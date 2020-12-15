@@ -1,0 +1,8 @@
+[package]
+name = "example"
+version = "0.1.0"
+authors = ["Moritz Bischof <moritz.bischof@aleph-alpha.de>"]
+edition = "2018"
+
+[dependencies]
+ts-rs = { path = "../ts-rs" }
