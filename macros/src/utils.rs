@@ -45,6 +45,7 @@ macro_rules! impl_parse {
     };
 }
 
+#[allow(unused)]
 pub(crate) fn print_warning(title: impl Display, content: impl Display, note: impl Display) -> std::io::Result<()> {
     let make_color = |color: Color, bold: bool| {
         let mut spec = ColorSpec::new();
