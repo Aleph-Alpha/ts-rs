@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Moritz Bischof <moritz.bischof@aleph-alpha.de>"]
 edition = "2018"
 license = "MIT"
@@ -9,4 +9,4 @@ homepage = "https://github.com/Aleph-Alpha/ts-rs"
 repository = "https://github.com/Aleph-Alpha/ts-rs"
 
 [dependencies]
-ts-rs-macros = "0.0.1"
+ts-rs-macros = "0.1.0"
