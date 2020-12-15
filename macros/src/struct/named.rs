@@ -2,15 +2,16 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Field, FieldsNamed, ItemStruct, Result};
 
-use crate::attr::FieldAttr;
+use crate::attr::{FieldAttr, StructAttr, Inflection};
 use crate::DerivedTS;
 
 pub(crate) fn named(s: &ItemStruct, i: &FieldsNamed) -> Result<DerivedTS> {
-    let name = s.ident.to_string();
+    let StructAttr { rename_all, rename } = StructAttr::from_attrs(&s.attrs)?;
+    let name = rename.unwrap_or_else(|| s.ident.to_string());
     let fields = i
         .named
         .iter()
-        .map(format_field)
+        .map(|f| format_field(f, &rename_all))
         .collect::<Result<Vec<TokenStream>>>()?;
 
     Ok(DerivedTS {
@@ -28,7 +29,7 @@ pub(crate) fn named(s: &ItemStruct, i: &FieldsNamed) -> Result<DerivedTS> {
     })
 }
 
-fn format_field(field: &Field) -> Result<TokenStream> {
+fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<TokenStream> {
     let FieldAttr {
         type_override,
         rename,
@@ -39,7 +40,11 @@ fn format_field(field: &Field) -> Result<TokenStream> {
     let ty = type_override
         .map(|t| quote!(#t))
         .unwrap_or_else(|| quote!(<#ty as ts_rs::TS>::format(indent + 1, #inline)));
-    let name = rename.unwrap_or_else(|| field.ident.as_ref().unwrap().to_string());
+    let name = match (rename, rename_all) {
+        (Some(rn), _) => rn,
+        (None, Some(rn)) => rn.apply(&field.ident.as_ref().unwrap().to_string()),
+        (None, None) => field.ident.as_ref().unwrap().to_string()
+    };
 
     Ok(quote! {
         format!("{}{}: {},", " ".repeat((indent + 1) * 4), #name, #ty)

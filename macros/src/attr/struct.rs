@@ -1,18 +1,16 @@
+use crate::attr::{Inflection, parse_assign_string_lit};
+use syn::{Attribute, Error, Result, Token, Ident};
 use std::convert::TryFrom;
-
-use syn::{Attribute, Error, Ident, Result, Token};
-use syn::ext::IdentExt;
 use syn::parse::{Parse, ParseStream};
-
-use crate::attr::{parse_assign_string_lit, Inflection};
+use syn::ext::IdentExt;
 
 #[derive(Default)]
-pub struct EnumAttr {
+pub struct StructAttr {
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,
 }
 
-impl TryFrom<&Attribute> for EnumAttr {
+impl TryFrom<&Attribute> for StructAttr {
     type Error = Error;
 
     fn try_from(attr: &Attribute) -> Result<Self> {
@@ -20,17 +18,18 @@ impl TryFrom<&Attribute> for EnumAttr {
     }
 }
 
-impl EnumAttr {
+
+impl StructAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         attrs
             .iter()
             .filter(|a| a.path.is_ident("ts"))
-            .map(EnumAttr::try_from)
-            .collect::<Result<Vec<EnumAttr>>>()
+            .map(StructAttr::try_from)
+            .collect::<Result<Vec<StructAttr>>>()
             .map(|attrs| Self::merge(&attrs))
     }
 
-    fn merge(attrs: &[EnumAttr]) -> Self {
+    fn merge(attrs: &[StructAttr]) -> Self {
         let mut result = Self::default();
         for attr in attrs {
             result.rename = result.rename.or_else(|| attr.rename.clone());
@@ -40,9 +39,9 @@ impl EnumAttr {
     }
 }
 
-impl Parse for EnumAttr {
+impl Parse for StructAttr {
     fn parse(input: ParseStream) -> Result<Self> {
-        let mut out = EnumAttr::default();
+        let mut out = StructAttr::default();
         loop {
             let key = input.call(Ident::parse_any)?;
             match &*key.to_string() {
