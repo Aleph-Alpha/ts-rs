@@ -32,3 +32,4 @@ We recommend doing this in your tests. [see the example](https://github.com/Alep
 - [ ] serde compatibility layer
 - [ ] more customization
 - [ ] library support (chrono, uuids, ...)
+- [ ] documentation

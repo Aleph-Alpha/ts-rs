@@ -3,6 +3,10 @@ name = "ts-rs-macros"
 version = "0.0.1"
 authors = ["Moritz Bischof <moritz.bischof@aleph-alpha.de>"]
 edition = "2018"
+description = "derive macro for ts-rs"
+license = "MIT"
+homepage = "https://github.com/Aleph-Alpha/ts-rs"
+repository = "https://github.com/Aleph-Alpha/ts-rs"
 
 [lib]
 proc-macro = true
