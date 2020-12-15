@@ -9,4 +9,4 @@ homepage = "https://github.com/Aleph-Alpha/ts-rs"
 repository = "https://github.com/Aleph-Alpha/ts-rs"
 
 [dependencies]
-ts-rs-macros = "0.1"
+ts-rs-macros = { version = "0.1", path = "../macros" }
