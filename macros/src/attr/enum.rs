@@ -1,8 +1,9 @@
 use std::convert::TryFrom;
 
 use syn::{Attribute, Ident, Result};
-
-use crate::attr::{parse_assign_inflection, parse_assign_str, Inflection};
+use quote::quote;
+use crate::attr::{Inflection, parse_assign_inflection, parse_assign_str};
+use crate::utils::print_warning;
 
 #[derive(Default)]
 pub struct EnumAttr {
@@ -10,30 +11,46 @@ pub struct EnumAttr {
     pub rename: Option<String>,
 }
 
+#[cfg(feature = "serde-compat")]
+#[derive(Default)]
+pub struct SerdeEnumAttr(EnumAttr);
+
 impl EnumAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
-        println!(
-            "{:?}",
-            attrs
-                .iter()
-                .map(|a| a.path.is_ident("serde"))
-                .collect::<Vec<_>>()
-        );
+        let mut result = Self::default();
         attrs
             .iter()
             .filter(|a| a.path.is_ident("ts"))
             .map(EnumAttr::try_from)
-            .collect::<Result<Vec<EnumAttr>>>()
-            .map(|attrs| Self::merge(&attrs))
+            .collect::<Result<Vec<EnumAttr>>>()?
+            .into_iter()
+            .for_each(|a| result.merge(a));
+
+        #[cfg(feature = "serde-compat")]
+            {
+                attrs
+                    .iter()
+                    .filter(|a| a.path.is_ident("serde"))
+                    .flat_map(|attr| match SerdeEnumAttr::try_from(attr) {
+                        Ok(attr) => Some(attr),
+                        Err(_) => {
+                            print_warning(
+                                "failed to parse serde attribute",
+                                format!("{}", quote!(#attr)),
+                                "ts-rs failed to parse this attribute. It will be ignored."
+                            ).unwrap();
+                            None
+                        }
+                    })
+                    .for_each(|a| result.merge(a.0));
+            }
+
+        Ok(result)
     }
 
-    fn merge(attrs: &[EnumAttr]) -> Self {
-        let mut result = Self::default();
-        for attr in attrs {
-            result.rename = result.rename.or_else(|| attr.rename.clone());
-            result.rename_all = result.rename_all.or_else(|| attr.rename_all);
-        }
-        result
+    fn merge(&mut self, EnumAttr { rename_all, rename }: EnumAttr) {
+        self.rename = self.rename.take().or(rename);
+        self.rename_all = self.rename_all.take().or(rename_all);
     }
 }
 
@@ -41,5 +58,13 @@ impl_parse! {
     EnumAttr(input, out) {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
+    }
+}
+
+#[cfg(feature = "serde-compat")]
+impl_parse! {
+    SerdeEnumAttr(input, out) {
+        "rename" => out.0.rename = Some(parse_assign_str(input)?),
+        "rename_all" => out.0.rename_all = Some(parse_assign_inflection(input)?),
     }
 }

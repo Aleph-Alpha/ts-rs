@@ -27,9 +27,13 @@ We recommend doing this in your tests. [see the example](https://github.com/Alep
 - generate union declarations from rust enums
 - inline types
 
+## serde compatibility layer
+With the `serde-compat` feature enabled, ts-rs tries parsing serde attributes.  
+Please note that not all serde attributes are supported yet.
+
 ## todo
 
-- [ ] serde compatibility layer
+- [x] serde compatibility layer
 - [ ] more customization
 - [ ] library support (chrono, uuids, ...)
 - [ ] documentation

@@ -4,14 +4,16 @@ use serde::Serialize;
 use ts_rs::TS;
 
 #[derive(Serialize, TS)]
+#[ts(rename_all = "lowercase")]
 enum Role {
     User,
+    #[ts(rename = "administrator")]
     Admin,
 }
 
 #[derive(Serialize, TS)]
+// when 'serde-compat' is enabled, ts-rs tries to use supported serde attributes.
 #[serde(rename_all = "UPPERCASE")]
-#[ts(rename_all = "lowercase")]
 enum Gender {
     Male,
     Female,

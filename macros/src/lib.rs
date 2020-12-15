@@ -9,7 +9,7 @@ use syn::spanned::Spanned;
 use syn::{Item, Result};
 
 #[macro_use]
-mod macros;
+mod utils;
 mod attr;
 mod r#enum;
 mod r#struct;

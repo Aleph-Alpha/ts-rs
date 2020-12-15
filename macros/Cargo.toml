@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs-macros"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Moritz Bischof <moritz.bischof@aleph-alpha.de>"]
 edition = "2018"
 description = "derive macro for ts-rs"
@@ -19,3 +19,4 @@ proc-macro2 = "1"
 quote = "1"
 syn = { version = "1", features = ["full", "extra-traits"] }
 Inflector = "0.11"
+termcolor = "1"
