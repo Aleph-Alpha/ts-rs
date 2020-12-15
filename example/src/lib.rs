@@ -14,6 +14,7 @@ enum Role {
 #[derive(Serialize, TS)]
 // when 'serde-compat' is enabled, ts-rs tries to use supported serde attributes.
 #[serde(rename_all = "UPPERCASE")]
+#[serde(tag = "ll")]
 enum Gender {
     Male,
     Female,

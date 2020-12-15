@@ -1,7 +1,6 @@
 use std::convert::TryFrom;
 
 use syn::{Attribute, Ident, Result};
-use quote::quote;
 use crate::attr::{Inflection, parse_assign_inflection, parse_assign_str};
 
 #[derive(Default)]
@@ -33,9 +32,10 @@ impl EnumAttr {
                     .flat_map(|attr| match SerdeEnumAttr::try_from(attr) {
                         Ok(attr) => Some(attr),
                         Err(_) => {
+                            use quote::ToTokens;
                             crate::utils::print_warning(
                                 "failed to parse serde attribute",
-                                format!("{}", quote!(#attr)),
+                                format!("{}", attr.to_token_stream()),
                                 "ts-rs failed to parse this attribute. It will be ignored."
                             ).unwrap();
                             None
