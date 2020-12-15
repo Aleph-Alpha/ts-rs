@@ -6,7 +6,6 @@ use crate::DerivedTS;
 
 pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
     let EnumAttr { rename_all, rename } = EnumAttr::from_attrs(&s.attrs)?;
-    println!("{:?}/ {:?}", rename_all, rename);
 
     let name = rename.unwrap_or_else(|| s.ident.to_string());
     let variants = s
