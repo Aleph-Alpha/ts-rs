@@ -1,4 +1,4 @@
-use std::fs::{File, OpenOptions};
+use std::fs::OpenOptions;
 use std::io::{Write, BufWriter};
 use std::path::Path;
 
@@ -16,7 +16,7 @@ pub trait TS {
 
     fn dump(out: impl AsRef<Path>) -> std::io::Result<()> {
         let out = out.as_ref();
-        let mut file = OpenOptions::new().append(true).create(true).truncate(false).open(out)?;
+        let file = OpenOptions::new().append(true).create(true).truncate(false).open(out)?;
         let mut writer = BufWriter::new(file);
         writer.write_all(Self::decl().expect("Type has no declaration").as_bytes())?;
         writer.write_all(b"\n\n")?;

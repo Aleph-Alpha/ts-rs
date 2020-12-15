@@ -1,22 +1,16 @@
 use std::convert::TryFrom;
 
-use syn::{parse::Parse, parse::ParseStream, Attribute, Error, Ident, Lit, Result, Token};
+use syn::{Attribute, Error, Ident, Lit, parse::Parse, parse::ParseStream, Result, Token};
 
 pub use field::*;
+pub use r#enum::*;
 
 mod field;
+mod r#enum;
 
 #[derive(Default)]
 struct TypeAttr {
     rename: Option<String>,
-}
-
-impl TryFrom<&Attribute> for FieldAttr {
-    type Error = Error;
-
-    fn try_from(attr: &Attribute) -> Result<Self> {
-        attr.parse_args()
-    }
 }
 
 impl TryFrom<&Attribute> for TypeAttr {

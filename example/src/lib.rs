@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use ts_rs::TS;
 
 #[derive(TS)]
@@ -7,6 +9,7 @@ enum Role {
 }
 
 #[derive(TS)]
+#[ts(rename_all = "lowercase")]
 enum Gender {
     Male,
     Female,
@@ -25,7 +28,8 @@ struct User {
 
 #[cfg(test)]
 mod export_ts {
-    use crate::{Role, User, TS};
+    use crate::{Role, User};
+    use ts_rs::TS;
 
     #[test]
     fn export_ts() {

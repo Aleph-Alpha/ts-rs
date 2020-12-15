@@ -32,6 +32,14 @@ impl FieldAttr {
     }
 }
 
+impl TryFrom<&Attribute> for FieldAttr {
+    type Error = Error;
+
+    fn try_from(attr: &Attribute) -> Result<Self> {
+        attr.parse_args()
+    }
+}
+
 impl Parse for FieldAttr {
     fn parse(input: ParseStream) -> Result<Self> {
         let mut out = FieldAttr::default();
