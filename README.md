@@ -19,6 +19,29 @@ ts-rs exposes a single interface, `TS`. Using a derive macro, you can implement 
 Then, you can use this trait to obtain the TypeScript bindings.  
 We recommend doing this in your tests. [see the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs)
 
+## get started
+```toml
+[dependencies]
+ts-rs = "0.1"
+```
+
+```rust
+use ts_rs::TS;
+
+#[derive(TS)]
+struct User {
+    user_id: i32,
+    first_name: String,
+    last_name: String,
+}
+
+#[test]
+fn export_ts() {
+    std::fs::remove_file("bindings.ts").ok();
+    User::dump("bindings.ts").unwrap();
+}
+```
+
 ## [example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs)
 
 ## features
