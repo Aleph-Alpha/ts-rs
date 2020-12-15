@@ -17,9 +17,9 @@ ts-rs might also come in handy when working with webassembly.
 
 ts-rs exposes a single interface, `TS`. Using a derive macro, you can implement this interface for your types.  
 Then, you can use this trait to obtain the TypeScript bindings.  
-We recommend doing this in your tests. [see the example](https://google.de)
+We recommend doing this in your tests. [see the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs)
 
-## [example](https://google.de)
+## [example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs)
 
 ## features
 
@@ -29,6 +29,6 @@ We recommend doing this in your tests. [see the example](https://google.de)
 
 ## todo
 
--[ ] serde compatibility layer
--[ ] more customization
--[ ] library support (chrono, uuids, ...)
+- [ ] serde compatibility layer
+- [ ] more customization
+- [ ] library support (chrono, uuids, ...)
