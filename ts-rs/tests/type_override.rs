@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-use ts_rs::TS;
 use std::time::Instant;
+use ts_rs::TS;
 
 #[derive(TS)]
 struct Override {
@@ -9,7 +9,7 @@ struct Override {
     #[ts(type = "0 | 1 | 2")]
     b: i32,
     #[ts(type = "string")]
-    x: Instant
+    x: Instant,
 }
 
 #[test]

@@ -1,7 +1,7 @@
 use quote::quote;
 use syn::{ItemEnum, Result};
 
-use crate::attr::{FieldAttr, EnumAttr};
+use crate::attr::{EnumAttr, FieldAttr};
 use crate::DerivedTS;
 
 pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
@@ -20,7 +20,7 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
             let name = match (rename, &rename_all) {
                 (Some(rn), _) => rn,
                 (None, None) => variant.ident.to_string(),
-                (None, Some(rn)) => rn.apply(&variant.ident.to_string())
+                (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
             };
             if type_override.is_some() {
                 syn_err!("`type_override` is not applicable to enum variants")

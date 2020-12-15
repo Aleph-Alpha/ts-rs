@@ -1,13 +1,13 @@
 use std::convert::TryFrom;
 
-use syn::{Error, Lit, parse::Parse, parse::ParseStream, Result, Token};
+use syn::{parse::Parse, parse::ParseStream, Error, Lit, Result, Token};
 
 pub use field::*;
 pub use r#enum::*;
 pub use r#struct::*;
 
-mod field;
 mod r#enum;
+mod field;
 mod r#struct;
 
 #[derive(Copy, Clone, Debug)]
@@ -30,7 +30,7 @@ impl Inflection {
             Inflection::Camel => string.to_camel_case(),
             Inflection::Snake => string.to_snake_case(),
             Inflection::Pascal => string.to_pascal_case(),
-            Inflection::ScreamingSnake => string.to_screaming_snake_case()
+            Inflection::ScreamingSnake => string.to_screaming_snake_case(),
         }
     }
 }
@@ -46,15 +46,19 @@ impl TryFrom<String> for Inflection {
             "snake_case" | "snakecase" => Self::Snake,
             "pascalcase" => Self::Pascal,
             "screaming_snake_case" | "screamingsnakecase" => Self::ScreamingSnake,
-            _ => syn_err!("invalid inflection: '{}'", value)
+            _ => syn_err!("invalid inflection: '{}'", value),
         })
     }
 }
 
-fn parse_assign_string_lit(input: ParseStream) -> Result<String> {
+fn parse_assign_str(input: ParseStream) -> Result<String> {
     input.parse::<Token![=]>()?;
     match Lit::parse(input)? {
         Lit::Str(string) => Ok(string.value()),
         other => Err(Error::new(other.span(), "expected string")),
     }
+}
+
+fn parse_assign_inflection(input: ParseStream) -> Result<Inflection> {
+    parse_assign_str(input).and_then(Inflection::try_from)
 }

@@ -1,29 +1,31 @@
 #![allow(dead_code)]
 
+use serde::Serialize;
 use ts_rs::TS;
 
-#[derive(TS)]
+#[derive(Serialize, TS)]
 enum Role {
     User,
     Admin,
 }
 
-#[derive(TS)]
+#[derive(Serialize, TS)]
+#[serde(rename_all = "UPPERCASE")]
 #[ts(rename_all = "lowercase")]
 enum Gender {
     Male,
     Female,
-    Other
+    Other,
 }
 
-#[derive(TS)]
+#[derive(Serialize, TS)]
 struct User {
     user_id: i32,
     first_name: String,
     last_name: String,
     role: Role,
     #[ts(inline)]
-    gender: Gender
+    gender: Gender,
 }
 
 #[cfg(test)]

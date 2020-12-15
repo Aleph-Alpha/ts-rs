@@ -4,7 +4,10 @@ use quote::quote;
 use syn::{FieldsUnnamed, ItemStruct, Result};
 
 pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
-    let StructAttr { rename_all, rename: rename_outer } = StructAttr::from_attrs(&s.attrs)?;
+    let StructAttr {
+        rename_all,
+        rename: rename_outer,
+    } = StructAttr::from_attrs(&s.attrs)?;
     if rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to tuple structs");
     }

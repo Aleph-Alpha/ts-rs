@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Field, FieldsNamed, ItemStruct, Result};
 
-use crate::attr::{FieldAttr, StructAttr, Inflection};
+use crate::attr::{FieldAttr, Inflection, StructAttr};
 use crate::DerivedTS;
 
 pub(crate) fn named(s: &ItemStruct, i: &FieldsNamed) -> Result<DerivedTS> {
@@ -43,7 +43,7 @@ fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<TokenS
     let name = match (rename, rename_all) {
         (Some(rn), _) => rn,
         (None, Some(rn)) => rn.apply(&field.ident.as_ref().unwrap().to_string()),
-        (None, None) => field.ident.as_ref().unwrap().to_string()
+        (None, None) => field.ident.as_ref().unwrap().to_string(),
     };
 
     Ok(quote! {
