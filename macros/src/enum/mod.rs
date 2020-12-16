@@ -16,7 +16,11 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
                 type_override,
                 rename,
                 inline,
+                skip,
             } = FieldAttr::from_attrs(&variant.attrs)?;
+            if skip {
+                return Ok(None)
+            }
             let name = match (rename, &rename_all) {
                 (Some(rn), _) => rn,
                 (None, None) => variant.ident.to_string(),
@@ -28,7 +32,12 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
             if inline {
                 syn_err!("`inline` is not applicable to enum variants")
             }
-            Ok(format!("{:?}", name))
+            Ok(Some(format!("{:?}", name)))
+        })
+        .flat_map(|x| match x {
+            Ok(Some(x)) => Some(Ok(x)),
+            Err(err) => Some(Err(err)),
+            Ok(None) => None,
         })
         .collect::<Result<Vec<String>>>()?;
 

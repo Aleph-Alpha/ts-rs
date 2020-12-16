@@ -12,6 +12,11 @@ pub(crate) fn named(s: &ItemStruct, i: &FieldsNamed) -> Result<DerivedTS> {
         .named
         .iter()
         .map(|f| format_field(f, &rename_all))
+        .flat_map(|x| match x {
+            Ok(Some(x)) => Some(Ok(x)),
+            Ok(None) => None,
+            Err(err) => Some(Err(err))
+        })
         .collect::<Result<Vec<TokenStream>>>()?;
 
     Ok(DerivedTS {
@@ -29,12 +34,17 @@ pub(crate) fn named(s: &ItemStruct, i: &FieldsNamed) -> Result<DerivedTS> {
     })
 }
 
-fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<TokenStream> {
+fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<Option<TokenStream>> {
     let FieldAttr {
         type_override,
         rename,
         inline,
+        skip
     } = FieldAttr::from_attrs(&field.attrs)?;
+    
+    if skip {
+        return Ok(None)
+    }
 
     let ty = &field.ty;
     let ty = type_override
@@ -46,7 +56,7 @@ fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<TokenS
         (None, None) => field.ident.as_ref().unwrap().to_string(),
     };
 
-    Ok(quote! {
+    Ok(Some(quote! {
         format!("{}{}: {},", " ".repeat((indent + 1) * 4), #name, #ty)
-    })
+    }))
 }

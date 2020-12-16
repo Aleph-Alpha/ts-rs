@@ -9,17 +9,21 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         rename: rename_outer,
     } = StructAttr::from_attrs(&s.attrs)?;
     if rename_all.is_some() {
-        syn_err!("`rename_all` is not applicable to tuple structs");
+        syn_err!("`rename_all` is not applicable to newtype structs");
     }
     let inner = i.unnamed.first().unwrap();
     let FieldAttr {
         type_override,
         rename: rename_inner,
         inline,
+        skip,
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
     if rename_inner.is_some() {
-        syn_err!("`rename` is not applicable to tuple fields")
+        syn_err!("`rename` is not applicable to newtype fields")
+    }
+    if skip {
+        syn_err!("`skip` is not applicable to newtype fields")
     }
 
     let name = rename_outer.unwrap_or_else(|| s.ident.to_string());

@@ -72,6 +72,9 @@ pub use ts_rs_macros::TS;
 /// - `#[ts(inline)]`:  
 ///   Inlines the type of this field  
 ///
+/// - `#[ts(skip)]`:  
+///   Skip this field  
+///
 /// ### enum attributes
 ///
 /// - `#[ts(rename = "..")]`:  
@@ -86,6 +89,8 @@ pub use ts_rs_macros::TS;
 /// - `#[ts(rename = "..")]`:  
 ///   Renames this variant  
 ///
+/// - `#[ts(skip)]`:  
+///   Skip this variant  
 
 pub trait TS {
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`, if available.

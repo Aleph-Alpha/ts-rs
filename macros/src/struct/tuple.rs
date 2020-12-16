@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{FieldsUnnamed, ItemStruct, Result};
+use syn::{Field, FieldsUnnamed, ItemStruct, Result};
 
 use crate::attr::{FieldAttr, StructAttr};
 use crate::DerivedTS;
@@ -15,22 +15,11 @@ pub(crate) fn tuple(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
     let fields = i
         .unnamed
         .iter()
-        .map(|field| {
-            let ty = &field.ty;
-            let FieldAttr {
-                type_override,
-                rename,
-                inline,
-            } = FieldAttr::from_attrs(&field.attrs)?;
-
-            if rename.is_some() {
-                syn_err!("`rename` is not applicable to tuple structs")
-            }
-
-            Ok(match type_override {
-                Some(o) => quote!(#o.into()),
-                None => quote!(<#ty as ts_rs::TS>::format(0, #inline)),
-            })
+        .map(format_field)
+        .flat_map(|x| match x {
+            Ok(Some(x)) => Some(Ok(x)),
+            Ok(None) => None,
+            Err(err) => Some(Err(err))
         })
         .collect::<Result<Vec<TokenStream>>>()?;
 
@@ -39,4 +28,27 @@ pub(crate) fn tuple(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         decl: quote!(format!("export type {} = {};", #name, Self::format(0, true))),
         name,
     })
+}
+
+fn format_field(field: &Field) -> Result<Option<TokenStream>> {
+    let ty = &field.ty;
+    let FieldAttr {
+        type_override,
+        rename,
+        inline,
+        skip,
+    } = FieldAttr::from_attrs(&field.attrs)?;
+
+    if skip {
+        return Ok(None);
+    }
+
+    if rename.is_some() {
+        syn_err!("`rename` is not applicable to tuple structs")
+    }
+
+    Ok(Some(match type_override {
+        Some(o) => quote!(#o.into()),
+        None => quote!(<#ty as ts_rs::TS>::format(0, #inline)),
+    }))
 }
