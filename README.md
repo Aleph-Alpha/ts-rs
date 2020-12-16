@@ -4,7 +4,7 @@ Generate TypeScript interface/type declarations from rust structs.
 
 [![Crate](https://img.shields.io/crates/v/ts-rs.svg)](https://crates.io/crates/ts-rs)
 [![API](https://docs.rs/ts-rs/badge.svg)](https://docs.rs/ts-rs)
-[![Test](https://github.com/Aleph-Alpha/ts-rs/workflows/test/badge.svg)](https://github.com/Aleph-Alpha/ts-rs/actions)
+[![Test](https://github.com/Aleph-Alpha/ts-rs/workflows/Test/badge.svg)](https://github.com/Aleph-Alpha/ts-rs/actions)
 
 ## why?
 
