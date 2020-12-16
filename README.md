@@ -23,7 +23,7 @@ We recommend doing this in your tests. [see the example](https://github.com/Alep
 ## get started
 ```toml
 [dependencies]
-ts-rs = "0.1"
+ts-rs = "0.2"
 ```
 
 ```rust
