@@ -1,4 +1,4 @@
 /target
 Cargo.lock
 /.idea
-/example/bindings.ts
+bindings.ts

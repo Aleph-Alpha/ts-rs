@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 
+use crate::attr::{parse_assign_inflection, parse_assign_str, Inflection};
 use syn::{Attribute, Ident, Result};
-use crate::attr::{Inflection, parse_assign_inflection, parse_assign_str};
 
 #[derive(Default)]
 pub struct EnumAttr {
@@ -25,24 +25,25 @@ impl EnumAttr {
             .for_each(|a| result.merge(a));
 
         #[cfg(feature = "serde-compat")]
-            {
-                attrs
-                    .iter()
-                    .filter(|a| a.path.is_ident("serde"))
-                    .flat_map(|attr| match SerdeEnumAttr::try_from(attr) {
-                        Ok(attr) => Some(attr),
-                        Err(_) => {
-                            use quote::ToTokens;
-                            crate::utils::print_warning(
-                                "failed to parse serde attribute",
-                                format!("{}", attr.to_token_stream()),
-                                "ts-rs failed to parse this attribute. It will be ignored."
-                            ).unwrap();
-                            None
-                        }
-                    })
-                    .for_each(|a| result.merge(a.0));
-            }
+        {
+            attrs
+                .iter()
+                .filter(|a| a.path.is_ident("serde"))
+                .flat_map(|attr| match SerdeEnumAttr::try_from(attr) {
+                    Ok(attr) => Some(attr),
+                    Err(_) => {
+                        use quote::ToTokens;
+                        crate::utils::print_warning(
+                            "failed to parse serde attribute",
+                            format!("{}", attr.to_token_stream()),
+                            "ts-rs failed to parse this attribute. It will be ignored.",
+                        )
+                        .unwrap();
+                        None
+                    }
+                })
+                .for_each(|a| result.merge(a.0));
+        }
 
         Ok(result)
     }

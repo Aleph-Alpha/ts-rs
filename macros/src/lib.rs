@@ -1,8 +1,6 @@
 #![macro_use]
 #![deny(unused)]
 
-//extern crate proc_macro;
-
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::spanned::Spanned;
@@ -37,6 +35,8 @@ impl DerivedTS {
     }
 }
 
+/// Derives [TS](ts_rs::TS) for a struct or enum.
+/// Please take a look at [TS](ts_rs::TS) for documentation.
 #[proc_macro_derive(TS, attributes(ts))]
 pub fn typescript(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     match entry(input) {

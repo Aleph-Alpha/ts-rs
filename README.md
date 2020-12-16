@@ -4,6 +4,7 @@ Generate TypeScript interface/type declarations from rust structs.
 
 [![Crate](https://img.shields.io/crates/v/ts-rs.svg)](https://crates.io/crates/ts-rs)
 [![API](https://docs.rs/ts-rs/badge.svg)](https://docs.rs/ts-rs)
+[![Test](https://github.com/Aleph-Alpha/ts-rs/workflows/test/badge.svg)](https://github.com/Aleph-Alpha/ts-rs/actions)
 
 ## why?
 
@@ -15,7 +16,7 @@ ts-rs might also come in handy when working with webassembly.
 
 ## how?
 
-ts-rs exposes a single interface, `TS`. Using a derive macro, you can implement this interface for your types.  
+ts-rs exposes a single trait, `TS`. Using a derive macro, you can implement this interface for your types.  
 Then, you can use this trait to obtain the TypeScript bindings.  
 We recommend doing this in your tests. [see the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs)
 
@@ -59,4 +60,4 @@ Please note that not all serde attributes are supported yet.
 - [x] serde compatibility layer
 - [ ] more customization
 - [ ] library support (chrono, uuids, ...)
-- [ ] documentation
+- [x] documentation

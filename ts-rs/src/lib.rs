@@ -1,19 +1,108 @@
+//! Generate TypeScript interface/type declarations from rust structs.
+//!
+//! ## why?
+//! When building a web application in rust, data structures have to be shared between backend and frontend.  
+//! Using this library, you can easily generate TypeScript bindings to your rust structs & enums, so that you can keep your
+//! types in one place.
+//!
+//! ts-rs might also come in handy when working with webassembly.
+//!
+//! ## how?
+//! ts-rs exposes a single trait, `TS`.  
+//! Using a derive macro, you can implement this interface for
+//! your types.  
+//! Then, you can use this trait to obtain the TypeScript bindings.
+//! We recommend doing this in your tests. [see the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs)
+//!
+//! ## serde compatibility layer
+//! With the `serde-compat` feature enabled, ts-rs tries parsing serde attributes.  
+//! Please note that not all serde attributes are supported yet.
+
 use std::fs::OpenOptions;
 use std::io::{BufWriter, Write};
 use std::path::Path;
 
 pub use ts_rs_macros::TS;
 
+/// A type which can be represented in TypeScript.  
+/// Most of the time, you'd want to derive this trait instead of implementing it manually.  
+/// ts-rs comes with implementations for all numeric types, `String`, `Vec`, `Option` and tuples.
+///
+/// ## get started
+/// [TS](ts_rs::TS) can easily be derived for structs and enums:
+/// ```rust
+/// use ts_rs::TS;
+///
+/// #[derive(TS)]
+/// struct User {
+///     first_name: String,
+///     last_name: String,
+/// }
+/// ```
+/// To actually obtain the bindings, you can call `User::dump` to write the bindings to a file:
+/// ```rust
+/// # use ts_rs::TS;
+///
+/// # #[derive(TS)]
+/// # struct User {
+/// #     first_name: String,
+/// #     last_name: String,
+/// # }
+/// std::fs::remove_file("bindings.ts").ok();
+/// User::dump("bindings.ts").unwrap();
+/// ```
+///
+/// ### struct attributes
+///
+/// - `#[ts(rename = "..")]`:  
+///   Set the name of the generated interface  
+///
+/// - `#[ts(rename_all = "..")]`:  
+///   Rename all fields of this struct.  
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`
+///   
+/// ### struct field attributes
+///
+/// - `#[ts(type = "..")]`:  
+///   Overrides the type used in TypeScript  
+///
+/// - `#[ts(rename = "..")]`:  
+///   Renames this field  
+///
+/// - `#[ts(inline)]`:  
+///   Inlines the type of this field  
+///
+/// ### enum attributes
+///
+/// - `#[ts(rename = "..")]`:  
+///   Set the name of the generated type  
+///
+/// - `#[ts(rename_all = "..")]`:  
+///   Rename all variants of this enum.  
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`
+///  
+/// ### enum variant attributes
+///
+/// - `#[ts(rename = "..")]`:  
+///   Renames this variant  
+///
+
 pub trait TS {
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`, if available.
     fn decl() -> Option<String> {
         None
     }
+
     /// Formats this type.
     /// When using inline, this will return the definition of the type.
     /// Otherwise, it's name is returned (if the type is named)
     fn format(indent: usize, inline: bool) -> String;
 
+    /// Dumps the declaration of this type to a file.  
+    /// If the file does not exist, it will be created.  
+    /// If it does, the declaration will be appended.
+    ///
+    /// This function will panicked when called on a type which does not have a declaration.
     fn dump(out: impl AsRef<Path>) -> std::io::Result<()> {
         let out = out.as_ref();
         let file = OpenOptions::new()
