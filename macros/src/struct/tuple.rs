@@ -26,6 +26,7 @@ pub(crate) fn tuple(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
     Ok(DerivedTS {
         format: quote!(format!("[{}]", vec![#(#fields),*].join(", "))),
         decl: quote!(format!("export type {} = {};", #name, Self::format(0, true))),
+        flatten: None,
         name,
     })
 }
@@ -37,6 +38,7 @@ fn format_field(field: &Field) -> Result<Option<TokenStream>> {
         rename,
         inline,
         skip,
+        flatten,
     } = FieldAttr::from_attrs(&field.attrs)?;
 
     if skip {
@@ -45,6 +47,9 @@ fn format_field(field: &Field) -> Result<Option<TokenStream>> {
 
     if rename.is_some() {
         syn_err!("`rename` is not applicable to tuple structs")
+    }
+    if flatten {
+        syn_err!("`flatten` is not applicable to newtype fields")
     }
 
     Ok(Some(match type_override {

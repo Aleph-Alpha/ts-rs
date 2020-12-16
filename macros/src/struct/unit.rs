@@ -18,6 +18,7 @@ pub(crate) fn unit(s: &ItemStruct) -> Result<DerivedTS> {
         decl: quote! {
             format!("export type {} = null;", #name)
         },
+        flatten: None,
         name,
     })
 }

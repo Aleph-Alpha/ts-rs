@@ -17,6 +17,7 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         rename: rename_inner,
         inline,
         skip,
+        flatten
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
     if rename_inner.is_some() {
@@ -24,6 +25,9 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
     }
     if skip {
         syn_err!("`skip` is not applicable to newtype fields")
+    }
+    if flatten {
+        syn_err!("`flatten` is not applicable to newtype fields")
     }
 
     let name = rename_outer.unwrap_or_else(|| s.ident.to_string());
@@ -35,6 +39,7 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
     Ok(DerivedTS {
         format: Default::default(),
         decl: quote!(format!("export type {} = {};", #name, #inline_def)),
+        flatten: None,
         name,
     })
 }

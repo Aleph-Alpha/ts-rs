@@ -75,6 +75,9 @@ pub use ts_rs_macros::TS;
 /// - `#[ts(skip)]`:  
 ///   Skip this field  
 ///
+/// - `#[ts(flatten)]`:  
+///   Flatten this field (only works if the field is a struct)  
+///   
 /// ### enum attributes
 ///
 /// - `#[ts(rename = "..")]`:  
@@ -101,7 +104,14 @@ pub trait TS {
     /// Formats this type.
     /// When using inline, this will return the definition of the type.
     /// Otherwise, it's name is returned (if the type is named)
+    // TODO: split this into `name(indent)` and `format(indent)`
     fn format(indent: usize, inline: bool) -> String;
+    
+    /// Flatten an interface declaration.  
+    /// This will panic if this is not an interface.
+    fn flatten_interface(#[allow(unused_variables)] indent: usize) -> String {
+        panic!("this type cannot be inlined!")
+    }
 
     /// Dumps the declaration of this type to a file.  
     /// If the file does not exist, it will be created.  

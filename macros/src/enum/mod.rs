@@ -17,6 +17,7 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
                 rename,
                 inline,
                 skip,
+                flatten,
             } = FieldAttr::from_attrs(&variant.attrs)?;
             if skip {
                 return Ok(None)
@@ -32,6 +33,9 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
             if inline {
                 syn_err!("`inline` is not applicable to enum variants")
             }
+            if flatten {
+                syn_err!("`flatten` is not applicable to enum variants")
+            }
             Ok(Some(format!("{:?}", name)))
         })
         .flat_map(|x| match x {
@@ -44,6 +48,7 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
     Ok(DerivedTS {
         format: quote!(vec![#(#variants),*].join(" | ")),
         decl: quote!(format!("export type {} = {};", #name, Self::format(0, true))),
+        flatten: None,
         name,
     })
 }

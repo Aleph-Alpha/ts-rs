@@ -30,6 +30,9 @@ pub(crate) fn named(s: &ItemStruct, i: &FieldsNamed) -> Result<DerivedTS> {
         decl: quote! {
             format!("export interface {} {}", #name, Self::format(0, true))
         },
+        flatten: Some(quote! {
+            vec![#(#fields),*].join("\n")
+        }),
         name,
     })
 }
@@ -39,14 +42,29 @@ fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<Option
         type_override,
         rename,
         inline,
-        skip
+        skip,
+        flatten
     } = FieldAttr::from_attrs(&field.attrs)?;
     
     if skip {
         return Ok(None)
     }
-
+    
     let ty = &field.ty;
+    
+    if flatten {
+        if type_override.is_some() {
+            syn_err!("`type` is not compatible with `flatten`")
+        }
+        if rename.is_some() {
+            syn_err!("`rename` is not compatible with `flatten`")
+        }
+        if inline {
+            syn_err!("`inline` is not compatible with `flatten`")
+        }
+        return Ok(Some(quote!(<#ty as ts_rs::TS>::flatten_interface(indent))))
+    }
+
     let ty = type_override
         .map(|t| quote!(#t))
         .unwrap_or_else(|| quote!(<#ty as ts_rs::TS>::format(indent + 1, #inline)));
