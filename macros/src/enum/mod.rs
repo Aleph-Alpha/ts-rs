@@ -1,11 +1,19 @@
 use quote::quote;
-use syn::{ItemEnum, Result};
+use syn::{spanned::Spanned, Fields, ItemEnum, Result};
 
 use crate::attr::{EnumAttr, FieldAttr};
 use crate::DerivedTS;
 
 pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
     let EnumAttr { rename_all, rename } = EnumAttr::from_attrs(&s.attrs)?;
+
+    if let Some(v) = s
+        .variants
+        .iter()
+        .find(|v| !matches!(v.fields, Fields::Unit))
+    {
+        syn_err!(v.span(); "variant has data attached. Such enums are not yet supported.");
+    }
 
     let name = rename.unwrap_or_else(|| s.ident.to_string());
     let variants = s
@@ -20,7 +28,7 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
                 flatten,
             } = FieldAttr::from_attrs(&variant.attrs)?;
             if skip {
-                return Ok(None)
+                return Ok(None);
             }
             let name = match (rename, &rename_all) {
                 (Some(rn), _) => rn,
