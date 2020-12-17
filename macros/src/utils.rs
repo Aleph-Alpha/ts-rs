@@ -28,7 +28,7 @@ macro_rules! impl_parse {
                     match &*key.to_string() {
                         $($k => $e,)*
                         #[allow(unreachable_patterns)]
-                        other => syn_err!("unexpected attribute key `{}`", other)
+                        _ => syn_err!($input.span(); "unexpected attribute")
                     }
 
                     match $input.is_empty() {
@@ -45,6 +45,8 @@ macro_rules! impl_parse {
     };
 }
 
+// Sadly, it is impossible to raise a warning in a proc macro.
+// This function prints a message which looks like a compiler warning.
 #[allow(unused)]
 pub(crate) fn print_warning(
     title: impl Display,
