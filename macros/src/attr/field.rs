@@ -1,6 +1,6 @@
 use syn::{Attribute, Ident, Result};
 
-use crate::utils::{parse_attrs, parse_serde_attrs};
+use crate::utils::parse_attrs;
 
 use super::parse_assign_str;
 
@@ -22,7 +22,7 @@ impl FieldAttr {
         let mut result = Self::default();
         parse_attrs(&attrs)?.for_each(|a| result.merge(a));
         #[cfg(feature = "serde-compat")]
-        parse_serde_attrs::<SerdeFieldAttr>(attrs).for_each(|a| result.merge(a.0));
+        crate::utils::parse_serde_attrs::<SerdeFieldAttr>(attrs).for_each(|a| result.merge(a.0));
         Ok(result)
     }
 

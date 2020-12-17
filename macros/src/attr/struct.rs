@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use syn::{Attribute, Ident, Result};
 
 use crate::attr::{parse_assign_str, Inflection};
-use crate::utils::{parse_attrs, parse_serde_attrs};
+use crate::utils::parse_attrs;
 
 #[derive(Default)]
 pub struct StructAttr {
@@ -20,7 +20,7 @@ impl StructAttr {
         let mut result = Self::default();
         parse_attrs(attrs)?.for_each(|a| result.merge(a));
         #[cfg(feature = "serde-compat")]
-        parse_serde_attrs::<SerdeStructAttr>(attrs).for_each(|a| result.merge(a.0));
+        crate::utils::parse_serde_attrs::<SerdeStructAttr>(attrs).for_each(|a| result.merge(a.0));
         Ok(result)
     }
 
