@@ -27,25 +27,25 @@ impl StructAttr {
             .for_each(|a| result.merge(a));
 
         #[cfg(feature = "serde-compat")]
-            {
-                attrs
-                    .iter()
-                    .filter(|a| a.path.is_ident("serde"))
-                    .flat_map(|attr| match SerdeStructAttr::try_from(attr) {
-                        Ok(attr) => Some(attr),
-                        Err(_) => {
-                            use quote::ToTokens;
-                            crate::utils::print_warning(
-                                "failed to parse serde attribute",
-                                format!("{}", attr.to_token_stream()),
-                                "ts-rs failed to parse this attribute. It will be ignored.",
-                            )
-                                .unwrap();
-                            None
-                        }
-                    })
-                    .for_each(|a| result.merge(a.0));
-            }
+        {
+            attrs
+                .iter()
+                .filter(|a| a.path.is_ident("serde"))
+                .flat_map(|attr| match SerdeStructAttr::try_from(attr) {
+                    Ok(attr) => Some(attr),
+                    Err(_) => {
+                        use quote::ToTokens;
+                        crate::utils::print_warning(
+                            "failed to parse serde attribute",
+                            format!("{}", attr.to_token_stream()),
+                            "ts-rs failed to parse this attribute. It will be ignored.",
+                        )
+                        .unwrap();
+                        None
+                    }
+                })
+                .for_each(|a| result.merge(a.0));
+        }
         Ok(result)
     }
 

@@ -17,7 +17,7 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         rename: rename_inner,
         inline,
         skip,
-        flatten
+        flatten,
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
     if rename_inner.is_some() {

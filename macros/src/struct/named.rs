@@ -15,7 +15,7 @@ pub(crate) fn named(s: &ItemStruct, i: &FieldsNamed) -> Result<DerivedTS> {
         .flat_map(|x| match x {
             Ok(Some(x)) => Some(Ok(x)),
             Ok(None) => None,
-            Err(err) => Some(Err(err))
+            Err(err) => Some(Err(err)),
         })
         .collect::<Result<Vec<TokenStream>>>()?;
 
@@ -43,15 +43,15 @@ fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<Option
         rename,
         inline,
         skip,
-        flatten
+        flatten,
     } = FieldAttr::from_attrs(&field.attrs)?;
-    
+
     if skip {
-        return Ok(None)
+        return Ok(None);
     }
-    
+
     let ty = &field.ty;
-    
+
     if flatten {
         if type_override.is_some() {
             syn_err!("`type` is not compatible with `flatten`")
@@ -62,7 +62,7 @@ fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<Option
         if inline {
             syn_err!("`inline` is not compatible with `flatten`")
         }
-        return Ok(Some(quote!(<#ty as ts_rs::TS>::flatten_interface(indent))))
+        return Ok(Some(quote!(<#ty as ts_rs::TS>::flatten_interface(indent))));
     }
 
     let ty = type_override

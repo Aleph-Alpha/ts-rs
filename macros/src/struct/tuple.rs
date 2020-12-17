@@ -19,7 +19,7 @@ pub(crate) fn tuple(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         .flat_map(|x| match x {
             Ok(Some(x)) => Some(Ok(x)),
             Ok(None) => None,
-            Err(err) => Some(Err(err))
+            Err(err) => Some(Err(err)),
         })
         .collect::<Result<Vec<TokenStream>>>()?;
 

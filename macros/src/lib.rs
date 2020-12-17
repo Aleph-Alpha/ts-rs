@@ -16,14 +16,19 @@ struct DerivedTS {
     name: String,
     format: TokenStream,
     decl: TokenStream,
-    flatten: Option<TokenStream>
+    flatten: Option<TokenStream>,
 }
 
 impl DerivedTS {
     fn into_impl(self, rust_ty: Ident) -> TokenStream {
-        let DerivedTS { name, format, decl, flatten } = self;
+        let DerivedTS {
+            name,
+            format,
+            decl,
+            flatten,
+        } = self;
         let flatten = flatten.unwrap_or_else(|| quote!(panic!("this type can't be flattened")));
-        
+
         quote! {
             impl ts_rs::TS for #rust_ty {
                 fn decl() -> Option<String> { Some({#decl}) }

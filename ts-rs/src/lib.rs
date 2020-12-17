@@ -106,7 +106,7 @@ pub trait TS {
     /// Otherwise, it's name is returned (if the type is named)
     // TODO: split this into `name(indent)` and `format(indent)`
     fn format(indent: usize, inline: bool) -> String;
-    
+
     /// Flatten an interface declaration.  
     /// This will panic if this is not an interface.
     fn flatten_interface(#[allow(unused_variables)] indent: usize) -> String {

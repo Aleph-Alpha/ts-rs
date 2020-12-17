@@ -8,7 +8,7 @@ pub struct FieldAttr {
     pub rename: Option<String>,
     pub inline: bool,
     pub skip: bool,
-    pub flatten: bool
+    pub flatten: bool,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -27,38 +27,45 @@ impl FieldAttr {
             .for_each(|a| result.merge(a));
 
         #[cfg(feature = "serde-compat")]
-            {
-                attrs
-                    .iter()
-                    .filter(|a| a.path.is_ident("serde"))
-                    .flat_map(|attr| match SerdeFieldAttr::try_from(attr) {
-                        Ok(attr) => Some(attr),
-                        Err(_) => {
-                            use quote::ToTokens;
-                            crate::utils::print_warning(
-                                "failed to parse serde attribute",
-                                format!("{}", attr.to_token_stream()),
-                                "ts-rs failed to parse this attribute. It will be ignored.",
-                            )
-                                .unwrap();
-                            None
-                        }
-                    })
-                    .for_each(|a| result.merge(a.0));
-            }
+        {
+            attrs
+                .iter()
+                .filter(|a| a.path.is_ident("serde"))
+                .flat_map(|attr| match SerdeFieldAttr::try_from(attr) {
+                    Ok(attr) => Some(attr),
+                    Err(_) => {
+                        use quote::ToTokens;
+                        crate::utils::print_warning(
+                            "failed to parse serde attribute",
+                            format!("{}", attr.to_token_stream()),
+                            "ts-rs failed to parse this attribute. It will be ignored.",
+                        )
+                        .unwrap();
+                        None
+                    }
+                })
+                .for_each(|a| result.merge(a.0));
+        }
 
         Ok(result)
-        
     }
 
-    fn merge(&mut self, FieldAttr { type_override, rename, inline, skip, flatten }: FieldAttr) {
+    fn merge(
+        &mut self,
+        FieldAttr {
+            type_override,
+            rename,
+            inline,
+            skip,
+            flatten,
+        }: FieldAttr,
+    ) {
         self.rename = self.rename.take().or(rename);
         self.type_override = self.type_override.take().or(type_override);
         self.inline = self.inline || inline;
         self.skip = self.skip || skip;
         self.flatten = self.flatten | flatten;
     }
-
 }
 
 impl_parse! {

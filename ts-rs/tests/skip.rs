@@ -7,7 +7,7 @@ struct Skip {
     a: i32,
     b: i32,
     #[ts(skip)]
-    c: String
+    c: String,
 }
 
 #[test]

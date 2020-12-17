@@ -19,7 +19,7 @@ struct B {
 struct C {
     #[ts(inline)]
     b: B,
-    d: i32
+    d: i32,
 }
 
 #[test]
