@@ -12,12 +12,8 @@ pub(crate) fn unit(s: &ItemStruct) -> Result<DerivedTS> {
     let name = rename.unwrap_or_else(|| s.ident.to_string());
 
     Ok(DerivedTS {
-        format: quote! {
-            "null".into()
-        },
-        decl: quote! {
-            format!("export type {} = null;", #name)
-        },
+        format: quote!("null".into()),
+        decl: quote!(format!("export type {} = null;", #name)),
         flatten: None,
         name,
     })

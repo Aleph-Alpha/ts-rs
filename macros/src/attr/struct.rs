@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 use syn::{Attribute, Ident, Result};
 
 use crate::attr::{parse_assign_str, Inflection};
+use crate::utils::{parse_attrs, parse_serde_attrs};
 
 #[derive(Default)]
 pub struct StructAttr {
@@ -17,35 +18,9 @@ pub struct SerdeStructAttr(StructAttr);
 impl StructAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = Self::default();
-
-        attrs
-            .iter()
-            .filter(|a| a.path.is_ident("ts"))
-            .map(StructAttr::try_from)
-            .collect::<Result<Vec<StructAttr>>>()?
-            .into_iter()
-            .for_each(|a| result.merge(a));
-
+        parse_attrs(attrs)?.for_each(|a| result.merge(a));
         #[cfg(feature = "serde-compat")]
-        {
-            attrs
-                .iter()
-                .filter(|a| a.path.is_ident("serde"))
-                .flat_map(|attr| match SerdeStructAttr::try_from(attr) {
-                    Ok(attr) => Some(attr),
-                    Err(_) => {
-                        use quote::ToTokens;
-                        crate::utils::print_warning(
-                            "failed to parse serde attribute",
-                            format!("{}", attr.to_token_stream()),
-                            "ts-rs failed to parse this attribute. It will be ignored.",
-                        )
-                        .unwrap();
-                        None
-                    }
-                })
-                .for_each(|a| result.merge(a.0));
-        }
+        parse_serde_attrs::<SerdeStructAttr>(attrs).for_each(|a| result.merge(a.0));
         Ok(result)
     }
 

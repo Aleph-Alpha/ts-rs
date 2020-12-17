@@ -58,6 +58,6 @@ Please note that not all serde attributes are supported yet.
 ## todo
 
 - [x] serde compatibility layer
-- [ ] more customization
-- [ ] library support (chrono, uuids, ...)
 - [x] documentation
+- [ ] move enum representations
+- [ ] more customization

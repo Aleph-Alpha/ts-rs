@@ -39,13 +39,13 @@ impl TryFrom<String> for Inflection {
     type Error = Error;
 
     fn try_from(value: String) -> Result<Self> {
-        Ok(match &*value.to_lowercase() {
+        Ok(match &*value.to_lowercase().replace("_", "") {
             "lowercase" => Self::Lower,
             "uppercase" => Self::Upper,
             "camelcase" => Self::Camel,
-            "snake_case" | "snakecase" => Self::Snake,
+            "snakecase" => Self::Snake,
             "pascalcase" => Self::Pascal,
-            "screaming_snake_case" | "screamingsnakecase" => Self::ScreamingSnake,
+            "screamingsnakecase" => Self::ScreamingSnake,
             _ => syn_err!("invalid inflection: '{}'", value),
         })
     }

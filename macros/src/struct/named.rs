@@ -12,31 +12,25 @@ pub(crate) fn named(s: &ItemStruct, i: &FieldsNamed) -> Result<DerivedTS> {
         .named
         .iter()
         .map(|f| format_field(f, &rename_all))
-        .flat_map(|x| match x {
-            Ok(Some(x)) => Some(Ok(x)),
-            Ok(None) => None,
-            Err(err) => Some(Err(err)),
-        })
+        .flat_map(Result::transpose)
         .collect::<Result<Vec<TokenStream>>>()?;
+    let formatted_fields = quote!(vec![#(#fields),*].join("\n"));
 
     Ok(DerivedTS {
         format: quote! {
             format!(
                 "{{\n{}\n{}}}",
-                vec![#(#fields),*].join("\n"),
+                #formatted_fields,
                 " ".repeat(indent * 4)
             )
         },
-        decl: quote! {
-            format!("export interface {} {}", #name, Self::format(0, true))
-        },
-        flatten: Some(quote! {
-            vec![#(#fields),*].join("\n")
-        }),
+        decl: quote!(format!("export interface {} {}", #name, Self::format(0, true))),
+        flatten: Some(formatted_fields),
         name,
     })
 }
 
+// build an expresion which expands to a string, representing a single field of a struct.
 fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<Option<TokenStream>> {
     let FieldAttr {
         type_override,
@@ -53,14 +47,11 @@ fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<Option
     let ty = &field.ty;
 
     if flatten {
-        if type_override.is_some() {
-            syn_err!("`type` is not compatible with `flatten`")
-        }
-        if rename.is_some() {
-            syn_err!("`rename` is not compatible with `flatten`")
-        }
-        if inline {
-            syn_err!("`inline` is not compatible with `flatten`")
+        match (&type_override, &rename, inline) {
+            (Some(_), _, _) => syn_err!("`type` is not compatible with `flatten`"),
+            (_, Some(_), _) => syn_err!("`rename` is not compatible with `flatten`"),
+            (_, _, true) => syn_err!("`inline` is not compatible with `flatten`"),
+            _ => {}
         }
         return Ok(Some(quote!(<#ty as ts_rs::TS>::flatten_interface(indent))));
     }

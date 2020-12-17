@@ -1,7 +1,8 @@
-use crate::attr::{FieldAttr, StructAttr};
-use crate::DerivedTS;
 use quote::quote;
 use syn::{FieldsUnnamed, ItemStruct, Result};
+
+use crate::attr::{FieldAttr, StructAttr};
+use crate::DerivedTS;
 
 pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
     let StructAttr {
@@ -20,15 +21,12 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         flatten,
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
-    if rename_inner.is_some() {
-        syn_err!("`rename` is not applicable to newtype fields")
-    }
-    if skip {
-        syn_err!("`skip` is not applicable to newtype fields")
-    }
-    if flatten {
-        syn_err!("`flatten` is not applicable to newtype fields")
-    }
+    match (&rename_inner, skip, flatten) {
+        (Some(_), _, _) => syn_err!("`rename` is not applicable to newtype fields"),
+        (_, true, _) => syn_err!("`skip` is not applicable to newtype fields"),
+        (_, _, true) => syn_err!("`flatten` is not applicable to newtype fields"),
+        _ => {}
+    };
 
     let name = rename_outer.unwrap_or_else(|| s.ident.to_string());
     let inner_ty = &inner.ty;
@@ -37,8 +35,8 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         None => quote!(<#inner_ty as ts_rs::TS>::format(0, #inline)),
     };
     Ok(DerivedTS {
-        format: Default::default(),
         decl: quote!(format!("export type {} = {};", #name, #inline_def)),
+        format: inline_def,
         flatten: None,
         name,
     })

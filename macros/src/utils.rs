@@ -1,7 +1,7 @@
-use std::fmt::Display;
-use std::io::Write;
+use std::convert::TryFrom;
 
-use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, WriteColor};
+use syn::Attribute;
+use syn::{Error, Result};
 
 macro_rules! syn_err {
     ($l:literal $(, $a:expr)*) => {
@@ -45,48 +45,94 @@ macro_rules! impl_parse {
     };
 }
 
-// Sadly, it is impossible to raise a warning in a proc macro.
-// This function prints a message which looks like a compiler warning.
+/// Parse all `#[ts(..)]` attributes from the given slice.
+pub fn parse_attrs<'a, A>(attrs: &'a [Attribute]) -> Result<impl Iterator<Item = A>>
+where
+    A: TryFrom<&'a Attribute, Error = Error>,
+{
+    Ok(attrs
+        .iter()
+        .filter(|a| a.path.is_ident("ts"))
+        .map(A::try_from)
+        .collect::<Result<Vec<A>>>()?
+        .into_iter())
+}
+
+/// Parse all `#[serde(..)]` attributes from the given slice.
+#[cfg(feature = "serde-compat")]
 #[allow(unused)]
-pub(crate) fn print_warning(
-    title: impl Display,
-    content: impl Display,
-    note: impl Display,
-) -> std::io::Result<()> {
-    let make_color = |color: Color, bold: bool| {
-        let mut spec = ColorSpec::new();
-        spec.set_fg(Some(color)).set_bold(bold).set_intense(true);
-        spec
-    };
+pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
+    attrs: &'a [Attribute],
+) -> impl Iterator<Item = A> {
+    attrs
+        .iter()
+        .filter(|a| a.path.is_ident("serde"))
+        .flat_map(|attr| match A::try_from(attr) {
+            Ok(attr) => Some(attr),
+            Err(_) => {
+                use quote::ToTokens;
+                warning::print_warning(
+                    "failed to parse serde attribute",
+                    format!("{}", attr.to_token_stream()),
+                    "ts-rs failed to parse this attribute. It will be ignored.",
+                )
+                .unwrap();
+                None
+            }
+        })
+        .collect::<Vec<_>>()
+        .into_iter()
+}
 
-    let yellow_bold = make_color(Color::Yellow, true);
-    let white_bold = make_color(Color::White, true);
-    let white = make_color(Color::White, false);
-    let blue = make_color(Color::Blue, true);
+#[cfg(feature = "serde-compat")]
+mod warning {
+    use std::fmt::Display;
+    use std::io::Write;
 
-    let writer = BufferWriter::stderr(ColorChoice::Always);
-    let mut buffer = writer.buffer();
+    use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, WriteColor};
 
-    buffer.set_color(&yellow_bold)?;
-    write!(&mut buffer, "warning")?;
-    buffer.set_color(&white_bold)?;
-    writeln!(&mut buffer, ": {}", title)?;
+    // Sadly, it is impossible to raise a warning in a proc macro.
+    // This function prints a message which looks like a compiler warning.
+    pub fn print_warning(
+        title: impl Display,
+        content: impl Display,
+        note: impl Display,
+    ) -> std::io::Result<()> {
+        let make_color = |color: Color, bold: bool| {
+            let mut spec = ColorSpec::new();
+            spec.set_fg(Some(color)).set_bold(bold).set_intense(true);
+            spec
+        };
 
-    buffer.set_color(&blue)?;
-    writeln!(&mut buffer, "  | ")?;
+        let yellow_bold = make_color(Color::Yellow, true);
+        let white_bold = make_color(Color::White, true);
+        let white = make_color(Color::White, false);
+        let blue = make_color(Color::Blue, true);
 
-    write!(&mut buffer, "  | ")?;
-    buffer.set_color(&white)?;
-    writeln!(&mut buffer, "{}", content)?;
+        let writer = BufferWriter::stderr(ColorChoice::Auto);
+        let mut buffer = writer.buffer();
 
-    buffer.set_color(&blue)?;
-    writeln!(&mut buffer, "  | ")?;
+        buffer.set_color(&yellow_bold)?;
+        write!(&mut buffer, "warning")?;
+        buffer.set_color(&white_bold)?;
+        writeln!(&mut buffer, ": {}", title)?;
 
-    write!(&mut buffer, "  = ")?;
-    buffer.set_color(&white_bold)?;
-    write!(&mut buffer, "note: ")?;
-    buffer.set_color(&white)?;
-    writeln!(&mut buffer, "{}", note)?;
+        buffer.set_color(&blue)?;
+        writeln!(&mut buffer, "  | ")?;
 
-    writer.print(&buffer)
+        write!(&mut buffer, "  | ")?;
+        buffer.set_color(&white)?;
+        writeln!(&mut buffer, "{}", content)?;
+
+        buffer.set_color(&blue)?;
+        writeln!(&mut buffer, "  | ")?;
+
+        write!(&mut buffer, "  = ")?;
+        buffer.set_color(&white_bold)?;
+        write!(&mut buffer, "note: ")?;
+        buffer.set_color(&white)?;
+        writeln!(&mut buffer, "{}", note)?;
+
+        writer.print(&buffer)
+    }
 }

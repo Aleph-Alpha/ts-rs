@@ -27,14 +27,14 @@ impl DerivedTS {
             decl,
             flatten,
         } = self;
-        let flatten = flatten.unwrap_or_else(|| quote!(panic!("this type can't be flattened")));
+        let flatten = flatten.unwrap_or_else(|| quote!(panic!("this type cannot be flattened")));
 
         quote! {
             impl ts_rs::TS for #rust_ty {
                 fn decl() -> Option<String> { Some({#decl}) }
                 fn format(indent: usize, inline: bool) -> String {
                     match inline {
-                        true => {#format},
+                        true => { #format },
                         false => #name.into()
                     }
                 }

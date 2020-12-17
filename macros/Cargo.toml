@@ -9,7 +9,7 @@ homepage = "https://github.com/Aleph-Alpha/ts-rs"
 repository = "https://github.com/Aleph-Alpha/ts-rs"
 
 [features]
-serde-compat = []
+serde-compat = ["termcolor"]
 
 [lib]
 proc-macro = true
@@ -19,4 +19,4 @@ proc-macro2 = "1"
 quote = "1"
 syn = { version = "1", features = ["full", "extra-traits"] }
 Inflector = "0.11"
-termcolor = "1"
+termcolor = { version = "1", optional = true }

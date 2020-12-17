@@ -16,11 +16,7 @@ pub(crate) fn tuple(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         .unnamed
         .iter()
         .map(format_field)
-        .flat_map(|x| match x {
-            Ok(Some(x)) => Some(Ok(x)),
-            Ok(None) => None,
-            Err(err) => Some(Err(err)),
-        })
+        .flat_map(Result::transpose)
         .collect::<Result<Vec<TokenStream>>>()?;
 
     Ok(DerivedTS {
@@ -44,7 +40,6 @@ fn format_field(field: &Field) -> Result<Option<TokenStream>> {
     if skip {
         return Ok(None);
     }
-
     if rename.is_some() {
         syn_err!("`rename` is not applicable to tuple structs")
     }
