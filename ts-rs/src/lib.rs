@@ -133,6 +133,44 @@ pub trait TS {
     }
 }
 
+/// Expands to a test function which exports typescript bindings to one or multiple files.  
+/// If a file already exists, it will be overriden. 
+/// Missing parent directories of the file(s) will be created.  
+/// Paths are interpreted as being relative to the project root.
+/// ```rust
+/// # use ts_rs::{export, TS};
+/// #[derive(TS)] struct A;
+/// #[derive(TS)] struct B;
+/// #[derive(TS)] struct C;
+///
+/// export! {
+///     A, B => "bindings/a.ts",
+///     C => "bindings/b.ts"
+/// }
+/// ```
+/// When running `cargo test`, bindings for `A`, `B` and `C` will be exported to `bindings/a.ts`
+/// and `bindings/b.ts`.
+#[macro_export]
+macro_rules! export {
+    ($($($p:path),+ => $l:literal),* $(,)?) => {
+        #[cfg(test)]
+        #[test]
+        fn export_typescript() -> std::io::Result<()> {
+            let manifest_var = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+            let manifest_dir = std::path::Path::new(&manifest_var);
+            $({
+                let out = manifest_dir.join($l);
+                std::fs::create_dir_all(out.parent().unwrap())?;
+                std::fs::remove_file(&out)?;
+                $(
+                    <$p as ts_rs::TS>::dump(&out)?;
+                )*
+            })*
+            Ok(())
+        }
+    };
+}
+
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
         impl TS for $ty {
