@@ -96,21 +96,25 @@ pub use ts_rs_macros::TS;
 ///   Skip this variant  
 
 pub trait TS {
-    /// Declaration of this type, e.g. `interface User { user_id: number, ... }`, if available.
-    fn decl() -> Option<String> {
-        None
+    /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
+    /// This function will panic if the type has no declaration.
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name());
     }
 
-    /// Formats this type.
-    /// When using inline, this will return the definition of the type.
-    /// Otherwise, it's name is returned (if the type is named)
-    // TODO: split this into `name(indent)` and `format(indent)`
-    fn format(indent: usize, inline: bool) -> String;
+    /// Name of this type in TypeScript.
+    fn name() -> String;
 
-    /// Flatten an interface declaration.  
-    /// This will panic if this is not an interface.
-    fn flatten_interface(#[allow(unused_variables)] indent: usize) -> String {
-        panic!("this type cannot be inlined!")
+    /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
+    /// This function will panic if the type cannot be inlined.
+    fn inline(#[allow(unused_variables)] indent: usize) -> String {
+        panic!("{} cannot be inlined", Self::name());
+    }
+
+    /// Flatten an type declaration.  
+    /// This function will panic if the type cannot be flattened.
+    fn inline_flattened(#[allow(unused_variables)] indent: usize) -> String {
+        panic!("{} cannot be flattened", Self::name())
     }
 
     /// Dumps the declaration of this type to a file.  
@@ -126,7 +130,7 @@ pub trait TS {
             .truncate(false)
             .open(out)?;
         let mut writer = BufWriter::new(file);
-        writer.write_all(Self::decl().expect("Type has no declaration").as_bytes())?;
+        writer.write_all(Self::decl().as_bytes())?;
         writer.write_all(b"\n\n")?;
         writer.flush()?;
         Ok(())
@@ -134,7 +138,7 @@ pub trait TS {
 }
 
 /// Expands to a test function which exports typescript bindings to one or multiple files.  
-/// If a file already exists, it will be overriden. 
+/// If a file already exists, it will be overriden.
 /// Missing parent directories of the file(s) will be created.  
 /// Paths are interpreted as being relative to the project root.
 /// ```rust
@@ -156,15 +160,19 @@ macro_rules! export {
         #[cfg(test)]
         #[test]
         fn export_typescript() -> std::io::Result<()> {
+            use std::io::Write;
             let manifest_var = std::env::var("CARGO_MANIFEST_DIR").unwrap();
             let manifest_dir = std::path::Path::new(&manifest_var);
             $({
                 let out = manifest_dir.join($l);
                 std::fs::create_dir_all(out.parent().unwrap())?;
-                std::fs::remove_file(&out).ok();
+                let out_file = std::fs::File::create(&out)?;
+                let mut writer = std::io::BufWriter::new(out_file);
                 $(
-                    <$p as ts_rs::TS>::dump(&out)?;
+                    writer.write_all(<$p as ts_rs::TS>::decl().as_bytes())?;
+                    writer.write_all(b"\n\n")?;
                 )*
+                writer.flush()?;
             })*
             Ok(())
         }
@@ -174,8 +182,10 @@ macro_rules! export {
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
         impl TS for $ty {
-            fn decl() -> Option<String> { None }
-            fn format(_: usize, _: bool) -> String {
+            fn name() -> String {
+                $l.to_owned()
+            }
+            fn inline(_: usize) -> String {
                 $l.to_owned()
             }
         }
@@ -185,10 +195,18 @@ macro_rules! impl_primitives {
 macro_rules! impl_tuples {
     ( impl $($i:ident),* ) => {
         impl<$($i: TS),*> TS for ($($i,)*) {
-            fn format(indent: usize, inline: bool) -> String {
+            fn name() -> String {
                 format!(
                     "[{}]",
-                    vec![$($i::format(indent, inline)),*].join(", ")
+                    vec![$($i::name()),*].join(", ")
+                )
+            }
+            fn inline(indent: usize) -> String {
+                format!(
+                    "[{}]",
+                    vec![
+                        $($i::inline(indent)),*
+                    ].join(", ")
                 )
             }
         }
@@ -203,7 +221,15 @@ macro_rules! impl_tuples {
 macro_rules! impl_proxy {
     ($($t:tt)*) => {
         $($t)* {
-            fn format(indent: usize, inline: bool) -> String { T::format(indent, inline) }
+            fn name() -> String {
+                T::name()
+            }
+            fn inline(indent: usize) -> String {
+                T::inline(indent)
+            }
+            fn inline_flattened(indent: usize) -> String {
+                T::inline_flattened(indent)
+            }
         }
     };
 }
@@ -212,7 +238,8 @@ impl_primitives! {
     u8, i8, u16, i16, u32, i32, u64, i64, f32, f64 => "number",
     u128, i128 => "bigint",
     bool => "boolean",
-    String, &str => "string"
+    String, &str => "string",
+    () => "null"
 }
 impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
 impl_proxy!(impl<T: TS> TS for &T);
@@ -224,17 +251,21 @@ impl_proxy!(impl<T: TS> TS for std::cell::Cell<T>);
 impl_proxy!(impl<T: TS> TS for std::cell::RefCell<T>);
 
 impl<T: TS> TS for Option<T> {
-    fn decl() -> Option<String> {
-        None
+    fn name() -> String {
+        format!("{} | null", T::name())
     }
 
-    fn format(indent: usize, inline: bool) -> String {
-        format!("{} | null", T::format(indent, inline))
+    fn inline(indent: usize) -> String {
+        format!("{} | null", T::inline(indent))
     }
 }
 
 impl<T: TS> TS for Vec<T> {
-    fn format(indent: usize, inline: bool) -> String {
-        format!("{}[]", T::format(indent, inline))
+    fn name() -> String {
+        format!("{}[]", T::name())
+    }
+
+    fn inline(indent: usize) -> String {
+        format!("{}[]", T::inline(indent))
     }
 }

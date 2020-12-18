@@ -31,13 +31,14 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
     let name = rename_outer.unwrap_or_else(|| s.ident.to_string());
     let inner_ty = &inner.ty;
     let inline_def = match type_override {
-        Some(o) => quote!(#o.into()),
-        None => quote!(<#inner_ty as ts_rs::TS>::format(0, #inline)),
+        Some(o) => quote!(#o),
+        None if inline => quote!(<#inner_ty as ts_rs::TS>::inline(0)),
+        None => quote!(<#inner_ty as ts_rs::TS>::name()),
     };
     Ok(DerivedTS {
         decl: quote!(format!("export type {} = {};", #name, #inline_def)),
-        format: inline_def,
-        flatten: None,
+        inline: inline_def,
+        inline_flattened: None,
         name,
     })
 }

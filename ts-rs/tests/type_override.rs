@@ -15,7 +15,7 @@ struct Override {
 #[test]
 fn test() {
     assert_eq!(
-        Override::format(0, true),
+        Override::inline(0),
         "\
 {
     a: number,

@@ -20,9 +20,20 @@ pub(crate) fn tuple(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         .collect::<Result<Vec<TokenStream>>>()?;
 
     Ok(DerivedTS {
-        format: quote!(format!("[{}]", vec![#(#fields),*].join(", "))),
-        decl: quote!(format!("export type {} = {};", #name, Self::format(0, true))),
-        flatten: None,
+        inline: quote!{
+            format!(
+                "[{}]", 
+                vec![#(#fields),*].join(", ")
+            )
+        },
+        decl: quote!{
+            format!(
+                "export type {} = {};", 
+                #name, 
+                Self::inline(0)
+            )
+        },
+        inline_flattened: None,
         name,
     })
 }
@@ -48,7 +59,8 @@ fn format_field(field: &Field) -> Result<Option<TokenStream>> {
     }
 
     Ok(Some(match type_override {
-        Some(o) => quote!(#o.into()),
-        None => quote!(<#ty as ts_rs::TS>::format(0, #inline)),
+        Some(o) => quote!(#o.to_owned()),
+        None if inline => quote!(<#ty as ts_rs::TS>::inline(0)),
+        None => quote!(<#ty as ts_rs::TS>::name()),
     }))
 }

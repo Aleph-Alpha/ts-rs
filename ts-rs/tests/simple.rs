@@ -14,7 +14,7 @@ struct Simple {
 #[test]
 fn test_def() {
     assert_eq!(
-        Simple::format(0, true),
+        Simple::inline(0),
         "\
 {
     a: number,
@@ -29,7 +29,7 @@ fn test_def() {
 #[test]
 fn test_indented() {
     assert_eq!(
-        Simple::format(1, true),
+        Simple::inline(1),
         "\
 {
         a: number,
@@ -39,9 +39,4 @@ fn test_indented() {
         e: string | null,
     }"
     )
-}
-
-#[test]
-fn test_name() {
-    assert_eq!(Simple::format(420, false), "Simple")
 }

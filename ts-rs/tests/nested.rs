@@ -25,7 +25,7 @@ struct C {
 #[test]
 fn test_nested() {
     assert_eq!(
-        C::format(0, true),
+        C::inline(0),
         "\
 {
     b1: B,
@@ -43,7 +43,7 @@ fn test_nested() {
 #[test]
 fn test_indented() {
     assert_eq!(
-        C::format(2, true),
+        C::inline(2),
         "\
 {
             b1: B,

@@ -17,15 +17,15 @@ pub(crate) fn named(s: &ItemStruct, i: &FieldsNamed) -> Result<DerivedTS> {
     let formatted_fields = quote!(vec![#(#fields),*].join("\n"));
 
     Ok(DerivedTS {
-        format: quote! {
+        inline: quote! {
             format!(
                 "{{\n{}\n{}}}",
                 #formatted_fields,
                 " ".repeat(indent * 4)
             )
         },
-        decl: quote!(format!("export interface {} {}", #name, Self::format(0, true))),
-        flatten: Some(formatted_fields),
+        decl: quote!(format!("export interface {} {}", #name, Self::inline(0))),
+        inline_flattened: Some(formatted_fields),
         name,
     })
 }
@@ -53,12 +53,17 @@ fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<Option
             (_, _, true) => syn_err!("`inline` is not compatible with `flatten`"),
             _ => {}
         }
-        return Ok(Some(quote!(<#ty as ts_rs::TS>::flatten_interface(indent))));
+        return Ok(Some(quote!(<#ty as ts_rs::TS>::inline_flattened(indent))));
     }
 
     let ty = type_override
         .map(|t| quote!(#t))
-        .unwrap_or_else(|| quote!(<#ty as ts_rs::TS>::format(indent + 1, #inline)));
+        .unwrap_or_else(|| {
+            match inline {
+                true => quote!(<#ty as ts_rs::TS>::inline(indent + 1)),
+                false => quote!(<#ty as ts_rs::TS>::name()),
+            }
+        });
     let name = match (rename, rename_all) {
         (Some(rn), _) => rn,
         (None, Some(rn)) => rn.apply(&field.ident.as_ref().unwrap().to_string()),

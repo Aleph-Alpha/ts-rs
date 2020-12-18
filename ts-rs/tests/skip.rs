@@ -13,7 +13,7 @@ struct Skip {
 #[test]
 fn test_def() {
     assert_eq!(
-        Skip::format(0, true),
+        Skip::inline(0),
         "\
 {
     a: number,

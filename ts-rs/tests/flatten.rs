@@ -25,7 +25,7 @@ struct C {
 #[test]
 fn test_def() {
     assert_eq!(
-        C::format(0, true),
+        C::inline(0),
         "\
 {
     b: {

@@ -12,7 +12,7 @@ struct Rename {
 #[test]
 fn test() {
     assert_eq!(
-        Rename::format(0, true),
+        Rename::inline(0),
         "\
 {
     a: number,

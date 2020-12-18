@@ -51,9 +51,9 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
         .collect::<Result<Vec<String>>>()?;
 
     Ok(DerivedTS {
-        format: quote!(vec![#(#variants),*].join(" | ")),
-        decl: quote!(format!("export type {} = {};", #name, Self::format(0, true))),
-        flatten: None,
+        inline: quote!(vec![#(#variants),*].join(" | ")),
+        decl: quote!(format!("export type {} = {};", #name, Self::inline(0))),
+        inline_flattened: None,
         name,
     })
 }

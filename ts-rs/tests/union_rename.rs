@@ -15,7 +15,7 @@ enum RenamedEnum {
 #[test]
 fn test_simple_enum() {
     assert_eq!(
-        RenamedEnum::decl().unwrap(),
+        RenamedEnum::decl(),
         r#"export type SimpleEnum = "ASDF" | "b" | "c";"#
     )
 }

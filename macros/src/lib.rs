@@ -14,31 +14,41 @@ mod r#struct;
 
 struct DerivedTS {
     name: String,
-    format: TokenStream,
+    inline: TokenStream,
     decl: TokenStream,
-    flatten: Option<TokenStream>,
+    inline_flattened: Option<TokenStream>,
 }
 
 impl DerivedTS {
     fn into_impl(self, rust_ty: Ident) -> TokenStream {
         let DerivedTS {
             name,
-            format,
+            inline,
             decl,
-            flatten,
+            inline_flattened,
         } = self;
-        let flatten = flatten.unwrap_or_else(|| quote!(panic!("this type cannot be flattened")));
+        let inline_flattened = inline_flattened
+            .map(|t| {
+                quote! {
+                    fn inline_flattened(indent: usize) -> String {
+                        #t
+                    }
+                }
+            })
+            .unwrap_or_else(TokenStream::new);
 
         quote! {
             impl ts_rs::TS for #rust_ty {
-                fn decl() -> Option<String> { Some({#decl}) }
-                fn format(indent: usize, inline: bool) -> String {
-                    match inline {
-                        true => { #format },
-                        false => #name.into()
-                    }
+                fn decl() -> String {
+                    #decl
                 }
-                fn flatten_interface(indent: usize) -> String { #flatten }
+                fn name() -> String {
+                    #name.to_owned()
+                }
+                fn inline(indent: usize) -> String {
+                    #inline 
+                }
+                #inline_flattened
             }
         }
     }
