@@ -9,7 +9,7 @@
 //!
 //! ## how?
 //! ts-rs exposes a single trait, `TS`.  
-//! Using a derive macro, you can implement this interface for
+//! Using a derive macro, you can implement this trait for
 //! your types.  
 //! Then, you can use this trait to obtain the TypeScript bindings.
 //! We recommend doing this in your tests. [see the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs)
