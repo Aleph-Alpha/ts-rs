@@ -161,7 +161,7 @@ macro_rules! export {
             $({
                 let out = manifest_dir.join($l);
                 std::fs::create_dir_all(out.parent().unwrap())?;
-                std::fs::remove_file(&out)?;
+                std::fs::remove_file(&out).ok();
                 $(
                     <$p as ts_rs::TS>::dump(&out)?;
                 )*
