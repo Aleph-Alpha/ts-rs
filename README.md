@@ -1,5 +1,6 @@
-# ts-rs
+<img width="150px" src="https://raw.githubusercontent.com/Aleph-Alpha/ts-rs/main/logo.png">  
 
+# ts-rs  
 Generate TypeScript interface/type declarations from rust structs.  
 
 [![Crate](https://img.shields.io/crates/v/ts-rs.svg)](https://crates.io/crates/ts-rs)
