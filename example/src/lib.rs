@@ -45,11 +45,9 @@ mod export_ts {
     }
 }
 
-#[derive(TS)]
-struct X(Vec<Role>);
 // this will export [Role] to `role.ts` and [User] to `user.ts`.
 // `export!` will also take care of including imports in typescript files.
 export! {
     Role => "role.ts",
-    User, X => "user.ts",
+    User => "user.ts",
 }

@@ -90,7 +90,11 @@ pub fn imports<T: TS>(
         .into_iter()
         .flat_map(|(id, name)| {
             let path = exported_files.get(&id)?;
-            Some((import_path(out_path, path), name))
+            if path == out_path {
+                None
+            } else {
+                Some((import_path(out_path, path), name))
+            }
         })
         .for_each(|(path, name)| {
             imports
