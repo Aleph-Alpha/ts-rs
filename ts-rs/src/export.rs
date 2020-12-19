@@ -1,8 +1,9 @@
 use std::any::TypeId;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Component, Path, PathBuf};
 
 use crate::TS;
+use std::fmt::Write;
 
 /// Expands to a test function which exports typescript bindings to one or multiple files when
 /// running `cargo test`.  
@@ -31,12 +32,13 @@ macro_rules! export {
         #[test]
         fn export_typescript() {
             use std::fmt::Write;
+            use std::collections::{HashMap as __HashMap, HashSet as __HashSet};
 
             let manifest_var = std::env::var("CARGO_MANIFEST_DIR").unwrap();
             let manifest_dir = std::path::Path::new(&manifest_var);
 
             // {TypeId} -> {PathBuf}
-            let mut files = std::collections::HashMap::new();
+            let mut files = __HashMap::new();
             $(
                 let path = manifest_dir.join($l);
                 $({
@@ -51,11 +53,13 @@ macro_rules! export {
 
             let mut buffer = String::with_capacity(8192);
             $({
+                let mut imports = __HashMap::<String, __HashSet<String>>::new();
                 buffer.clear();
                 let out = manifest_dir.join($l);
                 std::fs::create_dir_all(out.parent().unwrap())
                     .expect("could not create directory");
-                $( ts_rs::export::write_imports::<$p, _>(&files, &mut buffer, &out); )*
+                $( ts_rs::export::imports::<$p>(&files, &mut imports, &out); )*
+                ts_rs::export::write_imports(imports, &mut buffer);
                 writeln!(&mut buffer).unwrap();
                 $( writeln!(&mut buffer, "{}\n", <$p as ts_rs::TS>::decl()).unwrap(); )*
                 std::fs::write(&out, buffer.trim())
@@ -65,13 +69,23 @@ macro_rules! export {
     };
 }
 
-pub fn write_imports<T: TS, W: std::fmt::Write>(
+pub fn write_imports(imports: HashMap<String, HashSet<String>>, out: &mut impl Write) {
+    for (path, types) in imports {
+        writeln!(
+            out,
+            "import {{{}}} from {:?};",
+            types.into_iter().collect::<Vec<_>>().join(", "),
+            path
+        )
+        .unwrap();
+    }
+}
+
+pub fn imports<T: TS>(
     exported_files: &HashMap<TypeId, PathBuf>,
-    out: &mut W,
+    imports: &mut HashMap<String, HashSet<String>>,
     out_path: &Path,
 ) {
-    // { path } -> { [type] }
-    let mut imports = HashMap::<String, Vec<String>>::new();
     T::dependencies()
         .into_iter()
         .flat_map(|(id, name)| {
@@ -79,14 +93,11 @@ pub fn write_imports<T: TS, W: std::fmt::Write>(
             Some((import_path(out_path, path), name))
         })
         .for_each(|(path, name)| {
-            imports.entry(path).or_insert_with(Vec::new).push(name);
+            imports
+                .entry(path)
+                .or_insert_with(HashSet::<_>::new)
+                .insert(name);
         });
-
-    for (path, mut types) in imports {
-        types.sort();
-        types.dedup();
-        writeln!(out, "import {{{}}} from {:?};", types.join(", "), path).unwrap();
-    }
 }
 
 fn import_path(from: &Path, import: &Path) -> String {
