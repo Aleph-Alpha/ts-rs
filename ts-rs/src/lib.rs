@@ -23,6 +23,10 @@ use std::io::{BufWriter, Write};
 use std::path::Path;
 
 pub use ts_rs_macros::TS;
+use std::any::TypeId;
+
+#[doc(hidden)]
+pub mod export;
 
 /// A type which can be represented in TypeScript.  
 /// Most of the time, you'd want to derive this trait instead of implementing it manually.  
@@ -95,7 +99,7 @@ pub use ts_rs_macros::TS;
 /// - `#[ts(skip)]`:  
 ///   Skip this variant  
 
-pub trait TS {
+pub trait TS: 'static {
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
     /// This function will panic if the type has no declaration.
     fn decl() -> String {
@@ -116,6 +120,11 @@ pub trait TS {
     fn inline_flattened(#[allow(unused_variables)] indent: usize) -> String {
         panic!("{} cannot be flattened", Self::name())
     }
+    
+    /// All type ids and typescript names of the types this type depends on.  
+    /// This is used for resolving imports when using the `export!` macro.  
+    fn dependencies() -> Vec<(TypeId, String)>;
+    
 
     /// Dumps the declaration of this type to a file.  
     /// If the file does not exist, it will be created.  
@@ -137,47 +146,6 @@ pub trait TS {
     }
 }
 
-/// Expands to a test function which exports typescript bindings to one or multiple files.  
-/// If a file already exists, it will be overriden.
-/// Missing parent directories of the file(s) will be created.  
-/// Paths are interpreted as being relative to the project root.
-/// ```rust
-/// # use ts_rs::{export, TS};
-/// #[derive(TS)] struct A;
-/// #[derive(TS)] struct B;
-/// #[derive(TS)] struct C;
-///
-/// export! {
-///     A, B => "bindings/a.ts",
-///     C => "bindings/b.ts"
-/// }
-/// ```
-/// When running `cargo test`, bindings for `A`, `B` and `C` will be exported to `bindings/a.ts`
-/// and `bindings/b.ts`.
-#[macro_export]
-macro_rules! export {
-    ($($($p:path),+ => $l:literal),* $(,)?) => {
-        #[cfg(test)]
-        #[test]
-        fn export_typescript() -> std::io::Result<()> {
-            use std::io::Write;
-            let manifest_var = std::env::var("CARGO_MANIFEST_DIR").unwrap();
-            let manifest_dir = std::path::Path::new(&manifest_var);
-            $({
-                let out = manifest_dir.join($l);
-                std::fs::create_dir_all(out.parent().unwrap())?;
-                let out_file = std::fs::File::create(&out)?;
-                let mut writer = std::io::BufWriter::new(out_file);
-                $(
-                    writer.write_all(<$p as ts_rs::TS>::decl().as_bytes())?;
-                    writer.write_all(b"\n\n")?;
-                )*
-                writer.flush()?;
-            })*
-            Ok(())
-        }
-    };
-}
 
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
@@ -187,6 +155,9 @@ macro_rules! impl_primitives {
             }
             fn inline(_: usize) -> String {
                 $l.to_owned()
+            }
+            fn dependencies() -> Vec<(TypeId, String)> {
+                vec![]
             }
         }
     )*)* };
@@ -209,6 +180,9 @@ macro_rules! impl_tuples {
                     ].join(", ")
                 )
             }
+            fn dependencies() -> Vec<(TypeId, String)> {
+                vec![]
+            }
         }
     };
     ( $i2:ident $(, $i:ident)* ) => {
@@ -230,6 +204,9 @@ macro_rules! impl_proxy {
             fn inline_flattened(indent: usize) -> String {
                 T::inline_flattened(indent)
             }
+            fn dependencies() -> Vec<(TypeId, String)> {
+                T::dependencies()
+            }
         }
     };
 }
@@ -238,15 +215,14 @@ impl_primitives! {
     u8, i8, u16, i16, u32, i32, u64, i64, f32, f64 => "number",
     u128, i128 => "bigint",
     bool => "boolean",
-    String, &str => "string",
+    String, &'static str => "string",
     () => "null"
 }
 impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
-impl_proxy!(impl<T: TS> TS for &T);
 impl_proxy!(impl<T: TS> TS for Box<T>);
 impl_proxy!(impl<T: TS> TS for std::sync::Arc<T>);
 impl_proxy!(impl<T: TS> TS for std::rc::Rc<T>);
-impl_proxy!(impl<'a, T: TS + ToOwned> TS for std::borrow::Cow<'a, T>);
+impl_proxy!(impl<T: TS + ToOwned> TS for std::borrow::Cow<'static, T>);
 impl_proxy!(impl<T: TS> TS for std::cell::Cell<T>);
 impl_proxy!(impl<T: TS> TS for std::cell::RefCell<T>);
 
@@ -258,6 +234,10 @@ impl<T: TS> TS for Option<T> {
     fn inline(indent: usize) -> String {
         format!("{} | null", T::inline(indent))
     }
+
+    fn dependencies() -> Vec<(TypeId, String)> {
+        vec![(TypeId::of::<T>(), T::name())]
+    }
 }
 
 impl<T: TS> TS for Vec<T> {
@@ -267,5 +247,9 @@ impl<T: TS> TS for Vec<T> {
 
     fn inline(indent: usize) -> String {
         format!("{}[]", T::inline(indent))
+    }
+
+    fn dependencies() -> Vec<(TypeId, String)> {
+        vec![(TypeId::of::<T>(), T::name())]
     }
 }

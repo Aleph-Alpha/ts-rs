@@ -40,5 +40,13 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         inline: inline_def,
         inline_flattened: None,
         name,
+        dependencies: match inline {
+            true => quote! {
+                <#inner_ty as ts_rs::TS>::dependencies() 
+            },
+            false => quote!{
+                vec![(std::any::TypeId::of::<#inner_ty>(), <#inner_ty as ts_rs::TS>::name())]
+            }
+        }
     })
 }

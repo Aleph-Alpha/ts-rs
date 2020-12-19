@@ -8,30 +8,41 @@ use crate::DerivedTS;
 pub(crate) fn named(s: &ItemStruct, i: &FieldsNamed) -> Result<DerivedTS> {
     let StructAttr { rename_all, rename } = StructAttr::from_attrs(&s.attrs)?;
     let name = rename.unwrap_or_else(|| s.ident.to_string());
-    let fields = i
-        .named
-        .iter()
-        .map(|f| format_field(f, &rename_all))
-        .flat_map(Result::transpose)
-        .collect::<Result<Vec<TokenStream>>>()?;
-    let formatted_fields = quote!(vec![#(#fields),*].join("\n"));
+
+    let mut formatted_fields = vec![];
+    let mut dependencies = vec![];
+    for field in &i.named {
+        format_field(&mut formatted_fields, &mut dependencies, field, &rename_all)?;
+    }
+
+    let fields = quote!(vec![#(#formatted_fields),*].join("\n"));
 
     Ok(DerivedTS {
         inline: quote! {
             format!(
                 "{{\n{}\n{}}}",
-                #formatted_fields,
+                #fields,
                 " ".repeat(indent * 4)
             )
         },
         decl: quote!(format!("export interface {} {}", #name, Self::inline(0))),
-        inline_flattened: Some(formatted_fields),
+        inline_flattened: Some(fields),
         name,
+        dependencies: quote! {
+            let mut dependencies = vec![];
+            #( #dependencies )*
+            dependencies
+        },
     })
 }
 
 // build an expresion which expands to a string, representing a single field of a struct.
-fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<Option<TokenStream>> {
+fn format_field(
+    formatted_fields: &mut Vec<TokenStream>,
+    dependencies: &mut Vec<TokenStream>,
+    field: &Field,
+    rename_all: &Option<Inflection>,
+) -> Result<()> {
     let FieldAttr {
         type_override,
         rename,
@@ -41,7 +52,7 @@ fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<Option
     } = FieldAttr::from_attrs(&field.attrs)?;
 
     if skip {
-        return Ok(None);
+        return Ok(());
     }
 
     let ty = &field.ty;
@@ -53,16 +64,17 @@ fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<Option
             (_, _, true) => syn_err!("`inline` is not compatible with `flatten`"),
             _ => {}
         }
-        return Ok(Some(quote!(<#ty as ts_rs::TS>::inline_flattened(indent))));
+
+        formatted_fields.push(quote!(<#ty as ts_rs::TS>::inline_flattened(indent)));
+        dependencies.push(quote!(dependencies.append(&mut <#ty as ts_rs::TS>::dependencies());));
+        return Ok(());
     }
 
-    let ty = type_override
+    let formatted_ty = type_override
         .map(|t| quote!(#t))
-        .unwrap_or_else(|| {
-            match inline {
-                true => quote!(<#ty as ts_rs::TS>::inline(indent + 1)),
-                false => quote!(<#ty as ts_rs::TS>::name()),
-            }
+        .unwrap_or_else(|| match inline {
+            true => quote!(<#ty as ts_rs::TS>::inline(indent + 1)),
+            false => quote!(<#ty as ts_rs::TS>::name()),
         });
     let name = match (rename, rename_all) {
         (Some(rn), _) => rn,
@@ -70,7 +82,14 @@ fn format_field(field: &Field, rename_all: &Option<Inflection>) -> Result<Option
         (None, None) => field.ident.as_ref().unwrap().to_string(),
     };
 
-    Ok(Some(quote! {
-        format!("{}{}: {},", " ".repeat((indent + 1) * 4), #name, #ty)
-    }))
+    dependencies.push(match inline {
+        false => quote!( dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name())); ),
+        true => quote!( dependencies.append(&mut <#ty as ts_rs::TS>::dependencies()); ),
+    });
+
+    formatted_fields.push(quote! {
+        format!("{}{}: {},", " ".repeat((indent + 1) * 4), #name, #formatted_ty)
+    });
+
+    Ok(())
 }

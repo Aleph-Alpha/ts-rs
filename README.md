@@ -23,11 +23,11 @@ We recommend doing this in your tests. [see the example](https://github.com/Alep
 ## get started
 ```toml
 [dependencies]
-ts-rs = "1.0"
+ts-rs = "2.0"
 ```
 
 ```rust
-use ts_rs::TS;
+use ts_rs::{TS, export};
 
 #[derive(TS)]
 struct User {
@@ -36,12 +36,11 @@ struct User {
     last_name: String,
 }
 
-#[test]
-fn export_ts() {
-    std::fs::remove_file("bindings.ts").ok();
-    User::dump("bindings.ts").unwrap();
+export! {
+    User => "bindings.ts"
 }
 ```
+When running `cargo test`, the TypeScript bindings will be exported to the file `bindings.ts`.
 
 ## [example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs)
 
@@ -50,6 +49,8 @@ fn export_ts() {
 - generate interface declarations from rust structs
 - generate union declarations from rust enums
 - inline types
+- flatten structs/interfaces
+- generate necessary imports when exporting to multiple files
 
 ## serde compatibility layer
 With the `serde-compat` feature enabled, ts-rs tries parsing serde attributes.  
@@ -59,5 +60,6 @@ Please note that not all serde attributes are supported yet.
 
 - [x] serde compatibility layer
 - [x] documentation
-- [ ] move enum representations
-- [ ] more customization
+- [x] use typescript types across files
+- [ ] more enum representations
+- [ ] don't require `'static`

@@ -44,7 +44,9 @@ mod export_ts {
     }
 }
 
-// using the export! macro:
+// this will export [Role] to `role.ts` and [User] to `user.ts`.  
+// `export!` will also take care of including imports in typescript files.
 export! {
-    Role, User => "bindings2.ts"
+    Role => "role.ts",
+    User => "user.ts",
 }

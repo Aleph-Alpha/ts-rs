@@ -12,33 +12,42 @@ pub(crate) fn tuple(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
     }
 
     let name = rename.unwrap_or_else(|| s.ident.to_string());
-    let fields = i
-        .unnamed
-        .iter()
-        .map(format_field)
-        .flat_map(Result::transpose)
-        .collect::<Result<Vec<TokenStream>>>()?;
-
+    
+    let mut formatted_fields = Vec::new();
+    let mut dependenciees = Vec::new();
+    for field in &i.unnamed {
+        format_field(&mut formatted_fields, &mut dependenciees, field)?;
+    }
+    
     Ok(DerivedTS {
-        inline: quote!{
+        inline: quote! {
             format!(
-                "[{}]", 
-                vec![#(#fields),*].join(", ")
+                "[{}]",
+                vec![#(#formatted_fields),*].join(", ")
             )
         },
-        decl: quote!{
+        decl: quote! {
             format!(
-                "export type {} = {};", 
-                #name, 
+                "export type {} = {};",
+                #name,
                 Self::inline(0)
             )
         },
         inline_flattened: None,
         name,
+        dependencies: quote! {
+            let mut dependencies = vec![];
+            #( #dependenciees )*
+            dependencies
+        },
     })
 }
 
-fn format_field(field: &Field) -> Result<Option<TokenStream>> {
+fn format_field(
+    formatted_fields: &mut Vec<TokenStream>,
+    dependencies: &mut Vec<TokenStream>,
+    field: &Field,
+) -> Result<()> {
     let ty = &field.ty;
     let FieldAttr {
         type_override,
@@ -49,7 +58,7 @@ fn format_field(field: &Field) -> Result<Option<TokenStream>> {
     } = FieldAttr::from_attrs(&field.attrs)?;
 
     if skip {
-        return Ok(None);
+        return Ok(());
     }
     if rename.is_some() {
         syn_err!("`rename` is not applicable to tuple structs")
@@ -58,9 +67,21 @@ fn format_field(field: &Field) -> Result<Option<TokenStream>> {
         syn_err!("`flatten` is not applicable to newtype fields")
     }
 
-    Ok(Some(match type_override {
+    formatted_fields.push(match type_override {
         Some(o) => quote!(#o.to_owned()),
         None if inline => quote!(<#ty as ts_rs::TS>::inline(0)),
         None => quote!(<#ty as ts_rs::TS>::name()),
-    }))
+    });
+    
+    dependencies.push(match inline {
+        false => quote!{ 
+            dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name()));
+        },
+        true => quote!{ 
+            dependencies.append(&mut (<#ty as ts_rs::TS>::dependencies()));
+        }
+    });
+        
+        
+    Ok(())
 }
