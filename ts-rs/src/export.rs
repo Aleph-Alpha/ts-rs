@@ -82,7 +82,9 @@ pub fn write_imports<T: TS, W: std::fmt::Write>(
             imports.entry(path).or_insert_with(Vec::new).push(name);
         });
 
-    for (path, types) in imports {
+    for (path, mut types) in imports {
+        types.sort();
+        types.dedup();
         writeln!(out, "import {{{}}} from {:?};", types.join(", "), path).unwrap();
     }
 }

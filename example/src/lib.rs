@@ -44,16 +44,9 @@ mod export_ts {
     }
 }
 
-#[derive(TS)] struct A;
-#[derive(TS)] struct B((A, u8));
-
-
-
 // this will export [Role] to `role.ts` and [User] to `user.ts`.
 // `export!` will also take care of including imports in typescript files.
 export! {
     Role => "role.ts",
     User => "user.ts",
-    A => "a.ts",
-    B => "b.ts"
 }
