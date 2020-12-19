@@ -26,6 +26,7 @@ struct User {
     first_name: String,
     last_name: String,
     role: Role,
+    role2: Vec<Role>,
     #[ts(inline)]
     gender: Gender,
 }
@@ -44,9 +45,11 @@ mod export_ts {
     }
 }
 
+#[derive(TS)]
+struct X(Vec<Role>);
 // this will export [Role] to `role.ts` and [User] to `user.ts`.
 // `export!` will also take care of including imports in typescript files.
 export! {
     Role => "role.ts",
-    User => "user.ts",
+    User, X => "user.ts",
 }
