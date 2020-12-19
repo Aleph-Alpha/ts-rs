@@ -54,6 +54,9 @@ impl DerivedTS {
                 fn dependencies() -> Vec<(std::any::TypeId, String)> {
                     #dependencies
                 }
+                fn transparent() -> bool {
+                    false
+                }
             }
         }
     }

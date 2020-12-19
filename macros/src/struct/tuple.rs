@@ -76,7 +76,11 @@ fn format_field(
     dependencies.push(match (inline, &type_override) {
         (_, Some(_)) => quote!(),
         (false, _) => quote! {
-            dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name()));
+            if <#ty as ts_rs::TS>::transparent() {
+                dependencies.append(&mut <#ty as ts_rs::TS>::dependencies());
+            } else {
+                dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name()));
+            }
         },
         (true, _) => quote! {
             dependencies.append(&mut (<#ty as ts_rs::TS>::dependencies()));

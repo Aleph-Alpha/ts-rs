@@ -72,8 +72,14 @@ fn format_field(
 
     if type_override.is_none() {
         dependencies.push(match inline {
-            false => quote!( dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name())); ),
-            true => quote!( dependencies.append(&mut <#ty as ts_rs::TS>::dependencies()); ),
+            true => quote!{ dependencies.append(&mut <#ty as ts_rs::TS>::dependencies()); },
+            false => quote!{ 
+                if <#ty as ts_rs::TS>::transparent() {
+                    dependencies.append(&mut <#ty as ts_rs::TS>::dependencies());
+                } else {
+                    dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name())); 
+                }
+            },
         });
     }
 

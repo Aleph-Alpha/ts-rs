@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs"
-version = "2.0.0"
+version = "2.1.0"
 authors = ["Moritz Bischof <moritz.bischof@aleph-alpha.de>"]
 edition = "2018"
 license = "MIT"
@@ -12,4 +12,4 @@ repository = "https://github.com/Aleph-Alpha/ts-rs"
 serde-compat = ["ts-rs-macros/serde-compat"]
 
 [dependencies]
-ts-rs-macros = { version = "2.0", path = "../macros" }
+ts-rs-macros = { version = "2.1", path = "../macros" }

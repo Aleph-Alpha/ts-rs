@@ -124,6 +124,10 @@ pub trait TS: 'static {
     /// All type ids and typescript names of the types this type depends on.  
     /// This is used for resolving imports when using the `export!` macro.  
     fn dependencies() -> Vec<(TypeId, String)>;
+    
+    /// `true` if this is a transparent type, e.g tuples or a list.  
+    /// This is used for resolving imports when using the `export!` macro.
+    fn transparent() -> bool;
 
     /// Dumps the declaration of this type to a file.  
     /// If the file does not exist, it will be created.  
@@ -157,6 +161,9 @@ macro_rules! impl_primitives {
             fn dependencies() -> Vec<(TypeId, String)> {
                 vec![]
             }
+            fn transparent() -> bool {
+                false
+            }
         }
     )*)* };
 }
@@ -179,7 +186,10 @@ macro_rules! impl_tuples {
                 )
             }
             fn dependencies() -> Vec<(TypeId, String)> {
-                vec![]
+                vec![$((TypeId::of::<$i>(), $i::name())),*]
+            }
+            fn transparent() -> bool {
+                true
             }
         }
     };
@@ -204,6 +214,9 @@ macro_rules! impl_proxy {
             }
             fn dependencies() -> Vec<(TypeId, String)> {
                 T::dependencies()
+            }
+            fn transparent() -> bool {
+                true
             }
         }
     };
@@ -236,6 +249,10 @@ impl<T: TS> TS for Option<T> {
     fn dependencies() -> Vec<(TypeId, String)> {
         vec![(TypeId::of::<T>(), T::name())]
     }
+
+    fn transparent() -> bool {
+        true
+    }
 }
 
 impl<T: TS> TS for Vec<T> {
@@ -249,5 +266,9 @@ impl<T: TS> TS for Vec<T> {
 
     fn dependencies() -> Vec<(TypeId, String)> {
         vec![(TypeId::of::<T>(), T::name())]
+    }
+
+    fn transparent() -> bool {
+        true
     }
 }

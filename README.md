@@ -24,7 +24,7 @@ We recommend doing this in your tests. [see the example](https://github.com/Alep
 ## get started
 ```toml
 [dependencies]
-ts-rs = "2.0"
+ts-rs = "2.1"
 ```
 
 ```rust
