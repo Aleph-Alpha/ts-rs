@@ -70,6 +70,13 @@ fn format_field(
         return Ok(());
     }
 
+    if type_override.is_none() {
+        dependencies.push(match inline {
+            false => quote!( dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name())); ),
+            true => quote!( dependencies.append(&mut <#ty as ts_rs::TS>::dependencies()); ),
+        });
+    }
+
     let formatted_ty = type_override
         .map(|t| quote!(#t))
         .unwrap_or_else(|| match inline {
@@ -81,11 +88,6 @@ fn format_field(
         (None, Some(rn)) => rn.apply(&field.ident.as_ref().unwrap().to_string()),
         (None, None) => field.ident.as_ref().unwrap().to_string(),
     };
-
-    dependencies.push(match inline {
-        false => quote!( dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name())); ),
-        true => quote!( dependencies.append(&mut <#ty as ts_rs::TS>::dependencies()); ),
-    });
 
     formatted_fields.push(quote! {
         format!("{}{}: {},", " ".repeat((indent + 1) * 4), #name, #formatted_ty)

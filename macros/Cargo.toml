@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs-macros"
-version = "2.0.0"
+version = "2.0.1"
 authors = ["Moritz Bischof <moritz.bischof@aleph-alpha.de>"]
 edition = "2018"
 description = "derive macro for ts-rs"

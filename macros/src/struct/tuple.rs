@@ -67,17 +67,18 @@ fn format_field(
         syn_err!("`flatten` is not applicable to newtype fields")
     }
 
-    formatted_fields.push(match type_override {
+    formatted_fields.push(match &type_override {
         Some(o) => quote!(#o.to_owned()),
         None if inline => quote!(<#ty as ts_rs::TS>::inline(0)),
         None => quote!(<#ty as ts_rs::TS>::name()),
     });
 
-    dependencies.push(match inline {
-        false => quote! {
+    dependencies.push(match (inline, &type_override) {
+        (_, Some(_)) => quote!(),
+        (false, _) => quote! {
             dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name()));
         },
-        true => quote! {
+        (true, _) => quote! {
             dependencies.append(&mut (<#ty as ts_rs::TS>::dependencies()));
         },
     });

@@ -30,7 +30,7 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
 
     let name = rename_outer.unwrap_or_else(|| s.ident.to_string());
     let inner_ty = &inner.ty;
-    let inline_def = match type_override {
+    let inline_def = match &type_override {
         Some(o) => quote!(#o),
         None if inline => quote!(<#inner_ty as ts_rs::TS>::inline(0)),
         None => quote!(<#inner_ty as ts_rs::TS>::name()),
@@ -40,11 +40,12 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         inline: inline_def,
         inline_flattened: None,
         name,
-        dependencies: match inline {
-            true => quote! {
+        dependencies: match (inline, &type_override) {
+            (_, Some(_)) => quote!(vec![]),
+            (true, _) => quote! {
                 <#inner_ty as ts_rs::TS>::dependencies()
             },
-            false => quote! {
+            (false, _) => quote! {
                 vec![(std::any::TypeId::of::<#inner_ty>(), <#inner_ty as ts_rs::TS>::name())]
             },
         },
