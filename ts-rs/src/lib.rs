@@ -124,7 +124,7 @@ pub trait TS: 'static {
     /// All type ids and typescript names of the types this type depends on.  
     /// This is used for resolving imports when using the `export!` macro.  
     fn dependencies() -> Vec<(TypeId, String)>;
-    
+
     /// `true` if this is a transparent type, e.g tuples or a list.  
     /// This is used for resolving imports when using the `export!` macro.
     fn transparent() -> bool;
