@@ -30,7 +30,11 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
     })
 }
 
-fn format_variant(formatted_variants: &mut Vec<String>, rename_all: &Option<Inflection>, variant: &Variant) -> Result<()> {
+fn format_variant(
+    formatted_variants: &mut Vec<String>,
+    rename_all: &Option<Inflection>,
+    variant: &Variant,
+) -> Result<()> {
     let FieldAttr {
         type_override,
         rename,
@@ -38,7 +42,7 @@ fn format_variant(formatted_variants: &mut Vec<String>, rename_all: &Option<Infl
         skip,
         flatten,
     } = FieldAttr::from_attrs(&variant.attrs)?;
-    
+
     match (skip, &type_override, inline, flatten) {
         (true, ..) => return Ok(()),
         (_, Some(_), ..) => syn_err!("`type_override` is not applicable to enum variants"),
@@ -52,7 +56,7 @@ fn format_variant(formatted_variants: &mut Vec<String>, rename_all: &Option<Infl
         (None, None) => variant.ident.to_string(),
         (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
     };
-    
+
     formatted_variants.push(format!("{:?}", name));
     Ok(())
 }

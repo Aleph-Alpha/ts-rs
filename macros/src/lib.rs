@@ -17,7 +17,7 @@ struct DerivedTS {
     inline: TokenStream,
     decl: TokenStream,
     inline_flattened: Option<TokenStream>,
-    dependencies: TokenStream
+    dependencies: TokenStream,
 }
 
 impl DerivedTS {
@@ -27,7 +27,7 @@ impl DerivedTS {
             inline,
             decl,
             inline_flattened,
-            dependencies
+            dependencies,
         } = self;
         let inline_flattened = inline_flattened
             .map(|t| {
@@ -48,7 +48,7 @@ impl DerivedTS {
                     #name.to_owned()
                 }
                 fn inline(indent: usize) -> String {
-                    #inline 
+                    #inline
                 }
                 #inline_flattened
                 fn dependencies() -> Vec<(std::any::TypeId, String)> {

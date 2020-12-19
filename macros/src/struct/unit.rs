@@ -16,6 +16,6 @@ pub(crate) fn unit(s: &ItemStruct) -> Result<DerivedTS> {
         decl: quote!(format!("export type {} = null;", #name)),
         inline_flattened: None,
         name,
-        dependencies: quote!(vec![])
+        dependencies: quote!(vec![]),
     })
 }

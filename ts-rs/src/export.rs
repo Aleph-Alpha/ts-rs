@@ -4,9 +4,9 @@ use std::path::{Component, Path, PathBuf};
 
 use crate::TS;
 
-/// Expands to a test function which exports typescript bindings to one or multiple files when 
+/// Expands to a test function which exports typescript bindings to one or multiple files when
 /// running `cargo test`.  
-/// If a type depends on an other type which is exported to a different file, an appropriate import 
+/// If a type depends on an other type which is exported to a different file, an appropriate import
 /// will be included.  
 /// If a file already exists, it will be overriden.  
 /// Missing parent directories of the file(s) will be created.  
@@ -34,8 +34,8 @@ macro_rules! export {
 
             let manifest_var = std::env::var("CARGO_MANIFEST_DIR").unwrap();
             let manifest_dir = std::path::Path::new(&manifest_var);
-            
-            // {TypeId} -> {PathBuf} 
+
+            // {TypeId} -> {PathBuf}
             let mut files = std::collections::HashMap::new();
             $(
                 let path = manifest_dir.join($l);
@@ -81,15 +81,15 @@ pub fn write_imports<T: TS, W: std::fmt::Write>(
         .for_each(|(path, name)| {
             imports.entry(path).or_insert_with(Vec::new).push(name);
         });
-    
+
     for (path, types) in imports {
         writeln!(out, "import {{{}}} from {:?};", types.join(", "), path).unwrap();
     }
 }
 
 fn import_path(from: &Path, import: &Path) -> String {
-    let rel_path = diff_paths(import, from.parent().unwrap())
-        .expect("failed to calculate import path");
+    let rel_path =
+        diff_paths(import, from.parent().unwrap()).expect("failed to calculate import path");
     match rel_path.components().next() {
         Some(Component::Normal(_)) => format!("./{}", rel_path.to_string_lossy()),
         _ => rel_path.to_string_lossy().into(),
@@ -111,9 +111,9 @@ fn import_path(from: &Path, import: &Path) -> String {
 // Adapted from rustc's path_relative_from
 // https://github.com/rust-lang/rust/blob/e1d0de82cc40b666b88d4a6d2c9dcbc81d7ed27f/src/librustc_back/rpath.rs#L116-L158
 fn diff_paths<P, B>(path: P, base: B) -> Option<PathBuf>
-    where
-        P: AsRef<Path>,
-        B: AsRef<Path>,
+where
+    P: AsRef<Path>,
+    B: AsRef<Path>,
 {
     let path = path.as_ref();
     let base = base.as_ref();

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use serde::Serialize;
-use ts_rs::{TS, export};
+use ts_rs::{export, TS};
 
 #[derive(Serialize, TS)]
 #[ts(rename_all = "lowercase")]
@@ -44,7 +44,7 @@ mod export_ts {
     }
 }
 
-// this will export [Role] to `role.ts` and [User] to `user.ts`.  
+// this will export [Role] to `role.ts` and [User] to `user.ts`.
 // `export!` will also take care of including imports in typescript files.
 export! {
     Role => "role.ts",

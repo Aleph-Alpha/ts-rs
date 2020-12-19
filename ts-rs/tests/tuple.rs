@@ -5,10 +5,7 @@ use ts_rs::TS;
 #[test]
 fn test_tuple() {
     type Tuple = (String, i32, (i32, i32));
-    assert_eq!(
-        "[string, number, [number, number]]",
-        Tuple::name()
-    );
+    assert_eq!("[string, number, [number, number]]", Tuple::name());
 }
 
 #[test]

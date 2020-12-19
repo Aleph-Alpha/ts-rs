@@ -22,8 +22,8 @@ use std::fs::OpenOptions;
 use std::io::{BufWriter, Write};
 use std::path::Path;
 
-pub use ts_rs_macros::TS;
 use std::any::TypeId;
+pub use ts_rs_macros::TS;
 
 #[doc(hidden)]
 pub mod export;
@@ -120,11 +120,10 @@ pub trait TS: 'static {
     fn inline_flattened(#[allow(unused_variables)] indent: usize) -> String {
         panic!("{} cannot be flattened", Self::name())
     }
-    
+
     /// All type ids and typescript names of the types this type depends on.  
     /// This is used for resolving imports when using the `export!` macro.  
     fn dependencies() -> Vec<(TypeId, String)>;
-    
 
     /// Dumps the declaration of this type to a file.  
     /// If the file does not exist, it will be created.  
@@ -145,7 +144,6 @@ pub trait TS: 'static {
         Ok(())
     }
 }
-
 
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(

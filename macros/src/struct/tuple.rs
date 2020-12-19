@@ -12,13 +12,13 @@ pub(crate) fn tuple(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
     }
 
     let name = rename.unwrap_or_else(|| s.ident.to_string());
-    
+
     let mut formatted_fields = Vec::new();
     let mut dependenciees = Vec::new();
     for field in &i.unnamed {
         format_field(&mut formatted_fields, &mut dependenciees, field)?;
     }
-    
+
     Ok(DerivedTS {
         inline: quote! {
             format!(
@@ -72,16 +72,15 @@ fn format_field(
         None if inline => quote!(<#ty as ts_rs::TS>::inline(0)),
         None => quote!(<#ty as ts_rs::TS>::name()),
     });
-    
+
     dependencies.push(match inline {
-        false => quote!{ 
+        false => quote! {
             dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name()));
         },
-        true => quote!{ 
+        true => quote! {
             dependencies.append(&mut (<#ty as ts_rs::TS>::dependencies()));
-        }
+        },
     });
-        
-        
+
     Ok(())
 }
