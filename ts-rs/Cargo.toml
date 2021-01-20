@@ -13,3 +13,4 @@ serde-compat = ["ts-rs-macros/serde-compat"]
 
 [dependencies]
 ts-rs-macros = { version = "2.1.2", path = "../macros" }
+serde = { version = "1.0", features = ["derive"] }

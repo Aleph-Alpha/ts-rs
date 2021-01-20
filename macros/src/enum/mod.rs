@@ -5,7 +5,7 @@ use crate::attr::{EnumAttr, FieldAttr, Inflection};
 use crate::DerivedTS;
 
 pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
-    let EnumAttr { rename_all, rename } = EnumAttr::from_attrs(&s.attrs)?;
+    let EnumAttr { rename_all, rename, tag } = EnumAttr::from_attrs(&s.attrs)?;
 
     if let Some(v) = s
         .variants
@@ -18,7 +18,7 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
     let name = rename.unwrap_or_else(|| s.ident.to_string());
     let mut formatted_variants = vec![];
     for variant in &s.variants {
-        format_variant(&mut formatted_variants, &rename_all, &variant)?;
+        format_variant(&mut formatted_variants, &tag, &rename_all, &variant)?;
     }
 
     Ok(DerivedTS {
@@ -32,6 +32,7 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
 
 fn format_variant(
     formatted_variants: &mut Vec<String>,
+    tag: &Option<String>,
     rename_all: &Option<Inflection>,
     variant: &Variant,
 ) -> Result<()> {
@@ -56,7 +57,12 @@ fn format_variant(
         (None, None) => variant.ident.to_string(),
         (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
     };
-
-    formatted_variants.push(format!("{:?}", name));
+    
+    formatted_variants.push( match tag {
+        Some(tag_name) => {
+            format!("{{{}: {:?}}}", tag_name, name)
+        },
+        None => format!("{:?}", name)
+    });
     Ok(())
 }
