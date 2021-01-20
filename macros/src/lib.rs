@@ -9,7 +9,6 @@ use syn::{Item, Result};
 #[macro_use]
 mod utils;
 mod attr;
-mod r#enum;
 mod r#struct;
 
 struct DerivedTS {
@@ -77,7 +76,7 @@ fn entry(input: proc_macro::TokenStream) -> Result<TokenStream> {
     let input = syn::parse::<Item>(input)?;
     let (ts, ident) = match input {
         Item::Struct(s) => (r#struct::struct_def(&s)?, s.ident),
-        Item::Enum(e) => (r#enum::r#enum(&e)?, e.ident),
+        Item::Enum(e) => (r#struct::r#enum(&e)?, e.ident),
         _ => syn_err!(input.span(); "unsupported item"),
     };
 
