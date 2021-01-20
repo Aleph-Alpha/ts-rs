@@ -9,7 +9,7 @@ use syn::{Item, Result};
 #[macro_use]
 mod utils;
 mod attr;
-mod r#struct;
+mod types;
 
 struct DerivedTS {
     name: String,
@@ -75,8 +75,8 @@ pub fn typescript(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 fn entry(input: proc_macro::TokenStream) -> Result<TokenStream> {
     let input = syn::parse::<Item>(input)?;
     let (ts, ident) = match input {
-        Item::Struct(s) => (r#struct::struct_def(&s)?, s.ident),
-        Item::Enum(e) => (r#struct::r#enum(&e)?, e.ident),
+        Item::Struct(s) => (types::struct_def(&s)?, s.ident),
+        Item::Enum(e) => (types::r#enum(&e)?, e.ident),
         _ => syn_err!(input.span(); "unsupported item"),
     };
 
