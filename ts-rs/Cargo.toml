@@ -8,6 +8,8 @@ description = "generate typescript bindings from rust types"
 homepage = "https://github.com/Aleph-Alpha/ts-rs"
 repository = "https://github.com/Aleph-Alpha/ts-rs"
 
+[dev-dependencies]
+serde = { version = "1.0", features = ["derive"] }
+
 [dependencies]
 ts-rs-macros = { version = "2.1.2", path = "../macros", features=["serde-compat"]}
-serde = { version = "1.0", features = ["derive"] }
