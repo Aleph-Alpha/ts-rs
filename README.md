@@ -62,5 +62,5 @@ Please note that not all serde attributes are supported yet.
 - [x] serde compatibility layer
 - [x] documentation
 - [x] use typescript types across files
-- [ ] more enum representations
+- [x] more enum representations
 - [ ] don't require `'static`
