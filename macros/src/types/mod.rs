@@ -78,35 +78,20 @@ fn format_variant(
         (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
     };
 
-    let inline_type = match &variant.fields {
-        Fields::Unit => quote!("null".to_string()),
-        Fields::Unnamed(unnamed) => {
-            let ty = &unnamed.unnamed;
-            if ty.len() > 1 {
-                quote!{<#unnamed as ts_rs::TS>::inline(0)}
-            } else {
-                let inner = &ty.first().unwrap().ty;
-                quote!{<#inner as ts_rs::TS>::inline(0)}
-            }
-        },
-        Fields::Named(named) => {
-            let ty = named::named(&name, &enum_attr.rename_all, &named)?.inline;            
-            quote!(#ty)
-        }     
-    };
+    let inline_type = type_def(&name, &None, &variant.fields)?.inline;
+    
     
 
     formatted_variants.push(match &enum_attr.tag {
         Some(tag) => match &enum_attr.content {
             Some(content) => {
                 quote!(format!("{{{}: \"{}\", {}: {}}}", #tag, #name, #content, #inline_type))
-
             },
             None => panic!("Serde enums with tag discriminators should also have content keys")
         },
         None => match &variant.fields {
             Fields::Unit => quote!(format!("\"{}\"", #name)),
-            _ => inline_type
+            _ => quote!(#inline_type)
         }
     });
     Ok(())

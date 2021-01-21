@@ -17,7 +17,8 @@ enum ComplexEnum {
     A,
     B{foo: String, bar: f64},
     W(SimpleEnum),
-    F{nested: SimpleEnum}
+    F{nested: SimpleEnum},
+    T(i32, SimpleEnum)
 }
 
 
@@ -36,10 +37,10 @@ r#"export type ComplexEnum = {kind: "A", data: null} |
     foo: string,
     bar: number,
 }} |
-{kind: "W", data: {kind: "A", d: null} |
-{kind: "B", d: null}} |
+{kind: "W", data: SimpleEnum} |
 {kind: "F", data: {
     nested: SimpleEnum,
-}};"#
+}} |
+{kind: "T", data: [number, SimpleEnum]};"#
     );
 }

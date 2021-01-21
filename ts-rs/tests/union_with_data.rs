@@ -34,9 +34,7 @@ r#"export type SimpleEnum = string |
 number |
 "C" |
 [string, number] |
-{
-    bar: Bar,
-} |
+Foo |
 {
     a: number,
     b: string,
