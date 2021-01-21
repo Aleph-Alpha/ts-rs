@@ -1,17 +1,15 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Field, FieldsNamed, ItemStruct, Result};
+use syn::{Field, FieldsNamed, Result};
 
-use crate::attr::{FieldAttr, Inflection, StructAttr};
+use crate::attr::{FieldAttr, Inflection};
 use crate::DerivedTS;
 
-pub(crate) fn named(s: &ItemStruct, i: &FieldsNamed) -> Result<DerivedTS> {
-    let StructAttr { rename_all, rename } = StructAttr::from_attrs(&s.attrs)?;
-    let name = rename.unwrap_or_else(|| s.ident.to_string());
+pub(crate) fn named(name: String, rename_all: Option<Inflection>, fields: &FieldsNamed) -> Result<DerivedTS> {
 
     let mut formatted_fields = vec![];
     let mut dependencies = vec![];
-    for field in &i.named {
+    for field in &fields.named {
         format_field(&mut formatted_fields, &mut dependencies, field, &rename_all)?;
     }
 

@@ -1,7 +1,7 @@
 use quote::quote;
 use syn::{spanned::Spanned, Fields, ItemEnum, ItemStruct, Result, Variant};
 
-use crate::attr::{EnumAttr, FieldAttr, Inflection};
+use crate::attr::{EnumAttr, FieldAttr, Inflection, StructAttr};
 use crate::DerivedTS;
 
 mod named;
@@ -10,8 +10,14 @@ mod tuple;
 mod unit;
 
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
+    let StructAttr {
+        rename_all,
+        rename,
+    } = StructAttr::from_attrs(&s.attrs)?;
+    let name = rename.unwrap_or_else(|| s.ident.to_string());
+
     match &s.fields {
-        Fields::Named(named) => named::named(s, &named),
+        Fields::Named(named) => named::named(name, rename_all, &named),
         Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => newtype::newtype(s, &unnamed),
         Fields::Unnamed(unnamed) => tuple::tuple(s, &unnamed),
         Fields::Unit => unit::unit(s),
