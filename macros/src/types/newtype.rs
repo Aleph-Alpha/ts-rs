@@ -4,7 +4,7 @@ use syn::{FieldsUnnamed, Result};
 use crate::attr::{FieldAttr, Inflection};
 use crate::DerivedTS;
 
-pub(crate) fn newtype(name: String, rename_all: Option<Inflection>, fields: &FieldsUnnamed) -> Result<DerivedTS> {
+pub(crate) fn newtype(name: &String, rename_all: &Option<Inflection>, fields: &FieldsUnnamed) -> Result<DerivedTS> {
     if rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to newtype structs");
     }
@@ -34,7 +34,7 @@ pub(crate) fn newtype(name: String, rename_all: Option<Inflection>, fields: &Fie
         decl: quote!(format!("export type {} = {};", #name, #inline_def)),
         inline: inline_def,
         inline_flattened: None,
-        name,
+        name: name.clone(),
         dependencies: match (inline, &type_override) {
             (_, Some(_)) => quote!(vec![]),
             (true, _) => quote! {

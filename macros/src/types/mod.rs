@@ -1,5 +1,6 @@
 use quote::quote;
-use syn::{spanned::Spanned, Fields, ItemEnum, ItemStruct, Result, Variant};
+use syn::{Fields, ItemEnum, ItemStruct, Result, Variant};
+use proc_macro2::{TokenStream};
 
 use crate::attr::{EnumAttr, FieldAttr, Inflection, StructAttr};
 use crate::DerivedTS;
@@ -16,10 +17,10 @@ pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     } = StructAttr::from_attrs(&s.attrs)?;
     let name = rename.unwrap_or_else(|| s.ident.to_string());
 
-    type_def(name, rename_all, &s.fields)
+    type_def(&name, &rename_all, &s.fields)
 }
 
-fn type_def(name: String, rename_all: Option<Inflection>, fields: &Fields) -> Result<DerivedTS> {
+fn type_def(name: &String, rename_all: &Option<Inflection>, fields: &Fields) -> Result<DerivedTS> {
     match fields {
         Fields::Named(named) => named::named(name, rename_all, &named),
         Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => newtype::newtype(name, rename_all, &unnamed),
@@ -31,14 +32,6 @@ fn type_def(name: String, rename_all: Option<Inflection>, fields: &Fields) -> Re
 
 pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
     let EnumAttr { rename_all, rename, tag } = EnumAttr::from_attrs(&s.attrs)?;
-
-    if let Some(v) = s
-        .variants
-        .iter()
-        .find(|v| !matches!(v.fields, Fields::Unit))
-    {
-        syn_err!(v.span(); "variant has data attached. Such enums are not yet supported.");
-    }
 
     let name = rename.unwrap_or_else(|| s.ident.to_string());
     let mut formatted_variants = vec![];
@@ -56,7 +49,7 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
 }
 
 fn format_variant(
-    formatted_variants: &mut Vec<String>,
+    formatted_variants: &mut Vec<TokenStream>,
     tag: &Option<String>,
     rename_all: &Option<Inflection>,
     variant: &Variant,
@@ -72,22 +65,32 @@ fn format_variant(
     match (skip, &type_override, inline, flatten) {
         (true, ..) => return Ok(()),
         (_, Some(_), ..) => syn_err!("`type_override` is not applicable to enum variants"),
-        (_, _, true, ..) => syn_err!("`inline` is not applicable to enum variants"),
         (_, _, _, true) => syn_err!("`flatten` is not applicable to enum variants"),
         _ => {}
     };
-    
+
     let name = match (rename, &rename_all) {
         (Some(rn), _) => rn,
         (None, None) => variant.ident.to_string(),
         (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
     };
-    
+
     formatted_variants.push( match tag {
         Some(tag_name) => {
-            format!("{{{}: {:?}}}", tag_name, name)
+            let structd = format!("{{{}: {:?}}}", tag_name, name);
+            quote!(#structd)
         },
-        None => format!("{:?}", name)
+        None => match &variant.fields {
+            Fields::Unit => {
+                let quoted_name = format!("\"{}\"", name);
+                quote!(#quoted_name.to_owned())
+            },
+            Fields::Unnamed(unnamed) => {
+                let ty = &unnamed.unnamed;
+                quote!{<#ty as ts_rs::TS>::inline(0)}
+            },
+            _ => panic!("Don't support variants with these kind of fields")
+        }
     });
     Ok(())
 }

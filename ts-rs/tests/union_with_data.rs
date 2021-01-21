@@ -5,7 +5,7 @@ use ts_rs::TS;
 #[derive(TS)]
 enum SimpleEnum {
     A(String),
-    B(usize),
+    B(i64),
     C,
 }
 
@@ -13,6 +13,6 @@ enum SimpleEnum {
 fn test_simple_enum() {
     assert_eq!(
         SimpleEnum::decl(),
-        r#"export type SimpleEnum = string | usize | "C" ;"#
+        r#"export type SimpleEnum = string | number | "C";"#
     )
 }
