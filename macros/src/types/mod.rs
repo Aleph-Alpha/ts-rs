@@ -87,7 +87,11 @@ fn format_variant(
             },
             Fields::Unnamed(unnamed) => {
                 let ty = &unnamed.unnamed;
-                quote!{<#ty as ts_rs::TS>::inline(0)}
+                if ty.len() > 1 {
+                    quote!{<#unnamed as ts_rs::TS>::inline(0)}
+                } else {
+                    quote!{<#ty as ts_rs::TS>::inline(0)}
+                }
             },
             _ => panic!("Don't support variants with these kind of fields")
         }
