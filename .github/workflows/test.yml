@@ -13,7 +13,3 @@ jobs:
         with:
           command: test
           args: --manifest-path ts-rs/Cargo.toml
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --manifest-path ts-rs/Cargo.toml --features serde-compat
