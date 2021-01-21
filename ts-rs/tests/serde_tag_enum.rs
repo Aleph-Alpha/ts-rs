@@ -20,7 +20,13 @@ enum ComplexEnum {
     F{nested: SimpleEnum},
     T(i32, SimpleEnum)
 }
-
+#[derive(TS, Deserialize)]
+#[serde(untagged)]
+enum Untagged {
+    Foo(String),
+    Bar(i32),
+    None
+}
 
 
 #[test]
@@ -43,4 +49,9 @@ r#"export type ComplexEnum = {kind: "A", data: null} |
 }} |
 {kind: "T", data: [number, SimpleEnum]};"#
     );
+
+    assert_eq!(Untagged::decl(),
+r#"export type Untagged = string |
+number |
+null;"#)
 }
