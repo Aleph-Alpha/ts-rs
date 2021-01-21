@@ -23,16 +23,21 @@ enum SimpleEnum {
 }
 
 #[test]
-fn test_simple_enum() {
+fn test_stateful_enum() {
     assert_eq!(Foo::decl(), 
 r#"export interface Foo {
     bar: Bar,
 }"#);
     assert_eq!(
         SimpleEnum::decl(),
-r#"export type SimpleEnum = string | number | "C" | [string, number] | {
+r#"export type SimpleEnum = string |
+number |
+"C" |
+[string, number] |
+{
     bar: Bar,
-} | {
+} |
+{
     a: number,
     b: string,
 };"#
