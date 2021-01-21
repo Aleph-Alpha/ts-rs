@@ -93,7 +93,12 @@ fn format_variant(
                     quote!{<#ty as ts_rs::TS>::inline(0)}
                 }
             },
-            _ => panic!("Don't support variants with these kind of fields")
+            Fields::Named(named) => {
+                let ty = named::named(&name, rename_all, &named)?.inline;
+                
+                quote!(#ty)
+            }
+
         }
     });
     Ok(())
