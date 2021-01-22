@@ -1,6 +1,6 @@
+use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Fields, ItemEnum, ItemStruct, Result, Variant};
-use proc_macro2::{TokenStream};
 
 use crate::attr::{EnumAttr, FieldAttr, Inflection, StructAttr};
 use crate::DerivedTS;
@@ -11,10 +11,7 @@ mod tuple;
 mod unit;
 
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
-    let StructAttr {
-        rename_all,
-        rename,
-    } = StructAttr::from_attrs(&s.attrs)?;
+    let StructAttr { rename_all, rename } = StructAttr::from_attrs(&s.attrs)?;
     let name = rename.unwrap_or_else(|| s.ident.to_string());
 
     type_def(&name, &rename_all, &s.fields)
@@ -23,19 +20,20 @@ pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
 fn type_def(name: &String, rename_all: &Option<Inflection>, fields: &Fields) -> Result<DerivedTS> {
     match fields {
         Fields::Named(named) => named::named(name, rename_all, &named),
-        Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => newtype::newtype(name, rename_all, &unnamed),
+        Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
+            newtype::newtype(name, rename_all, &unnamed)
+        }
         Fields::Unnamed(unnamed) => tuple::tuple(name, rename_all, &unnamed),
         Fields::Unit => unit::unit(name, rename_all),
     }
 }
 
-
 pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
     let enum_attr: EnumAttr = EnumAttr::from_attrs(&s.attrs)?;
-    
+
     let name = match &enum_attr.rename {
         Some(existing) => existing.clone(),
-        None => s.ident.to_string()
+        None => s.ident.to_string(),
     };
 
     let mut formatted_variants = vec![];
@@ -64,7 +62,7 @@ fn format_variant(
         skip,
         flatten,
     } = FieldAttr::from_attrs(&variant.attrs)?;
-    
+
     match (skip, &type_override, inline, flatten) {
         (true, ..) => return Ok(()),
         (_, Some(_), ..) => syn_err!("`type_override` is not applicable to enum variants"),
@@ -85,8 +83,6 @@ fn format_variant(
     };
 
     let inline_type = type_def(&name, &None, &variant.fields)?.inline;
-    
-    
 
     formatted_variants.push(match &enum_attr.untag {
         true => quote!(#inline_type),
@@ -94,14 +90,14 @@ fn format_variant(
             Some(tag) => match &enum_attr.content {
                 Some(content) => {
                     quote!(format!("{{{}: \"{}\", {}: {}}}", #tag, #name, #content, #inline_type))
-                },
-                None => panic!("Serde enums with tag discriminators should also have content keys")
+                }
+                None => panic!("Serde enums with tag discriminators should also have content keys"),
             },
             None => match &variant.fields {
                 Fields::Unit => quote!(format!("\"{}\"", #name)),
-                _ => quote!(#inline_type)
-            }
-        }           
+                _ => quote!(#inline_type),
+            },
+        },
     });
     Ok(())
 }

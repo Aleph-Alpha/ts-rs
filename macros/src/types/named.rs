@@ -5,8 +5,11 @@ use syn::{Field, FieldsNamed, Result};
 use crate::attr::{FieldAttr, Inflection};
 use crate::DerivedTS;
 
-pub(crate) fn named(name: &String, rename_all: &Option<Inflection>, fields: &FieldsNamed) -> Result<DerivedTS> {
-
+pub(crate) fn named(
+    name: &String,
+    rename_all: &Option<Inflection>,
+    fields: &FieldsNamed,
+) -> Result<DerivedTS> {
     let mut formatted_fields = vec![];
     let mut dependencies = vec![];
     for field in &fields.named {

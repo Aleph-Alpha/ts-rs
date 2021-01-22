@@ -1,7 +1,7 @@
 use quote::quote;
-use syn::{Result};
+use syn::Result;
 
-use crate::attr::{Inflection};
+use crate::attr::Inflection;
 use crate::DerivedTS;
 
 pub(crate) fn unit(name: &String, rename_all: &Option<Inflection>) -> Result<DerivedTS> {

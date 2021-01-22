@@ -5,7 +5,11 @@ use syn::{Field, FieldsUnnamed, Result};
 use crate::attr::{FieldAttr, Inflection};
 use crate::DerivedTS;
 
-pub(crate) fn tuple(name: &String, rename_all: &Option<Inflection>, fields: &FieldsUnnamed) -> Result<DerivedTS> {
+pub(crate) fn tuple(
+    name: &String,
+    rename_all: &Option<Inflection>,
+    fields: &FieldsUnnamed,
+) -> Result<DerivedTS> {
     if rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to tuple structs");
     }

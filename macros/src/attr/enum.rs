@@ -9,7 +9,7 @@ pub struct EnumAttr {
     pub rename: Option<String>,
     pub tag: Option<String>,
     pub untag: bool,
-    pub content: Option<String>
+    pub content: Option<String>,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -25,7 +25,16 @@ impl EnumAttr {
         Ok(result)
     }
 
-    fn merge(&mut self, EnumAttr { rename_all, rename, tag, content, untag }: EnumAttr) {
+    fn merge(
+        &mut self,
+        EnumAttr {
+            rename_all,
+            rename,
+            tag,
+            content,
+            untag,
+        }: EnumAttr,
+    ) {
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
         self.tag = self.tag.take().or(tag);

@@ -1,44 +1,42 @@
 #![allow(dead_code)]
 
+use serde::Deserialize;
 use ts_rs::TS;
-use serde::{Deserialize};
-
 
 #[derive(TS, Deserialize)]
-#[serde(tag="kind", content="d")]
+#[serde(tag = "kind", content = "d")]
 enum SimpleEnum {
     A,
     B,
 }
 
 #[derive(TS, Deserialize)]
-#[serde(tag="kind", content="data")]
+#[serde(tag = "kind", content = "data")]
 enum ComplexEnum {
     A,
-    B{foo: String, bar: f64},
+    B { foo: String, bar: f64 },
     W(SimpleEnum),
-    F{nested: SimpleEnum},
-    T(i32, SimpleEnum)
+    F { nested: SimpleEnum },
+    T(i32, SimpleEnum),
 }
 #[derive(TS, Deserialize)]
 #[serde(untagged)]
 enum Untagged {
     Foo(String),
     Bar(i32),
-    None
+    None,
 }
-
 
 #[test]
 fn test_serde_enum() {
     assert_eq!(
         SimpleEnum::decl(),
-r#"export type SimpleEnum = {kind: "A", d: null} |
+        r#"export type SimpleEnum = {kind: "A", d: null} |
 {kind: "B", d: null};"#
     );
     assert_eq!(
         ComplexEnum::decl(),
-r#"export type ComplexEnum = {kind: "A", data: null} |
+        r#"export type ComplexEnum = {kind: "A", data: null} |
 {kind: "B", data: {
     foo: string,
     bar: number,
@@ -50,8 +48,10 @@ r#"export type ComplexEnum = {kind: "A", data: null} |
 {kind: "T", data: [number, SimpleEnum]};"#
     );
 
-    assert_eq!(Untagged::decl(),
-r#"export type Untagged = string |
+    assert_eq!(
+        Untagged::decl(),
+        r#"export type Untagged = string |
 number |
-null;"#)
+null;"#
+    )
 }
