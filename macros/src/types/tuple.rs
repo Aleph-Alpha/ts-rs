@@ -1,21 +1,18 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Field, FieldsUnnamed, ItemStruct, Result};
+use syn::{Field, FieldsUnnamed, Result};
 
-use crate::attr::{FieldAttr, StructAttr};
+use crate::attr::{FieldAttr, Inflection};
 use crate::DerivedTS;
 
-pub(crate) fn tuple(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
-    let StructAttr { rename_all, rename } = StructAttr::from_attrs(&s.attrs)?;
+pub(crate) fn tuple(name: &String, rename_all: &Option<Inflection>, fields: &FieldsUnnamed) -> Result<DerivedTS> {
     if rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to tuple structs");
     }
 
-    let name = rename.unwrap_or_else(|| s.ident.to_string());
-
     let mut formatted_fields = Vec::new();
     let mut dependenciees = Vec::new();
-    for field in &i.unnamed {
+    for field in &fields.unnamed {
         format_field(&mut formatted_fields, &mut dependenciees, field)?;
     }
 
@@ -34,7 +31,7 @@ pub(crate) fn tuple(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
             )
         },
         inline_flattened: None,
-        name,
+        name: name.clone(),
         dependencies: quote! {
             let mut dependencies = vec![];
             #( #dependenciees )*

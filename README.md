@@ -53,14 +53,16 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - flatten structs/interfaces
 - generate necessary imports when exporting to multiple files
 
-## serde compatibility layer
-With the `serde-compat` feature enabled, ts-rs tries parsing serde attributes.  
-Please note that not all serde attributes are supported yet.
+## Serde Compatability
+Serde representations are supported for enums and structs. The serde tags supported on enums are:
+- tag & content
+- untagged
+
 
 ## todo
 
 - [x] serde compatibility layer
 - [x] documentation
 - [x] use typescript types across files
-- [ ] more enum representations
+- [x] more enum representations
 - [ ] don't require `'static`

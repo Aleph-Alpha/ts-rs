@@ -1,18 +1,14 @@
 use quote::quote;
-use syn::{FieldsUnnamed, ItemStruct, Result};
+use syn::{FieldsUnnamed, Result};
 
-use crate::attr::{FieldAttr, StructAttr};
+use crate::attr::{FieldAttr, Inflection};
 use crate::DerivedTS;
 
-pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
-    let StructAttr {
-        rename_all,
-        rename: rename_outer,
-    } = StructAttr::from_attrs(&s.attrs)?;
+pub(crate) fn newtype(name: &String, rename_all: &Option<Inflection>, fields: &FieldsUnnamed) -> Result<DerivedTS> {
     if rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to newtype structs");
     }
-    let inner = i.unnamed.first().unwrap();
+    let inner = fields.unnamed.first().unwrap();
     let FieldAttr {
         type_override,
         rename: rename_inner,
@@ -28,7 +24,6 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         _ => {}
     };
 
-    let name = rename_outer.unwrap_or_else(|| s.ident.to_string());
     let inner_ty = &inner.ty;
     let inline_def = match &type_override {
         Some(o) => quote!(#o),
@@ -39,7 +34,7 @@ pub(crate) fn newtype(s: &ItemStruct, i: &FieldsUnnamed) -> Result<DerivedTS> {
         decl: quote!(format!("export type {} = {};", #name, #inline_def)),
         inline: inline_def,
         inline_flattened: None,
-        name,
+        name: name.clone(),
         dependencies: match (inline, &type_override) {
             (_, Some(_)) => quote!(vec![]),
             (true, _) => quote! {

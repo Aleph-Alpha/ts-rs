@@ -7,6 +7,9 @@ use crate::utils::parse_attrs;
 pub struct EnumAttr {
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,
+    pub tag: Option<String>,
+    pub untag: bool,
+    pub content: Option<String>
 }
 
 #[cfg(feature = "serde-compat")]
@@ -22,9 +25,12 @@ impl EnumAttr {
         Ok(result)
     }
 
-    fn merge(&mut self, EnumAttr { rename_all, rename }: EnumAttr) {
+    fn merge(&mut self, EnumAttr { rename_all, rename, tag, content, untag }: EnumAttr) {
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
+        self.tag = self.tag.take().or(tag);
+        self.untag = self.untag || untag;
+        self.content = self.content.take().or(content);
     }
 }
 
@@ -40,5 +46,8 @@ impl_parse! {
     SerdeEnumAttr(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.0.rename_all = Some(parse_assign_inflection(input)?),
+        "tag" => out.0.tag = Some(parse_assign_str(input)?),
+        "content" => out.0.content = Some(parse_assign_str(input)?),
+        "untagged" => out.0.untag = true
     }
 }
