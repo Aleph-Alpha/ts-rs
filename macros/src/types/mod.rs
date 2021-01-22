@@ -17,7 +17,7 @@ pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     type_def(&name, &rename_all, &s.fields)
 }
 
-fn type_def(name: &String, rename_all: &Option<Inflection>, fields: &Fields) -> Result<DerivedTS> {
+fn type_def(name: &str, rename_all: &Option<Inflection>, fields: &Fields) -> Result<DerivedTS> {
     match fields {
         Fields::Named(named) => named::named(name, rename_all, &named),
         Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {

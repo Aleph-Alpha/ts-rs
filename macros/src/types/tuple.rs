@@ -6,7 +6,7 @@ use crate::attr::{FieldAttr, Inflection};
 use crate::DerivedTS;
 
 pub(crate) fn tuple(
-    name: &String,
+    name: &str,
     rename_all: &Option<Inflection>,
     fields: &FieldsUnnamed,
 ) -> Result<DerivedTS> {
@@ -15,9 +15,9 @@ pub(crate) fn tuple(
     }
 
     let mut formatted_fields = Vec::new();
-    let mut dependenciees = Vec::new();
+    let mut dependencies = Vec::new();
     for field in &fields.unnamed {
-        format_field(&mut formatted_fields, &mut dependenciees, field)?;
+        format_field(&mut formatted_fields, &mut dependencies, field)?;
     }
 
     Ok(DerivedTS {
@@ -35,10 +35,10 @@ pub(crate) fn tuple(
             )
         },
         inline_flattened: None,
-        name: name.clone(),
+        name: name.to_owned(),
         dependencies: quote! {
             let mut dependencies = vec![];
-            #( #dependenciees )*
+            #( #dependencies )*
             dependencies
         },
     })
@@ -65,7 +65,7 @@ fn format_field(
         syn_err!("`rename` is not applicable to tuple structs")
     }
     if flatten {
-        syn_err!("`flatten` is not applicable to newtype fields")
+        syn_err!("`flatten` is not applicable to tuple fields")
     }
 
     formatted_fields.push(match &type_override {

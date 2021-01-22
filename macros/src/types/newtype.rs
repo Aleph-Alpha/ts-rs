@@ -5,7 +5,7 @@ use crate::attr::{FieldAttr, Inflection};
 use crate::DerivedTS;
 
 pub(crate) fn newtype(
-    name: &String,
+    name: &str,
     rename_all: &Option<Inflection>,
     fields: &FieldsUnnamed,
 ) -> Result<DerivedTS> {
@@ -38,7 +38,7 @@ pub(crate) fn newtype(
         decl: quote!(format!("export type {} = {};", #name, #inline_def)),
         inline: inline_def,
         inline_flattened: None,
-        name: name.clone(),
+        name: name.to_owned(),
         dependencies: match (inline, &type_override) {
             (_, Some(_)) => quote!(vec![]),
             (true, _) => quote! {

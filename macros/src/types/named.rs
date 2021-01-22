@@ -6,7 +6,7 @@ use crate::attr::{FieldAttr, Inflection};
 use crate::DerivedTS;
 
 pub(crate) fn named(
-    name: &String,
+    name: &str,
     rename_all: &Option<Inflection>,
     fields: &FieldsNamed,
 ) -> Result<DerivedTS> {
@@ -28,7 +28,7 @@ pub(crate) fn named(
         },
         decl: quote!(format!("export interface {} {}", #name, Self::inline(0))),
         inline_flattened: Some(fields),
-        name: name.clone(),
+        name: name.to_owned(),
         dependencies: quote! {
             let mut dependencies = vec![];
             #( #dependencies )*
