@@ -18,9 +18,9 @@
 //! With the `serde-compat` feature enabled, ts-rs tries parsing serde attributes.  
 //! Please note that not all serde attributes are supported yet.
 
-use std::fs::OpenOptions;
-use std::io::{BufWriter, Write};
+use std::{collections::{BTreeMap, BTreeSet, HashSet}, io::{BufWriter, Write}};
 use std::path::Path;
+use std::{collections::HashMap, fs::OpenOptions};
 
 use std::any::TypeId;
 pub use ts_rs_macros::TS;
@@ -266,6 +266,84 @@ impl<T: TS> TS for Vec<T> {
 
     fn dependencies() -> Vec<(TypeId, String)> {
         vec![(TypeId::of::<T>(), T::name())]
+    }
+
+    fn transparent() -> bool {
+        true
+    }
+}
+
+impl<T: TS> TS for HashSet<T> {
+    fn name() -> String {
+        format!("{}[]", T::name())
+    }
+
+    fn inline(indent: usize) -> String {
+        format!("{}[]", T::inline(indent))
+    }
+
+    fn dependencies() -> Vec<(TypeId, String)> {
+        vec![(TypeId::of::<T>(), T::name())]
+    }
+
+    fn transparent() -> bool {
+        true
+    }
+}
+
+impl<T: TS> TS for BTreeSet<T> {
+    fn name() -> String {
+        format!("{}[]", T::name())
+    }
+
+    fn inline(indent: usize) -> String {
+        format!("{}[]", T::inline(indent))
+    }
+
+    fn dependencies() -> Vec<(TypeId, String)> {
+        vec![(TypeId::of::<T>(), T::name())]
+    }
+
+    fn transparent() -> bool {
+        true
+    }
+}
+
+impl<K: TS, V: TS> TS for HashMap<K, V> {
+    fn name() -> String {
+        format!("{{ [key: {}]: {} }}", K::name(), V::name())
+    }
+
+    fn inline(indent: usize) -> String {
+        format!("{{ [key: {}]: {} }}", K::inline(indent), V::inline(indent))
+    }
+
+    fn dependencies() -> Vec<(TypeId, String)> {
+        vec![
+            (TypeId::of::<K>(), K::name()),
+            (TypeId::of::<V>(), V::name()),
+        ]
+    }
+
+    fn transparent() -> bool {
+        true
+    }
+}
+
+impl<K: TS, V: TS> TS for BTreeMap<K, V> {
+    fn name() -> String {
+        format!("{{ [key: {}]: {} }}", K::name(), V::name())
+    }
+
+    fn inline(indent: usize) -> String {
+        format!("{{ [key: {}]: {} }}", K::inline(indent), V::inline(indent))
+    }
+
+    fn dependencies() -> Vec<(TypeId, String)> {
+        vec![
+            (TypeId::of::<K>(), K::name()),
+            (TypeId::of::<V>(), V::name()),
+        ]
     }
 
     fn transparent() -> bool {
