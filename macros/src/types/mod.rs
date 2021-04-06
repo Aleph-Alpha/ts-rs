@@ -42,7 +42,7 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
     }
 
     Ok(DerivedTS {
-        inline: quote!(vec![#(#formatted_variants),*].join(" |\n")),
+        inline: quote!(vec![#(#formatted_variants),*].join(" | ")),
         decl: quote!(format!("export type {} = {};", #name, Self::inline(0))),
         inline_flattened: None,
         dependencies: quote!((vec![])),
