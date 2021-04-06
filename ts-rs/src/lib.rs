@@ -18,9 +18,12 @@
 //! With the `serde-compat` feature enabled, ts-rs tries parsing serde attributes.  
 //! Please note that not all serde attributes are supported yet.
 
-use std::{collections::{BTreeMap, BTreeSet, HashSet}, io::{BufWriter, Write}};
 use std::path::Path;
 use std::{collections::HashMap, fs::OpenOptions};
+use std::{
+    collections::{BTreeMap, BTreeSet, HashSet},
+    io::{BufWriter, Write},
+};
 
 use std::any::TypeId;
 pub use ts_rs_macros::TS;
