@@ -32,12 +32,7 @@ fn test_stateful_enum() {
     );
     assert_eq!(
         SimpleEnum::decl(),
-        r#"export type SimpleEnum = string |
-number |
-"C" |
-[string, number] |
-Foo |
-{
+        r#"export type SimpleEnum = string | number | "C" | [string, number] | Foo | {
     a: number,
     b: string,
 };"#

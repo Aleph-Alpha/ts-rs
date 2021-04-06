@@ -31,27 +31,20 @@ enum Untagged {
 fn test_serde_enum() {
     assert_eq!(
         SimpleEnum::decl(),
-        r#"export type SimpleEnum = {kind: "A", d: null} |
-{kind: "B", d: null};"#
+        r#"export type SimpleEnum = {kind: "A", d: null} | {kind: "B", d: null};"#
     );
     assert_eq!(
         ComplexEnum::decl(),
-        r#"export type ComplexEnum = {kind: "A", data: null} |
-{kind: "B", data: {
+        r#"export type ComplexEnum = {kind: "A", data: null} | {kind: "B", data: {
     foo: string,
     bar: number,
-}} |
-{kind: "W", data: SimpleEnum} |
-{kind: "F", data: {
+}} | {kind: "W", data: SimpleEnum} | {kind: "F", data: {
     nested: SimpleEnum,
-}} |
-{kind: "T", data: [number, SimpleEnum]};"#
+}} | {kind: "T", data: [number, SimpleEnum]};"#
     );
 
     assert_eq!(
         Untagged::decl(),
-        r#"export type Untagged = string |
-number |
-null;"#
+        r#"export type Untagged = string | number | null;"#
     )
 }

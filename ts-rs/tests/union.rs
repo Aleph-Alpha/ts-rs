@@ -14,8 +14,6 @@ enum SimpleEnum {
 fn test_simple_enum() {
     assert_eq!(
         SimpleEnum::decl(),
-        r#"export type SimpleEnum = "asdf" |
-"B" |
-"C";"#
+        r#"export type SimpleEnum = "asdf" | "B" | "C";"#
     )
 }
