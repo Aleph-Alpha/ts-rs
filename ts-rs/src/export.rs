@@ -52,16 +52,34 @@ macro_rules! export {
             )*
 
             let mut buffer = String::with_capacity(8192);
+            let mut imports = __HashMap::<String, __HashSet<String>>::new();
+            let fmt_config = ts_rs::export::FmtCfg::new() .deno().build();
+
             $({
-                let mut imports = __HashMap::<String, __HashSet<String>>::new();
+                // clear buffers
                 buffer.clear();
+                imports.clear();
+
+                // create output directory
                 let out = manifest_dir.join($l);
                 std::fs::create_dir_all(out.parent().unwrap())
                     .expect("could not create directory");
+
+                // write imports
                 $( ts_rs::export::imports::<$p>(&files, &mut imports, &out); )*
-                ts_rs::export::write_imports(imports, &mut buffer);
-                writeln!(&mut buffer).unwrap();
-                $( writeln!(&mut buffer, "{}\n", <$p as ts_rs::TS>::decl()).unwrap(); )*
+                ts_rs::export::write_imports(&imports, &mut buffer);
+                buffer.push_str("\n");
+
+                // write declarations
+                $(
+                    buffer.push_str(&<$p as ts_rs::TS>::decl());
+                    buffer.push_str("\n\n");
+                )*
+
+                // format output
+                let buffer = ts_rs::export::fmt_ts(&out, &buffer, &fmt_config)
+                    .expect("could not format output");
+
                 std::fs::write(&out, buffer.trim())
                     .expect("could not write file");
             })*
@@ -69,12 +87,16 @@ macro_rules! export {
     };
 }
 
-pub fn write_imports(imports: HashMap<String, HashSet<String>>, out: &mut impl Write) {
+pub use dprint_plugin_typescript::{
+    configuration::ConfigurationBuilder as FmtCfg, format_text as fmt_ts,
+};
+
+pub fn write_imports(imports: &HashMap<String, HashSet<String>>, out: &mut impl Write) {
     for (path, types) in imports {
         writeln!(
             out,
             "import {{{}}} from {:?};",
-            types.into_iter().collect::<Vec<_>>().join(", "),
+            types.iter().cloned().collect::<Vec<_>>().join(", "),
             path
         )
         .unwrap();
