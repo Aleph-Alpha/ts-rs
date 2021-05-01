@@ -226,7 +226,7 @@ macro_rules! impl_proxy {
 }
 
 impl_primitives! {
-    u8, i8, u16, i16, u32, i32, u64, i64, f32, f64 => "number",
+    u8, i8, u16, i16, u32, i32, u64, i64, f32, f64, usize, isize => "number",
     u128, i128 => "bigint",
     bool => "boolean",
     String, &'static str => "string",

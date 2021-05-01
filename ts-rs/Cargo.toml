@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs"
-version = "2.4.0"
+version = "2.4.1"
 authors = ["Moritz Bischof <moritz.bischof@aleph-alpha.de>"]
 edition = "2018"
 license = "MIT"
