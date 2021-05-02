@@ -26,13 +26,13 @@ enum SimpleEnum {
 fn test_stateful_enum() {
     assert_eq!(
         Foo::decl(),
-        r#"export interface Foo {
+        r#"interface Foo {
     bar: Bar,
 }"#
     );
     assert_eq!(
         SimpleEnum::decl(),
-        r#"export type SimpleEnum = string | number | "C" | [string, number] | Foo | {
+        r#"type SimpleEnum = string | number | "C" | [string, number] | Foo | {
     a: number,
     b: string,
 };"#

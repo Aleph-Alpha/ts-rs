@@ -20,7 +20,7 @@ fn test_newtype() {
     #[derive(TS)]
     struct NewType(String);
 
-    assert_eq!("export type NewType = string;", NewType::decl());
+    assert_eq!("type NewType = string;", NewType::decl());
 }
 
 #[test]
@@ -28,7 +28,7 @@ fn test_tuple_newtype() {
     #[derive(TS)]
     struct TupleNewType(String, i32, (i32, i32));
     assert_eq!(
-        "export type TupleNewType = [string, number, [number, number]];",
+        "type TupleNewType = [string, number, [number, number]];",
         TupleNewType::decl()
     )
 }
