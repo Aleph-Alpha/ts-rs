@@ -30,7 +30,6 @@ struct User {
     gender: Gender,
 }
 
-
 // this will export [Role] to `role.ts` and [User] to `user.ts` when running `cargo test`.
 // `export!` will also take care of including imports in typescript files.
 export! {
