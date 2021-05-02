@@ -25,9 +25,24 @@ use std::fmt::Write;
 /// ```
 /// When running `cargo test`, bindings for `A`, `B` and `C` will be exported to `bindings/a.ts`
 /// and `bindings/b.ts`.
+///
+/// By default, `export!` always uses `export type/interface`.
+/// If you wish, you can also use ambient declarations (`declare type/interface`):
+/// ```rust
+/// # use ts_rs::{export, TS};
+/// #[derive(TS)] struct Declared;
+/// #[derive(TS)] struct Normal(Declared);
+///
+/// export! {
+///     (declare) Declared => "bindings/declared.d.ts",
+///     Normal => "bindings/normal.ts"
+/// }
+/// ```
+/// Since `Declared` is now an ambient declaration, `bindings/normal.ts` will not include an import
+/// for `bindings/declared.d.ts`.
 #[macro_export]
 macro_rules! export {
-    ($($($p:path),+ => $l:literal),* $(,)?) => {
+    ($($(($decl:ident))? $($p:path),+ => $l:literal),* $(,)?) => {
         #[cfg(test)]
         #[test]
         fn export_typescript() {
@@ -41,14 +56,21 @@ macro_rules! export {
             let mut files = __HashMap::new();
             $(
                 let path = manifest_dir.join($l);
-                $({
-                    if let Some(_) = files.insert(std::any::TypeId::of::<$p>(), path.clone()) {
-                        panic!(
-                            "{} cannot be exported to multiple files using `export!`",
-                            stringify!($p),
-                        );
-                    }
-                })*
+
+                // if the type(s) should be `declare`d, then they should not be imported.
+                let mut declared = false;
+                $( ts_rs::check_declare!($decl); declared = true; )*;
+
+                if !declared {
+                    $({
+                        if let Some(_) = files.insert(std::any::TypeId::of::<$p>(), path.clone()) {
+                            panic!(
+                                "{} cannot be exported to multiple files using `export!`",
+                                stringify!($p),
+                            );
+                        }
+                    })*
+                }
             )*
 
             let mut buffer = String::with_capacity(8192);
@@ -71,7 +93,13 @@ macro_rules! export {
                 buffer.push_str("\n");
 
                 // write declarations
+
+                // check if `export` or `declare` should be used
+                let mut prefix = "export ";
+                $( ts_rs::check_declare!($decl); prefix = "declare "; )*;
+
                 $(
+                    buffer.push_str(prefix);
                     buffer.push_str(&<$p as ts_rs::TS>::decl());
                     buffer.push_str("\n\n");
                 )*
@@ -84,6 +112,20 @@ macro_rules! export {
                     .expect("could not write file");
             })*
         }
+    };
+}
+
+// checks that the given argument is `declare`, emitting a compile_error! if it isn't.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! check_declare {
+    (declare) => {};
+    ($x:ident) => {
+        compile_error!(concat!(
+            "expected `(declare)`, got `(",
+            stringify!($x),
+            ")`"
+        ));
     };
 }
 
