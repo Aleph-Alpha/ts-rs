@@ -52,6 +52,7 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - inline types
 - flatten structs/interfaces
 - generate necessary imports when exporting to multiple files
+- `export ..` and `declare ..`
 
 ## Serde Compatability
 Serde representations are supported for enums and structs. The serde tags supported on enums are:
