@@ -61,8 +61,8 @@ impl DerivedTS {
     }
 }
 
-/// Derives [TS](TS) for a struct or enum.
-/// Please take a look at [TS](TS) for documentation.
+/// Derives [TS](./trait.TS.html) for a struct or enum.
+/// Please take a look at [TS](./trait.TS.html) for documentation.
 #[proc_macro_derive(TS, attributes(ts))]
 pub fn typescript(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     match entry(input) {
