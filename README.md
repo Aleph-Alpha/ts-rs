@@ -10,18 +10,15 @@
 <div align="center">
   <!-- Github Actions -->
   <img src="https://img.shields.io/github/workflow/status/Aleph-Alpha/ts-rs/Test?style=flat-square" alt="actions status" />
-  <!-- Version -->
   <a href="https://crates.io/crates/ts-rs">
     <img src="https://img.shields.io/crates/v/ts-rs.svg?style=flat-square"
     alt="Crates.io version" />
   </a>
-  <!-- Docs -->
   <a href="https://docs.rs/ts-rs">
     <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
       alt="docs.rs docs" />
   </a>
-  <!-- Downloads -->
-  <a href="https://crates.io/crates/sqlx">
+  <a href="https://crates.io/crates/ts-rs">
     <img src="https://img.shields.io/crates/d/ts-rs.svg?style=flat-square"
       alt="Download" />
   </a>
