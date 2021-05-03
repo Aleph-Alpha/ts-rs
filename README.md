@@ -1,14 +1,34 @@
-<img width="150px" src="https://raw.githubusercontent.com/Aleph-Alpha/ts-rs/main/logo.png">  
+<h1 align="center" style="margin-bottom: 0;">
+    <img width="150px" src="https://raw.githubusercontent.com/Aleph-Alpha/ts-rs/main/logo.png" alt="logo">  
+</h1>
+<h1 align="center" style="padding-top: 0; margin-top: 0;">ts-rs</h1>
+<div align="center">
+   generate typescript interface/type declarations from rust types
+</div>
 
-# ts-rs  
-Generate TypeScript interface/type declarations from rust structs.  
+<br />
 
-[![Crate](https://img.shields.io/crates/v/ts-rs.svg)](https://crates.io/crates/ts-rs)
-[![API](https://docs.rs/ts-rs/badge.svg)](https://docs.rs/ts-rs)
-[![Test](https://github.com/Aleph-Alpha/ts-rs/workflows/Test/badge.svg)](https://github.com/Aleph-Alpha/ts-rs/actions)
+<div align="center">
+  <!-- Github Actions -->
+  <img src="https://img.shields.io/github/workflow/status/Aleph-Alpha/ts-rs/Test?style=flat-square" alt="actions status" />
+  <!-- Version -->
+  <a href="https://crates.io/crates/ts-rs">
+    <img src="https://img.shields.io/crates/v/ts-rs.svg?style=flat-square"
+    alt="Crates.io version" />
+  </a>
+  <!-- Docs -->
+  <a href="https://docs.rs/ts-rs">
+    <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
+      alt="docs.rs docs" />
+  </a>
+  <!-- Downloads -->
+  <a href="https://crates.io/crates/sqlx">
+    <img src="https://img.shields.io/crates/d/ts-rs.svg?style=flat-square"
+      alt="Download" />
+  </a>
+</div>
 
 ## why?
-
 When building a web application in rust, data structures have to be shared between backend and frontend.  
 Using this library, you can easily generate TypeScript bindings to your rust structs & enums, so that you can keep your
 types in one place.
@@ -16,7 +36,6 @@ types in one place.
 ts-rs might also come in handy when working with webassembly.
 
 ## how?
-
 ts-rs exposes a single trait, `TS`. Using a derive macro, you can implement this interface for your types.  
 Then, you can use this trait to obtain the TypeScript bindings.  
 We recommend doing this in your tests. [see the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs)
@@ -24,7 +43,7 @@ We recommend doing this in your tests. [see the example](https://github.com/Alep
 ## get started
 ```toml
 [dependencies]
-ts-rs = "2.4"
+ts-rs = "3.0"
 ```
 
 ```rust
@@ -46,7 +65,6 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 ## [example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs)
 
 ## features
-
 - generate interface declarations from rust structs
 - generate union declarations from rust enums
 - inline types
@@ -54,14 +72,19 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - generate necessary imports when exporting to multiple files
 - `export ..` and `declare ..`
 
-## Serde Compatability
-Serde representations are supported for enums and structs. The serde tags supported on enums are:
-- tag & content
-- untagged
-
+## serde compatability
+With `serde-compat`, serde attributes can be parsed for enums and structs.  
+Supported serde attributes:
+- `rename`
+- `rename-all`
+- `tag`
+- `content`
+- `untagged`
+- `skip_serializing`
+- `skip_deserializing`
+- `flatten`
 
 ## todo
-
 - [x] serde compatibility layer
 - [x] documentation
 - [x] use typescript types across files
