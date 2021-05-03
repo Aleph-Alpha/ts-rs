@@ -35,7 +35,7 @@ pub(crate) fn newtype(
         None => quote!(<#inner_ty as ts_rs::TS>::name()),
     };
     Ok(DerivedTS {
-        decl: quote!(format!("export type {} = {};", #name, #inline_def)),
+        decl: quote!(format!("type {} = {};", #name, #inline_def)),
         inline: inline_def,
         inline_flattened: None,
         name: name.to_owned(),

@@ -29,7 +29,7 @@ pub(crate) fn tuple(
         },
         decl: quote! {
             format!(
-                "export type {} = {};",
+                "type {} = {};",
                 #name,
                 Self::inline(0)
             )

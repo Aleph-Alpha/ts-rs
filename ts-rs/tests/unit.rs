@@ -5,5 +5,5 @@ struct Unit;
 
 #[test]
 fn test() {
-    assert_eq!("export type Unit = null;", Unit::decl())
+    assert_eq!("type Unit = null;", Unit::decl())
 }

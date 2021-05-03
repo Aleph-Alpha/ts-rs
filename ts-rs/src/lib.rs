@@ -36,7 +36,7 @@ pub mod export;
 /// ts-rs comes with implementations for all numeric types, `String`, `Vec`, `Option` and tuples.
 ///
 /// ## get started
-/// [TS](ts_rs::TS) can easily be derived for structs and enums:
+/// [TS](TS) can easily be derived for structs and enums:
 /// ```rust
 /// use ts_rs::TS;
 ///
@@ -46,10 +46,9 @@ pub mod export;
 ///     last_name: String,
 /// }
 /// ```
-/// To actually obtain the bindings, you can call `User::dump` to write the bindings to a file:
+/// To actually obtain the bindings, you can call `User::dump` to write the bindings to a file.
 /// ```rust
 /// # use ts_rs::TS;
-///
 /// # #[derive(TS)]
 /// # struct User {
 /// #     first_name: String,
@@ -58,6 +57,9 @@ pub mod export;
 /// std::fs::remove_file("bindings.ts").ok();
 /// User::dump("bindings.ts").unwrap();
 /// ```
+///
+/// Preferrably, you should use the [export!](export!) macro, which takes care of dependencies
+/// between types and allows you to decide between `export` and `declare`.
 ///
 /// ### struct attributes
 ///

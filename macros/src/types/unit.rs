@@ -11,7 +11,7 @@ pub(crate) fn unit(name: &str, rename_all: &Option<Inflection>) -> Result<Derive
 
     Ok(DerivedTS {
         inline: quote!("null".to_owned()),
-        decl: quote!(format!("export type {} = null;", #name)),
+        decl: quote!(format!("type {} = null;", #name)),
         inline_flattened: None,
         name: name.to_owned(),
         dependencies: quote!(vec![]),

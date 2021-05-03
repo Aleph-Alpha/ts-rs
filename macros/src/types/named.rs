@@ -26,7 +26,7 @@ pub(crate) fn named(
                 " ".repeat(indent * 4)
             )
         },
-        decl: quote!(format!("export interface {} {}", #name, Self::inline(0))),
+        decl: quote!(format!("interface {} {}", #name, Self::inline(0))),
         inline_flattened: Some(fields),
         name: name.to_owned(),
         dependencies: quote! {
