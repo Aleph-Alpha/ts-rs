@@ -2,11 +2,9 @@
     <img width="150px" src="https://raw.githubusercontent.com/Aleph-Alpha/ts-rs/main/logo.png" alt="logo">  
 </h1>
 <h1 align="center" style="padding-top: 0; margin-top: 0;">ts-rs</h1>
-<div align="center">
+<p align="center">
    generate typescript interface/type declarations from rust types
-</div>
-
-<br />
+</p>
 
 <div align="center">
   <!-- Github Actions -->
