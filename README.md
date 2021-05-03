@@ -1,7 +1,8 @@
-<h1 align="center" style="margin-bottom: 0;">
-    <img width="150px" src="https://raw.githubusercontent.com/Aleph-Alpha/ts-rs/main/logo.png" alt="logo">  
+<h1 align="center" style="padding-top: 0; margin-top: 0;">
+    <img width="150px" src="https://raw.githubusercontent.com/Aleph-Alpha/ts-rs/main/logo.png" alt="logo">
+    <br/>
+    ts-rs
 </h1>
-<h1 align="center" style="padding-top: 0; margin-top: 0;">ts-rs</h1>
 <p align="center">
    generate typescript interface/type declarations from rust types
 </p>
