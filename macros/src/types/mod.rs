@@ -102,9 +102,15 @@ fn format_variant(
                             #inline_flattened
                         )
                     },
-                    None => panic!(
-                        "Serde enums with tag discriminators should also have flattened fields"
-                    ),
+                    None => quote! {
+                        format!(
+                            "\n{}{{ {}: \"{}\" }} & {}",
+                            " ".repeat((indent + 1) * 4),
+                            #tag,
+                            #name,
+                            #inline_type
+                        )
+                    },
                 },
             },
             None => match &variant.fields {
