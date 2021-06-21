@@ -82,7 +82,8 @@ fn format_variant(
         _ => {}
     };
 
-    let inline_type = type_def(&name, &None, &variant.fields)?.inline;
+    let derived_type = type_def(&name, &None, &variant.fields)?;
+    let inline_type = derived_type.inline;
 
     formatted_variants.push(match &enum_attr.untag {
         true => quote!(#inline_type),
@@ -91,7 +92,20 @@ fn format_variant(
                 Some(content) => {
                     quote!(format!("{{{}: \"{}\", {}: {}}}", #tag, #name, #content, #inline_type))
                 }
-                None => panic!("Serde enums with tag discriminators should also have content keys"),
+                None => match derived_type.inline_flattened {
+                    Some(inline_flattened) => quote! {
+                        format!(
+                            "{{\n{}{}: \"{}\",\n{}\n}}",
+                            " ".repeat((indent + 1) * 4),
+                            #tag,
+                            #name,
+                            #inline_flattened
+                        )
+                    },
+                    None => panic!(
+                        "Serde enums with tag discriminators should also have flattened fields"
+                    ),
+                },
             },
             None => match &variant.fields {
                 Fields::Unit => quote!(format!("\"{}\"", #name)),

@@ -30,11 +30,19 @@ struct User {
     gender: Gender,
 }
 
+#[derive(Serialize, TS)]
+#[serde(tag = "type", rename_all = "snake_case")]
+enum Vehicle {
+    Bicycle { color: String },
+    Car { brand: String, color: String },
+}
+
 // this will export [Role] to `role.ts` and [User] to `user.ts` when running `cargo test`.
 // `export!` will also take care of including imports in typescript files.
 export! {
     Role => "role.ts",
     User => "user.ts",
+    Vehicle => "vehicle.ts",
     // this exports an ambient declaration (`declare interface`) instead of an `export interface`.
     (declare) Gender => "gender.d.ts",
 }
