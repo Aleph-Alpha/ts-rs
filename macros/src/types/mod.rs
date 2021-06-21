@@ -95,7 +95,8 @@ fn format_variant(
                 None => match derived_type.inline_flattened {
                     Some(inline_flattened) => quote! {
                         format!(
-                            "{{\n{}: \"{}\",\n{}}}",
+                            "{{\n{}{}: \"{}\",\n{}\n}}",
+                            " ".repeat((indent + 1) * 4),
                             #tag,
                             #name,
                             #inline_flattened
