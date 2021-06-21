@@ -76,9 +76,11 @@ Supported serde attributes:
 - `tag`
 - `content`
 - `untagged`
+- `skip`
 - `skip_serializing`
 - `skip_deserializing`
 - `flatten`
+- `default`
 
 ## todo
 - [x] serde compatibility layer
