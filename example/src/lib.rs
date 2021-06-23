@@ -37,11 +37,28 @@ enum Vehicle {
     Car { brand: String, color: String },
 }
 
+#[derive(Serialize, TS)]
+struct Point<T>
+where
+    T: TS,
+{
+    time: u64,
+    value: T,
+}
+
+#[derive(Serialize, TS)]
+struct Series {
+    points: Vec<Point<u64>>,
+}
+
 // this will export [Role] to `role.ts` and [User] to `user.ts` when running `cargo test`.
 // `export!` will also take care of including imports in typescript files.
 export! {
     Role => "role.ts",
     User => "user.ts",
+    // any type can be used here in place of the generic, as long as it impls TS:
+    Point<()> => "point.ts",
+    Series => "series.ts",
     Vehicle => "vehicle.ts",
     // this exports an ambient declaration (`declare interface`) instead of an `export interface`.
     (declare) Gender => "gender.d.ts",

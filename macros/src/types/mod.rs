@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Fields, ItemEnum, ItemStruct, Result, Variant};
+use syn::{Fields, Generics, ItemEnum, ItemStruct, Result, Variant};
 
 use crate::attr::{EnumAttr, FieldAttr, Inflection, StructAttr};
 use crate::DerivedTS;
@@ -14,12 +14,17 @@ pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     let StructAttr { rename_all, rename } = StructAttr::from_attrs(&s.attrs)?;
     let name = rename.unwrap_or_else(|| s.ident.to_string());
 
-    type_def(&name, &rename_all, &s.fields)
+    type_def(&name, &rename_all, &s.fields, &s.generics)
 }
 
-fn type_def(name: &str, rename_all: &Option<Inflection>, fields: &Fields) -> Result<DerivedTS> {
+fn type_def(
+    name: &str,
+    rename_all: &Option<Inflection>,
+    fields: &Fields,
+    generics: &Generics,
+) -> Result<DerivedTS> {
     match fields {
-        Fields::Named(named) => named::named(name, rename_all, &named),
+        Fields::Named(named) => named::named(name, rename_all, &named, generics),
         Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
             newtype::newtype(name, rename_all, &unnamed)
         }
@@ -82,7 +87,7 @@ fn format_variant(
         _ => {}
     };
 
-    let derived_type = type_def(&name, &None, &variant.fields)?;
+    let derived_type = type_def(&name, &None, &variant.fields, &Generics::default())?;
     let inline_type = derived_type.inline;
 
     formatted_variants.push(match &enum_attr.untag {
