@@ -113,60 +113,11 @@ fn format_field(
         });
     }
 
-    let formatted_ty =
-        type_override.map(|t| quote!(#t)).unwrap_or_else(|| {
-            if let Some(generic_ident) = generics
-                .params
-                .iter()
-                .filter_map(|param| match param {
-                    GenericParam::Type(type_param) => Some(type_param),
-                    _ => None,
-                })
-                .find(|type_param| {
-                    matches!(
-                        ty,
-                        Type::Path(type_path)
-                            if type_path.qself.is_none()
-                            && type_path.path.is_ident(&type_param.ident)
-                    )
-                })
-                .map(|type_param| type_param.ident.to_string())
-            {
-                quote!(#generic_ident)
-            } else if let Some((name, generic_args)) =
-                match ty {
-                    Type::Path(type_path) => type_path.path.segments.last().and_then(|segment| {
-                        match &segment.arguments {
-                            PathArguments::AngleBracketed(generic_arguments) => {
-                                if has_specialized_impl(&segment.ident) {
-                                    None
-                                } else {
-                                    Some((segment.ident.to_string(), &generic_arguments.args))
-                                }
-                            }
-                            _ => None,
-                        }
-                    }),
-                    _ => None,
-                }
-            {
-                let args = generic_args
-                    .iter()
-                    .filter_map(|arg| match arg {
-                        GenericArgument::Type(Type::Path(type_path)) => {
-                            let path = &type_path.path;
-                            Some(quote!(<#path as ts_rs::TS>::name()))
-                        }
-                        _ => None,
-                    })
-                    .collect::<TokenStream>();
-                quote!(format!("{}<{}>", #name, #args))
-            } else {
-                match inline {
-                    true => quote!(<#ty as ts_rs::TS>::inline(indent + 1)),
-                    false => quote!(<#ty as ts_rs::TS>::name()),
-                }
-            }
+    let formatted_ty = type_override
+        .map(|t| quote!(#t))
+        .unwrap_or_else(|| match inline {
+            true => quote!(<#ty as ts_rs::TS>::inline(indent + 1)),
+            false => format_type(ty, generics),
         });
     let name = match (rename, rename_all) {
         (Some(rn), _) => rn,
@@ -205,17 +156,79 @@ fn extract_option_argument(ty: &Type) -> Result<&Type> {
     }
 }
 
+fn extract_type_args(ty: &Type) -> Option<Vec<&Type>> {
+    let last_segment = match ty {
+        Type::Path(type_path) => type_path.path.segments.last(),
+        _ => None,
+    }?;
+
+    let segment_arguments = match &last_segment.arguments {
+        PathArguments::AngleBracketed(generic_arguments) => {
+            if has_specialized_impl(&last_segment.ident) {
+                None
+            } else {
+                Some(generic_arguments)
+            }
+        }
+        _ => None,
+    }?;
+
+    let type_args: Vec<_> = segment_arguments
+        .args
+        .iter()
+        .filter_map(|arg| match arg {
+            GenericArgument::Type(ty) => Some(ty),
+            _ => None,
+        })
+        .collect();
+    if type_args.is_empty() {
+        return None;
+    }
+
+    Some(type_args)
+}
+
+fn format_type(ty: &Type, generics: &Generics) -> TokenStream {
+    // If the type matches one of the generic parameters, just pass the identifier:
+    if let Some(generic_ident) = generics
+        .params
+        .iter()
+        .filter_map(|param| match param {
+            GenericParam::Type(type_param) => Some(type_param),
+            _ => None,
+        })
+        .find(|type_param| {
+            matches!(
+                ty,
+                Type::Path(type_path)
+                    if type_path.qself.is_none()
+                    && type_path.path.is_ident(&type_param.ident)
+            )
+        })
+        .map(|type_param| type_param.ident.to_string())
+    {
+        return quote!(#generic_ident.to_owned());
+    }
+
+    match extract_type_args(ty) {
+        None => quote!(<#ty as ts_rs::TS>::name()),
+        Some(type_args) => {
+            let args = type_args
+                .iter()
+                .map(|ty| format_type(ty, generics))
+                .collect::<Vec<_>>();
+            let args = quote!(vec![#(#args),*]);
+            quote!(<#ty as ts_rs::TS>::name_with_type_args(#args))
+        }
+    }
+}
+
 fn has_specialized_impl(ident: &Ident) -> bool {
     ident == "Arc"
         || ident == "Box"
-        || ident == "BTreeMap"
-        || ident == "BTreeSet"
         || ident == "Cell"
         || ident == "Cow"
-        || ident == "HashMap"
-        || ident == "HashSet"
         || ident == "Option"
         || ident == "Rc"
         || ident == "RefCell"
-        || ident == "Vec"
 }

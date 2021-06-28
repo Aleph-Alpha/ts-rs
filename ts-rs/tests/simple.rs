@@ -20,7 +20,7 @@ fn test_def() {
     a: number,
     b: string,
     c: [number, string, number],
-    d: string[],
+    d: Array<string>,
     e: string | null,
 }"
     )
@@ -35,7 +35,7 @@ fn test_indented() {
         a: number,
         b: string,
         c: [number, string, number],
-        d: string[],
+        d: Array<string>,
         e: string | null,
     }"
     )
