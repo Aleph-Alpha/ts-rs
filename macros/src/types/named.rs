@@ -1,8 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{
-    Field, FieldsNamed, GenericArgument, GenericParam, Generics, Ident, Path, PathArguments,
-    PathSegment, Result, Type,
+    Field, FieldsNamed, GenericArgument, GenericParam, Generics, Ident, PathArguments, Result, Type,
 };
 
 use crate::attr::{FieldAttr, Inflection};
@@ -74,6 +73,7 @@ fn format_field(
         rename,
         inline,
         skip,
+        optional,
         flatten,
     } = FieldAttr::from_attrs(&field.attrs)?;
 
@@ -81,7 +81,11 @@ fn format_field(
         return Ok(());
     }
 
-    let ty = &field.ty;
+    let mut ty = &field.ty;
+
+    if optional {
+        ty = extract_option_argument(ty)?;
+    }
 
     if flatten {
         match (&type_override, &rename, inline) {
@@ -123,10 +127,7 @@ fn format_field(
                         ty,
                         Type::Path(type_path)
                             if type_path.qself.is_none()
-                            && type_path.path == Path::from(PathSegment {
-                                ident: type_param.ident.clone(),
-                                arguments: PathArguments::None,
-                            })
+                            && type_path.path.is_ident(&type_param.ident)
                     )
                 })
                 .map(|type_param| type_param.ident.to_string())
@@ -172,12 +173,36 @@ fn format_field(
         (None, Some(rn)) => rn.apply(&field.ident.as_ref().unwrap().to_string()),
         (None, None) => field.ident.as_ref().unwrap().to_string(),
     };
+    let optional_annotation = if optional { "?" } else { "" };
 
     formatted_fields.push(quote! {
-        format!("{}{}: {},", " ".repeat((indent + 1) * 4), #name, #formatted_ty)
+        format!("{}{}{}: {},", " ".repeat((indent + 1) * 4), #name, #optional_annotation, #formatted_ty)
     });
 
     Ok(())
+}
+
+fn extract_option_argument(ty: &Type) -> Result<&Type> {
+    match ty {
+        Type::Path(type_path)
+            if type_path.qself.is_none()
+                && type_path.path.leading_colon.is_none()
+                && type_path.path.segments.len() == 1
+                && type_path.path.segments[0].ident == "Option" =>
+        {
+            let segment = &type_path.path.segments[0];
+            match &segment.arguments {
+                PathArguments::AngleBracketed(args) if args.args.len() == 1 => {
+                    match &args.args[0] {
+                        GenericArgument::Type(inner_ty) => Ok(&inner_ty),
+                        _ => syn_err!("`Option` argument must be a type"),
+                    }
+                }
+                _ => syn_err!("`Option` type must have a single generic argument"),
+            }
+        }
+        _ => syn_err!("`optional` can only be used on an Option<T> type"),
+    }
 }
 
 fn has_specialized_impl(ident: &Ident) -> bool {
