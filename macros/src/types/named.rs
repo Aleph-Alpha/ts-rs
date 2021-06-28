@@ -1,8 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{
-    Field, FieldsNamed, GenericArgument, GenericParam, Generics, Ident, Path, PathArguments,
-    PathSegment, Result, Type,
+    Field, FieldsNamed, GenericArgument, GenericParam, Generics, Ident, PathArguments, Result, Type,
 };
 
 use crate::attr::{FieldAttr, Inflection};
@@ -127,10 +126,7 @@ fn format_field(
                         ty,
                         Type::Path(type_path)
                             if type_path.qself.is_none()
-                            && type_path.path == Path::from(PathSegment {
-                                ident: type_param.ident.clone(),
-                                arguments: PathArguments::None,
-                            })
+                            && type_path.path.is_ident(&type_param.ident)
                     )
                 })
                 .map(|type_param| type_param.ident.to_string())
