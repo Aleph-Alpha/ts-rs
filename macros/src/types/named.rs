@@ -57,11 +57,10 @@ fn format_field(
         return Ok(());
     }
 
-    let mut ty = &field.ty;
-
-    if optional {
-        ty = extract_option_argument(ty)?;
-    }
+    let (ty, optional_annotation) = match optional {
+        true => (extract_option_argument(&field.ty)?, "?"),
+        false => (&field.ty, ""),
+    };
 
     if flatten {
         match (&type_override, &rename, inline) {
@@ -100,7 +99,6 @@ fn format_field(
         (None, Some(rn)) => rn.apply(&field.ident.as_ref().unwrap().to_string()),
         (None, None) => field.ident.as_ref().unwrap().to_string(),
     };
-    let optional_annotation = if optional { "?" } else { "" };
 
     formatted_fields.push(quote! {
         format!("{}{}{}: {},", " ".repeat((indent + 1) * 4), #name, #optional_annotation, #formatted_ty)
