@@ -99,25 +99,15 @@ fn format_field(
         return Ok(());
     }
 
-    if type_override.is_none() {
-        dependencies.push(match inline {
-            true => quote! { dependencies.append(&mut <#ty as ts_rs::TS>::dependencies()); },
-            false => quote! {
-                if <#ty as ts_rs::TS>::transparent() {
-                    dependencies.append(&mut <#ty as ts_rs::TS>::dependencies());
-                } else {
-                    dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name()));
-                }
-            },
-        });
-    }
-
-    let formatted_ty = type_override
-        .map(|t| quote!(#t))
-        .unwrap_or_else(|| match inline {
-            true => quote!(<#ty as ts_rs::TS>::inline(indent + 1)),
-            false => format_type(ty, generics),
-        });
+    let formatted_ty = type_override.map(|t| quote!(#t)).unwrap_or_else(|| {
+        if inline {
+            dependencies
+                .push(quote!(dependencies.append(&mut <#ty as ts_rs::TS>::dependencies());));
+            quote!(<#ty as ts_rs::TS>::inline(indent + 1))
+        } else {
+            format_type(ty, dependencies, generics)
+        }
+    });
     let name = match (rename, rename_all) {
         (Some(rn), _) => rn,
         (None, Some(rn)) => rn.apply(&field.ident.as_ref().unwrap().to_string()),
@@ -186,7 +176,7 @@ fn extract_type_args(ty: &Type) -> Option<Vec<&Type>> {
     Some(type_args)
 }
 
-fn format_type(ty: &Type, generics: &Generics) -> TokenStream {
+fn format_type(ty: &Type, dependencies: &mut Vec<TokenStream>, generics: &Generics) -> TokenStream {
     // If the type matches one of the generic parameters, just pass the identifier:
     if let Some(generic_ident) = generics
         .params
@@ -208,12 +198,20 @@ fn format_type(ty: &Type, generics: &Generics) -> TokenStream {
         return quote!(#generic_ident.to_owned());
     }
 
+    dependencies.push(quote! {
+        if <#ty as ts_rs::TS>::transparent() {
+            dependencies.append(&mut <#ty as ts_rs::TS>::dependencies());
+        } else {
+            dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name()));
+        }
+    });
+
     match extract_type_args(ty) {
         None => quote!(<#ty as ts_rs::TS>::name()),
         Some(type_args) => {
             let args = type_args
                 .iter()
-                .map(|ty| format_type(ty, generics))
+                .map(|ty| format_type(ty, dependencies, generics))
                 .collect::<Vec<_>>();
             let args = quote!(vec![#(#args),*]);
             quote!(<#ty as ts_rs::TS>::name_with_type_args(#args))
