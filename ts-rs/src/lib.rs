@@ -31,6 +31,8 @@ pub use ts_rs_macros::TS;
 #[doc(hidden)]
 pub mod export;
 
+pub use export::index;
+
 /// A type which can be represented in TypeScript.  
 /// Most of the time, you'd want to derive this trait instead of implementing it manually.  
 /// ts-rs comes with implementations for all numeric types, `String`, `Vec`, `Option` and tuples.
