@@ -10,8 +10,25 @@ enum EnumWithInternalTag {
     B { bar: i32 },
 }
 
+#[derive(Serialize, TS)]
+struct InnerA {
+    foo: String,
+}
+
+#[derive(Serialize, TS)]
+struct InnerB {
+    bar: i32,
+}
+
+#[derive(Serialize, TS)]
+#[serde(tag = "type")]
+enum EnumWithInternalTag2 {
+    A(InnerA),
+    B(InnerB),
+}
+
 #[test]
-fn test_enum_with_internal_tag() {
+fn test_enums_with_internal_tags() {
     assert_eq!(
         EnumWithInternalTag::decl(),
         r#"type EnumWithInternalTag = {
@@ -21,5 +38,12 @@ fn test_enum_with_internal_tag() {
     type: "B",
     bar: number,
 };"#
-    )
+    );
+
+    assert_eq!(
+        EnumWithInternalTag2::decl(),
+        r#"type EnumWithInternalTag2 = 
+    { type: "A" } & InnerA | 
+    { type: "B" } & InnerB;"#
+    );
 }
