@@ -58,8 +58,14 @@ impl_parse! {
 impl_parse! {
     SerdeFieldAttr(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
+        "skip" => out.0.skip = true,
         "skip_serializing" => out.0.skip = true,
         "skip_deserializing" => out.0.skip = true,
         "flatten" => out.0.flatten = true,
+        "default" => {
+            if !input.is_empty() {
+                parse_assign_str(input)?;
+            }
+        },
     }
 }
