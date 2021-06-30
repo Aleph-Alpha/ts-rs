@@ -55,6 +55,7 @@ fn format_field(
         rename,
         inline,
         skip,
+        optional,
         flatten,
     } = FieldAttr::from_attrs(&field.attrs)?;
 
@@ -63,6 +64,9 @@ fn format_field(
     }
     if rename.is_some() {
         syn_err!("`rename` is not applicable to tuple structs")
+    }
+    if optional {
+        syn_err!("`optional` is not applicable to tuple fields")
     }
     if flatten {
         syn_err!("`flatten` is not applicable to tuple fields")

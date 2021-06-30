@@ -18,13 +18,15 @@ pub(crate) fn newtype(
         rename: rename_inner,
         inline,
         skip,
+        optional,
         flatten,
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
-    match (&rename_inner, skip, flatten) {
-        (Some(_), _, _) => syn_err!("`rename` is not applicable to newtype fields"),
-        (_, true, _) => syn_err!("`skip` is not applicable to newtype fields"),
-        (_, _, true) => syn_err!("`flatten` is not applicable to newtype fields"),
+    match (&rename_inner, skip, optional, flatten) {
+        (Some(_), ..) => syn_err!("`rename` is not applicable to newtype fields"),
+        (_, true, ..) => syn_err!("`skip` is not applicable to newtype fields"),
+        (_, _, true, ..) => syn_err!("`optional` is not applicable to newtype fields"),
+        (_, _, _, true) => syn_err!("`flatten` is not applicable to newtype fields"),
         _ => {}
     };
 

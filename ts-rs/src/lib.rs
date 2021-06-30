@@ -84,6 +84,9 @@ pub mod export;
 /// - `#[ts(skip)]`:  
 ///   Skip this field  
 ///
+/// - `#[ts(optional)]
+///   Indicates the field may be omitted from the serialized struct
+///
 /// - `#[ts(flatten)]`:  
 ///   Flatten this field (only works if the field is a struct)  
 ///   
