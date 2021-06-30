@@ -1,5 +1,5 @@
 use std::any::TypeId;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path, PathBuf};
 
 use crate::TS;
@@ -47,13 +47,13 @@ macro_rules! export {
         #[test]
         fn export_typescript() {
             use std::fmt::Write;
-            use std::collections::{HashMap as __HashMap, HashSet as __HashSet};
+            use std::collections::{BTreeMap as __BTreeMap, BTreeSet as __BTreeSet};
 
             let manifest_var = std::env::var("CARGO_MANIFEST_DIR").unwrap();
             let manifest_dir = std::path::Path::new(&manifest_var);
 
             // {TypeId} -> {PathBuf}
-            let mut files = __HashMap::new();
+            let mut files = __BTreeMap::new();
             $(
                 let path = manifest_dir.join($l);
 
@@ -74,7 +74,7 @@ macro_rules! export {
             )*
 
             let mut buffer = String::with_capacity(8192);
-            let mut imports = __HashMap::<String, __HashSet<String>>::new();
+            let mut imports = __BTreeMap::<String, __BTreeSet<String>>::new();
             let fmt_config = ts_rs::export::FmtCfg::new() .deno().build();
 
             $({
@@ -133,7 +133,7 @@ pub use dprint_plugin_typescript::{
     configuration::ConfigurationBuilder as FmtCfg, format_text as fmt_ts,
 };
 
-pub fn write_imports(imports: &HashMap<String, HashSet<String>>, out: &mut impl Write) {
+pub fn write_imports(imports: &BTreeMap<String, BTreeSet<String>>, out: &mut impl Write) {
     for (path, types) in imports {
         writeln!(
             out,
@@ -146,8 +146,8 @@ pub fn write_imports(imports: &HashMap<String, HashSet<String>>, out: &mut impl 
 }
 
 pub fn imports<T: TS>(
-    exported_files: &HashMap<TypeId, PathBuf>,
-    imports: &mut HashMap<String, HashSet<String>>,
+    exported_files: &BTreeMap<TypeId, PathBuf>,
+    imports: &mut BTreeMap<String, BTreeSet<String>>,
     out_path: &Path,
 ) {
     T::dependencies()
@@ -163,7 +163,7 @@ pub fn imports<T: TS>(
         .for_each(|(path, name)| {
             imports
                 .entry(path)
-                .or_insert_with(HashSet::<_>::new)
+                .or_insert_with(BTreeSet::<_>::new)
                 .insert(name);
         });
 }
