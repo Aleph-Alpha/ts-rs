@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{
-    Field, FieldsNamed, GenericArgument, GenericParam, Generics, Ident, PathArguments, Result, Type,
+    Field, FieldsNamed, GenericArgument, GenericParam, Generics, PathArguments, Result, Type,
 };
 
 use crate::attr::{FieldAttr, Inflection};
@@ -151,13 +151,7 @@ fn extract_type_args(ty: &Type) -> Option<Vec<&Type>> {
     }?;
 
     let segment_arguments = match &last_segment.arguments {
-        PathArguments::AngleBracketed(generic_arguments) => {
-            if has_specialized_impl(&last_segment.ident) {
-                None
-            } else {
-                Some(generic_arguments)
-            }
-        }
+        PathArguments::AngleBracketed(generic_arguments) => Some(generic_arguments),
         _ => None,
     }?;
 
@@ -217,14 +211,4 @@ fn format_type(ty: &Type, dependencies: &mut Vec<TokenStream>, generics: &Generi
             quote!(<#ty as ts_rs::TS>::name_with_type_args(#args))
         }
     }
-}
-
-fn has_specialized_impl(ident: &Ident) -> bool {
-    ident == "Arc"
-        || ident == "Box"
-        || ident == "Cell"
-        || ident == "Cow"
-        || ident == "Option"
-        || ident == "Rc"
-        || ident == "RefCell"
 }
