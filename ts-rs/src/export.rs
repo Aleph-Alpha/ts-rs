@@ -5,6 +5,20 @@ use std::path::{Component, Path, PathBuf};
 use crate::TS;
 use std::fmt::Write;
 
+/// Placeholder type that can be used to instruct `export!` to generate an index file that
+/// re-exports all generated types.
+///
+/// ```rust
+/// use ts_rs::{export, index};
+///
+/// export ! {
+///     A => "bindings/a.ts",
+///     index => "bindings/index.ts" // export type { A } from "./a.ts";
+/// }
+/// ```
+#[allow(non_camel_case_types)]
+pub type index = ();
+
 /// Expands to a test function which exports typescript bindings to one or multiple files when
 /// running `cargo test`.  
 /// If a type depends on an other type which is exported to a different file, an appropriate import
@@ -26,6 +40,8 @@ use std::fmt::Write;
 /// When running `cargo test`, bindings for `A`, `B` and `C` will be exported to `bindings/a.ts`
 /// and `bindings/b.ts`.
 ///
+/// ## Ambient declarations
+///
 /// By default, `export!` always uses `export type/interface`.
 /// If you wish, you can also use ambient declarations (`declare type/interface`):
 /// ```rust
@@ -40,6 +56,20 @@ use std::fmt::Write;
 /// ```
 /// Since `Declared` is now an ambient declaration, `bindings/normal.ts` will not include an import
 /// for `bindings/declared.d.ts`.
+///
+/// ## Index file
+///
+/// You may also wish to generate an index file that re-exports all generated types. You can do so
+/// using the special `index` export:
+///
+/// ```rust
+/// use ts_rs::{export, index};
+///
+/// export ! {
+///     A => "bindings/a.ts",
+///     index => "bindings/index.ts" // export type { A } from "./a.ts";
+/// }
+/// ```
 #[macro_export]
 macro_rules! export {
     ($($(($decl:ident))? $($p:path),+ => $l:literal),* $(,)?) => {
@@ -48,6 +78,8 @@ macro_rules! export {
         fn export_typescript() {
             use std::fmt::Write;
             use std::collections::{HashMap as __HashMap, HashSet as __HashSet};
+
+            let index_type = std::any::TypeId::of::<ts_rs::export::index>();
 
             let manifest_var = std::env::var("CARGO_MANIFEST_DIR").unwrap();
             let manifest_dir = std::path::Path::new(&manifest_var);
@@ -88,7 +120,11 @@ macro_rules! export {
                     .expect("could not create directory");
 
                 // write imports
-                $( ts_rs::export::imports::<$p>(&files, &mut imports, &out); )*
+                $(
+                    if std::any::TypeId::of::<$p>() != index_type {
+                        ts_rs::export::imports::<$p>(&files, &mut imports, &out);
+                    }
+                )*
                 ts_rs::export::write_imports(&imports, &mut buffer);
                 buffer.push_str("\n");
 
@@ -99,18 +135,59 @@ macro_rules! export {
                 $( ts_rs::check_declare!($decl); prefix = "declare "; )*;
 
                 $(
-                    buffer.push_str(prefix);
-                    buffer.push_str(&<$p as ts_rs::TS>::decl());
-                    buffer.push_str("\n\n");
+                    if std::any::TypeId::of::<$p>() != index_type {
+                        buffer.push_str(prefix);
+                        buffer.push_str(&<$p as ts_rs::TS>::decl());
+                        buffer.push_str("\n\n");
+                    }
                 )*
 
-                // format output
-                let buffer = ts_rs::export::fmt_ts(&out, &buffer, &fmt_config)
-                    .expect("could not format output");
+                if !buffer.trim().is_empty() {
+                    // format output
+                    let buffer = ts_rs::export::fmt_ts(&out, &buffer, &fmt_config)
+                        .expect("could not format output");
 
-                std::fs::write(&out, buffer.trim())
-                    .expect("could not write file");
+                    std::fs::write(&out, buffer.trim())
+                        .expect("could not write file");
+                }
             })*
+
+            // generate index, if requested
+            if let Some(index_path) = files.get(&index_type) {
+                buffer.clear();
+
+                let out = manifest_dir.join(index_path);
+                std::fs::create_dir_all(out.parent().unwrap()).expect("could not create directory");
+
+                // generate the content of the index file
+                $({
+                    let mut types = vec![];
+                    $(
+                        if std::any::TypeId::of::<$p>() != index_type {
+                            types.push(<$p as ts_rs::TS>::name());
+                        }
+                    )*
+
+                    if !types.is_empty() {
+                        let path = manifest_dir.join($l);
+                        writeln!(
+                            &mut buffer,
+                            "export type {{{}}} from {:?};",
+                            types
+                                .iter()
+                                .cloned()
+                                .collect::<Vec<_>>()
+                                .join(", "),
+                            ts_rs::export::import_path(index_path, &path)
+                        )
+                        .unwrap();
+                    }
+                })*
+
+                let buffer = ts_rs::export::fmt_ts(&out, &buffer, &fmt_config).expect("could not format output");
+
+                std::fs::write(&out, buffer.trim()).expect("could not write file");
+            }
         }
     };
 }
@@ -168,7 +245,7 @@ pub fn imports<T: TS>(
         });
 }
 
-fn import_path(from: &Path, import: &Path) -> String {
+pub fn import_path(from: &Path, import: &Path) -> String {
     let rel_path =
         diff_paths(import, from.parent().unwrap()).expect("failed to calculate import path");
     match rel_path.components().next() {
