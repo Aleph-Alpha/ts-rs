@@ -219,6 +219,9 @@ macro_rules! impl_proxy {
             fn name() -> String {
                 T::name()
             }
+            fn name_with_type_args(_: Vec<String>) -> String {
+                T::name()
+            }
             fn inline(indent: usize) -> String {
                 T::inline(indent)
             }
@@ -229,7 +232,7 @@ macro_rules! impl_proxy {
                 T::dependencies()
             }
             fn transparent() -> bool {
-                true
+                T::transparent()
             }
         }
     };
@@ -253,6 +256,10 @@ impl_proxy!(impl<T: TS> TS for std::cell::RefCell<T>);
 impl<T: TS> TS for Option<T> {
     fn name() -> String {
         format!("{} | null", T::name())
+    }
+
+    fn name_with_type_args(_: Vec<String>) -> String {
+        Self::name()
     }
 
     fn inline(indent: usize) -> String {
