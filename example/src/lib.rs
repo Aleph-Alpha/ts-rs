@@ -51,6 +51,24 @@ struct Series {
     points: Vec<Point<u64>>,
 }
 
+#[derive(Serialize, TS)]
+#[serde(tag = "kind", content = "d")]
+enum SimpleEnum {
+    A,
+    B,
+}
+
+#[derive(Serialize, TS)]
+#[serde(tag = "kind", content = "data")]
+enum ComplexEnum {
+    A,
+    B { foo: String, bar: f64 },
+    W(SimpleEnum),
+    F { nested: SimpleEnum },
+    T(i32, SimpleEnum),
+    V(Vec<Series>),
+}
+
 // this will export [Role] to `role.ts` and [User] to `user.ts` when running `cargo test`.
 // `export!` will also take care of including imports in typescript files.
 export! {
@@ -60,6 +78,8 @@ export! {
     Point<()> => "point.ts",
     Series => "series.ts",
     Vehicle => "vehicle.ts",
+    ComplexEnum => "complex_enum.ts",
+    SimpleEnum => "simple_enum.ts",
     // this exports an ambient declaration (`declare interface`) instead of an `export interface`.
     (declare) Gender => "gender.d.ts",
 }

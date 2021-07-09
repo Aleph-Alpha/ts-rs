@@ -31,11 +31,11 @@ enum Untagged {
 fn test_serde_enum() {
     assert_eq!(
         SimpleEnum::decl(),
-        r#"type SimpleEnum = {kind: "A", d: null} | {kind: "B", d: null};"#
+        r#"type SimpleEnum = {kind: "A"} | {kind: "B"};"#
     );
     assert_eq!(
         ComplexEnum::decl(),
-        r#"type ComplexEnum = {kind: "A", data: null} | {kind: "B", data: {
+        r#"type ComplexEnum = {kind: "A"} | {kind: "B", data: {
     foo: string,
     bar: number,
 }} | {kind: "W", data: SimpleEnum} | {kind: "F", data: {
