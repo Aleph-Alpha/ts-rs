@@ -219,8 +219,12 @@ macro_rules! impl_proxy {
             fn name() -> String {
                 T::name()
             }
-            fn name_with_type_args(_: Vec<String>) -> String {
-                T::name()
+            fn name_with_type_args(args: Vec<String>) -> String {
+                if args.len() == 1 {
+                    args[0].clone()
+                } else {
+                    format!("[{}]", args.join(", "))
+                }
             }
             fn inline(indent: usize) -> String {
                 T::inline(indent)
