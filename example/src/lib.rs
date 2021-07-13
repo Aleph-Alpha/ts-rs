@@ -65,8 +65,19 @@ enum ComplexEnum {
     B { foo: String, bar: f64 },
     W(SimpleEnum),
     F { nested: SimpleEnum },
-    T(i32, SimpleEnum),
     V(Vec<Series>),
+    U(Box<User>),
+}
+
+#[derive(Serialize, TS)]
+#[serde(tag = "kind")]
+enum InlineComplexEnum {
+    A,
+    B { foo: String, bar: f64 },
+    W(SimpleEnum),
+    F { nested: SimpleEnum },
+    V(Vec<Series>),
+    U(Box<User>),
 }
 
 // this will export [Role] to `role.ts` and [User] to `user.ts` when running `cargo test`.
@@ -79,6 +90,7 @@ export! {
     Series => "series.ts",
     Vehicle => "vehicle.ts",
     ComplexEnum => "complex_enum.ts",
+    InlineComplexEnum => "inline_complex_enum.ts",
     SimpleEnum => "simple_enum.ts",
     // this exports an ambient declaration (`declare interface`) instead of an `export interface`.
     (declare) Gender => "gender.d.ts",
