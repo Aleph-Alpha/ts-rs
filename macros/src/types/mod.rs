@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::{Fields, ItemEnum, ItemStruct, Result, Variant};
 
 use crate::attr::{EnumAttr, FieldAttr, Inflection, StructAttr};
@@ -36,18 +36,113 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
         None => s.ident.to_string(),
     };
 
+    let is_enum = match enum_attr.r#type.as_deref() {
+        Some("enum" | "const enum") => { true },
+        None | Some("type") => { false },
+        Some(x) => {
+            syn_err!("Either `const enum`, `enum` or `type` accepted; was: {:?}", x);
+        }
+    };
+
     let mut formatted_variants = vec![];
-    for variant in &s.variants {
-        format_variant(&mut formatted_variants, &enum_attr, &variant)?;
+    if is_enum {
+        let any_renamed = enum_attr.rename_all.is_some() || s.variants.iter().find(|v| {
+            let FieldAttr {
+                rename,
+                ..
+            } = FieldAttr::from_attrs(&v.attrs).unwrap();
+            rename.is_some()
+        }).is_some();
+
+        for variant in &s.variants {
+            format_enum_variant(&mut formatted_variants, &enum_attr, &variant, any_renamed)?;
+        }
+    } else {
+        for variant in &s.variants {
+            format_variant(&mut formatted_variants, &enum_attr, &variant)?;
+        }
     }
 
+    let inline = if is_enum {
+        quote!([#(#formatted_variants),*].join(", "))
+    } else {
+        quote!([#(#formatted_variants),*].join(" | "))
+    };
+
+    let overwrite_type = enum_attr.r#type.unwrap_or(String::from("type"));
+
+    let decl = if is_enum {
+        quote!(format!("{} {} {{{}}}", #overwrite_type, #name, Self::inline(0)))
+    } else {
+        quote!(format!("{} {} = {};", #overwrite_type, #name, Self::inline(0)))
+    };
+
     Ok(DerivedTS {
-        inline: quote!(vec![#(#formatted_variants),*].join(" | ")),
-        decl: quote!(format!("type {} = {};", #name, Self::inline(0))),
+        inline,
+        decl,
         inline_flattened: None,
         dependencies: quote!((vec![])),
         name,
     })
+}
+
+/// If any have been renamed then we want to rename all enum variants
+fn format_enum_variant(
+    formatted_variants: &mut Vec<TokenStream>,
+    enum_attr: &EnumAttr,
+    variant: &Variant,
+    any_renamed: bool
+) -> Result<()> {
+    let FieldAttr {
+        type_override,
+        rename,
+        inline,
+        skip,
+        flatten,
+    } = FieldAttr::from_attrs(&variant.attrs)?;
+
+    match (skip, &type_override, inline, flatten) {
+        (true, ..) => return Ok(()),
+        (_, Some(_), ..) => syn_err!("`type_override` is not applicable to enum variants"),
+        (_, _, _, true) => syn_err!("`flatten` is not applicable to enum variants"),
+        (_, _, true, _) => syn_err!("`inline` is not applicable to enum variants when type enum"),
+        _ => {}
+    };
+
+    let name = variant.ident.to_string();
+
+    let enum_renamed_value: Option<String> = match (rename, &enum_attr.rename_all, any_renamed) {
+        (Some(rn), _, _) => Some(rn),
+        (None, None, true) => Some(name.clone()),
+        (None, None, false) => None,
+        (None, Some(rn), _) => Some(rn.apply(&name)),
+    };
+
+    for (forbidden_attr_name, forbidden_attr_val) in [
+        ("tag", &enum_attr.tag.as_deref()),
+        ("content", &enum_attr.content.as_deref()),
+        ("untag", &enum_attr.untag.then(|| "true"))
+    ] {
+        if let Some(_) = forbidden_attr_val {
+            syn_err!("Invalid enum attribute {:?} when type is enum.", forbidden_attr_name)
+        }
+    }
+
+    formatted_variants.push(if let Some((_, expr)) = &variant.discriminant {
+        let str = format!("{}={}", name, expr.to_token_stream());
+        quote!(#str)
+    } else if let Some(renamed) = enum_renamed_value {
+        if let Some((_, e)) = &variant.discriminant {
+            if !any_renamed {
+                syn_err!("{:?} Can't be both renamed and have a discriminant {:?}", name, e.to_token_stream());
+            }
+        }
+        let str =  format!("{}=\"{}\"", name, renamed);
+        quote!(#str)
+    } else {
+        quote!(#name)
+    });
+    Ok(())
 }
 
 fn format_variant(
@@ -77,8 +172,8 @@ fn format_variant(
     };
 
     match (&enum_attr.tag, &enum_attr.content, &enum_attr.untag) {
-        (_, Some(_), true) => panic!("Untagged enums cannot have content tags"),
-        (Some(_), _, true) => panic!("Untagged enums cannot have tags"),
+        (_, Some(_), true) => syn_err!("Untagged enums cannot have content tags"),
+        (Some(_), _, true) => syn_err!("Untagged enums cannot have tags"),
         _ => {}
     };
 
@@ -102,7 +197,7 @@ fn format_variant(
                             #inline_flattened
                         )
                     },
-                    None => panic!(
+                    None => syn_err!(
                         "Serde enums with tag discriminators should also have flattened fields"
                     ),
                 },
