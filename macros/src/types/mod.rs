@@ -37,21 +37,32 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
     };
 
     let mut formatted_variants = vec![];
+    let mut dependencies = vec![];
     for variant in &s.variants {
-        format_variant(&mut formatted_variants, &enum_attr, &variant)?;
+        format_variant(
+            &mut formatted_variants,
+            &mut dependencies,
+            &enum_attr,
+            &variant,
+        )?;
     }
 
     Ok(DerivedTS {
         inline: quote!(vec![#(#formatted_variants),*].join(" | ")),
         decl: quote!(format!("type {} = {};", #name, Self::inline(0))),
         inline_flattened: None,
-        dependencies: quote!((vec![])),
+        dependencies: quote! {
+            let mut dependencies = vec![];
+            #( #dependencies )*
+            dependencies
+        },
         name,
     })
 }
 
 fn format_variant(
     formatted_variants: &mut Vec<TokenStream>,
+    dependencies: &mut Vec<TokenStream>,
     enum_attr: &EnumAttr,
     variant: &Variant,
 ) -> Result<()> {
@@ -86,6 +97,7 @@ fn format_variant(
 
     let derived_type = type_def(&name, &None, &variant.fields)?;
     let inline_type = derived_type.inline;
+    let derived_dependencies = derived_type.dependencies;
 
     formatted_variants.push(match &enum_attr.untag {
         true => quote!(#inline_type),
@@ -104,9 +116,18 @@ fn format_variant(
                             #inline_flattened
                         )
                     },
-                    None => panic!(
-                        "Serde enums with tag discriminators should also have flattened fields"
-                    ),
+                    None => {
+                        dependencies.push(quote!(dependencies.append(&mut #derived_dependencies);));
+                        quote! {
+                            format!(
+                                "\n{}{{ {}: \"{}\" }} & {}",
+                                " ".repeat((indent + 1) * 4),
+                                #tag,
+                                #name,
+                                #inline_type
+                            )
+                        }
+                    }
                 },
             },
             None => match &variant.fields {
