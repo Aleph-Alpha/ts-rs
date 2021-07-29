@@ -60,13 +60,15 @@ fn format_variant(
         rename,
         inline,
         skip,
+        optional,
         flatten,
     } = FieldAttr::from_attrs(&variant.attrs)?;
 
-    match (skip, &type_override, inline, flatten) {
+    match (skip, &type_override, inline, optional, flatten) {
         (true, ..) => return Ok(()),
         (_, Some(_), ..) => syn_err!("`type_override` is not applicable to enum variants"),
-        (_, _, _, true) => syn_err!("`flatten` is not applicable to enum variants"),
+        (_, _, _, true, ..) => syn_err!("`optional` is not applicable to enum variants"),
+        (_, _, _, _, true) => syn_err!("`flatten` is not applicable to enum variants"),
         _ => {}
     };
 

@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Field, FieldsNamed, Result};
+use syn::{Field, FieldsNamed, GenericArgument, PathArguments, Result, Type};
 
 use crate::attr::{FieldAttr, Inflection};
 use crate::DerivedTS;
@@ -49,6 +49,7 @@ fn format_field(
         rename,
         inline,
         skip,
+        optional,
         flatten,
     } = FieldAttr::from_attrs(&field.attrs)?;
 
@@ -56,7 +57,10 @@ fn format_field(
         return Ok(());
     }
 
-    let ty = &field.ty;
+    let (ty, optional_annotation) = match optional {
+        true => (extract_option_argument(&field.ty)?, "?"),
+        false => (&field.ty, ""),
+    };
 
     if flatten {
         match (&type_override, &rename, inline) {
@@ -97,8 +101,31 @@ fn format_field(
     };
 
     formatted_fields.push(quote! {
-        format!("{}{}: {},", " ".repeat((indent + 1) * 4), #name, #formatted_ty)
+        format!("{}{}{}: {},", " ".repeat((indent + 1) * 4), #name, #optional_annotation, #formatted_ty)
     });
 
     Ok(())
+}
+
+fn extract_option_argument(ty: &Type) -> Result<&Type> {
+    match ty {
+        Type::Path(type_path)
+            if type_path.qself.is_none()
+                && type_path.path.leading_colon.is_none()
+                && type_path.path.segments.len() == 1
+                && type_path.path.segments[0].ident == "Option" =>
+        {
+            let segment = &type_path.path.segments[0];
+            match &segment.arguments {
+                PathArguments::AngleBracketed(args) if args.args.len() == 1 => {
+                    match &args.args[0] {
+                        GenericArgument::Type(inner_ty) => Ok(&inner_ty),
+                        _ => syn_err!("`Option` argument must be a type"),
+                    }
+                }
+                _ => syn_err!("`Option` type must have a single generic argument"),
+            }
+        }
+        _ => syn_err!("`optional` can only be used on an Option<T> type"),
+    }
 }
