@@ -6,4 +6,4 @@ edition = "2018"
 
 [dependencies]
 ts-rs = { path = "../ts-rs" }
-serde = { version = "1", features = ["derive"] }
+serde = { version = "1", features = ["derive", "rc"] }
