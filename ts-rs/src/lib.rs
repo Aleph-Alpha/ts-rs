@@ -237,6 +237,17 @@ impl_primitives! {
     String, &'static str => "string",
     () => "null"
 }
+
+#[cfg(feature = "chrono-impl")]
+impl_primitives! {
+    chrono::NaiveDateTime => "string"
+}
+
+#[cfg(feature = "bigdecimal-impl")]
+impl_primitives! {
+    bigdecimal::BigDecimal => "string"
+}
+
 impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
 impl_proxy!(impl<T: TS> TS for Box<T>);
 impl_proxy!(impl<T: TS> TS for std::sync::Arc<T>);
