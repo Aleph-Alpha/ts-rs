@@ -26,11 +26,11 @@ fn type_def(
     generics: &Generics,
 ) -> Result<DerivedTS> {
     match fields {
-        Fields::Named(named) => named::named(name, rename_all, &named, generics),
+        Fields::Named(named) => named::named(name, rename_all, named, generics),
         Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
-            newtype::newtype(name, rename_all, &unnamed)
+            newtype::newtype(name, rename_all, unnamed)
         }
-        Fields::Unnamed(unnamed) => tuple::tuple(name, rename_all, &unnamed),
+        Fields::Unnamed(unnamed) => tuple::tuple(name, rename_all, unnamed),
         Fields::Unit => unit::unit(name, rename_all),
     }
 }
@@ -50,7 +50,7 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
             &mut formatted_variants,
             &mut dependencies,
             &enum_attr,
-            &variant,
+            variant,
         )?;
     }
 

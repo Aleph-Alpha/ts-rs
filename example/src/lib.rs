@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use chrono::NaiveDateTime;
 use serde::Serialize;
 use std::collections::BTreeSet;
 use std::rc::Rc;
@@ -30,6 +31,8 @@ struct User {
     role: Role,
     family: Vec<User>,
     gender: Gender,
+    #[ts(type = "string")]
+    created_at: NaiveDateTime,
 }
 
 #[derive(Serialize, TS)]

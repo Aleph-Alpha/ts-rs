@@ -21,7 +21,7 @@ pub(crate) fn named(
             &mut formatted_fields,
             &mut dependencies,
             field,
-            &rename_all,
+            rename_all,
             generics,
         )?;
     }
@@ -134,7 +134,7 @@ fn extract_option_argument(ty: &Type) -> Result<&Type> {
             match &segment.arguments {
                 PathArguments::AngleBracketed(args) if args.args.len() == 1 => {
                     match &args.args[0] {
-                        GenericArgument::Type(inner_ty) => Ok(&inner_ty),
+                        GenericArgument::Type(inner_ty) => Ok(inner_ty),
                         _ => syn_err!("`Option` argument must be a type"),
                     }
                 }

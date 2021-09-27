@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use serde::Serialize;
+
 use ts_rs::TS;
 
 #[derive(Serialize, TS)]
@@ -28,6 +29,7 @@ enum EnumWithInternalTag2 {
 }
 
 #[test]
+#[cfg(feature = "serde-compat")]
 fn test_enums_with_internal_tags() {
     assert_eq!(
         EnumWithInternalTag::decl(),

@@ -1,16 +1,23 @@
 [package]
 name = "ts-rs"
-version = "3.0.0"
-authors = ["Moritz Bischof <moritz.bischof@aleph-alpha.de>"]
+version = "3.1.0"
+authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
 edition = "2018"
 license = "MIT"
 description = "generate typescript bindings from rust types"
 homepage = "https://github.com/Aleph-Alpha/ts-rs"
 repository = "https://github.com/Aleph-Alpha/ts-rs"
 
+[features]
+chrono-impl = ["chrono"]
+bigdecimal-impl = ["bigdecimal"]
+serde-compat = ["ts-rs-macros/serde-compat"]
+
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
 
 [dependencies]
-ts-rs-macros = { version = "3.0.0", path = "../macros", features = ["serde-compat"] }
+ts-rs-macros = { version = "3.1.0", path = "../macros" }
 dprint-plugin-typescript = { version = "0.43" }
+chrono = { version = "0.4.19", optional = true }
+bigdecimal = {version = "0.1.2", features=["serde"], optional = true}
