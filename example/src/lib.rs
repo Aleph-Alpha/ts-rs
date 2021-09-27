@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 
+use std::{collections::BTreeSet, rc::Rc};
+
 use chrono::NaiveDateTime;
 use serde::Serialize;
-use std::collections::BTreeSet;
-use std::rc::Rc;
 use ts_rs::{export, TS};
 
 #[derive(Serialize, TS)]

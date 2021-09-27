@@ -4,9 +4,11 @@ use syn::{
     Field, FieldsNamed, GenericArgument, GenericParam, Generics, PathArguments, Result, Type,
 };
 
-use crate::attr::{FieldAttr, Inflection};
-use crate::types::generics::format_type;
-use crate::DerivedTS;
+use crate::{
+    attr::{FieldAttr, Inflection},
+    types::generics::format_type,
+    DerivedTS,
+};
 
 pub(crate) fn named(
     name: &str,

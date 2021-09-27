@@ -1,8 +1,7 @@
 use quote::quote;
 use syn::Result;
 
-use crate::attr::Inflection;
-use crate::DerivedTS;
+use crate::{attr::Inflection, DerivedTS};
 
 pub(crate) fn unit(name: &str, rename_all: &Option<Inflection>) -> Result<DerivedTS> {
     if rename_all.is_some() {

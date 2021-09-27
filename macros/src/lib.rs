@@ -3,8 +3,7 @@
 
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
-use syn::spanned::Spanned;
-use syn::{parse_quote, WhereClause, GenericParam, Generics, Item, Result};
+use syn::{parse_quote, spanned::Spanned, GenericParam, Generics, Item, Result, WhereClause};
 
 #[macro_use]
 mod utils;
@@ -72,11 +71,17 @@ impl DerivedTS {
 }
 
 fn add_ts_trait_bound(generics: &Generics) -> Option<WhereClause> {
-    let generic_types: Vec<_> = generics.params.iter().filter_map(|gp| match gp {
-        GenericParam::Type(ty) => Some(ty.ident.clone()),
-        _ => None,
-    }).collect();
-    if generic_types.len() == 0 { return generics.where_clause.clone() }
+    let generic_types: Vec<_> = generics
+        .params
+        .iter()
+        .filter_map(|gp| match gp {
+            GenericParam::Type(ty) => Some(ty.ident.clone()),
+            _ => None,
+        })
+        .collect();
+    if generic_types.is_empty() {
+        return generics.where_clause.clone();
+    }
     match generics.where_clause {
         None => Some(parse_quote! { where #( #generic_types : ts_rs::TS ),* }),
         Some(ref w) => {

@@ -1,7 +1,9 @@
 use syn::{Attribute, Ident, Result};
 
-use crate::attr::{parse_assign_inflection, parse_assign_str, Inflection};
-use crate::utils::parse_attrs;
+use crate::{
+    attr::{parse_assign_inflection, parse_assign_str, Inflection},
+    utils::parse_attrs,
+};
 
 #[derive(Default)]
 pub struct EnumAttr {

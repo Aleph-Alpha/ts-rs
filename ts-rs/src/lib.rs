@@ -18,14 +18,14 @@
 //! With the `serde-compat` feature enabled, ts-rs tries parsing serde attributes.  
 //! Please note that not all serde attributes are supported yet.
 
-use std::path::Path;
-use std::{collections::HashMap, fs::OpenOptions};
 use std::{
-    collections::{BTreeMap, BTreeSet, HashSet},
+    any::TypeId,
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+    fs::OpenOptions,
     io::{BufWriter, Write},
+    path::Path,
 };
 
-use std::any::TypeId;
 pub use ts_rs_macros::TS;
 
 #[doc(hidden)]
@@ -251,8 +251,50 @@ impl_primitives! {
 }
 
 #[cfg(feature = "chrono-impl")]
-impl_primitives! {
-    chrono::NaiveDateTime => "string"
+mod chrono_impls {
+    use std::any::TypeId;
+    use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
+    use super::TS;
+
+    impl_primitives! {
+        NaiveDateTime, NaiveDate, NaiveTime => "string"
+    }
+
+    impl<T: TimeZone + 'static> TS for DateTime<T> {
+        fn name() -> String {
+            "string".to_owned()
+        }
+
+        fn inline(_indent: usize) -> String {
+            "string".to_owned()
+        }
+
+        fn dependencies() -> Vec<(TypeId, String)> {
+            vec![]
+        }
+
+        fn transparent() -> bool {
+            false
+        }
+    }
+
+    impl<T: TimeZone + 'static> TS for Date<T> {
+        fn name() -> String {
+            "string".to_owned()
+        }
+
+        fn inline(_indent: usize) -> String {
+            "string".to_owned()
+        }
+
+        fn dependencies() -> Vec<(TypeId, String)> {
+            vec![]
+        }
+
+        fn transparent() -> bool {
+            false
+        }
+    }
 }
 
 #[cfg(feature = "bigdecimal-impl")]

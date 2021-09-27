@@ -1,9 +1,11 @@
-use std::any::TypeId;
-use std::collections::{BTreeMap, BTreeSet};
-use std::path::{Component, Path, PathBuf};
+use std::{
+    any::TypeId,
+    collections::{BTreeMap, BTreeSet},
+    fmt::Write,
+    path::{Component, Path, PathBuf},
+};
 
 use crate::TS;
-use std::fmt::Write;
 
 /// Expands to a test function which exports typescript bindings to one or multiple files when
 /// running `cargo test`.  

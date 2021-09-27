@@ -39,7 +39,7 @@ We recommend doing this in your tests. [see the example](https://github.com/Alep
 ## get started
 ```toml
 [dependencies]
-ts-rs = "3.1"
+ts-rs = "4.0"
 ```
 
 ```rust
@@ -88,4 +88,5 @@ Supported serde attributes:
 - [x] documentation
 - [x] use typescript types across files
 - [x] more enum representations
+- [x] generics  
 - [ ] don't require `'static`

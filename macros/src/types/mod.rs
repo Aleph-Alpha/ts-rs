@@ -2,9 +2,11 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Fields, Generics, ItemEnum, ItemStruct, Result, Variant};
 
-use crate::attr::{EnumAttr, FieldAttr, Inflection, StructAttr};
-use crate::types::generics::format_type;
-use crate::DerivedTS;
+use crate::{
+    attr::{EnumAttr, FieldAttr, Inflection, StructAttr},
+    types::generics::format_type,
+    DerivedTS,
+};
 
 mod generics;
 mod named;

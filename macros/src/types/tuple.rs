@@ -2,8 +2,10 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Field, FieldsUnnamed, Result};
 
-use crate::attr::{FieldAttr, Inflection};
-use crate::DerivedTS;
+use crate::{
+    attr::{FieldAttr, Inflection},
+    DerivedTS,
+};
 
 pub(crate) fn tuple(
     name: &str,

@@ -1,8 +1,7 @@
 use syn::{Attribute, Ident, Result};
 
-use crate::utils::parse_attrs;
-
 use super::parse_assign_str;
+use crate::utils::parse_attrs;
 
 #[derive(Default)]
 pub struct FieldAttr {

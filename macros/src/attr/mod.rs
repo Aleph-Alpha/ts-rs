@@ -1,10 +1,12 @@
 use std::convert::TryFrom;
 
-use syn::{parse::Parse, parse::ParseStream, Error, Lit, Result, Token};
-
 pub use field::*;
 pub use r#enum::*;
 pub use r#struct::*;
+use syn::{
+    parse::{Parse, ParseStream},
+    Error, Lit, Result, Token,
+};
 
 mod r#enum;
 mod field;

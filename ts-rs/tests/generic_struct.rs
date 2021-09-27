@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use std::collections::HashMap;
+
 use ts_rs::TS;
 
 #[derive(TS)]
@@ -20,7 +21,8 @@ struct GenericAutoBound<T> {
 
 #[derive(TS)]
 struct GenericAutoBound2<T>
-where T: PartialEq
+where
+    T: PartialEq,
 {
     value: T,
     values: Vec<T>,

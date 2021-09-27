@@ -1,8 +1,10 @@
 use quote::quote;
 use syn::{FieldsUnnamed, Result};
 
-use crate::attr::{FieldAttr, Inflection};
-use crate::DerivedTS;
+use crate::{
+    attr::{FieldAttr, Inflection},
+    DerivedTS,
+};
 
 pub(crate) fn newtype(
     name: &str,

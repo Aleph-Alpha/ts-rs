@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
 use serde::Deserialize;
-
 use ts_rs::TS;
 
 #[derive(TS, Deserialize)]

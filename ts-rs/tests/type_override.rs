@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use std::time::Instant;
+
 use ts_rs::TS;
 
 #[derive(TS)]
