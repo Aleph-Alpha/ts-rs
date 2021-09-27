@@ -39,7 +39,7 @@ We recommend doing this in your tests. [see the example](https://github.com/Alep
 ## get started
 ```toml
 [dependencies]
-ts-rs = "3.0"
+ts-rs = "3.1"
 ```
 
 ```rust
@@ -79,6 +79,7 @@ Supported serde attributes:
 - `skip`
 - `skip_serializing`
 - `skip_deserializing`
+- `skip_serializing_if = "Option::is_none"`
 - `flatten`
 - `default`
 

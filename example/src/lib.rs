@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
+use chrono::NaiveDateTime;
 use serde::Serialize;
 use ts_rs::{export, TS};
-use chrono::NaiveDateTime;
 
 #[derive(Serialize, TS)]
 #[ts(rename_all = "lowercase")]
@@ -29,6 +29,7 @@ struct User {
     role: Role,
     family: Vec<User>,
     gender: Gender,
+    #[ts(type = "string")]
     created_at: NaiveDateTime,
 }
 

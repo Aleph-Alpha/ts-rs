@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use serde::Serialize;
+
 use ts_rs::TS;
 
 #[derive(Serialize, TS)]
@@ -13,6 +14,16 @@ struct Optional {
 
 #[test]
 fn test() {
+    #[cfg(not(feature = "serde-compat"))]
+    assert_eq!(
+        Optional::inline(0),
+        "\
+{
+    a?: number,
+    b: string | null,
+}"
+    );
+    #[cfg(feature = "serde-compat")]
     assert_eq!(
         Optional::inline(0),
         "\

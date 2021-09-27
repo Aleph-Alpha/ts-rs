@@ -19,11 +19,11 @@ pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
 
 fn type_def(name: &str, rename_all: &Option<Inflection>, fields: &Fields) -> Result<DerivedTS> {
     match fields {
-        Fields::Named(named) => named::named(name, rename_all, &named),
+        Fields::Named(named) => named::named(name, rename_all, named),
         Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
-            newtype::newtype(name, rename_all, &unnamed)
+            newtype::newtype(name, rename_all, unnamed)
         }
-        Fields::Unnamed(unnamed) => tuple::tuple(name, rename_all, &unnamed),
+        Fields::Unnamed(unnamed) => tuple::tuple(name, rename_all, unnamed),
         Fields::Unit => unit::unit(name, rename_all),
     }
 }
@@ -43,7 +43,7 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
             &mut formatted_variants,
             &mut dependencies,
             &enum_attr,
-            &variant,
+            variant,
         )?;
     }
 

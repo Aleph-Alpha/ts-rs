@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use serde::Deserialize;
+
 use ts_rs::TS;
 
 #[derive(TS, Deserialize)]
@@ -19,6 +20,7 @@ enum ComplexEnum {
     F { nested: SimpleEnum },
     T(i32, SimpleEnum),
 }
+
 #[derive(TS, Deserialize)]
 #[serde(untagged)]
 enum Untagged {
@@ -27,6 +29,7 @@ enum Untagged {
     None,
 }
 
+#[cfg(feature = "serde-compat")]
 #[test]
 fn test_serde_enum() {
     assert_eq!(

@@ -13,7 +13,7 @@ pub(crate) fn named(
     let mut formatted_fields = vec![];
     let mut dependencies = vec![];
     for field in &fields.named {
-        format_field(&mut formatted_fields, &mut dependencies, field, &rename_all)?;
+        format_field(&mut formatted_fields, &mut dependencies, field, rename_all)?;
     }
 
     let fields = quote!(vec![#(#formatted_fields),*].join("\n"));
@@ -119,7 +119,7 @@ fn extract_option_argument(ty: &Type) -> Result<&Type> {
             match &segment.arguments {
                 PathArguments::AngleBracketed(args) if args.args.len() == 1 => {
                     match &args.args[0] {
-                        GenericArgument::Type(inner_ty) => Ok(&inner_ty),
+                        GenericArgument::Type(inner_ty) => Ok(inner_ty),
                         _ => syn_err!("`Option` argument must be a type"),
                     }
                 }

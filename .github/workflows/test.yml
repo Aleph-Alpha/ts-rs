@@ -12,4 +12,8 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --manifest-path ts-rs/Cargo.toml
+          args: --no-default-features --manifest-path ts-rs/Cargo.toml
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features --manifest-path ts-rs/Cargo.toml
