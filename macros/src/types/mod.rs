@@ -1,10 +1,12 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Fields, ItemEnum, ItemStruct, Result, Variant};
+use syn::{Fields, Generics, ItemEnum, ItemStruct, Result, Variant};
 
 use crate::attr::{EnumAttr, FieldAttr, Inflection, StructAttr};
+use crate::types::generics::format_type;
 use crate::DerivedTS;
 
+mod generics;
 mod named;
 mod newtype;
 mod tuple;
@@ -14,12 +16,17 @@ pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     let StructAttr { rename_all, rename } = StructAttr::from_attrs(&s.attrs)?;
     let name = rename.unwrap_or_else(|| s.ident.to_string());
 
-    type_def(&name, &rename_all, &s.fields)
+    type_def(&name, &rename_all, &s.fields, &s.generics)
 }
 
-fn type_def(name: &str, rename_all: &Option<Inflection>, fields: &Fields) -> Result<DerivedTS> {
+fn type_def(
+    name: &str,
+    rename_all: &Option<Inflection>,
+    fields: &Fields,
+    generics: &Generics,
+) -> Result<DerivedTS> {
     match fields {
-        Fields::Named(named) => named::named(name, rename_all, named),
+        Fields::Named(named) => named::named(name, rename_all, named, generics),
         Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
             newtype::newtype(name, rename_all, unnamed)
         }
@@ -95,39 +102,46 @@ fn format_variant(
         _ => {}
     };
 
-    let derived_type = type_def(&name, &None, &variant.fields)?;
-    let inline_type = derived_type.inline;
-    let derived_dependencies = derived_type.dependencies;
+    let generics = Generics::default();
+    let variant_type = type_def(&name, &None, &variant.fields, &generics)?;
+    let variant_dependencies = variant_type.dependencies;
+    let inline_type = variant_type.inline;
 
     formatted_variants.push(match &enum_attr.untag {
         true => quote!(#inline_type),
         false => match &enum_attr.tag {
             Some(tag) => match &enum_attr.content {
-                Some(content) => {
-                    quote!(format!("{{{}: \"{}\", {}: {}}}", #tag, #name, #content, #inline_type))
-                }
-                None => match derived_type.inline_flattened {
+                Some(content) => match &variant.fields {
+                    Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
+                        let ty = format_type(&unnamed.unnamed[0].ty, dependencies, &generics);
+                        quote!(format!("{{ {}: \"{}\", {}: {} }}", #tag, #name, #content, #ty))
+                    }
+                    Fields::Unit => quote!(format!("{{ {}: \"{}\" }}", #tag, #name)),
+                    _ => quote!(
+                        format!("{{ {}: \"{}\", {}: {} }}", #tag, #name, #content, #inline_type)
+                    ),
+                },
+                None => match variant_type.inline_flattened {
                     Some(inline_flattened) => quote! {
                         format!(
-                            "{{\n{}{}: \"{}\",\n{}\n}}",
-                            " ".repeat((indent + 1) * 4),
+                            "{{ {}: \"{}\", {} }}",
                             #tag,
                             #name,
                             #inline_flattened
                         )
                     },
-                    None => {
-                        dependencies.push(quote!(dependencies.append(&mut #derived_dependencies);));
-                        quote! {
-                            format!(
-                                "\n{}{{ {}: \"{}\" }} & {}",
-                                " ".repeat((indent + 1) * 4),
-                                #tag,
-                                #name,
-                                #inline_type
-                            )
+                    None => match &variant.fields {
+                        Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
+                            let ty = format_type(&unnamed.unnamed[0].ty, dependencies, &generics);
+                            quote!(format!("{{ {}: \"{}\" }} & {}", #tag, #name, #ty))
                         }
-                    }
+                        Fields::Unit => quote!(format!("{{ {}: \"{}\" }}", #tag, #name)),
+                        _ => {
+                            dependencies
+                                .push(quote!(dependencies.append(&mut #variant_dependencies);));
+                            quote!(format!("{{ {}: \"{}\" }} & {}", #tag, #name, #inline_type))
+                        }
+                    },
                 },
             },
             None => match &variant.fields {

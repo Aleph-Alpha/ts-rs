@@ -6,5 +6,5 @@ edition = "2018"
 
 [dependencies]
 ts-rs = { path = "../ts-rs", features = ["serde-compat"] }
-serde = { version = "1", features = ["derive"] }
+serde = { version = "1", features = ["derive", "rc"] }
 chrono = { version = "0.4", features = ["serde"] }

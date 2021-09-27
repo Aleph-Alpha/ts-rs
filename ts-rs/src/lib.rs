@@ -117,6 +117,11 @@ pub trait TS: 'static {
     /// Name of this type in TypeScript.
     fn name() -> String;
 
+    /// Name of this type in TypeScript, with type arguments.
+    fn name_with_type_args(args: Vec<String>) -> String {
+        format!("{}<{}>", Self::name(), args.join(", "))
+    }
+
     /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
     /// This function will panic if the type cannot be inlined.
     fn inline(#[allow(unused_variables)] indent: usize) -> String {
@@ -214,6 +219,13 @@ macro_rules! impl_proxy {
             fn name() -> String {
                 T::name()
             }
+            fn name_with_type_args(args: Vec<String>) -> String {
+                if args.len() == 1 {
+                    args[0].clone()
+                } else {
+                    format!("[{}]", args.join(", "))
+                }
+            }
             fn inline(indent: usize) -> String {
                 T::inline(indent)
             }
@@ -224,7 +236,7 @@ macro_rules! impl_proxy {
                 T::dependencies()
             }
             fn transparent() -> bool {
-                true
+                T::transparent()
             }
         }
     };
@@ -261,6 +273,10 @@ impl<T: TS> TS for Option<T> {
         format!("{} | null", T::name())
     }
 
+    fn name_with_type_args(_: Vec<String>) -> String {
+        Self::name()
+    }
+
     fn inline(indent: usize) -> String {
         format!("{} | null", T::inline(indent))
     }
@@ -276,11 +292,11 @@ impl<T: TS> TS for Option<T> {
 
 impl<T: TS> TS for Vec<T> {
     fn name() -> String {
-        format!("{}[]", T::name())
+        "Array".to_owned()
     }
 
     fn inline(indent: usize) -> String {
-        format!("{}[]", T::inline(indent))
+        format!("Array<{}>", T::inline(indent))
     }
 
     fn dependencies() -> Vec<(TypeId, String)> {
@@ -294,11 +310,11 @@ impl<T: TS> TS for Vec<T> {
 
 impl<T: TS> TS for HashSet<T> {
     fn name() -> String {
-        format!("{}[]", T::name())
+        "Array".to_owned()
     }
 
     fn inline(indent: usize) -> String {
-        format!("{}[]", T::inline(indent))
+        format!("Array<{}>", T::inline(indent))
     }
 
     fn dependencies() -> Vec<(TypeId, String)> {
@@ -312,11 +328,11 @@ impl<T: TS> TS for HashSet<T> {
 
 impl<T: TS> TS for BTreeSet<T> {
     fn name() -> String {
-        format!("{}[]", T::name())
+        "Array".to_owned()
     }
 
     fn inline(indent: usize) -> String {
-        format!("{}[]", T::inline(indent))
+        format!("Array<{}>", T::inline(indent))
     }
 
     fn dependencies() -> Vec<(TypeId, String)> {
@@ -330,11 +346,11 @@ impl<T: TS> TS for BTreeSet<T> {
 
 impl<K: TS, V: TS> TS for HashMap<K, V> {
     fn name() -> String {
-        format!("{{ [key: {}]: {} }}", K::name(), V::name())
+        "Record".to_owned()
     }
 
     fn inline(indent: usize) -> String {
-        format!("{{ [key: {}]: {} }}", K::inline(indent), V::inline(indent))
+        format!("Record<{}, {}>", K::inline(indent), V::inline(indent))
     }
 
     fn dependencies() -> Vec<(TypeId, String)> {
@@ -351,11 +367,11 @@ impl<K: TS, V: TS> TS for HashMap<K, V> {
 
 impl<K: TS, V: TS> TS for BTreeMap<K, V> {
     fn name() -> String {
-        format!("{{ [key: {}]: {} }}", K::name(), V::name())
+        "Record".to_owned()
     }
 
     fn inline(indent: usize) -> String {
-        format!("{{ [key: {}]: {} }}", K::inline(indent), V::inline(indent))
+        format!("Record<{}, {}>", K::inline(indent), V::inline(indent))
     }
 
     fn dependencies() -> Vec<(TypeId, String)> {
