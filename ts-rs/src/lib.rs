@@ -252,9 +252,9 @@ impl_primitives! {
 
 #[cfg(feature = "chrono-impl")]
 mod chrono_impls {
-    use std::any::TypeId;
-    use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
     use super::TS;
+    use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
+    use std::any::TypeId;
 
     impl_primitives! {
         NaiveDateTime, NaiveDate, NaiveTime => "string"
@@ -300,6 +300,11 @@ mod chrono_impls {
 #[cfg(feature = "bigdecimal-impl")]
 impl_primitives! {
     bigdecimal::BigDecimal => "string"
+}
+
+#[cfg(feature = "uuid-impl")]
+impl_primitives! {
+    uuid::Uuid => "string"
 }
 
 impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
