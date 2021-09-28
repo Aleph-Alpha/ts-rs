@@ -5,6 +5,7 @@ authors = ["Moritz Bischof <moritz.bischof@aleph-alpha.de>"]
 edition = "2018"
 
 [dependencies]
-ts-rs = { path = "../ts-rs", features = ["serde-compat"] }
+ts-rs = { path = "../ts-rs", features = ["serde-compat", "uuid-impl"] }
 serde = { version = "1", features = ["derive", "rc"] }
 chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "0.8.2", features = ["v4", "serde"] }

@@ -5,6 +5,7 @@ use std::{collections::BTreeSet, rc::Rc};
 use chrono::NaiveDateTime;
 use serde::Serialize;
 use ts_rs::{export, TS};
+use uuid::Uuid;
 
 #[derive(Serialize, TS)]
 #[ts(rename_all = "lowercase")]
@@ -32,6 +33,7 @@ struct User {
     family: Vec<User>,
     #[ts(inline)]
     gender: Gender,
+    token: Uuid,
     #[ts(type = "string")]
     created_at: NaiveDateTime,
 }
