@@ -5,6 +5,7 @@ use syn::{Fields, Generics, ItemEnum, ItemStruct, Result, Variant};
 use crate::{
     attr::{EnumAttr, FieldAttr, Inflection, StructAttr},
     types::generics::format_type,
+    utils::to_ts_ident,
     DerivedTS,
 };
 
@@ -16,7 +17,7 @@ mod unit;
 
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     let StructAttr { rename_all, rename } = StructAttr::from_attrs(&s.attrs)?;
-    let name = rename.unwrap_or_else(|| s.ident.to_string());
+    let name = rename.unwrap_or_else(|| to_ts_ident(&s.ident));
 
     type_def(&name, &rename_all, &s.fields, &s.generics)
 }

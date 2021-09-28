@@ -7,6 +7,7 @@ use syn::{
 use crate::{
     attr::{FieldAttr, Inflection},
     types::generics::format_type,
+    utils::to_ts_ident,
     DerivedTS,
 };
 
@@ -111,10 +112,11 @@ fn format_field(
             format_type(ty, dependencies, generics)
         }
     });
+    let field_name = to_ts_ident(field.ident.as_ref().unwrap());
     let name = match (rename, rename_all) {
         (Some(rn), _) => rn,
-        (None, Some(rn)) => rn.apply(&field.ident.as_ref().unwrap().to_string()),
-        (None, None) => field.ident.as_ref().unwrap().to_string(),
+        (None, Some(rn)) => rn.apply(&field_name),
+        (None, None) => field_name,
     };
 
     formatted_fields.push(quote! {

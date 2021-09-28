@@ -253,7 +253,9 @@ impl_primitives! {
 #[cfg(feature = "chrono-impl")]
 mod chrono_impls {
     use std::any::TypeId;
+
     use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
+
     use super::TS;
 
     impl_primitives! {

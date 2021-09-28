@@ -1,5 +1,6 @@
 use std::convert::TryFrom;
 
+use proc_macro2::Ident;
 use syn::{Attribute, Error, Result};
 
 macro_rules! syn_err {
@@ -42,6 +43,16 @@ macro_rules! impl_parse {
             }
         }
     };
+}
+
+/// Converts a rust identifier to a typescript identifier.
+pub fn to_ts_ident(ident: &Ident) -> String {
+    let ident = ident.to_string();
+    if ident.starts_with("r#") {
+        ident.trim_start_matches("r#").to_owned()
+    } else {
+        ident
+    }
 }
 
 /// Parse all `#[ts(..)]` attributes from the given slice.

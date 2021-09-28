@@ -30,6 +30,7 @@ struct User {
     last_name: String,
     role: Role,
     family: Vec<User>,
+    #[ts(inline)]
     gender: Gender,
     #[ts(type = "string")]
     created_at: NaiveDateTime,
