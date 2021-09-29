@@ -7,6 +7,5 @@ fn list() {
         data: Option<Vec<u32>>
     }
 
-    println!("{:?}", List::decl());
-    assert_eq!(List::decl(), "");
+    assert_eq!(List::decl(&[]), "interface List {\n    data: Array<number> | null,\n}");
 }
