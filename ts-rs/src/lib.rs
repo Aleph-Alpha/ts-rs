@@ -317,11 +317,12 @@ impl_proxy!(impl<T: TS> TS for std::cell::RefCell<T>);
 
 impl<T: TS> TS for Option<T> {
     fn name() -> String {
-        format!("{} | null", T::name())
+        unreachable!();
     }
 
-    fn name_with_type_args(_: Vec<String>) -> String {
-        Self::name()
+    fn name_with_type_args(args: Vec<String>) -> String {
+        assert_eq!(args.len(), 1);
+        format!("{} | null", args[0])
     }
 
     fn inline(indent: usize) -> String {
