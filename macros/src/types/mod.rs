@@ -29,11 +29,15 @@ fn type_def(
     generics: &Generics,
 ) -> Result<DerivedTS> {
     match fields {
-        Fields::Named(named) => named::named(name, rename_all, named, generics),
-        Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
-            newtype::newtype(name, rename_all, unnamed)
-        }
-        Fields::Unnamed(unnamed) => tuple::tuple(name, rename_all, unnamed),
+        Fields::Named(named) => match named.named.len() {
+            0 => unit::unit(name, rename_all),
+            _ => named::named(name, rename_all, named, generics),
+        },
+        Fields::Unnamed(unnamed) => match unnamed.unnamed.len() {
+            0 => unit::unit(name, rename_all),
+            1 => newtype::newtype(name, rename_all, unnamed),
+            _ => tuple::tuple(name, rename_all, unnamed),
+        },
         Fields::Unit => unit::unit(name, rename_all),
     }
 }
