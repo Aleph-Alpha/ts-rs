@@ -47,7 +47,9 @@ macro_rules! export {
     ($($arg:tt)*) => {
         #[cfg(test)]
         #[test]
-        ts_rs::export_core!($($arg)*);
+        fn export_typescript() {
+             ts_rs::export_here!($($arg)*)
+        }
     };
 }
 
@@ -55,16 +57,8 @@ macro_rules! export {
 /// This may be useful if you'd like to run the binding generation in any other context than a test.
 #[macro_export]
 macro_rules! export_here {
-    ($($arg:tt)*) => {
-        ts_rs::export_core!($($arg)*);
-        export_typescript();
-    };
-}
-
-#[macro_export]
-macro_rules! export_core {
     ($($(($decl:ident))? $($p:path),+ => $l:literal),* $(,)?) => {
-        fn export_typescript() {
+        {
             use std::fmt::Write;
             use std::collections::{BTreeMap as __BTreeMap, BTreeSet as __BTreeSet};
 
