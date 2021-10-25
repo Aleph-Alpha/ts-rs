@@ -57,7 +57,7 @@ macro_rules! export {
 /// This may be useful if you'd like to run the binding generation in any other context than a test.
 #[macro_export]
 macro_rules! export_here {
-    ($($(($decl:ident))? $($p:path),+ => $l:literal),* $(,)?) => {
+    ($($(($decl:ident))? $($p:path),+ => $l:expr),* $(,)?) => {
         {
             use std::fmt::Write;
             use std::collections::{BTreeMap as __BTreeMap, BTreeSet as __BTreeSet};
