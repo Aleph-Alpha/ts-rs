@@ -52,7 +52,7 @@ macro_rules! export {
 }
 
 /// Like `export!` but instead of creating a test function it executes the binding generation right here.
-/// This may be useful if you'd like to run the binding generation in any other context then a test.
+/// This may be useful if you'd like to run the binding generation in any other context than a test.
 #[macro_export]
 macro_rules! export_here {
     ($($arg:tt)*) => {
