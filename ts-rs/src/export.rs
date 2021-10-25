@@ -64,8 +64,6 @@ macro_rules! export_here {
 #[macro_export]
 macro_rules! export_core {
     ($($(($decl:ident))? $($p:path),+ => $l:literal),* $(,)?) => {
-        //#[cfg(test)]
-        //#[test]
         fn export_typescript() {
             use std::fmt::Write;
             use std::collections::{BTreeMap as __BTreeMap, BTreeSet as __BTreeSet};
