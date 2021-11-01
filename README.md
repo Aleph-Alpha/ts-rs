@@ -39,7 +39,7 @@ We recommend doing this in your tests. [see the example](https://github.com/Alep
 ## get started
 ```toml
 [dependencies]
-ts-rs = "4.0"
+ts-rs = "5.0"
 ```
 
 ```rust
