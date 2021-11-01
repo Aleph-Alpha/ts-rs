@@ -44,10 +44,21 @@ use crate::TS;
 /// for `bindings/declared.d.ts`.
 #[macro_export]
 macro_rules! export {
-    ($($(($decl:ident))? $($p:path),+ => $l:literal),* $(,)?) => {
+    ($($arg:tt)*) => {
         #[cfg(test)]
         #[test]
         fn export_typescript() {
+             ts_rs::export_here!($($arg)*)
+        }
+    };
+}
+
+/// Like `export!` but instead of creating a test function it executes the binding generation right here.
+/// This may be useful if you'd like to run the binding generation in any other context than a test.
+#[macro_export]
+macro_rules! export_here {
+    ($($(($decl:ident))? $($p:path),+ => $l:expr),* $(,)?) => {
+        {
             use std::fmt::Write;
             use std::collections::{BTreeMap as __BTreeMap, BTreeSet as __BTreeSet};
 
