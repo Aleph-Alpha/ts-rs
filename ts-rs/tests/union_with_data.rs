@@ -32,9 +32,9 @@ fn test_stateful_enum() {
     );
     assert_eq!(
         SimpleEnum::decl(),
-        r#"type SimpleEnum = string | number | "C" | [string, number] | Foo | {
+        r#"type SimpleEnum = { "A": string } | { "B": number } | "C" | { "D": [string, number] } | { "E": Foo } | { "F": {
     a: number,
     b: string,
-};"#
+}};"#
     );
 }
