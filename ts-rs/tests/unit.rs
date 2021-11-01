@@ -4,7 +4,7 @@ use ts_rs::TS;
 struct Unit;
 
 #[derive(TS)]
-struct Unit2{}
+struct Unit2 {}
 
 #[derive(TS)]
 struct Unit3();

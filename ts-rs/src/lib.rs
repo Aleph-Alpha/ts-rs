@@ -243,8 +243,8 @@ macro_rules! impl_proxy {
 }
 
 impl_primitives! {
-    u8, i8, u16, i16, u32, i32, u64, i64, f32, f64, usize, isize => "number",
-    u128, i128 => "bigint",
+    u8, i8, u16, i16, u32, i32, f32, f64, usize, isize => "number",
+    u64, i64, u128, i128 => "bigint",
     bool => "boolean",
     String, &'static str => "string",
     () => "null"
@@ -252,8 +252,9 @@ impl_primitives! {
 
 #[cfg(feature = "bytes-impl")]
 mod bytes {
-    use super::TS;
     use std::any::TypeId;
+
+    use super::TS;
 
     impl TS for bytes::Bytes {
         fn name() -> String {
@@ -294,9 +295,11 @@ mod bytes {
 
 #[cfg(feature = "chrono-impl")]
 mod chrono_impls {
-    use super::TS;
-    use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
     use std::any::TypeId;
+
+    use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
+
+    use super::TS;
 
     impl_primitives! {
         NaiveDateTime, NaiveDate, NaiveTime => "string"

@@ -15,9 +15,9 @@ struct Foo {
 #[derive(TS)]
 enum SimpleEnum {
     A(String),
-    B(i64),
+    B(i32),
     C,
-    D(String, i64),
+    D(String, i32),
     E(Foo),
     F { a: i32, b: String },
 }
