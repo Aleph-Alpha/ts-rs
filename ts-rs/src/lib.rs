@@ -478,3 +478,21 @@ impl<K: TS, V: TS> TS for BTreeMap<K, V> {
         true
     }
 }
+
+impl<T: TS, const N: usize> TS for [T; N] {
+    fn name() -> String {
+        format!("Array<{}>", T::name())
+    }
+
+    fn inline(indent: usize) -> String {
+        format!("Array<{}>", T::inline(indent))
+    }
+
+    fn dependencies() -> Vec<(TypeId, String)> {
+        vec![(TypeId::of::<T>(), T::name())]
+    }
+
+    fn transparent() -> bool {
+        true
+    }
+}
