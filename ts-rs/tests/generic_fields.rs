@@ -33,10 +33,7 @@ fn named() {
     struct Struct {
         a: Vec<String>,
     }
-    assert_eq!(
-        Struct::inline(),
-        "{ a: Array<string>, }"
-    );
+    assert_eq!(Struct::inline(), "{ a: Array<string>, }");
 }
 
 #[test]
@@ -45,10 +42,7 @@ fn named_nested() {
     struct Struct {
         a: Vec<Vec<String>>,
     }
-    assert_eq!(
-        Struct::inline(),
-        "{ a: Array<Array<string>>, }"
-    );
+    assert_eq!(Struct::inline(), "{ a: Array<Array<string>>, }");
 }
 
 #[test]
