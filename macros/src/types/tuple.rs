@@ -5,9 +5,9 @@ use syn::{Field, FieldsUnnamed, Generics, Result};
 use crate::{
     attr::{FieldAttr, Inflection},
     deps::Dependencies,
+    types::generics::format_type,
     DerivedTS,
 };
-use crate::types::generics::format_type;
 
 pub(crate) fn tuple(
     name: &str,
@@ -36,7 +36,7 @@ pub(crate) fn tuple(
             format!(
                 "type {} = {};",
                 #name,
-                Self::inline(0)
+                Self::inline()
             )
         },
         inline_flattened: None,
@@ -76,7 +76,7 @@ fn format_field(
 
     formatted_fields.push(match &type_override {
         Some(o) => quote!(#o.to_owned()),
-        None if inline => quote!(<#ty as ts_rs::TS>::inline(0)),
+        None if inline => quote!(<#ty as ts_rs::TS>::inline()),
         None => format_type(ty, dependencies, generics),
     });
 

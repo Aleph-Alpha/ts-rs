@@ -25,35 +25,7 @@ struct C {
 #[test]
 fn test_nested() {
     assert_eq!(
-        C::inline(0),
-        "\
-{
-    b1: B,
-    b2: {
-        a1: A,
-        a2: {
-            x1: number,
-            y1: number,
-        },
-    },
-}"
-    );
-}
-
-#[test]
-fn test_indented() {
-    assert_eq!(
-        C::inline(2),
-        "\
-{
-            b1: B,
-            b2: {
-                a1: A,
-                a2: {
-                    x1: number,
-                    y1: number,
-                },
-            },
-        }"
+        C::inline(),
+        "{ b1: B, b2: { a1: A, a2: { x1: number, y1: number, }, }, }"
     );
 }

@@ -16,12 +16,7 @@ struct Override {
 #[test]
 fn test() {
     assert_eq!(
-        Override::inline(0),
-        "\
-{
-    a: number,
-    b: 0 | 1 | 2,
-    x: string,
-}"
+        Override::inline(),
+        "{ a: number, b: 0 | 1 | 2, x: string, }"
     )
 }

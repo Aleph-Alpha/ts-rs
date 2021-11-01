@@ -4,11 +4,11 @@ use syn::{Fields, Generics, ItemEnum, ItemStruct, Result, Variant};
 
 use crate::{
     attr::{EnumAttr, FieldAttr, Inflection, StructAttr},
+    deps::Dependencies,
     types::generics::format_type,
     utils::to_ts_ident,
     DerivedTS,
 };
-use crate::deps::Dependencies;
 
 mod generics;
 mod named;
@@ -64,7 +64,7 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
 
     Ok(DerivedTS {
         inline: quote!(vec![#(#formatted_variants),*].join(" | ")),
-        decl: quote!(format!("type {} = {};", #name, Self::inline(0))),
+        decl: quote!(format!("type {} = {};", #name, Self::inline())),
         inline_flattened: None,
         dependencies,
         name,

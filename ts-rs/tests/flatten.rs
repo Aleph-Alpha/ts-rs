@@ -25,15 +25,7 @@ struct C {
 #[test]
 fn test_def() {
     assert_eq!(
-        C::inline(0),
-        "\
-{
-    b: {
-        a: number,
-        b: number,
-        c: number,
-    },
-    d: number,
-}"
+        C::inline(),
+        "{ b: { a: number, b: number, c: number, }, d: number, }"
     );
 }

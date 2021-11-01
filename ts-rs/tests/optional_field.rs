@@ -15,20 +15,12 @@ struct Optional {
 fn test() {
     #[cfg(not(feature = "serde-compat"))]
     assert_eq!(
-        Optional::inline(0),
-        "\
-{
-    a?: number,
-    b: string | null,
-}"
+        Optional::inline(),
+        "{ a?: number, b: string | null, }"
     );
     #[cfg(feature = "serde-compat")]
     assert_eq!(
-        Optional::inline(0),
-        "\
-{
-    a?: number,
-    b?: string,
-}"
+        Optional::inline(),
+        "{ a?: number, b?: string, }"
     )
 }

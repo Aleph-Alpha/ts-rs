@@ -1,13 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{GenericArgument, GenericParam, Generics, PathArguments, Type};
+
 use crate::deps::Dependencies;
 
-pub fn format_type(
-    ty: &Type,
-    dependencies: &mut Dependencies,
-    generics: &Generics,
-) -> TokenStream {
+pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generics) -> TokenStream {
     // If the type matches one of the generic parameters, just pass the identifier:
     if let Some(generic_ident) = generics
         .params
