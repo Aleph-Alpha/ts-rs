@@ -250,6 +250,48 @@ impl_primitives! {
     () => "null"
 }
 
+#[cfg(feature = "bytes-impl")]
+mod bytes {
+    use super::TS;
+    use std::any::TypeId;
+
+    impl TS for bytes::Bytes {
+        fn name() -> String {
+            "Array<number>".to_owned()
+        }
+
+        fn inline(indent: usize) -> String {
+            format!("Array<{}>", u8::inline(indent))
+        }
+
+        fn dependencies() -> Vec<(TypeId, String)> {
+            vec![(TypeId::of::<u8>(), u8::name())]
+        }
+
+        fn transparent() -> bool {
+            true
+        }
+    }
+
+    impl TS for bytes::BytesMut {
+        fn name() -> String {
+            "Array<number>".to_owned()
+        }
+
+        fn inline(indent: usize) -> String {
+            format!("Array<{}>", u8::inline(indent))
+        }
+
+        fn dependencies() -> Vec<(TypeId, String)> {
+            vec![(TypeId::of::<u8>(), u8::name())]
+        }
+
+        fn transparent() -> bool {
+            true
+        }
+    }
+}
+
 #[cfg(feature = "chrono-impl")]
 mod chrono_impls {
     use super::TS;
