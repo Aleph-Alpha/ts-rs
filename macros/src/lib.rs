@@ -4,18 +4,20 @@
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::{parse_quote, spanned::Spanned, GenericParam, Generics, Item, Result, WhereClause};
+use crate::deps::Dependencies;
 
 #[macro_use]
 mod utils;
 mod attr;
 mod types;
+mod deps;
 
 struct DerivedTS {
     name: String,
     inline: TokenStream,
     decl: TokenStream,
     inline_flattened: Option<TokenStream>,
-    dependencies: TokenStream,
+    dependencies: Dependencies,
 }
 
 impl DerivedTS {

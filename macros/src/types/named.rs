@@ -10,6 +10,7 @@ use crate::{
     utils::to_ts_ident,
     DerivedTS,
 };
+use crate::deps::Dependencies;
 
 pub(crate) fn named(
     name: &str,
@@ -18,7 +19,7 @@ pub(crate) fn named(
     generics: &Generics,
 ) -> Result<DerivedTS> {
     let mut formatted_fields = vec![];
-    let mut dependencies = vec![];
+    let mut dependencies = Dependencies::default();
     for field in &fields.named {
         format_field(
             &mut formatted_fields,
@@ -56,18 +57,14 @@ pub(crate) fn named(
         decl: quote!(format!("interface {}{} {}", #name, #generic_args, Self::inline(0))),
         inline_flattened: Some(fields),
         name: name.to_owned(),
-        dependencies: quote! {
-            let mut dependencies = vec![];
-            #( #dependencies )*
-            dependencies
-        },
+        dependencies
     })
 }
 
 // build an expresion which expands to a string, representing a single field of a struct.
 fn format_field(
     formatted_fields: &mut Vec<TokenStream>,
-    dependencies: &mut Vec<TokenStream>,
+    dependencies: &mut Dependencies,
     field: &Field,
     rename_all: &Option<Inflection>,
     generics: &Generics,
@@ -99,14 +96,13 @@ fn format_field(
         }
 
         formatted_fields.push(quote!(<#ty as ts_rs::TS>::inline_flattened(indent)));
-        dependencies.push(quote!(dependencies.append(&mut <#ty as ts_rs::TS>::dependencies());));
+        dependencies.append_from(ty);
         return Ok(());
     }
 
     let formatted_ty = type_override.map(|t| quote!(#t)).unwrap_or_else(|| {
         if inline {
-            dependencies
-                .push(quote!(dependencies.append(&mut <#ty as ts_rs::TS>::dependencies());));
+            dependencies.append_from(ty);
             quote!(<#ty as ts_rs::TS>::inline(indent + 1))
         } else {
             format_type(ty, dependencies, generics)

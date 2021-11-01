@@ -8,6 +8,7 @@ use crate::{
     utils::to_ts_ident,
     DerivedTS,
 };
+use crate::deps::Dependencies;
 
 mod generics;
 mod named;
@@ -35,8 +36,8 @@ fn type_def(
         },
         Fields::Unnamed(unnamed) => match unnamed.unnamed.len() {
             0 => unit::unit(name, rename_all),
-            1 => newtype::newtype(name, rename_all, unnamed),
-            _ => tuple::tuple(name, rename_all, unnamed),
+            1 => newtype::newtype(name, rename_all, unnamed, generics),
+            _ => tuple::tuple(name, rename_all, unnamed, generics),
         },
         Fields::Unit => unit::unit(name, rename_all),
     }
@@ -51,7 +52,7 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
     };
 
     let mut formatted_variants = vec![];
-    let mut dependencies = vec![];
+    let mut dependencies = Dependencies::default();
     for variant in &s.variants {
         format_variant(
             &mut formatted_variants,
@@ -65,18 +66,14 @@ pub(crate) fn r#enum(s: &ItemEnum) -> Result<DerivedTS> {
         inline: quote!(vec![#(#formatted_variants),*].join(" | ")),
         decl: quote!(format!("type {} = {};", #name, Self::inline(0))),
         inline_flattened: None,
-        dependencies: quote! {
-            let mut dependencies = vec![];
-            #( #dependencies )*
-            dependencies
-        },
+        dependencies,
         name,
     })
 }
 
 fn format_variant(
     formatted_variants: &mut Vec<TokenStream>,
-    dependencies: &mut Vec<TokenStream>,
+    dependencies: &mut Dependencies,
     enum_attr: &EnumAttr,
     variant: &Variant,
 ) -> Result<()> {
@@ -144,8 +141,7 @@ fn format_variant(
                         }
                         Fields::Unit => quote!(format!("{{ {}: \"{}\" }}", #tag, #name)),
                         _ => {
-                            dependencies
-                                .push(quote!(dependencies.append(&mut #variant_dependencies);));
+                            dependencies.append(variant_dependencies);
                             quote!(format!("{{ {}: \"{}\" }} & {}", #tag, #name, #inline_type))
                         }
                     },

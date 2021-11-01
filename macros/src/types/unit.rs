@@ -2,6 +2,7 @@ use quote::quote;
 use syn::Result;
 
 use crate::{attr::Inflection, DerivedTS};
+use crate::deps::Dependencies;
 
 pub(crate) fn unit(name: &str, rename_all: &Option<Inflection>) -> Result<DerivedTS> {
     if rename_all.is_some() {
@@ -13,6 +14,6 @@ pub(crate) fn unit(name: &str, rename_all: &Option<Inflection>) -> Result<Derive
         decl: quote!(format!("type {} = null;", #name)),
         inline_flattened: None,
         name: name.to_owned(),
-        dependencies: quote!(vec![]),
+        dependencies: Dependencies::default(),
     })
 }

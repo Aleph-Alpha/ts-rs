@@ -388,6 +388,11 @@ impl<T: TS> TS for Vec<T> {
         "Array".to_owned()
     }
 
+   fn name_with_type_args(args: Vec<String>) -> String {
+       assert_eq!(args.len(), 1);
+       format!("Array<{}>", args[0])
+   }
+
     fn inline(indent: usize) -> String {
         format!("Array<{}>", T::inline(indent))
     }

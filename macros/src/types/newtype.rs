@@ -1,8 +1,10 @@
 use quote::quote;
-use syn::{FieldsUnnamed, Result};
+use syn::{FieldsUnnamed, Generics, Result};
 
 use crate::{
     attr::{FieldAttr, Inflection},
+    deps::Dependencies,
+    types::generics::format_type,
     DerivedTS,
 };
 
@@ -10,6 +12,7 @@ pub(crate) fn newtype(
     name: &str,
     rename_all: &Option<Inflection>,
     fields: &FieldsUnnamed,
+    generics: &Generics,
 ) -> Result<DerivedTS> {
     if rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to newtype structs");
@@ -33,27 +36,23 @@ pub(crate) fn newtype(
     };
 
     let inner_ty = &inner.ty;
+    let mut dependencies = Dependencies::default();
+    match (inline, &type_override) {
+        (_, Some(_)) => (),
+        (true, _) => dependencies.append_from(inner_ty),
+        (false, _) => dependencies.push_or_append_from(inner_ty),
+    };
     let inline_def = match &type_override {
         Some(o) => quote!(#o),
         None if inline => quote!(<#inner_ty as ts_rs::TS>::inline(0)),
-        None => quote!(<#inner_ty as ts_rs::TS>::name()),
+        None => format_type(inner_ty, &mut dependencies, generics),
     };
+
     Ok(DerivedTS {
         decl: quote!(format!("type {} = {};", #name, #inline_def)),
         inline: inline_def,
         inline_flattened: None,
         name: name.to_owned(),
-        dependencies: match (inline, &type_override) {
-            (_, Some(_)) => quote!(vec![]),
-            (true, _) => quote! {
-                <#inner_ty as ts_rs::TS>::dependencies()
-            },
-            (false, _) => quote! {
-                match <#inner_ty as ts_rs::TS>::transparent() {
-                    true => <#inner_ty as ts_rs::TS>::dependencies(),
-                    false => vec![(std::any::TypeId::of::<#inner_ty>(), <#inner_ty as ts_rs::TS>::name())]
-                }
-            },
-        },
+        dependencies,
     })
 }

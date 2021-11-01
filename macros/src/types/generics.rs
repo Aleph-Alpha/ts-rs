@@ -1,10 +1,11 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{GenericArgument, GenericParam, Generics, PathArguments, Type};
+use crate::deps::Dependencies;
 
 pub fn format_type(
     ty: &Type,
-    dependencies: &mut Vec<TokenStream>,
+    dependencies: &mut Dependencies,
     generics: &Generics,
 ) -> TokenStream {
     // If the type matches one of the generic parameters, just pass the identifier:
@@ -28,13 +29,7 @@ pub fn format_type(
         return quote!(#generic_ident.to_owned());
     }
 
-    dependencies.push(quote! {
-        if <#ty as ts_rs::TS>::transparent() {
-            dependencies.append(&mut <#ty as ts_rs::TS>::dependencies());
-        } else {
-            dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name()));
-        }
-    });
+    dependencies.push_or_append_from(ty);
 
     match extract_type_args(ty) {
         None => quote!(<#ty as ts_rs::TS>::name()),
