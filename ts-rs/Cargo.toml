@@ -2,7 +2,7 @@
 name = "ts-rs"
 version = "5.0.0"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 description = "generate typescript bindings from rust types"
 homepage = "https://github.com/Aleph-Alpha/ts-rs"

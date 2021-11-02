@@ -51,7 +51,7 @@ impl DerivedTS {
         let where_clause = add_ts_trait_bound(&generics);
 
         quote! {
-            impl#lt_token#params#gt_token ts_rs::TS for #rust_ty#lt_token#params#gt_token#where_clause {
+            impl #lt_token #params #gt_token ts_rs::TS for #rust_ty #lt_token #params #gt_token #where_clause {
                 fn decl() -> String {
                     #decl
                 }

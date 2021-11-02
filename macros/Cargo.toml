@@ -2,7 +2,7 @@
 name = "ts-rs-macros"
 version = "5.0.0"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
-edition = "2018"
+edition = "2021"
 description = "derive macro for ts-rs"
 license = "MIT"
 homepage = "https://github.com/Aleph-Alpha/ts-rs"
