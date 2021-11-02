@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs"
-version = "5.1.0"
+version = "5.1.1"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -9,6 +9,7 @@ homepage = "https://github.com/Aleph-Alpha/ts-rs"
 repository = "https://github.com/Aleph-Alpha/ts-rs"
 keywords = ["typescript", "ts", "bindings", "ts-rs", "wasm"]
 categories = ["development-tools::ffi", "development-tools::build-utils", "wasm", "web-programming"]
+readme = "../README.md"
 
 [features]
 chrono-impl = ["chrono"]
