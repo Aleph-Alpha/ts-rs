@@ -11,12 +11,5 @@ struct Rename {
 
 #[test]
 fn test() {
-    assert_eq!(
-        Rename::inline(0),
-        "\
-{
-    A: number,
-    B: number,
-}"
-    )
+    assert_eq!(Rename::inline(), "{ A: number, B: number, }")
 }

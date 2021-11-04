@@ -5,26 +5,26 @@ use ts_rs::TS;
 fn newtype() {
     #[derive(TS)]
     struct Newtype(Vec<i32>);
-    assert_eq!(Newtype::inline(0), "Array<number>");
+    assert_eq!(Newtype::inline(), "Array<number>");
 }
 
 #[test]
 fn newtype_nested() {
     #[derive(TS)]
     struct Newtype(Vec<Vec<i32>>);
-    assert_eq!(Newtype::inline(0), "Array<Array<number>>");
+    assert_eq!(Newtype::inline(), "Array<Array<number>>");
 }
 
 #[test]
 fn alias() {
     type Alias = Vec<String>;
-    assert_eq!(Alias::inline(0), "Array<string>");
+    assert_eq!(Alias::inline(), "Array<string>");
 }
 
 #[test]
 fn alias_nested() {
     type Alias = Vec<Vec<String>>;
-    assert_eq!(Alias::inline(0), "Array<Array<string>>");
+    assert_eq!(Alias::inline(), "Array<Array<string>>");
 }
 
 #[test]
@@ -33,12 +33,7 @@ fn named() {
     struct Struct {
         a: Vec<String>,
     }
-    assert_eq!(
-        Struct::inline(0),
-        "{
-    a: Array<string>,
-}"
-    );
+    assert_eq!(Struct::inline(), "{ a: Array<string>, }");
 }
 
 #[test]
@@ -47,24 +42,22 @@ fn named_nested() {
     struct Struct {
         a: Vec<Vec<String>>,
     }
-    assert_eq!(
-        Struct::inline(0),
-        "{
-    a: Array<Array<string>>,
-}"
-    );
+    assert_eq!(Struct::inline(), "{ a: Array<Array<string>>, }");
 }
 
 #[test]
 fn tuple() {
     #[derive(TS)]
     struct Tuple(Vec<i32>, Vec<i32>);
-    assert_eq!(Tuple::inline(0), "[Array<number>, Array<number>]");
+    assert_eq!(Tuple::inline(), "[Array<number>, Array<number>]");
 }
 
 #[test]
 fn tuple_nested() {
     #[derive(TS)]
     struct Tuple(Vec<Vec<i32>>, Vec<Vec<i32>>);
-    assert_eq!(Tuple::inline(0), "[Array<Array<number>>, Array<Array<number>>]");
+    assert_eq!(
+        Tuple::inline(),
+        "[Array<Array<number>>, Array<Array<number>>]"
+    );
 }

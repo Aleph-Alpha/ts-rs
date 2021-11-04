@@ -12,12 +12,5 @@ struct Skip {
 
 #[test]
 fn test_def() {
-    assert_eq!(
-        Skip::inline(0),
-        "\
-{
-    a: number,
-    b: number,
-}"
-    );
+    assert_eq!(Skip::inline(), "{ a: number, b: number, }");
 }

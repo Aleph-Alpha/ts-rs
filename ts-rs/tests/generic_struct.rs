@@ -39,38 +39,21 @@ struct Container {
 fn test() {
     assert_eq!(
         Generic::<()>::decl(),
-        "\
-interface Generic<T> {
-    value: T,
-    values: Array<T>,
-}"
+        "interface Generic<T> { value: T, values: Array<T>, }"
     );
 
     assert_eq!(
         GenericAutoBound::<()>::decl(),
-        "\
-interface GenericAutoBound<T> {
-    value: T,
-    values: Array<T>,
-}"
+        "interface GenericAutoBound<T> { value: T, values: Array<T>, }"
     );
 
     assert_eq!(
         GenericAutoBound2::<()>::decl(),
-        "\
-interface GenericAutoBound2<T> {
-    value: T,
-    values: Array<T>,
-}"
+        "interface GenericAutoBound2<T> { value: T, values: Array<T>, }"
     );
 
     assert_eq!(
         Container::decl(),
-        "\
-interface Container {
-    foo: Generic<number>,
-    bar: Array<Generic<number>>,
-    baz: Record<string, Generic<string>>,
-}"
+        "interface Container { foo: Generic<number>, bar: Array<Generic<number>>, baz: Record<string, Generic<string>>, }"
     );
 }

@@ -124,13 +124,13 @@ pub trait TS: 'static {
 
     /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
     /// This function will panic if the type cannot be inlined.
-    fn inline(#[allow(unused_variables)] indent: usize) -> String {
+    fn inline() -> String {
         panic!("{} cannot be inlined", Self::name());
     }
 
     /// Flatten an type declaration.  
     /// This function will panic if the type cannot be flattened.
-    fn inline_flattened(#[allow(unused_variables)] indent: usize) -> String {
+    fn inline_flattened() -> String {
         panic!("{} cannot be flattened", Self::name())
     }
 
@@ -168,7 +168,7 @@ macro_rules! impl_primitives {
             fn name() -> String {
                 $l.to_owned()
             }
-            fn inline(_: usize) -> String {
+            fn inline() -> String {
                 $l.to_owned()
             }
             fn dependencies() -> Vec<(TypeId, String)> {
@@ -190,11 +190,11 @@ macro_rules! impl_tuples {
                     vec![$($i::name()),*].join(", ")
                 )
             }
-            fn inline(indent: usize) -> String {
+            fn inline() -> String {
                 format!(
                     "[{}]",
                     vec![
-                        $($i::inline(indent)),*
+                        $($i::inline()),*
                     ].join(", ")
                 )
             }
@@ -226,11 +226,11 @@ macro_rules! impl_proxy {
                     format!("[{}]", args.join(", "))
                 }
             }
-            fn inline(indent: usize) -> String {
-                T::inline(indent)
+            fn inline() -> String {
+                T::inline()
             }
-            fn inline_flattened(indent: usize) -> String {
-                T::inline_flattened(indent)
+            fn inline_flattened() -> String {
+                T::inline_flattened()
             }
             fn dependencies() -> Vec<(TypeId, String)> {
                 T::dependencies()
@@ -261,8 +261,8 @@ mod bytes {
             "Array<number>".to_owned()
         }
 
-        fn inline(indent: usize) -> String {
-            format!("Array<{}>", u8::inline(indent))
+        fn inline() -> String {
+            format!("Array<{}>", u8::inline())
         }
 
         fn dependencies() -> Vec<(TypeId, String)> {
@@ -279,8 +279,8 @@ mod bytes {
             "Array<number>".to_owned()
         }
 
-        fn inline(indent: usize) -> String {
-            format!("Array<{}>", u8::inline(indent))
+        fn inline() -> String {
+            format!("Array<{}>", u8::inline())
         }
 
         fn dependencies() -> Vec<(TypeId, String)> {
@@ -310,7 +310,7 @@ mod chrono_impls {
             "string".to_owned()
         }
 
-        fn inline(_indent: usize) -> String {
+        fn inline() -> String {
             "string".to_owned()
         }
 
@@ -328,7 +328,7 @@ mod chrono_impls {
             "string".to_owned()
         }
 
-        fn inline(_indent: usize) -> String {
+        fn inline() -> String {
             "string".to_owned()
         }
 
@@ -370,8 +370,8 @@ impl<T: TS> TS for Option<T> {
         format!("{} | null", args[0])
     }
 
-    fn inline(indent: usize) -> String {
-        format!("{} | null", T::inline(indent))
+    fn inline() -> String {
+        format!("{} | null", T::inline())
     }
 
     fn dependencies() -> Vec<(TypeId, String)> {
@@ -388,13 +388,13 @@ impl<T: TS> TS for Vec<T> {
         "Array".to_owned()
     }
 
-   fn name_with_type_args(args: Vec<String>) -> String {
-       assert_eq!(args.len(), 1);
-       format!("Array<{}>", args[0])
-   }
+    fn name_with_type_args(args: Vec<String>) -> String {
+        assert_eq!(args.len(), 1);
+        format!("Array<{}>", args[0])
+    }
 
-    fn inline(indent: usize) -> String {
-        format!("Array<{}>", T::inline(indent))
+    fn inline() -> String {
+        format!("Array<{}>", T::inline())
     }
 
     fn dependencies() -> Vec<(TypeId, String)> {
@@ -411,8 +411,8 @@ impl<T: TS> TS for HashSet<T> {
         "Array".to_owned()
     }
 
-    fn inline(indent: usize) -> String {
-        format!("Array<{}>", T::inline(indent))
+    fn inline() -> String {
+        format!("Array<{}>", T::inline())
     }
 
     fn dependencies() -> Vec<(TypeId, String)> {
@@ -429,8 +429,8 @@ impl<T: TS> TS for BTreeSet<T> {
         "Array".to_owned()
     }
 
-    fn inline(indent: usize) -> String {
-        format!("Array<{}>", T::inline(indent))
+    fn inline() -> String {
+        format!("Array<{}>", T::inline())
     }
 
     fn dependencies() -> Vec<(TypeId, String)> {
@@ -447,8 +447,8 @@ impl<K: TS, V: TS> TS for HashMap<K, V> {
         "Record".to_owned()
     }
 
-    fn inline(indent: usize) -> String {
-        format!("Record<{}, {}>", K::inline(indent), V::inline(indent))
+    fn inline() -> String {
+        format!("Record<{}, {}>", K::inline(), V::inline())
     }
 
     fn dependencies() -> Vec<(TypeId, String)> {
@@ -468,8 +468,8 @@ impl<K: TS, V: TS> TS for BTreeMap<K, V> {
         "Record".to_owned()
     }
 
-    fn inline(indent: usize) -> String {
-        format!("Record<{}, {}>", K::inline(indent), V::inline(indent))
+    fn inline() -> String {
+        format!("Record<{}, {}>", K::inline(), V::inline())
     }
 
     fn dependencies() -> Vec<(TypeId, String)> {
@@ -489,8 +489,8 @@ impl<T: TS, const N: usize> TS for [T; N] {
         format!("Array<{}>", T::name())
     }
 
-    fn inline(indent: usize) -> String {
-        format!("Array<{}>", T::inline(indent))
+    fn inline() -> String {
+        format!("Array<{}>", T::inline())
     }
 
     fn dependencies() -> Vec<(TypeId, String)> {

@@ -37,12 +37,7 @@ fn test_serde_enum() {
     );
     assert_eq!(
         ComplexEnum::decl(),
-        r#"type ComplexEnum = { kind: "A" } | { kind: "B", data: {
-    foo: string,
-    bar: number,
-} } | { kind: "W", data: SimpleEnum } | { kind: "F", data: {
-    nested: SimpleEnum,
-} } | { kind: "T", data: [number, SimpleEnum] };"#
+        r#"type ComplexEnum = { kind: "A" } | { kind: "B", data: { foo: string, bar: number, } } | { kind: "W", data: SimpleEnum } | { kind: "F", data: { nested: SimpleEnum, } } | { kind: "T", data: [number, SimpleEnum] };"#
     );
 
     assert_eq!(

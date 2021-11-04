@@ -8,12 +8,7 @@ fn interface() {
         a: [i32; 10],
     }
 
-    assert_eq!(
-        Interface::inline(0),
-        "{
-    a: Array<number>,
-}"
-    )
+    assert_eq!(Interface::inline(), "{ a: Array<number>, }")
 }
 
 #[test]
@@ -21,5 +16,5 @@ fn newtype() {
     #[derive(TS)]
     struct Newtype(#[allow(dead_code)] [i32; 10]);
 
-    assert_eq!(Newtype::inline(0), "Array<number>")
+    assert_eq!(Newtype::inline(), "Array<number>")
 }

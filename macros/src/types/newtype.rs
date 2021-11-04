@@ -44,7 +44,7 @@ pub(crate) fn newtype(
     };
     let inline_def = match &type_override {
         Some(o) => quote!(#o),
-        None if inline => quote!(<#inner_ty as ts_rs::TS>::inline(0)),
+        None if inline => quote!(<#inner_ty as ts_rs::TS>::inline()),
         None => format_type(inner_ty, &mut dependencies, generics),
     };
 
