@@ -5,7 +5,7 @@ use syn::{Field, FieldsUnnamed, Generics, Result};
 use crate::{
     attr::{FieldAttr, Inflection},
     deps::Dependencies,
-    types::generics::format_type,
+    types::generics::{format_generics, format_type},
     DerivedTS,
 };
 
@@ -25,6 +25,7 @@ pub(crate) fn tuple(
         format_field(&mut formatted_fields, &mut dependencies, field, generics)?;
     }
 
+    let generic_args = format_generics(generics).unwrap_or_default();
     Ok(DerivedTS {
         inline: quote! {
             format!(
@@ -34,8 +35,9 @@ pub(crate) fn tuple(
         },
         decl: quote! {
             format!(
-                "type {} = {};",
+                "type {}{} = {};",
                 #name,
+                #generic_args,
                 Self::inline()
             )
         },

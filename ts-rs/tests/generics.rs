@@ -57,3 +57,45 @@ fn test() {
         "interface Container { foo: Generic<number>, bar: Array<Generic<number>>, baz: Record<string, Generic<string>>, }"
     );
 }
+
+#[test]
+fn generic_enum() {
+    #[derive(TS)]
+    enum Generic<A, B, C> {
+        A(A),
+        B(B, B, B),
+        C(Vec<C>),
+        D(Vec<Vec<Vec<A>>>),
+        E { a: A, b: B, c: C },
+        X(Vec<i32>),
+        Y(i32),
+        Z(Vec<Vec<i32>>),
+    }
+
+    assert_eq!(
+        Generic::<(), (), ()>::decl(),
+        r#"type Generic<A, B, C> = { A: A } | { B: [B, B, B] } | { C: Array<C> } | { D: Array<Array<Array<A>>> } | { E: { a: A, b: B, c: C, } } | { X: Array<number> } | { Y: number } | { Z: Array<Array<number>> };"#
+    )
+}
+
+#[test]
+fn generic_newtype() {
+    #[derive(TS)]
+    struct NewType<T>(Vec<Vec<T>>);
+
+    assert_eq!(
+        NewType::<()>::decl(),
+        r#"type NewType<T> = Array<Array<T>>;"#
+    );
+}
+
+#[test]
+fn generic_tuple() {
+    #[derive(TS)]
+    struct Tuple<T>(T, Vec<T>, Vec<Vec<T>>);
+
+    assert_eq!(
+        Tuple::<()>::decl(),
+        r#"type Tuple<T> = [T, Array<T>, Array<Array<T>>];"#
+    );
+}

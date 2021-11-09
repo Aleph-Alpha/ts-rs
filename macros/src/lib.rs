@@ -109,7 +109,7 @@ fn entry(input: proc_macro::TokenStream) -> Result<TokenStream> {
     let input = syn::parse::<Item>(input)?;
     let (ts, ident, generics) = match input {
         Item::Struct(s) => (types::struct_def(&s)?, s.ident, s.generics),
-        Item::Enum(e) => (types::r#enum(&e)?, e.ident, e.generics),
+        Item::Enum(e) => (types::enum_def(&e)?, e.ident, e.generics),
         _ => syn_err!(input.span(); "unsupported item"),
     };
 

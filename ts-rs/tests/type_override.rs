@@ -4,7 +4,6 @@ use std::time::Instant;
 
 use ts_rs::TS;
 
-
 struct Unsupported<T>(T);
 struct Unsupported2;
 
@@ -18,7 +17,7 @@ struct Override {
     #[ts(type = "string")]
     y: Unsupported<Unsupported<Unsupported2>>,
     #[ts(type = "string | null")]
-    z: Option<Unsupported2>
+    z: Option<Unsupported2>,
 }
 
 #[test]

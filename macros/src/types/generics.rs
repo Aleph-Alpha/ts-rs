@@ -4,6 +4,25 @@ use syn::{GenericArgument, GenericParam, Generics, PathArguments, Type};
 
 use crate::deps::Dependencies;
 
+/// formats the generic arguments (like A, B in struct X<A, B>{..}) as "<X>" where x is a comma
+/// seperated list of generic arguments, or None if there are no generic arguments.
+pub fn format_generics(generics: &Generics) -> Option<String> {
+    match &generics.params {
+        params if !params.is_empty() => {
+            let expanded_params = params
+                .iter()
+                .filter_map(|param| match param {
+                    GenericParam::Type(type_param) => Some(type_param.ident.to_string()),
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            Some(format!("<{}>", expanded_params))
+        }
+        _ => None,
+    }
+}
+
 pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generics) -> TokenStream {
     // If the type matches one of the generic parameters, just pass the identifier:
     if let Some(generic_ident) = generics
