@@ -27,6 +27,6 @@ fn test_stateful_enum() {
     assert_eq!(Foo::decl(), r#"interface Foo { bar: Bar, }"#);
     assert_eq!(
         SimpleEnum::decl(),
-        r#"type SimpleEnum = { "A": string } | { "B": number } | "C" | { "D": [string, number] } | { "E": Foo } | { "F": { a: number, b: string, }};"#
+        r#"type SimpleEnum = { A: string } | { B: number } | "C" | { D: [string, number] } | { E: Foo } | { F: { a: number, b: string, } };"#
     );
 }
