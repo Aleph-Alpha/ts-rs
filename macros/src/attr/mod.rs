@@ -61,6 +61,14 @@ fn parse_assign_str(input: ParseStream) -> Result<String> {
     }
 }
 
+fn parse_opt_assign_str(input: ParseStream) -> Result<Option<String>> {
+    if input.is_empty() || !input.peek(Token![=]) {
+        Ok(None)
+    } else {
+        parse_assign_str(input).map(Some)
+    }
+}
+
 fn parse_assign_inflection(input: ParseStream) -> Result<Inflection> {
     parse_assign_str(input).and_then(Inflection::try_from)
 }

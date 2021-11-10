@@ -16,10 +16,14 @@ mod unit;
 pub(crate) use r#enum::r#enum_def;
 
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
-    let StructAttr { rename_all, rename } = StructAttr::from_attrs(&s.attrs)?;
+    let StructAttr {
+        rename_all,
+        rename,
+        export,
+    } = StructAttr::from_attrs(&s.attrs)?;
     let name = rename.unwrap_or_else(|| to_ts_ident(&s.ident));
 
-    type_def(&name, &rename_all, &s.fields, &s.generics)
+    type_def(&name, &rename_all, &s.fields, &s.generics, export)
 }
 
 fn type_def(
@@ -27,17 +31,18 @@ fn type_def(
     rename_all: &Option<Inflection>,
     fields: &Fields,
     generics: &Generics,
+    export: Option<Option<String>>,
 ) -> Result<DerivedTS> {
     match fields {
         Fields::Named(named) => match named.named.len() {
-            0 => unit::unit(name, rename_all),
-            _ => named::named(name, rename_all, named, generics),
+            0 => unit::unit(name, rename_all, export),
+            _ => named::named(name, rename_all, named, generics, export),
         },
         Fields::Unnamed(unnamed) => match unnamed.unnamed.len() {
-            0 => unit::unit(name, rename_all),
-            1 => newtype::newtype(name, rename_all, unnamed, generics),
-            _ => tuple::tuple(name, rename_all, unnamed, generics),
+            0 => unit::unit(name, rename_all, export),
+            1 => newtype::newtype(name, rename_all, unnamed, generics, export),
+            _ => tuple::tuple(name, rename_all, unnamed, generics, export),
         },
-        Fields::Unit => unit::unit(name, rename_all),
+        Fields::Unit => unit::unit(name, rename_all, export),
     }
 }

@@ -9,6 +9,7 @@ use uuid::Uuid;
 
 #[derive(Serialize, TS)]
 #[ts(rename_all = "lowercase")]
+#[ts(export)]
 enum Role {
     User,
     #[ts(rename = "administrator")]
@@ -18,6 +19,7 @@ enum Role {
 #[derive(Serialize, TS)]
 // when 'serde-compat' is enabled, ts-rs tries to use supported serde attributes.
 #[serde(rename_all = "UPPERCASE")]
+#[ts(export)]
 enum Gender {
     Male,
     Female,
@@ -25,6 +27,7 @@ enum Gender {
 }
 
 #[derive(Serialize, TS)]
+#[ts(export)]
 struct User {
     user_id: i32,
     first_name: String,
@@ -40,12 +43,14 @@ struct User {
 
 #[derive(Serialize, TS)]
 #[serde(tag = "type", rename_all = "snake_case")]
+#[ts(export)]
 enum Vehicle {
     Bicycle { color: String },
     Car { brand: String, color: String },
 }
 
 #[derive(Serialize, TS)]
+#[ts(export)]
 struct Point<T>
 where
     T: TS,
@@ -55,12 +60,14 @@ where
 }
 
 #[derive(Serialize, TS)]
+#[ts(export)]
 struct Series {
     points: Vec<Point<u64>>,
 }
 
 #[derive(Serialize, TS)]
 #[serde(tag = "kind", content = "d")]
+#[ts(export)]
 enum SimpleEnum {
     A,
     B,
@@ -68,6 +75,7 @@ enum SimpleEnum {
 
 #[derive(Serialize, TS)]
 #[serde(tag = "kind", content = "data")]
+#[ts(export)]
 enum ComplexEnum {
     A,
     B { foo: String, bar: f64 },
@@ -79,6 +87,7 @@ enum ComplexEnum {
 
 #[derive(Serialize, TS)]
 #[serde(tag = "kind")]
+#[ts(export)]
 enum InlineComplexEnum {
     A,
     B { foo: String, bar: f64 },
@@ -90,6 +99,7 @@ enum InlineComplexEnum {
 
 #[derive(Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 struct ComplexStruct {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub string_tree: Option<Rc<BTreeSet<String>>>,

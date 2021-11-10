@@ -18,9 +18,9 @@ impl Dependencies {
         self.0.push(quote! {
             if <#ty as ts_rs::TS>::transparent() {
               dependencies.append(&mut <#ty as ts_rs::TS>::dependencies());
-          } else {
-                dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name()));
-          }
+            } else {
+                dependencies.push(ts_rs::Dependency::from_ty::<#ty>());
+            }
         });
     }
 

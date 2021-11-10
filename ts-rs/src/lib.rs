@@ -108,6 +108,8 @@ pub mod export;
 ///   Skip this variant  
 
 pub trait TS: 'static {
+    const EXPORTED_TO: Option<&'static str> = None;
+
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
     /// This function will panic if the type has no declaration.
     fn decl() -> String {
@@ -134,9 +136,9 @@ pub trait TS: 'static {
         panic!("{} cannot be flattened", Self::name())
     }
 
-    /// All type ids and typescript names of the types this type depends on.  
-    /// This is used for resolving imports when using the `export!` macro.  
-    fn dependencies() -> Vec<(TypeId, String)>;
+    /// Information about types this type depends on.
+    /// This is used for resolving imports when exporting to a file.
+    fn dependencies() -> Vec<Dependency>;
 
     /// `true` if this is a transparent type, e.g tuples or a list.  
     /// This is used for resolving imports when using the `export!` macro.
@@ -162,6 +164,23 @@ pub trait TS: 'static {
     }
 }
 
+#[derive(Eq, PartialEq, Ord, PartialOrd)]
+pub struct Dependency {
+    pub type_id: TypeId,
+    pub ts_name: String,
+    pub exported_to: Option<&'static str>,
+}
+
+impl Dependency {
+    pub fn from_ty<T: TS>() -> Self {
+        Dependency {
+            type_id: TypeId::of::<T>(),
+            ts_name: T::name(),
+            exported_to: T::EXPORTED_TO,
+        }
+    }
+}
+
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
         impl TS for $ty {
@@ -171,7 +190,7 @@ macro_rules! impl_primitives {
             fn inline() -> String {
                 $l.to_owned()
             }
-            fn dependencies() -> Vec<(TypeId, String)> {
+            fn dependencies() -> Vec<Dependency> {
                 vec![]
             }
             fn transparent() -> bool {
@@ -198,8 +217,10 @@ macro_rules! impl_tuples {
                     ].join(", ")
                 )
             }
-            fn dependencies() -> Vec<(TypeId, String)> {
-                vec![$((TypeId::of::<$i>(), $i::name())),*]
+            fn dependencies() -> Vec<Dependency> {
+                vec![$(
+                    Dependency::from_ty::<$i>()
+                ),*]
             }
             fn transparent() -> bool {
                 true
@@ -232,7 +253,7 @@ macro_rules! impl_proxy {
             fn inline_flattened() -> String {
                 T::inline_flattened()
             }
-            fn dependencies() -> Vec<(TypeId, String)> {
+            fn dependencies() -> Vec<Dependency> {
                 T::dependencies()
             }
             fn transparent() -> bool {
@@ -252,9 +273,8 @@ impl_primitives! {
 
 #[cfg(feature = "bytes-impl")]
 mod bytes {
-    use std::any::TypeId;
-
     use super::TS;
+    use crate::Dependency;
 
     impl TS for bytes::Bytes {
         fn name() -> String {
@@ -265,8 +285,8 @@ mod bytes {
             format!("Array<{}>", u8::inline())
         }
 
-        fn dependencies() -> Vec<(TypeId, String)> {
-            vec![(TypeId::of::<u8>(), u8::name())]
+        fn dependencies() -> Vec<Dependency> {
+            vec![]
         }
 
         fn transparent() -> bool {
@@ -283,8 +303,8 @@ mod bytes {
             format!("Array<{}>", u8::inline())
         }
 
-        fn dependencies() -> Vec<(TypeId, String)> {
-            vec![(TypeId::of::<u8>(), u8::name())]
+        fn dependencies() -> Vec<Dependency> {
+            vec![]
         }
 
         fn transparent() -> bool {
@@ -295,11 +315,10 @@ mod bytes {
 
 #[cfg(feature = "chrono-impl")]
 mod chrono_impls {
-    use std::any::TypeId;
-
     use chrono::{Date, DateTime, NaiveDate, NaiveDateTime, NaiveTime, TimeZone};
 
     use super::TS;
+    use crate::Dependency;
 
     impl_primitives! {
         NaiveDateTime, NaiveDate, NaiveTime => "string"
@@ -314,7 +333,7 @@ mod chrono_impls {
             "string".to_owned()
         }
 
-        fn dependencies() -> Vec<(TypeId, String)> {
+        fn dependencies() -> Vec<Dependency> {
             vec![]
         }
 
@@ -332,7 +351,7 @@ mod chrono_impls {
             "string".to_owned()
         }
 
-        fn dependencies() -> Vec<(TypeId, String)> {
+        fn dependencies() -> Vec<Dependency> {
             vec![]
         }
 
@@ -374,8 +393,8 @@ impl<T: TS> TS for Option<T> {
         format!("{} | null", T::inline())
     }
 
-    fn dependencies() -> Vec<(TypeId, String)> {
-        vec![(TypeId::of::<T>(), T::name())]
+    fn dependencies() -> Vec<Dependency> {
+        vec![Dependency::from_ty::<T>()]
     }
 
     fn transparent() -> bool {
@@ -397,8 +416,8 @@ impl<T: TS> TS for Vec<T> {
         format!("Array<{}>", T::inline())
     }
 
-    fn dependencies() -> Vec<(TypeId, String)> {
-        vec![(TypeId::of::<T>(), T::name())]
+    fn dependencies() -> Vec<Dependency> {
+        vec![Dependency::from_ty::<T>()]
     }
 
     fn transparent() -> bool {
@@ -415,8 +434,8 @@ impl<T: TS> TS for HashSet<T> {
         format!("Array<{}>", T::inline())
     }
 
-    fn dependencies() -> Vec<(TypeId, String)> {
-        vec![(TypeId::of::<T>(), T::name())]
+    fn dependencies() -> Vec<Dependency> {
+        vec![Dependency::from_ty::<T>()]
     }
 
     fn transparent() -> bool {
@@ -433,8 +452,8 @@ impl<T: TS> TS for BTreeSet<T> {
         format!("Array<{}>", T::inline())
     }
 
-    fn dependencies() -> Vec<(TypeId, String)> {
-        vec![(TypeId::of::<T>(), T::name())]
+    fn dependencies() -> Vec<Dependency> {
+        vec![Dependency::from_ty::<T>()]
     }
 
     fn transparent() -> bool {
@@ -451,11 +470,8 @@ impl<K: TS, V: TS> TS for HashMap<K, V> {
         format!("Record<{}, {}>", K::inline(), V::inline())
     }
 
-    fn dependencies() -> Vec<(TypeId, String)> {
-        vec![
-            (TypeId::of::<K>(), K::name()),
-            (TypeId::of::<V>(), V::name()),
-        ]
+    fn dependencies() -> Vec<Dependency> {
+        vec![Dependency::from_ty::<K>(), Dependency::from_ty::<V>()]
     }
 
     fn transparent() -> bool {
@@ -472,11 +488,8 @@ impl<K: TS, V: TS> TS for BTreeMap<K, V> {
         format!("Record<{}, {}>", K::inline(), V::inline())
     }
 
-    fn dependencies() -> Vec<(TypeId, String)> {
-        vec![
-            (TypeId::of::<K>(), K::name()),
-            (TypeId::of::<V>(), V::name()),
-        ]
+    fn dependencies() -> Vec<Dependency> {
+        vec![Dependency::from_ty::<K>(), Dependency::from_ty::<V>()]
     }
 
     fn transparent() -> bool {
@@ -493,8 +506,8 @@ impl<T: TS, const N: usize> TS for [T; N] {
         format!("Array<{}>", T::inline())
     }
 
-    fn dependencies() -> Vec<(TypeId, String)> {
-        vec![(TypeId::of::<T>(), T::name())]
+    fn dependencies() -> Vec<Dependency> {
+        vec![Dependency::from_ty::<T>()]
     }
 
     fn transparent() -> bool {

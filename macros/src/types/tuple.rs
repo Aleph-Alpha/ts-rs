@@ -14,6 +14,7 @@ pub(crate) fn tuple(
     rename_all: &Option<Inflection>,
     fields: &FieldsUnnamed,
     generics: &Generics,
+    export: Option<Option<String>>,
 ) -> Result<DerivedTS> {
     if rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to tuple structs");
@@ -44,6 +45,7 @@ pub(crate) fn tuple(
         inline_flattened: None,
         name: name.to_owned(),
         dependencies,
+        export,
     })
 }
 

@@ -1,7 +1,7 @@
 use syn::{Attribute, Ident, Result};
 
 use crate::{
-    attr::{parse_assign_inflection, parse_assign_str, Inflection},
+    attr::{parse_assign_inflection, parse_assign_str, parse_opt_assign_str, Inflection},
     utils::parse_attrs,
 };
 
@@ -9,8 +9,9 @@ use crate::{
 pub struct EnumAttr {
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,
+    pub export: Option<Option<String>>,
     tag: Option<String>,
-    untag: bool,
+    untagged: bool,
     content: Option<String>,
 }
 
@@ -28,7 +29,7 @@ pub enum Tagged<'a> {
 
 impl EnumAttr {
     pub fn tagged(&self) -> Result<Tagged<'_>> {
-        match (self.untag, &self.tag, &self.content) {
+        match (self.untagged, &self.tag, &self.content) {
             (false, None, None) => Ok(Tagged::Externally),
             (false, Some(tag), None) => Ok(Tagged::Internally { tag }),
             (false, Some(tag), Some(content)) => Ok(Tagged::Adjacently { tag, content }),
@@ -54,14 +55,16 @@ impl EnumAttr {
             rename,
             tag,
             content,
-            untag,
+            untagged,
+            export,
         }: EnumAttr,
     ) {
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
         self.tag = self.tag.take().or(tag);
-        self.untag = self.untag || untag;
+        self.untagged = self.untagged || untagged;
         self.content = self.content.take().or(content);
+        self.export = self.export.take().or(export);
     }
 }
 
@@ -69,6 +72,7 @@ impl_parse! {
     EnumAttr(input, out) {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
+        "export" => out.export = Some(parse_opt_assign_str(input)?)
     }
 }
 
@@ -79,6 +83,6 @@ impl_parse! {
         "rename_all" => out.0.rename_all = Some(parse_assign_inflection(input)?),
         "tag" => out.0.tag = Some(parse_assign_str(input)?),
         "content" => out.0.content = Some(parse_assign_str(input)?),
-        "untagged" => out.0.untag = true
+        "untagged" => out.0.untagged = true
     }
 }

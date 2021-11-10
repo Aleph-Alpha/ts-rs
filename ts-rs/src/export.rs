@@ -165,12 +165,12 @@ pub fn imports<T: TS>(
 ) {
     T::dependencies()
         .into_iter()
-        .flat_map(|(id, name)| {
-            let path = exported_files.get(&id)?;
+        .flat_map(|dep| {
+            let path = exported_files.get(&dep.type_id)?;
             if path == out_path {
                 None
             } else {
-                Some((import_path(out_path, path), name))
+                Some((import_path(out_path, path), dep.ts_name))
             }
         })
         .for_each(|(path, name)| {
@@ -181,7 +181,9 @@ pub fn imports<T: TS>(
         });
 }
 
-fn import_path(from: &Path, import: &Path) -> String {
+/// Returns the required import path for importing `import` from the file `from`
+#[doc(hidden)]
+pub fn import_path(from: &Path, import: &Path) -> String {
     let rel_path =
         diff_paths(import, from.parent().unwrap()).expect("failed to calculate import path");
     match rel_path.components().next() {

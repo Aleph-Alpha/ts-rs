@@ -37,6 +37,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         inline_flattened: None,
         dependencies,
         name,
+        export: enum_attr.export,
     })
 }
 
@@ -70,7 +71,7 @@ fn format_variant(
         (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
     };
 
-    let variant_type = types::type_def(&name, &None, &variant.fields, generics)?;
+    let variant_type = types::type_def(&name, &None, &variant.fields, generics, None)?;
     let variant_dependencies = variant_type.dependencies;
     let inline_type = variant_type.inline;
 
