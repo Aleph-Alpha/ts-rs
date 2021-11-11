@@ -1,10 +1,12 @@
 #![allow(dead_code)]
+
+use std::borrow::Cow;
 use ts_rs::TS;
 
 #[test]
 fn newtype() {
     #[derive(TS)]
-    struct Newtype(Vec<i32>);
+    struct Newtype(Vec<Cow<'static, i32>>);
     assert_eq!(Newtype::inline(), "Array<number>");
 }
 
@@ -31,7 +33,7 @@ fn alias_nested() {
 fn named() {
     #[derive(TS)]
     struct Struct {
-        a: Vec<String>,
+        a: Box<Vec<String>>,
         b: (Vec<String>, Vec<String>),
         c: [Vec<String>; 3],
     }

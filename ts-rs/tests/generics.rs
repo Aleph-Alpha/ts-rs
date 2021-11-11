@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashSet};
+use std::rc::Rc;
 
 use ts_rs::TS;
 
@@ -31,8 +32,8 @@ where
 #[derive(TS)]
 struct Container {
     foo: Generic<u32>,
-    bar: Vec<Generic<u32>>,
-    baz: HashMap<String, Generic<String>>,
+    bar: Box<HashSet<Generic<u32>>>,
+    baz: Box<BTreeMap<String, Rc<Generic<String>>>>,
 }
 
 #[test]

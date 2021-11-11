@@ -174,10 +174,15 @@ impl Dependency {
     }
 }
 
+// generate impls for primitive types
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
         impl TS for $ty {
             fn name() -> String { $l.to_owned() }
+            fn name_with_type_args(args: Vec<String>) -> String {
+                assert!(args.is_empty(), "called name_with_type_args on primitive");
+                $l.to_owned()
+            }
             fn inline() -> String { $l.to_owned() }
             fn dependencies() -> Vec<Dependency> { vec![] }
             fn transparent() -> bool { false }
@@ -186,34 +191,23 @@ macro_rules! impl_primitives {
 }
 pub(crate) use impl_primitives;
 
+// generate impls for tuples
 macro_rules! impl_tuples {
     ( impl $($i:ident),* ) => {
         impl<$($i: TS),*> TS for ($($i,)*) {
             fn name() -> String {
-                format!(
-                    "[{}]",
-                    vec![$($i::name()),*].join(", ")
-                )
+                format!("[{}]", vec![$($i::name()),*].join(", "))
             }
             fn inline() -> String {
-                format!(
-                    "[{}]",
-                    vec![
-                        $($i::inline()),*
-                    ].join(", ")
-                )
+                format!("[{}]", vec![ $($i::inline()),* ].join(", "))
             }
             fn dependencies() -> Vec<Dependency> {
-                [$(
-                    Dependency::from_ty::<$i>()
-                ),*]
+                [$( Dependency::from_ty::<$i>() ),*]
                 .into_iter()
                 .flatten()
                 .collect()
             }
-            fn transparent() -> bool {
-                true
-            }
+            fn transparent() -> bool { true }
         }
     };
     ( $i2:ident $(, $i:ident)* ) => {
@@ -223,102 +217,36 @@ macro_rules! impl_tuples {
     () => {};
 }
 
-macro_rules! impl_proxy {
+// generate impls for wrapper types
+macro_rules! impl_wrapper {
     ($($t:tt)*) => {
         $($t)* {
-            fn name() -> String {
-                T::name()
+            fn name() -> String { T::name() }
+            fn name_with_type_args(mut args: Vec<String>) -> String {
+                assert_eq!(args.len(), 1);
+                args.remove(0)
             }
-            fn name_with_type_args(args: Vec<String>) -> String {
-                if args.len() == 1 {
-                    args[0].clone()
-                } else {
-                    format!("[{}]", args.join(", "))
-                }
-            }
-            fn inline() -> String {
-                T::inline()
-            }
-            fn inline_flattened() -> String {
-                T::inline_flattened()
-            }
-            fn dependencies() -> Vec<Dependency> {
-                T::dependencies()
-            }
-            fn transparent() -> bool {
-                T::transparent()
-            }
+            fn inline() -> String { T::inline() }
+            fn inline_flattened() -> String { T::inline_flattened() }
+            fn dependencies() -> Vec<Dependency> { T::dependencies() }
+            fn transparent() -> bool { T::transparent() }
         }
     };
 }
 
-impl_primitives! {
-    u8, i8, u16, i16, u32, i32, f32, f64, usize, isize => "number",
-    u64, i64, u128, i128 => "bigint",
-    bool => "boolean",
-    String, &'static str => "string",
-    () => "null"
+// implement TS for the $shadow, deferring to the impl $s
+macro_rules! impl_shadow {
+    (as $s:ty: $($impl:tt)*) => {
+        $($impl)* {
+            fn name() -> String { <$s>::name() }
+            fn name_with_type_args(args: Vec<String>) -> String { <$s>::name_with_type_args(args) }
+            fn inline() -> String { <$s>::inline() }
+            fn inline_flattened() -> String { <$s>::inline_flattened() }
+            fn dependencies() -> Vec<$crate::Dependency> { <$s>::dependencies() }
+            fn transparent() -> bool { <$s>::transparent() }
+        }
+    };
 }
-
-#[cfg(feature = "bytes-impl")]
-mod bytes {
-    use super::TS;
-    use crate::Dependency;
-
-    impl TS for bytes::Bytes {
-        fn name() -> String {
-            "Array<number>".to_owned()
-        }
-
-        fn inline() -> String {
-            format!("Array<{}>", u8::inline())
-        }
-
-        fn dependencies() -> Vec<Dependency> {
-            vec![]
-        }
-
-        fn transparent() -> bool {
-            true
-        }
-    }
-
-    impl TS for bytes::BytesMut {
-        fn name() -> String {
-            "Array<number>".to_owned()
-        }
-
-        fn inline() -> String {
-            format!("Array<{}>", u8::inline())
-        }
-
-        fn dependencies() -> Vec<Dependency> {
-            vec![]
-        }
-
-        fn transparent() -> bool {
-            true
-        }
-    }
-}
-
-#[cfg(feature = "bigdecimal-impl")]
-impl_primitives! {
-    bigdecimal::BigDecimal => "string"
-}
-
-#[cfg(feature = "uuid-impl")]
-impl_primitives! {
-    uuid::Uuid => "string"
-}
-
-impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
-impl_proxy!(impl<T: TS> TS for Box<T>);
-impl_proxy!(impl<T: TS> TS for std::sync::Arc<T>);
-impl_proxy!(impl<T: TS> TS for std::rc::Rc<T>);
-impl_proxy!(impl<T: TS + ToOwned> TS for std::borrow::Cow<'static, T>);
-impl_proxy!(impl<T: TS> TS for std::cell::Cell<T>);
-impl_proxy!(impl<T: TS> TS for std::cell::RefCell<T>);
 
 impl<T: TS> TS for Option<T> {
     fn name() -> String {
@@ -326,7 +254,12 @@ impl<T: TS> TS for Option<T> {
     }
 
     fn name_with_type_args(args: Vec<String>) -> String {
-        assert_eq!(args.len(), 1);
+        assert_eq!(
+            args.len(),
+            1,
+            "called Option::name_with_type_args with {} args",
+            args.len()
+        );
         format!("{} | null", args[0])
     }
 
@@ -349,44 +282,13 @@ impl<T: TS> TS for Vec<T> {
     }
 
     fn name_with_type_args(args: Vec<String>) -> String {
-        assert_eq!(args.len(), 1);
+        assert_eq!(
+            args.len(),
+            1,
+            "called Vec::name_with_type_args with {} args",
+            args.len()
+        );
         format!("Array<{}>", args[0])
-    }
-
-    fn inline() -> String {
-        format!("Array<{}>", T::inline())
-    }
-
-    fn dependencies() -> Vec<Dependency> {
-        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
-    }
-
-    fn transparent() -> bool {
-        true
-    }
-}
-
-impl<T: TS> TS for HashSet<T> {
-    fn name() -> String {
-        "Array".to_owned()
-    }
-
-    fn inline() -> String {
-        format!("Array<{}>", T::inline())
-    }
-
-    fn dependencies() -> Vec<Dependency> {
-        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
-    }
-
-    fn transparent() -> bool {
-        true
-    }
-}
-
-impl<T: TS> TS for BTreeSet<T> {
-    fn name() -> String {
-        "Array".to_owned()
     }
 
     fn inline() -> String {
@@ -407,25 +309,14 @@ impl<K: TS, V: TS> TS for HashMap<K, V> {
         "Record".to_owned()
     }
 
-    fn inline() -> String {
-        format!("Record<{}, {}>", K::inline(), V::inline())
-    }
-
-    fn dependencies() -> Vec<Dependency> {
-        [Dependency::from_ty::<K>(), Dependency::from_ty::<V>()]
-            .into_iter()
-            .flatten()
-            .collect()
-    }
-
-    fn transparent() -> bool {
-        true
-    }
-}
-
-impl<K: TS, V: TS> TS for BTreeMap<K, V> {
-    fn name() -> String {
-        "Record".to_owned()
+    fn name_with_type_args(args: Vec<String>) -> String {
+        assert_eq!(
+            args.len(),
+            2,
+            "called HashMap::name_with_type_args with {} args",
+            args.len()
+        );
+        format!("Record<{}, {}>", args[0], args[1])
     }
 
     fn inline() -> String {
@@ -444,20 +335,38 @@ impl<K: TS, V: TS> TS for BTreeMap<K, V> {
     }
 }
 
-impl<T: TS, const N: usize> TS for [T; N] {
-    fn name() -> String {
-        format!("Array<{}>", T::name())
-    }
+impl_shadow!(as Vec<T>: impl<T: TS> TS for HashSet<T>);
+impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
+impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);
+impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for [T; N]);
 
-    fn inline() -> String {
-        format!("Array<{}>", T::inline())
-    }
+impl_wrapper!(impl<T: TS> TS for Box<T>);
+impl_wrapper!(impl<T: TS> TS for std::sync::Arc<T>);
+impl_wrapper!(impl<T: TS> TS for std::rc::Rc<T>);
+impl_wrapper!(impl<T: TS + ToOwned> TS for std::borrow::Cow<'static, T>);
+impl_wrapper!(impl<T: TS> TS for std::cell::Cell<T>);
+impl_wrapper!(impl<T: TS> TS for std::cell::RefCell<T>);
 
-    fn dependencies() -> Vec<Dependency> {
-        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
-    }
+impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
 
-    fn transparent() -> bool {
-        true
-    }
+#[cfg(feature = "bigdecimal-impl")]
+impl_primitives! { bigdecimal::BigDecimal => "string" }
+
+#[cfg(feature = "uuid-impl")]
+impl_primitives! { uuid::Uuid => "string" }
+
+#[cfg(feature = "bytes-impl")]
+mod bytes {
+    use super::TS;
+
+    impl_shadow!(as Vec<u8>: impl TS for bytes::Bytes);
+    impl_shadow!(as Vec<u8>: impl TS for bytes::BytesMut);
+}
+
+impl_primitives! {
+    u8, i8, u16, i16, u32, i32, f32, f64, usize, isize => "number",
+    u64, i64, u128, i128 => "bigint",
+    bool => "boolean",
+    String, &'static str => "string",
+    () => "null"
 }
