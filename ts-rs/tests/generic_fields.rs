@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use ts_rs::{Dependency, TS};
+use ts_rs::TS;
 
 #[test]
 fn newtype() {

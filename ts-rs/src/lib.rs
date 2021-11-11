@@ -27,6 +27,8 @@ pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
 
+#[cfg(feature = "chrono-impl")]
+mod chrono;
 mod export;
 
 /// A type which can be represented in TypeScript.  
@@ -182,6 +184,7 @@ macro_rules! impl_primitives {
         }
     )*)* };
 }
+pub(crate) use impl_primitives;
 
 macro_rules! impl_tuples {
     ( impl $($i:ident),* ) => {
@@ -295,69 +298,6 @@ mod bytes {
 
         fn transparent() -> bool {
             true
-        }
-    }
-}
-
-#[cfg(feature = "chrono-impl")]
-mod chrono_impls {
-    use chrono::{
-        Date, DateTime, Duration, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime,
-        TimeZone, Utc,
-    };
-
-    use super::TS;
-    use crate::Dependency;
-
-    macro_rules! impl_dummy {
-        ($($t:ty),*) => {$(
-            impl TS for $t {
-                fn name() -> String { String::new() }
-                fn inline() -> String { String::new() }
-                fn dependencies() -> Vec<Dependency> { vec![] }
-                fn transparent() -> bool { false }
-            }
-        )*};
-    }
-
-    impl_primitives! {
-        NaiveDateTime, NaiveDate, NaiveTime, Duration => "string"
-    }
-    impl_dummy!(Utc, Local, FixedOffset);
-
-    impl<T: TimeZone + 'static> TS for DateTime<T> {
-        fn name() -> String {
-            "string".to_owned()
-        }
-        fn name_with_type_args(_: Vec<String>) -> String {
-            Self::name()
-        }
-        fn inline() -> String {
-            "string".to_owned()
-        }
-        fn dependencies() -> Vec<Dependency> {
-            vec![]
-        }
-        fn transparent() -> bool {
-            false
-        }
-    }
-
-    impl<T: TimeZone + 'static> TS for Date<T> {
-        fn name() -> String {
-            "string".to_owned()
-        }
-        fn name_with_type_args(_: Vec<String>) -> String {
-            Self::name()
-        }
-        fn inline() -> String {
-            "string".to_owned()
-        }
-        fn dependencies() -> Vec<Dependency> {
-            vec![]
-        }
-        fn transparent() -> bool {
-            false
         }
     }
 }

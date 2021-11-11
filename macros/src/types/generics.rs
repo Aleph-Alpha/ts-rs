@@ -1,9 +1,8 @@
 use proc_macro2::TokenStream;
-use quote::{quote, format_ident};
+use quote::{format_ident, quote};
 use syn::{GenericArgument, GenericParam, Generics, ItemStruct, PathArguments, Type, TypeTuple};
-use crate::attr::StructAttr;
 
-use crate::deps::Dependencies;
+use crate::{attr::StructAttr, deps::Dependencies};
 
 /// formats the generic arguments (like A, B in struct X<A, B>{..}) as "<X>" where x is a comma
 /// seperated list of generic arguments, or None if there are no generic arguments.
@@ -63,13 +62,14 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
                 &StructAttr::default(),
                 &format_ident!("_"),
                 &tuple_type_to_tuple_struct(tuple).fields,
-                generics
-            ).unwrap();
+                generics,
+            )
+            .unwrap();
             // now, we return the inline definition
             dependencies.append(tuple_struct.dependencies);
             return tuple_struct.inline;
         }
-        _ => ()
+        _ => (),
     };
 
     dependencies.push_or_append_from(ty);
@@ -116,5 +116,6 @@ fn extract_type_args(ty: &Type) -> Option<Vec<&Type>> {
 //      to a [`ItemStruct`], e.g `struct A(A, B, C)`
 fn tuple_type_to_tuple_struct(tuple: &TypeTuple) -> ItemStruct {
     let elements = tuple.elems.iter();
-    syn::parse2(quote!(struct A( #(#elements),* );)).expect("could not convert tuple to tuple struct")
+    syn::parse2(quote!(struct A( #(#elements),* );))
+        .expect("could not convert tuple to tuple struct")
 }

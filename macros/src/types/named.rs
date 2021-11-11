@@ -3,13 +3,12 @@ use quote::quote;
 use syn::{Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, Type};
 
 use crate::{
-    attr::{FieldAttr, Inflection},
+    attr::{FieldAttr, Inflection, StructAttr},
     deps::Dependencies,
     types::generics::{format_generics, format_type},
     utils::to_ts_ident,
     DerivedTS,
 };
-use crate::attr::StructAttr;
 
 pub(crate) fn named(
     attr: &StructAttr,

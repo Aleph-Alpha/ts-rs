@@ -1,13 +1,9 @@
 use quote::quote;
 use syn::Result;
 
-use crate::{deps::Dependencies, DerivedTS};
-use crate::attr::StructAttr;
+use crate::{attr::StructAttr, deps::Dependencies, DerivedTS};
 
-pub(crate) fn unit(
-    attr: &StructAttr,
-    name: &str,
-) -> Result<DerivedTS> {
+pub(crate) fn unit(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to unit structs");
     }

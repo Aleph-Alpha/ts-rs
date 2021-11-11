@@ -1,10 +1,6 @@
-use syn::{Fields, Generics, ItemStruct, Result, Ident};
+use syn::{Fields, Generics, Ident, ItemStruct, Result};
 
-use crate::{
-    attr::{StructAttr},
-    utils::to_ts_ident,
-    DerivedTS,
-};
+use crate::{attr::StructAttr, utils::to_ts_ident, DerivedTS};
 
 mod r#enum;
 mod generics;
@@ -18,12 +14,7 @@ pub(crate) use r#enum::r#enum_def;
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     let attr = StructAttr::from_attrs(&s.attrs)?;
 
-    type_def(
-        &attr,
-        &s.ident,
-        &s.fields,
-        &s.generics,
-    )
+    type_def(&attr, &s.ident, &s.fields, &s.generics)
 }
 
 fn type_def(

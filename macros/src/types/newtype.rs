@@ -2,12 +2,11 @@ use quote::quote;
 use syn::{FieldsUnnamed, Generics, Result};
 
 use crate::{
-    attr::{FieldAttr},
+    attr::{FieldAttr, StructAttr},
     deps::Dependencies,
     types::generics::{format_generics, format_type},
     DerivedTS,
 };
-use crate::attr::StructAttr;
 
 pub(crate) fn newtype(
     attr: &StructAttr,
