@@ -1,7 +1,9 @@
 #![allow(dead_code)]
 
-use std::collections::{BTreeMap, HashSet};
-use std::rc::Rc;
+use std::{
+    collections::{BTreeMap, HashSet},
+    rc::Rc,
+};
 
 use ts_rs::TS;
 
@@ -112,7 +114,7 @@ fn generic_struct() {
         e: [(T, T); 3],
         f: Vec<T>,
         g: Vec<Vec<T>>,
-        h: Vec<[(T, T); 3]>
+        h: Vec<[(T, T); 3]>,
     }
 
     assert_eq!(

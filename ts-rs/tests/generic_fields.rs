@@ -1,6 +1,7 @@
-#![allow(dead_code)]
+#![allow(dead_code, clippy::box_collection)]
 
 use std::borrow::Cow;
+
 use ts_rs::TS;
 
 #[test]

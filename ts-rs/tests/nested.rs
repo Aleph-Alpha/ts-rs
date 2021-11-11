@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 
-use std::cell::Cell;
-use std::rc::Rc;
-use std::sync::Arc;
+use std::{cell::Cell, rc::Rc, sync::Arc};
+
 use ts_rs::TS;
 
 #[derive(TS)]

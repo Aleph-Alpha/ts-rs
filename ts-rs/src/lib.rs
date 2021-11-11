@@ -26,7 +26,7 @@
 //!
 //! ## why?
 //! When building a web application in rust, data structures have to be shared between backend and frontend.
-//! Using this library, you can easily generate TypeScript bindings to your rust structs & enums, so that you can keep your
+//! Using this library, you can easily generate TypeScript bindings to your rust structs & enums so that you can keep your
 //! types in one place.
 //!
 //! ts-rs might also come in handy when working with webassembly.
@@ -34,7 +34,8 @@
 //! ## how?
 //! ts-rs exposes a single trait, `TS`. Using a derive macro, you can implement this interface for your types.
 //! Then, you can use this trait to obtain the TypeScript bindings.
-//! We recommend doing this in your tests. [See the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs) and [the docs](https://docs.rs/ts-rs/latest/ts_rs/).
+//! We recommend doing this in your tests.
+//! [See the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs) and [the docs](https://docs.rs/ts-rs/latest/ts_rs/).
 //!
 //! ## get started
 //! ```toml
@@ -43,7 +44,7 @@
 //! ```
 //!
 //! ```rust
-//! use ts_rs::{TS, export};
+//! use ts_rs::TS;
 //!
 //! #[derive(TS)]
 //! #[ts(export)]
@@ -63,6 +64,20 @@
 //! - generate necessary imports when exporting to multiple files
 //! - serde compatibility
 //! - generic types
+//!
+//! ## cargo features
+//! - `serde-compat` (default)  
+//!   Enable serde compatibility. See below for more info.  
+//! - `chrono-impl`  
+//!   Implement `TS` for types from chrono  
+//! - `bigdecimal-impl`  
+//!   Implement `TS` for types from bigdecimal  
+//! - `uuid-impl`  
+//!   Implement `TS` for types from uuid  
+//! - `bytes-impl`  
+//!   Implement `TS` for types from bytes  
+//!
+//! If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 //!
 //! ## serde compatability
 //! With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
@@ -84,7 +99,7 @@
 //! ## contributing
 //! Contributions are always welcome!
 //! Feel free to open an issue, discuss using GitHub discussions or open a PR.
-//! [see CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
+//! [See CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
 //!
 //! ## todo
 //! - [x] serde compatibility layer
@@ -128,17 +143,17 @@ mod export;
 /// ### container attributes
 /// attributes applicable for both structs and enums
 ///
-/// - `#[ts(export)]`:
+/// - `#[ts(export)]`:  
 ///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
 ///   `cargo test`
 ///
-/// - `#[ts(export_to = "..")]`:
+/// - `#[ts(export_to = "..")]`:  
 ///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.
 ///
-/// - `#[ts(rename = "..")]`:
+/// - `#[ts(rename = "..")]`:  
 ///   Sets the typescript name of the generated type
 ///
-/// - `#[ts(rename_all = "..")]`:
+/// - `#[ts(rename_all = "..")]`:  
 ///   Rename all fields/variants of the type.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`
 ///
@@ -146,7 +161,8 @@ mod export;
 /// ### struct field attributes
 ///
 /// - `#[ts(type = "..")]`:  
-///   Overrides the type used in TypeScript  
+///   Overrides the type used in TypeScript.  
+///   This is useful when there's a type for which you cannot derive `TS`.  
 ///
 /// - `#[ts(rename = "..")]`:  
 ///   Renames this field  
@@ -157,7 +173,7 @@ mod export;
 /// - `#[ts(skip)]`:  
 ///   Skip this field  
 ///
-/// - `#[ts(optional)]`:
+/// - `#[ts(optional)]`:  
 ///   Indicates the field may be omitted from the serialized struct
 ///
 /// - `#[ts(flatten)]`:  
@@ -165,15 +181,15 @@ mod export;
 ///   
 /// ### enum attributes
 ///
-/// - `#[ts(tag = "..")]`:
+/// - `#[ts(tag = "..")]`:  
 ///   Changes the representation of the enum to store its tag in a separate field.
 ///   See [the serde docs](https://serde.rs/enum-representations.html).
 ///
-/// - `#[ts(content = "..")]`:
+/// - `#[ts(content = "..")]`:  
 ///   Changes the representation of the enum to store its content in a separate field.
 ///   See [the serde docs](https://serde.rs/enum-representations.html).
 ///
-/// - `#[ts(untagged)]`:
+/// - `#[ts(untagged)]`:  
 ///   Changes the representation of the enum to not include its tag.
 ///   See [the serde docs](https://serde.rs/enum-representations.html).
 ///

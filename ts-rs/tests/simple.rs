@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use std::cell::RefCell;
+
 use ts_rs::TS;
 
 #[derive(TS)]
