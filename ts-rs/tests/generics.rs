@@ -99,3 +99,23 @@ fn generic_tuple() {
         r#"type Tuple<T> = [T, Array<T>, Array<Array<T>>];"#
     );
 }
+
+#[test]
+fn generic_struct() {
+    #[derive(TS)]
+    struct Struct<T> {
+        a: T,
+        b: (T, T),
+        c: (T, (T, T)),
+        d: [T; 3],
+        e: [(T, T); 3],
+        f: Vec<T>,
+        g: Vec<Vec<T>>,
+        h: Vec<[(T, T); 3]>
+    }
+
+    assert_eq!(
+        Struct::<()>::decl(),
+        "interface Struct<T> { a: T, b: [T, T], c: [T, [T, T]], d: Array<T>, e: Array<[T, T]>, f: Array<T>, g: Array<Array<T>>, h: Array<Array<[T, T]>>, }"
+    )
+}
