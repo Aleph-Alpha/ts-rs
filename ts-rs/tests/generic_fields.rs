@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use ts_rs::TS;
+use ts_rs::{Dependency, TS};
 
 #[test]
 fn newtype() {
@@ -32,8 +32,13 @@ fn named() {
     #[derive(TS)]
     struct Struct {
         a: Vec<String>,
+        b: (Vec<String>, Vec<String>),
+        c: [Vec<String>; 3],
     }
-    assert_eq!(Struct::inline(), "{ a: Array<string>, }");
+    assert_eq!(
+        Struct::inline(),
+        "{ a: Array<string>, b: [Array<string>, Array<string>], c: Array<Array<string>>, }"
+    );
 }
 
 #[test]
@@ -41,23 +46,32 @@ fn named_nested() {
     #[derive(TS)]
     struct Struct {
         a: Vec<Vec<String>>,
+        b: (Vec<Vec<String>>, Vec<Vec<String>>),
+        c: [Vec<Vec<String>>; 3],
     }
-    assert_eq!(Struct::inline(), "{ a: Array<Array<string>>, }");
+    assert_eq!(Struct::inline(), "{ a: Array<Array<string>>, b: [Array<Array<string>>, Array<Array<string>>], c: Array<Array<Array<string>>>, }");
 }
 
 #[test]
 fn tuple() {
     #[derive(TS)]
-    struct Tuple(Vec<i32>, Vec<i32>);
-    assert_eq!(Tuple::inline(), "[Array<number>, Array<number>]");
+    struct Tuple(Vec<i32>, (Vec<i32>, Vec<i32>), [Vec<i32>; 3]);
+    assert_eq!(
+        Tuple::inline(),
+        "[Array<number>, [Array<number>, Array<number>], Array<Array<number>>]"
+    );
 }
 
 #[test]
 fn tuple_nested() {
     #[derive(TS)]
-    struct Tuple(Vec<Vec<i32>>, Vec<Vec<i32>>);
+    struct Tuple(
+        Vec<Vec<i32>>,
+        (Vec<Vec<i32>>, Vec<Vec<i32>>),
+        [Vec<Vec<i32>>; 3],
+    );
     assert_eq!(
         Tuple::inline(),
-        "[Array<Array<number>>, Array<Array<number>>]"
+        "[Array<Array<number>>, [Array<Array<number>>, Array<Array<number>>], Array<Array<Array<number>>>]"
     );
 }
