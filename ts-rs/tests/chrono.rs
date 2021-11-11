@@ -1,3 +1,5 @@
+#![cfg(feature = "chrono-impl")]
+
 use chrono::{
     Date, DateTime, Duration, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, Utc,
 };
