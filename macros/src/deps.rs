@@ -28,7 +28,7 @@ impl Dependencies {
 
     pub fn append(&mut self, other: Dependencies) {
         self.0.push(quote! {
-            dependencies.append(&mut #other)
+            dependencies.append(&mut #other);
         })
     }
 }
