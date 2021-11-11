@@ -69,7 +69,7 @@ fn generate_imports<T: TS + ?Sized>(out: &mut String) -> Result<(), ExportError>
 
     for dep in deps {
         let rel_path = import_path(path, Path::new(dep.exported_to));
-        writeln!(out, "import {{ {} }} from {:?};", &dep.ts_name, rel_path).unwrap();
+        writeln!(out, "import type {{ {} }} from {:?};", &dep.ts_name, rel_path).unwrap();
     }
     writeln!(out).unwrap();
     Ok(())

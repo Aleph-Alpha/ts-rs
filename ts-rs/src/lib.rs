@@ -1,22 +1,98 @@
-//! Generate TypeScript interface/type declarations from rust structs.
+//! <h1 align="center" style="padding-top: 0; margin-top: 0;">
+//! <img width="150px" src="https://raw.githubusercontent.com/Aleph-Alpha/ts-rs/main/logo.png" alt="logo">
+//! <br/>
+//! ts-rs
+//! </h1>
+//! <p align="center">
+//! generate typescript interface/type declarations from rust types
+//! </p>
+//!
+//! <div align="center">
+//! <!-- Github Actions -->
+//! <img src="https://img.shields.io/github/workflow/status/Aleph-Alpha/ts-rs/Test?style=flat-square" alt="actions status" />
+//! <a href="https://crates.io/crates/ts-rs">
+//! <img src="https://img.shields.io/crates/v/ts-rs.svg?style=flat-square"
+//! alt="Crates.io version" />
+//! </a>
+//! <a href="https://docs.rs/ts-rs">
+//! <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
+//! alt="docs.rs docs" />
+//! </a>
+//! <a href="https://crates.io/crates/ts-rs">
+//! <img src="https://img.shields.io/crates/d/ts-rs.svg?style=flat-square"
+//! alt="Download" />
+//! </a>
+//! </div>
 //!
 //! ## why?
-//! When building a web application in rust, data structures have to be shared between backend and frontend.  
+//! When building a web application in rust, data structures have to be shared between backend and frontend.
 //! Using this library, you can easily generate TypeScript bindings to your rust structs & enums, so that you can keep your
 //! types in one place.
 //!
 //! ts-rs might also come in handy when working with webassembly.
 //!
 //! ## how?
-//! ts-rs exposes a single trait, `TS`.  
-//! Using a derive macro, you can implement this trait for
-//! your types.  
+//! ts-rs exposes a single trait, `TS`. Using a derive macro, you can implement this interface for your types.
 //! Then, you can use this trait to obtain the TypeScript bindings.
-//! We recommend doing this in your tests. [see the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs)
+//! We recommend doing this in your tests. [See the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs) and [the docs](https://docs.rs/ts-rs/latest/ts_rs/).
 //!
-//! ## serde compatibility layer
-//! With the `serde-compat` feature enabled, ts-rs tries parsing serde attributes.  
-//! Please note that not all serde attributes are supported yet.
+//! ## get started
+//! ```toml
+//! [dependencies]
+//! ts-rs = "6.0"
+//! ```
+//!
+//! ```rust
+//! use ts_rs::{TS, export};
+//!
+//! #[derive(TS)]
+//! #[ts(export)]
+//! struct User {
+//!     user_id: i32,
+//!     first_name: String,
+//!     last_name: String,
+//! }
+//! ```
+//! When running `cargo test`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
+//!
+//! ## features
+//! - generate interface declarations from rust structs
+//! - generate union declarations from rust enums
+//! - inline types
+//! - flatten structs/interfaces
+//! - generate necessary imports when exporting to multiple files
+//! - serde compatibility
+//! - generic types
+//!
+//! ## serde compatability
+//! With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
+//! Supported serde attributes:
+//! - `rename`
+//! - `rename-all`
+//! - `tag`
+//! - `content`
+//! - `untagged`
+//! - `skip`
+//! - `skip_serializing`
+//! - `skip_deserializing`
+//! - `skip_serializing_if = "Option::is_none"`
+//! - `flatten`
+//! - `default`
+//!
+//! When ts-rs encounters an unsupported serde attribute, a warning is emitted.
+//!
+//! ## contributing
+//! Contributions are always welcome!
+//! Feel free to open an issue, discuss using GitHub discussions or open a PR.
+//! [see CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
+//!
+//! ## todo
+//! - [x] serde compatibility layer
+//! - [x] documentation
+//! - [x] use typescript types across files
+//! - [x] more enum representations
+//! - [x] generics
+//! - [ ] don't require `'static`
 
 use std::{
     any::TypeId,
@@ -36,32 +112,37 @@ mod export;
 /// ts-rs comes with implementations for all primitives, most collections, tuples,
 /// arrays and containers.
 ///
-/// ## get started
-/// [TS](TS) can easily be derived for structs and enums:
-/// ```rust
-/// use ts_rs::TS;
+/// ### exporting
+/// Because Rusts procedural macros are evaluated before other compilation steps, TypeScript
+/// bindings cannot be exported during compile time.
+/// Bindings can be exported within a test, which ts-rs generates for you by adding `#[ts(export)]`
+/// to a type you wish to export to a file.
+/// If, for some reason, you need to do this during runtime, you can call [`TS::export`] yourself.
 ///
-/// #[derive(TS)]
-/// #[ts(export)]
-/// struct User {
-///     first_name: String,
-///     last_name: String,
-/// }
-/// ```
-/// `#[ts(export)]` will generate a test for you, in which the bindings are exported.
-/// After running `cargo test`, there should be a new file, `User.ts` in the `typescript/` directory.
-/// This behaviour can be customized by adding `#[ts(export_to = "..")]` to the type and/or configuring
-/// the output directory in `ts.toml`.
+/// ### serde compatibility
+/// By default, the feature `serde-compat` is enabled.
+/// ts-rs then parses serde attributes and adjusts the generated typescript bindings accordingly.
+/// Not all serde attributes are supported yet - if you use an unsupported attribute, you'll see a
+/// warning.
 ///
-/// ### struct attributes
+/// ### container attributes
+/// attributes applicable for both structs and enums
 ///
-/// - `#[ts(rename = "..")]`:  
-///   Set the name of the generated interface  
+/// - `#[ts(export)]`:
+///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
+///   `cargo test`
 ///
-/// - `#[ts(rename_all = "..")]`:  
-///   Rename all fields of this struct.  
+/// - `#[ts(export_to = "..")]`:
+///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.
+///
+/// - `#[ts(rename = "..")]`:
+///   Sets the typescript name of the generated type
+///
+/// - `#[ts(rename_all = "..")]`:
+///   Rename all fields/variants of the type.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`
-///   
+///
+///
 /// ### struct field attributes
 ///
 /// - `#[ts(type = "..")]`:  
@@ -76,7 +157,7 @@ mod export;
 /// - `#[ts(skip)]`:  
 ///   Skip this field  
 ///
-/// - `#[ts(optional)]
+/// - `#[ts(optional)]`:
 ///   Indicates the field may be omitted from the serialized struct
 ///
 /// - `#[ts(flatten)]`:  
@@ -84,8 +165,17 @@ mod export;
 ///   
 /// ### enum attributes
 ///
-/// - `#[ts(rename = "..")]`:  
-///   Set the name of the generated type  
+/// - `#[ts(tag = "..")]`:
+///   Changes the representation of the enum to store its tag in a separate field.
+///   See [the serde docs](https://serde.rs/enum-representations.html).
+///
+/// - `#[ts(content = "..")]`:
+///   Changes the representation of the enum to store its content in a separate field.
+///   See [the serde docs](https://serde.rs/enum-representations.html).
+///
+/// - `#[ts(untagged)]`:
+///   Changes the representation of the enum to not include its tag.
+///   See [the serde docs](https://serde.rs/enum-representations.html).
 ///
 /// - `#[ts(rename_all = "..")]`:  
 ///   Rename all variants of this enum.  
@@ -98,7 +188,6 @@ mod export;
 ///
 /// - `#[ts(skip)]`:  
 ///   Skip this variant  
-
 pub trait TS: 'static {
     const EXPORT_TO: Option<&'static str> = None;
 
