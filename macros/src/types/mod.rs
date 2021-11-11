@@ -1,7 +1,7 @@
-use syn::{Fields, Generics, ItemStruct, Result};
+use syn::{Fields, Generics, ItemStruct, Result, Ident};
 
 use crate::{
-    attr::{Inflection, StructAttr},
+    attr::{StructAttr},
     utils::to_ts_ident,
     DerivedTS,
 };
@@ -16,42 +16,33 @@ mod unit;
 pub(crate) use r#enum::r#enum_def;
 
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
-    let StructAttr {
-        rename_all,
-        rename,
-        export,
-        export_to,
-    } = StructAttr::from_attrs(&s.attrs)?;
-    let name = rename.unwrap_or_else(|| to_ts_ident(&s.ident));
+    let attr = StructAttr::from_attrs(&s.attrs)?;
 
     type_def(
-        &name,
-        &rename_all,
+        &attr,
+        &s.ident,
         &s.fields,
         &s.generics,
-        export,
-        export_to,
     )
 }
 
 fn type_def(
-    name: &str,
-    rename_all: &Option<Inflection>,
+    attr: &StructAttr,
+    ident: &Ident,
     fields: &Fields,
     generics: &Generics,
-    export: bool,
-    export_to: Option<String>,
 ) -> Result<DerivedTS> {
+    let name = attr.rename.clone().unwrap_or_else(|| to_ts_ident(ident));
     match fields {
         Fields::Named(named) => match named.named.len() {
-            0 => unit::unit(name, rename_all, export, export_to),
-            _ => named::named(name, rename_all, named, generics, export, export_to),
+            0 => unit::unit(attr, &name),
+            _ => named::named(attr, &name, named, generics),
         },
         Fields::Unnamed(unnamed) => match unnamed.unnamed.len() {
-            0 => unit::unit(name, rename_all, export, export_to),
-            1 => newtype::newtype(name, rename_all, unnamed, generics, export, export_to),
-            _ => tuple::tuple(name, rename_all, unnamed, generics, export, export_to),
+            0 => unit::unit(attr, &name),
+            1 => newtype::newtype(attr, &name, unnamed, generics),
+            _ => tuple::tuple(attr, &name, unnamed, generics),
         },
-        Fields::Unit => unit::unit(name, rename_all, export, export_to),
+        Fields::Unit => unit::unit(attr, &name),
     }
 }

@@ -7,7 +7,7 @@ use crate::{
     utils::parse_attrs,
 };
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct StructAttr {
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,

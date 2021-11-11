@@ -1,9 +1,9 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, format_ident};
 use syn::{Fields, Generics, ItemEnum, Variant};
 
 use crate::{
-    attr::{EnumAttr, FieldAttr, Tagged},
+    attr::{EnumAttr, FieldAttr, StructAttr, Tagged},
     deps::Dependencies,
     types,
     types::generics::{format_generics, format_type},
@@ -72,7 +72,13 @@ fn format_variant(
         (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
     };
 
-    let variant_type = types::type_def(&name, &None, &variant.fields, generics, false, None)?;
+    let variant_type = types::type_def(
+        &StructAttr::default(),
+        // since we are generating the variant as a struct, it doesn't have a name
+        &format_ident!("_"),
+        &variant.fields,
+        generics,
+    )?;
     let variant_dependencies = variant_type.dependencies;
     let inline_type = variant_type.inline;
 

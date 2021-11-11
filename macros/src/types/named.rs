@@ -9,14 +9,13 @@ use crate::{
     utils::to_ts_ident,
     DerivedTS,
 };
+use crate::attr::StructAttr;
 
 pub(crate) fn named(
+    attr: &StructAttr,
     name: &str,
-    rename_all: &Option<Inflection>,
     fields: &FieldsNamed,
     generics: &Generics,
-    export: bool,
-    export_to: Option<String>,
 ) -> Result<DerivedTS> {
     let mut formatted_fields = vec![];
     let mut dependencies = Dependencies::default();
@@ -25,7 +24,7 @@ pub(crate) fn named(
             &mut formatted_fields,
             &mut dependencies,
             field,
-            rename_all,
+            &attr.rename_all,
             generics,
         )?;
     }
@@ -44,8 +43,8 @@ pub(crate) fn named(
         inline_flattened: Some(fields),
         name: name.to_owned(),
         dependencies,
-        export,
-        export_to,
+        export: attr.export,
+        export_to: attr.export_to.clone(),
     })
 }
 

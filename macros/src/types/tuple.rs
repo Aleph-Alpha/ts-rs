@@ -3,21 +3,20 @@ use quote::quote;
 use syn::{Field, FieldsUnnamed, Generics, Result};
 
 use crate::{
-    attr::{FieldAttr, Inflection},
+    attr::{FieldAttr, },
     deps::Dependencies,
     types::generics::{format_generics, format_type},
     DerivedTS,
 };
+use crate::attr::StructAttr;
 
 pub(crate) fn tuple(
+    attr: &StructAttr,
     name: &str,
-    rename_all: &Option<Inflection>,
     fields: &FieldsUnnamed,
     generics: &Generics,
-    export: bool,
-    export_to: Option<String>,
 ) -> Result<DerivedTS> {
-    if rename_all.is_some() {
+    if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to tuple structs");
     }
 
@@ -46,8 +45,8 @@ pub(crate) fn tuple(
         inline_flattened: None,
         name: name.to_owned(),
         dependencies,
-        export,
-        export_to,
+        export: attr.export,
+        export_to: attr.export_to.clone(),
     })
 }
 

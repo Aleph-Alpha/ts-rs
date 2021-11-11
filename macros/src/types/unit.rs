@@ -1,15 +1,14 @@
 use quote::quote;
 use syn::Result;
 
-use crate::{attr::Inflection, deps::Dependencies, DerivedTS};
+use crate::{deps::Dependencies, DerivedTS};
+use crate::attr::StructAttr;
 
 pub(crate) fn unit(
+    attr: &StructAttr,
     name: &str,
-    rename_all: &Option<Inflection>,
-    export: bool,
-    export_to: Option<String>,
 ) -> Result<DerivedTS> {
-    if rename_all.is_some() {
+    if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to unit structs");
     }
 
@@ -19,7 +18,7 @@ pub(crate) fn unit(
         inline_flattened: None,
         name: name.to_owned(),
         dependencies: Dependencies::default(),
-        export,
-        export_to,
+        export: attr.export,
+        export_to: attr.export_to.clone(),
     })
 }
