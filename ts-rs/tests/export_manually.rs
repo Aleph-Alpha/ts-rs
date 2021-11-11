@@ -13,7 +13,7 @@ struct User {
 }
 
 #[test]
-fn test_export_here() {
+fn export_manually() {
     User::export().unwrap();
 
     let expected_content = concat!(

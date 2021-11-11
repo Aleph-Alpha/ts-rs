@@ -7,6 +7,7 @@ use std::{
 
 pub use dprint_plugin_typescript::{configuration::ConfigurationBuilder, format_text};
 use thiserror::Error;
+use ExportError::*;
 
 use crate::TS;
 
@@ -19,12 +20,14 @@ pub enum ExportError {
     Formatting(String),
     #[error("an error occurred while performing IO")]
     Io(#[from] std::io::Error),
+    #[error("the environment variable CARGO_MANIFEST_DIR is not set")]
+    ManifestDirNotSet,
 }
 
 /// Export `T` to the file specified by the `#[ts(export = ..)]` attribute and/or the `out_dir`
 /// setting in the `ts.toml` config file.
 pub(crate) fn export_type<T: TS + ?Sized>() -> Result<(), ExportError> {
-    let path = Path::new(T::EXPORT_TO.ok_or(ExportError::CannotBeExported)?);
+    let path = output_path::<T>()?;
 
     let mut buffer = String::with_capacity(1024);
     generate_imports::<T>(&mut buffer)?;
@@ -32,13 +35,21 @@ pub(crate) fn export_type<T: TS + ?Sized>() -> Result<(), ExportError> {
 
     // format output
     let fmt_cfg = ConfigurationBuilder::new().deno().build();
-    let buffer = format_text(path, &buffer, &fmt_cfg).map_err(ExportError::Formatting)?;
+    let buffer = format_text(&path, &buffer, &fmt_cfg).map_err(Formatting)?;
 
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
     std::fs::write(path, &buffer)?;
     Ok(())
+}
+
+/// Compute the output path to where `T` should be exported.
+fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").map_err(|_| ManifestDirNotSet)?;
+    let manifest_dir = Path::new(&manifest_dir);
+    let path = PathBuf::from(T::EXPORT_TO.ok_or(CannotBeExported)?);
+    Ok(manifest_dir.join(path))
 }
 
 /// Push the declaration of `T`
