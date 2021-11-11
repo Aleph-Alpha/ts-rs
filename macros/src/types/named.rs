@@ -1,20 +1,18 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{
-    Field, FieldsNamed, GenericArgument, GenericParam, Generics, PathArguments, Result, Type,
-};
+use syn::{Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, Type};
 
 use crate::{
-    attr::{FieldAttr, Inflection},
+    attr::{FieldAttr, Inflection, StructAttr},
     deps::Dependencies,
-    types::generics::format_type,
+    types::generics::{format_generics, format_type},
     utils::to_ts_ident,
     DerivedTS,
 };
 
 pub(crate) fn named(
+    attr: &StructAttr,
     name: &str,
-    rename_all: &Option<Inflection>,
     fields: &FieldsNamed,
     generics: &Generics,
 ) -> Result<DerivedTS> {
@@ -25,26 +23,13 @@ pub(crate) fn named(
             &mut formatted_fields,
             &mut dependencies,
             field,
-            rename_all,
+            &attr.rename_all,
             generics,
         )?;
     }
 
     let fields = quote!(vec![#(#formatted_fields),*].join(" "));
-    let generic_args = match &generics.params {
-        params if !params.is_empty() => {
-            let expanded_params = params
-                .iter()
-                .filter_map(|param| match param {
-                    GenericParam::Type(type_param) => Some(type_param.ident.to_string()),
-                    _ => None,
-                })
-                .collect::<Vec<_>>()
-                .join(", ");
-            quote!(format!("<{}>", #expanded_params))
-        }
-        _ => quote!("".to_owned()),
-    };
+    let generic_args = format_generics(generics).unwrap_or_default();
 
     Ok(DerivedTS {
         inline: quote! {
@@ -57,6 +42,8 @@ pub(crate) fn named(
         inline_flattened: Some(fields),
         name: name.to_owned(),
         dependencies,
+        export: attr.export,
+        export_to: attr.export_to.clone(),
     })
 }
 

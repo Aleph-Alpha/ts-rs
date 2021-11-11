@@ -1,6 +1,11 @@
 use ts_rs::TS;
 
 #[test]
+fn free() {
+    assert_eq!(<[String; 10]>::inline(), "Array<string>")
+}
+
+#[test]
 fn interface() {
     #[derive(TS)]
     struct Interface {

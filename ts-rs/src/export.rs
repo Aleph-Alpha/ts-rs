@@ -1,186 +1,86 @@
 use std::{
     any::TypeId,
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeSet,
     fmt::Write,
     path::{Component, Path, PathBuf},
 };
 
+pub use dprint_plugin_typescript::{configuration::ConfigurationBuilder, format_text};
+use thiserror::Error;
+use ExportError::*;
+
 use crate::TS;
 
-/// Expands to a test function which exports typescript bindings to one or multiple files when
-/// running `cargo test`.  
-/// If a type depends on an other type which is exported to a different file, an appropriate import
-/// will be included.  
-/// If a file already exists, it will be overriden.  
-/// Missing parent directories of the file(s) will be created.  
-/// Paths are interpreted as being relative to the project root.
-/// ```rust
-/// # use ts_rs::{export, TS};
-/// #[derive(TS)] struct A;
-/// #[derive(TS)] struct B;
-/// #[derive(TS)] struct C;
-///
-/// export! {
-///     A, B => "bindings/a.ts",
-///     C => "bindings/b.ts"
-/// }
-/// ```
-/// When running `cargo test`, bindings for `A`, `B` and `C` will be exported to `bindings/a.ts`
-/// and `bindings/b.ts`.
-///
-/// By default, `export!` always uses `export type/interface`.
-/// If you wish, you can also use ambient declarations (`declare type/interface`):
-/// ```rust
-/// # use ts_rs::{export, TS};
-/// #[derive(TS)] struct Declared;
-/// #[derive(TS)] struct Normal(Declared);
-///
-/// export! {
-///     (declare) Declared => "bindings/declared.d.ts",
-///     Normal => "bindings/normal.ts"
-/// }
-/// ```
-/// Since `Declared` is now an ambient declaration, `bindings/normal.ts` will not include an import
-/// for `bindings/declared.d.ts`.
-#[macro_export]
-macro_rules! export {
-    ($($arg:tt)*) => {
-        #[cfg(test)]
-        #[test]
-        fn export_typescript() {
-             ts_rs::export_here!($($arg)*)
-        }
-    };
+/// An error which may occur when exporting a type
+#[derive(Error, Debug)]
+pub enum ExportError {
+    #[error("this type cannot be exported")]
+    CannotBeExported,
+    #[error("an error occurred while formatting the generated typescript output")]
+    Formatting(String),
+    #[error("an error occurred while performing IO")]
+    Io(#[from] std::io::Error),
+    #[error("the environment variable CARGO_MANIFEST_DIR is not set")]
+    ManifestDirNotSet,
 }
 
-/// Like `export!` but instead of creating a test function it executes the binding generation right here.
-/// This may be useful if you'd like to run the binding generation in any other context than a test.
-#[macro_export]
-macro_rules! export_here {
-    ($($(($decl:ident))? $($p:path),+ => $l:expr),* $(,)?) => {
-        {
-            use std::fmt::Write;
-            use std::collections::{BTreeMap as __BTreeMap, BTreeSet as __BTreeSet};
+/// Export `T` to the file specified by the `#[ts(export = ..)]` attribute and/or the `out_dir`
+/// setting in the `ts.toml` config file.
+pub(crate) fn export_type<T: TS + ?Sized>() -> Result<(), ExportError> {
+    let path = output_path::<T>()?;
 
-            let manifest_var = std::env::var("CARGO_MANIFEST_DIR").unwrap();
-            let manifest_dir = std::path::Path::new(&manifest_var);
+    let mut buffer = String::with_capacity(1024);
+    generate_imports::<T>(&mut buffer)?;
+    generate_decl::<T>(&mut buffer);
 
-            // {TypeId} -> {PathBuf}
-            let mut files = __BTreeMap::new();
-            $(
-                let path = manifest_dir.join($l);
+    // format output
+    let fmt_cfg = ConfigurationBuilder::new().deno().build();
+    let buffer = format_text(&path, &buffer, &fmt_cfg).map_err(Formatting)?;
 
-                // if the type(s) should be `declare`d, then they should not be imported.
-                let mut declared = false;
-                $( ts_rs::check_declare!($decl); declared = true; )*;
-
-                if !declared {
-                    $({
-                        if let Some(_) = files.insert(std::any::TypeId::of::<$p>(), path.clone()) {
-                            panic!(
-                                "{} cannot be exported to multiple files using `export!`",
-                                stringify!($p),
-                            );
-                        }
-                    })*
-                }
-            )*
-
-            let mut buffer = String::with_capacity(8192);
-            let mut imports = __BTreeMap::<String, __BTreeSet<String>>::new();
-            let fmt_config = ts_rs::export::FmtCfg::new() .deno().build();
-
-            $({
-                // clear buffers
-                buffer.clear();
-                imports.clear();
-
-                // create output directory
-                let out = manifest_dir.join($l);
-                std::fs::create_dir_all(out.parent().unwrap())
-                    .expect("could not create directory");
-
-                // write imports
-                $( ts_rs::export::imports::<$p>(&files, &mut imports, &out); )*
-                ts_rs::export::write_imports(&imports, &mut buffer);
-                buffer.push_str("\n");
-
-                // write declarations
-
-                // check if `export` or `declare` should be used
-                let mut prefix = "export ";
-                $( ts_rs::check_declare!($decl); prefix = "declare "; )*;
-
-                $(
-                    buffer.push_str(prefix);
-                    buffer.push_str(&<$p as ts_rs::TS>::decl());
-                    buffer.push_str("\n\n");
-                )*
-
-                // format output
-                let buffer = ts_rs::export::fmt_ts(&out, &buffer, &fmt_config)
-                    .expect("could not format output");
-
-                std::fs::write(&out, buffer.trim())
-                    .expect("could not write file");
-            })*
-        }
-    };
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(path, &buffer)?;
+    Ok(())
 }
 
-// checks that the given argument is `declare`, emitting a compile_error! if it isn't.
-#[doc(hidden)]
-#[macro_export]
-macro_rules! check_declare {
-    (declare) => {};
-    ($x:ident) => {
-        compile_error!(concat!(
-            "expected `(declare)`, got `(",
-            stringify!($x),
-            ")`"
-        ));
-    };
+/// Compute the output path to where `T` should be exported.
+fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").map_err(|_| ManifestDirNotSet)?;
+    let manifest_dir = Path::new(&manifest_dir);
+    let path = PathBuf::from(T::EXPORT_TO.ok_or(CannotBeExported)?);
+    Ok(manifest_dir.join(path))
 }
 
-pub use dprint_plugin_typescript::{
-    configuration::ConfigurationBuilder as FmtCfg, format_text as fmt_ts,
-};
+/// Push the declaration of `T`
+fn generate_decl<T: TS + ?Sized>(out: &mut String) {
+    out.push_str("export ");
+    out.push_str(&T::decl());
+}
 
-pub fn write_imports(imports: &BTreeMap<String, BTreeSet<String>>, out: &mut impl Write) {
-    for (path, types) in imports {
+/// Push an import statement for all dependencies of `T`
+fn generate_imports<T: TS + ?Sized>(out: &mut String) -> Result<(), ExportError> {
+    let path = Path::new(T::EXPORT_TO.ok_or(ExportError::CannotBeExported)?);
+
+    let deps = T::dependencies()
+        .into_iter()
+        .filter(|dep| dep.type_id != TypeId::of::<T>())
+        .collect::<BTreeSet<_>>();
+
+    for dep in deps {
+        let rel_path = import_path(path, Path::new(dep.exported_to));
         writeln!(
             out,
-            "import {{{}}} from {:?};",
-            types.iter().cloned().collect::<Vec<_>>().join(", "),
-            path
+            "import type {{ {} }} from {:?};",
+            &dep.ts_name, rel_path
         )
         .unwrap();
     }
+    writeln!(out).unwrap();
+    Ok(())
 }
 
-pub fn imports<T: TS>(
-    exported_files: &BTreeMap<TypeId, PathBuf>,
-    imports: &mut BTreeMap<String, BTreeSet<String>>,
-    out_path: &Path,
-) {
-    T::dependencies()
-        .into_iter()
-        .flat_map(|(id, name)| {
-            let path = exported_files.get(&id)?;
-            if path == out_path {
-                None
-            } else {
-                Some((import_path(out_path, path), name))
-            }
-        })
-        .for_each(|(path, name)| {
-            imports
-                .entry(path)
-                .or_insert_with(BTreeSet::<_>::new)
-                .insert(name);
-        });
-}
-
+/// Returns the required import path for importing `import` from the file `from`
 fn import_path(from: &Path, import: &Path) -> String {
     let rel_path =
         diff_paths(import, from.parent().unwrap()).expect("failed to calculate import path");

@@ -18,15 +18,17 @@ impl Dependencies {
         self.0.push(quote! {
             if <#ty as ts_rs::TS>::transparent() {
               dependencies.append(&mut <#ty as ts_rs::TS>::dependencies());
-          } else {
-                dependencies.push((std::any::TypeId::of::<#ty>(), <#ty as ts_rs::TS>::name()));
-          }
+            } else {
+                if let Some(dep) = ts_rs::Dependency::from_ty::<#ty>() {
+                    dependencies.push(dep);
+                }
+            }
         });
     }
 
     pub fn append(&mut self, other: Dependencies) {
         self.0.push(quote! {
-            dependencies.append(&mut #other)
+            dependencies.append(&mut #other);
         })
     }
 }

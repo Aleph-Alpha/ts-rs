@@ -2,19 +2,19 @@ use quote::quote;
 use syn::{FieldsUnnamed, Generics, Result};
 
 use crate::{
-    attr::{FieldAttr, Inflection},
+    attr::{FieldAttr, StructAttr},
     deps::Dependencies,
-    types::generics::format_type,
+    types::generics::{format_generics, format_type},
     DerivedTS,
 };
 
 pub(crate) fn newtype(
+    attr: &StructAttr,
     name: &str,
-    rename_all: &Option<Inflection>,
     fields: &FieldsUnnamed,
     generics: &Generics,
 ) -> Result<DerivedTS> {
-    if rename_all.is_some() {
+    if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to newtype structs");
     }
     let inner = fields.unnamed.first().unwrap();
@@ -48,11 +48,14 @@ pub(crate) fn newtype(
         None => format_type(inner_ty, &mut dependencies, generics),
     };
 
+    let generic_args = format_generics(generics).unwrap_or_default();
     Ok(DerivedTS {
-        decl: quote!(format!("type {} = {};", #name, #inline_def)),
+        decl: quote!(format!("type {}{} = {};", #name, #generic_args, #inline_def)),
         inline: inline_def,
         inline_flattened: None,
         name: name.to_owned(),
         dependencies,
+        export: attr.export,
+        export_to: attr.export_to.clone(),
     })
 }

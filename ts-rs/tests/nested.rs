@@ -1,23 +1,25 @@
 #![allow(dead_code)]
 
+use std::{cell::Cell, rc::Rc, sync::Arc};
+
 use ts_rs::TS;
 
 #[derive(TS)]
 struct A {
-    x1: i32,
-    y1: i32,
+    x1: Arc<i32>,
+    y1: Cell<i32>,
 }
 
 #[derive(TS)]
 struct B {
-    a1: A,
+    a1: Box<A>,
     #[ts(inline)]
     a2: A,
 }
 
 #[derive(TS)]
 struct C {
-    b1: B,
+    b1: Rc<B>,
     #[ts(inline)]
     b2: B,
 }

@@ -7,10 +7,12 @@ use crate::{
     utils::parse_attrs,
 };
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct StructAttr {
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,
+    pub export_to: Option<String>,
+    pub export: bool,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -26,9 +28,19 @@ impl StructAttr {
         Ok(result)
     }
 
-    fn merge(&mut self, StructAttr { rename_all, rename }: StructAttr) {
+    fn merge(
+        &mut self,
+        StructAttr {
+            rename_all,
+            rename,
+            export,
+            export_to,
+        }: StructAttr,
+    ) {
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
+        self.export_to = self.export_to.take().or(export_to);
+        self.export = self.export || export;
     }
 }
 
@@ -36,6 +48,8 @@ impl_parse! {
     StructAttr(input, out) {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
+        "export" => out.export = true,
+        "export_to" => out.export_to = Some(parse_assign_str(input)?)
     }
 }
 
