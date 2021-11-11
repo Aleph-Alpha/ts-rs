@@ -1,2 +1,2 @@
 [workspace]
-members = ["macros", "ts-rs", "example"]
+members = ["config", "macros", "ts-rs", "example"]

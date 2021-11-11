@@ -19,88 +19,39 @@ struct DerivedTS {
     decl: TokenStream,
     inline_flattened: Option<TokenStream>,
     dependencies: Dependencies,
-    export: Option<Option<String>>,
+
+    export: bool,
+    export_to: Option<String>,
 }
 
 impl DerivedTS {
-    fn generate_export_test(
-        &self,
-        rust_ty: &Ident,
-        generics: &Generics,
-        path: &str,
-    ) -> Option<TokenStream> {
+    fn generate_export_test(&self, rust_ty: &Ident, generics: &Generics) -> Option<TokenStream> {
         let test_fn = format_ident!("export_bindings_{}", &self.name.to_lowercase());
         let generic_params = generics
             .params
             .iter()
             .filter(|param| matches!(param, GenericParam::Type(_)))
             .map(|_| quote! { () });
+        let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
 
-        let rust_ty = quote!(#rust_ty<#(#generic_params),*>);
-        let expanded = quote! {
+        Some(quote! {
             #[cfg(test)]
             #[test]
             fn #test_fn() {
-                use std::{
-                    path::Path,
-                    fmt::Write,
-                    collections::BTreeSet,
-                    any::TypeId,
-                };
-                use ts_rs::export::{FmtCfg, fmt_ts};
-
-                let path = Path::new(#path);
-                let mut buffer = String::with_capacity(1024);
-
-                let deps = <#rust_ty as ts_rs::TS>::dependencies()
-                    .into_iter()
-                    .filter(|dep| dep.type_id != TypeId::of::<#rust_ty>())
-                    .collect::<BTreeSet<_>>();
-                for dep in deps {
-                    let exported_to = match dep.exported_to {
-                        None => continue,
-                        Some(to) => Path::new(to),
-                    };
-                    let rel_path = ts_rs::export::import_path(
-                        path,
-                        exported_to,
-                    );
-                    write!(&mut buffer, "import {{ {} }} from {:?};\n", &dep.ts_name, rel_path).unwrap();
-                }
-                buffer.push_str("\n");
-
-                buffer.push_str("export ");
-                buffer.push_str(
-                   &<#rust_ty as ts_rs::TS>::decl()
-                );
-
-                let buffer = fmt_ts(
-                    &path,
-                    &buffer,
-                    &FmtCfg::new().deno().build()
-                )
-                .expect("could not format output");
-
-                if let Some(parent) = path.parent() {
-                    std::fs::create_dir_all(parent).expect("could not create directory");
-                }
-                std::fs::write(path, &buffer).expect("could not write bindings to file");
+                #ty::export().expect("could not export type");
             }
-        };
-        Some(expanded)
+        })
     }
 
     fn into_impl(self, rust_ty: Ident, generics: Generics) -> TokenStream {
         let export_to = self
-            .export
+            .export_to
             .clone()
-            .map(|export| export.unwrap_or_else(|| format!("bindings/{}.ts", &self.name)));
-        let export = export_to
-            .as_ref()
-            .map(|to| self.generate_export_test(&rust_ty, &generics, to));
-        let export_to = export_to
-            .map(|to| quote!(Some(#to)))
-            .unwrap_or_else(|| quote!(None));
+            .unwrap_or_else(|| format!("bindings/{}.ts", self.name));
+        let export = match self.export {
+            true => Some(self.generate_export_test(&rust_ty, &generics)),
+            false => None,
+        };
 
         let DerivedTS {
             name,
@@ -130,7 +81,7 @@ impl DerivedTS {
         let where_clause = add_ts_trait_bound(&generics);
         quote! {
             impl #lt_token #params #gt_token ts_rs::TS for #rust_ty #lt_token #params #gt_token #where_clause {
-                const EXPORTED_TO: Option<&'static str> = #export_to;
+                const EXPORT_TO: Option<&'static str> = Some(#export_to);
 
                 fn decl() -> String {
                     #decl
@@ -156,14 +107,14 @@ impl DerivedTS {
 }
 
 fn add_ts_trait_bound(generics: &Generics) -> Option<WhereClause> {
-    let generic_types: Vec<_> = generics
+    let generic_types = generics
         .params
         .iter()
         .filter_map(|gp| match gp {
             GenericParam::Type(ty) => Some(ty.ident.clone()),
             _ => None,
         })
-        .collect();
+        .collect::<Vec<_>>();
     if generic_types.is_empty() {
         return generics.where_clause.clone();
     }

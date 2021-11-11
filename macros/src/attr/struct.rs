@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use syn::{Attribute, Ident, Result};
 
 use crate::{
-    attr::{parse_assign_str, parse_opt_assign_str, Inflection},
+    attr::{parse_assign_str, Inflection},
     utils::parse_attrs,
 };
 
@@ -11,7 +11,8 @@ use crate::{
 pub struct StructAttr {
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,
-    pub export: Option<Option<String>>,
+    pub export_to: Option<String>,
+    pub export: bool,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -33,11 +34,13 @@ impl StructAttr {
             rename_all,
             rename,
             export,
+            export_to,
         }: StructAttr,
     ) {
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
-        self.export = self.export.take().or(export);
+        self.export_to = self.export_to.take().or(export_to);
+        self.export = self.export || export;
     }
 }
 
@@ -45,7 +48,8 @@ impl_parse! {
     StructAttr(input, out) {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
-        "export" => out.export = Some(parse_opt_assign_str(input)?)
+        "export" => out.export = true,
+        "export_to" => out.export_to = Some(parse_assign_str(input)?)
     }
 }
 

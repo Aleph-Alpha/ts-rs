@@ -15,7 +15,8 @@ pub(crate) fn named(
     rename_all: &Option<Inflection>,
     fields: &FieldsNamed,
     generics: &Generics,
-    export: Option<Option<String>>,
+    export: bool,
+    export_to: Option<String>,
 ) -> Result<DerivedTS> {
     let mut formatted_fields = vec![];
     let mut dependencies = Dependencies::default();
@@ -44,6 +45,7 @@ pub(crate) fn named(
         name: name.to_owned(),
         dependencies,
         export,
+        export_to,
     })
 }
 

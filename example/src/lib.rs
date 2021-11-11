@@ -4,12 +4,12 @@ use std::{collections::BTreeSet, rc::Rc};
 
 use chrono::NaiveDateTime;
 use serde::Serialize;
-use ts_rs::{export, TS};
+use ts_rs::TS;
 use uuid::Uuid;
 
 #[derive(Serialize, TS)]
 #[ts(rename_all = "lowercase")]
-#[ts(export)]
+#[ts(export, export_to = "bindings/UserRole.ts")]
 enum Role {
     User,
     #[ts(rename = "administrator")]
@@ -103,22 +103,4 @@ enum InlineComplexEnum {
 struct ComplexStruct {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub string_tree: Option<Rc<BTreeSet<String>>>,
-}
-
-// this will export [Role] to `role.ts` and [User] to `user.ts` when running `cargo test`.
-// `export!` will also take care of including imports in typescript files.
-export! {
-    Role => "role.ts",
-    User => "user.ts",
-    // any type can be used here in place of the generic, but it has to match the one used
-    // in other structs to generate the dependencies correctly:
-    Point<u64> => "point.ts",
-    Series => "series.ts",
-    Vehicle => "vehicle.ts",
-    ComplexEnum => "complex_enum.ts",
-    InlineComplexEnum => "inline_complex_enum.ts",
-    SimpleEnum => "simple_enum.ts",
-    ComplexStruct => "complex_struct.ts",
-    // this exports an ambient declaration (`declare interface`) instead of an `export interface`.
-    (declare) Gender => "gender.d.ts",
 }

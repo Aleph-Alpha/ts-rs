@@ -13,7 +13,8 @@ pub(crate) fn newtype(
     rename_all: &Option<Inflection>,
     fields: &FieldsUnnamed,
     generics: &Generics,
-    export: Option<Option<String>>,
+    export: bool,
+    export_to: Option<String>,
 ) -> Result<DerivedTS> {
     if rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to newtype structs");
@@ -57,5 +58,6 @@ pub(crate) fn newtype(
         name: name.to_owned(),
         dependencies,
         export,
+        export_to,
     })
 }

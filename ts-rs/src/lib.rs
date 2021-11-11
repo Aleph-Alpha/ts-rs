@@ -21,19 +21,18 @@
 use std::{
     any::TypeId,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
-    fs::OpenOptions,
-    io::{BufWriter, Write},
-    path::Path,
 };
 
 pub use ts_rs_macros::TS;
 
-#[doc(hidden)]
-pub mod export;
+pub use crate::export::ExportError;
+
+mod export;
 
 /// A type which can be represented in TypeScript.  
 /// Most of the time, you'd want to derive this trait instead of implementing it manually.  
-/// ts-rs comes with implementations for all numeric types, `String`, `Vec`, `Option` and tuples.
+/// ts-rs comes with implementations for all primitives, most collections, tuples,
+/// arrays and containers.
 ///
 /// ## get started
 /// [TS](TS) can easily be derived for structs and enums:
@@ -41,25 +40,16 @@ pub mod export;
 /// use ts_rs::TS;
 ///
 /// #[derive(TS)]
+/// #[ts(export)]
 /// struct User {
 ///     first_name: String,
 ///     last_name: String,
 /// }
 /// ```
-/// To actually obtain the bindings, you can call `User::dump` to write the bindings to a file.
-/// ```rust
-/// # use ts_rs::TS;
-/// # #[derive(TS)]
-/// # struct User {
-/// #     first_name: String,
-/// #     last_name: String,
-/// # }
-/// std::fs::remove_file("bindings.ts").ok();
-/// User::dump("bindings.ts").unwrap();
-/// ```
-///
-/// Preferrably, you should use the [export!](export!) macro, which takes care of dependencies
-/// between types and allows you to decide between `export` and `declare`.
+/// `#[ts(export)]` will generate a test for you, in which the bindings are exported.
+/// After running `cargo test`, there should be a new file, `User.ts` in the `typescript/` directory.
+/// This behaviour can be customized by adding `#[ts(export_to = "..")]` to the type and/or configuring
+/// the output directory in `ts.toml`.
 ///
 /// ### struct attributes
 ///
@@ -108,7 +98,7 @@ pub mod export;
 ///   Skip this variant  
 
 pub trait TS: 'static {
-    const EXPORTED_TO: Option<&'static str> = None;
+    const EXPORT_TO: Option<&'static str> = None;
 
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
     /// This function will panic if the type has no declaration.
@@ -144,40 +134,41 @@ pub trait TS: 'static {
     /// This is used for resolving imports when using the `export!` macro.
     fn transparent() -> bool;
 
-    /// Dumps the declaration of this type to a file.  
-    /// If the file does not exist, it will be created.  
-    /// If it does, the declaration will be appended.
+    /// Manually export this type to a file.
+    /// The output file can be specified by annotating the type with `#[ts(export_to = ".."]`.
+    /// By default, the filename will be derived from the types name.
     ///
-    /// This function will panicked when called on a type which does not have a declaration.
-    fn dump(out: impl AsRef<Path>) -> std::io::Result<()> {
-        let out = out.as_ref();
-        let file = OpenOptions::new()
-            .append(true)
-            .create(true)
-            .truncate(false)
-            .open(out)?;
-        let mut writer = BufWriter::new(file);
-        writer.write_all(Self::decl().as_bytes())?;
-        writer.write_all(b"\n\n")?;
-        writer.flush()?;
-        Ok(())
+    /// When a type is annotated with `#[ts(export)]`, it is exported automatically within a test.
+    /// This function is only usefull if you need to export the type outside of the context of a
+    /// test.
+    fn export() -> Result<(), ExportError> {
+        export::export_type::<Self>()
     }
 }
 
+/// A typescript type which is depended upon by other types.
+/// This information is required for generating the correct import statements.
 #[derive(Eq, PartialEq, Ord, PartialOrd)]
 pub struct Dependency {
+    /// Type ID of the rust type
     pub type_id: TypeId,
+    /// Name of the type in TypeScript
     pub ts_name: String,
-    pub exported_to: Option<&'static str>,
+    /// Path to where the type would be exported. By default a filename is derived from the types
+    /// name, which can be customized with `#[ts(export_to = "..")]`.
+    pub exported_to: &'static str,
 }
 
 impl Dependency {
-    pub fn from_ty<T: TS>() -> Self {
-        Dependency {
+    /// Constructs a [`Dependency`] from the given type `T`.
+    /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
+    /// `None`
+    pub fn from_ty<T: TS>() -> Option<Self> {
+        Some(Dependency {
             type_id: TypeId::of::<T>(),
             ts_name: T::name(),
-            exported_to: T::EXPORTED_TO,
-        }
+            exported_to: T::EXPORT_TO?,
+        })
     }
 }
 
@@ -218,9 +209,12 @@ macro_rules! impl_tuples {
                 )
             }
             fn dependencies() -> Vec<Dependency> {
-                vec![$(
+                [$(
                     Dependency::from_ty::<$i>()
                 ),*]
+                .into_iter()
+                .flatten()
+                .collect()
             }
             fn transparent() -> bool {
                 true
@@ -394,7 +388,7 @@ impl<T: TS> TS for Option<T> {
     }
 
     fn dependencies() -> Vec<Dependency> {
-        vec![Dependency::from_ty::<T>()]
+        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
     }
 
     fn transparent() -> bool {
@@ -417,7 +411,7 @@ impl<T: TS> TS for Vec<T> {
     }
 
     fn dependencies() -> Vec<Dependency> {
-        vec![Dependency::from_ty::<T>()]
+        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
     }
 
     fn transparent() -> bool {
@@ -435,7 +429,7 @@ impl<T: TS> TS for HashSet<T> {
     }
 
     fn dependencies() -> Vec<Dependency> {
-        vec![Dependency::from_ty::<T>()]
+        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
     }
 
     fn transparent() -> bool {
@@ -453,7 +447,7 @@ impl<T: TS> TS for BTreeSet<T> {
     }
 
     fn dependencies() -> Vec<Dependency> {
-        vec![Dependency::from_ty::<T>()]
+        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
     }
 
     fn transparent() -> bool {
@@ -471,7 +465,10 @@ impl<K: TS, V: TS> TS for HashMap<K, V> {
     }
 
     fn dependencies() -> Vec<Dependency> {
-        vec![Dependency::from_ty::<K>(), Dependency::from_ty::<V>()]
+        [Dependency::from_ty::<K>(), Dependency::from_ty::<V>()]
+            .into_iter()
+            .flatten()
+            .collect()
     }
 
     fn transparent() -> bool {
@@ -489,7 +486,10 @@ impl<K: TS, V: TS> TS for BTreeMap<K, V> {
     }
 
     fn dependencies() -> Vec<Dependency> {
-        vec![Dependency::from_ty::<K>(), Dependency::from_ty::<V>()]
+        [Dependency::from_ty::<K>(), Dependency::from_ty::<V>()]
+            .into_iter()
+            .flatten()
+            .collect()
     }
 
     fn transparent() -> bool {
@@ -507,7 +507,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
     }
 
     fn dependencies() -> Vec<Dependency> {
-        vec![Dependency::from_ty::<T>()]
+        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
     }
 
     fn transparent() -> bool {

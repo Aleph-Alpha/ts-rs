@@ -6,7 +6,8 @@ use crate::{attr::Inflection, deps::Dependencies, DerivedTS};
 pub(crate) fn unit(
     name: &str,
     rename_all: &Option<Inflection>,
-    export: Option<Option<String>>,
+    export: bool,
+    export_to: Option<String>,
 ) -> Result<DerivedTS> {
     if rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to unit structs");
@@ -19,5 +20,6 @@ pub(crate) fn unit(
         name: name.to_owned(),
         dependencies: Dependencies::default(),
         export,
+        export_to,
     })
 }

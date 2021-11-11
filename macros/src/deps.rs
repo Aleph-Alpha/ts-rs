@@ -19,7 +19,9 @@ impl Dependencies {
             if <#ty as ts_rs::TS>::transparent() {
               dependencies.append(&mut <#ty as ts_rs::TS>::dependencies());
             } else {
-                dependencies.push(ts_rs::Dependency::from_ty::<#ty>());
+                if let Some(dep) = ts_rs::Dependency::from_ty::<#ty>() {
+                    dependencies.push(dep);
+                }
             }
         });
     }
