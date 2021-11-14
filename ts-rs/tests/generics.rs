@@ -2,6 +2,7 @@
 
 use std::{
     collections::{BTreeMap, HashSet},
+    fmt::Debug,
     rc::Rc,
 };
 
@@ -155,12 +156,15 @@ fn default() {
         t: T,
     }
     assert_eq!(A::<()>::decl(), "interface A<T = string> { t: T, }");
-    
+
     #[derive(TS)]
     struct B<U = Option<A<i32>>> {
-        u: U
+        u: U,
     }
-    assert_eq!(B::<()>::decl(), "interface B<U = A<number> | null> { u: U, }");
+    assert_eq!(
+        B::<()>::decl(),
+        "interface B<U = A<number> | null> { u: U, }"
+    );
     assert!(B::<()>::dependencies().iter().any(|dep| dep.ts_name == "A"));
 
     #[derive(TS)]
@@ -175,4 +179,36 @@ fn default() {
         // xi2: X<i32>
     }
     assert_eq!(Y::decl(), "interface Y { a1: A, a2: A<number>, }")
+}
+
+#[test]
+fn trait_bounds() {
+    #[derive(TS)]
+    struct A<T: ToString = i32> {
+        t: T,
+    }
+    assert_eq!(A::<i32>::decl(), "interface A<T = number> { t: T, }");
+
+    #[derive(TS)]
+    struct B<T: ToString + Debug + Clone + 'static>(T);
+    assert_eq!(B::<&'static str>::decl(), "type B<T> = T;");
+
+    #[derive(TS)]
+    enum C<T: Copy + Clone + PartialEq, K: Copy + PartialOrd = i32> {
+        A { t: T },
+        B(T),
+        C,
+        D(T, K),
+    }
+    assert_eq!(
+        C::<&'static str, i32>::decl(),
+        "type C<T, K = number> = { A: { t: T, } } | { B: T } | \"C\" | { D: [T, K] };"
+    );
+
+    #[derive(TS)]
+    struct D<T: ToString, const N: usize> {
+        t: [T; N],
+    }
+
+    assert_eq!(D::<&str, 41>::decl(), "interface D<T> { t: Array<T>, }")
 }

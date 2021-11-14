@@ -17,7 +17,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         Some(existing) => existing.clone(),
         None => s.ident.to_string(),
     };
-    
+
     if s.variants.is_empty() {
         return Ok(empty_enum(name, enum_attr));
     }
