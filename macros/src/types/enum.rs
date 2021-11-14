@@ -17,6 +17,22 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         Some(existing) => existing.clone(),
         None => s.ident.to_string(),
     };
+    
+    if s.variants.is_empty() {
+        return Ok(empty_enum(name, enum_attr));
+    }
+
+    if s.variants.is_empty() {
+        return Ok(DerivedTS {
+            name,
+            inline: quote!("never".to_owned()),
+            decl: quote!("type {} = never;"),
+            inline_flattened: None,
+            dependencies: Dependencies::default(),
+            export: enum_attr.export,
+            export_to: enum_attr.export_to,
+        });
+    }
 
     let mut formatted_variants = vec![];
     let mut dependencies = Dependencies::default();
@@ -121,4 +137,18 @@ fn format_variant(
 
     formatted_variants.push(formatted);
     Ok(())
+}
+
+// bindings for an empty enum (`never` in TS)
+fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
+    let name = name.into();
+    DerivedTS {
+        inline: quote!("never".to_owned()),
+        decl: quote!(format!("type {} = never;", #name)),
+        name,
+        inline_flattened: None,
+        dependencies: Dependencies::default(),
+        export: enum_attr.export,
+        export_to: enum_attr.export_to,
+    }
 }

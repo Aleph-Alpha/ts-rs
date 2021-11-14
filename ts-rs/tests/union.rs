@@ -10,6 +10,18 @@ enum SimpleEnum {
     C,
 }
 
+
+#[test]
+fn test_empty() {
+    #[derive(TS)]
+    enum Empty {}
+    
+    assert_eq!(
+        Empty::decl(),
+        "type Empty = never;"
+    )
+}
+
 #[test]
 fn test_simple_enum() {
     assert_eq!(
