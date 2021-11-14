@@ -151,15 +151,22 @@ fn inline() {
 #[test]
 fn default() {
     #[derive(TS)]
-    struct X<T = String> {
+    struct A<T = String> {
         t: T,
     }
-    assert_eq!(X::<()>::decl(), "interface X<T> { t: T, }");
+    assert_eq!(A::<()>::decl(), "interface A<T = string> { t: T, }");
+    
+    #[derive(TS)]
+    struct B<U = Option<A<i32>>> {
+        u: U
+    }
+    assert_eq!(B::<()>::decl(), "interface B<U = A<number> | null> { u: U, }");
+    assert!(B::<()>::dependencies().iter().any(|dep| dep.ts_name == "A"));
 
     #[derive(TS)]
     struct Y {
-        x: X,
-        x2: X<i32>,
+        a1: A,
+        a2: A<i32>,
         // https://github.com/Aleph-Alpha/ts-rs/issues/56
         // TODO: fixme
         // #[ts(inline)]
@@ -167,6 +174,5 @@ fn default() {
         // #[ts(inline)]
         // xi2: X<i32>
     }
-    // assert_eq!(Y::decl(), "interface Y { x: X, x2: X<number>, xi: { t: string, }, xi2: { t: number, }, }")
-    assert_eq!(Y::decl(), "interface Y { x: X, x2: X<number>, }")
+    assert_eq!(Y::decl(), "interface Y { a1: A, a2: A<number>, }")
 }

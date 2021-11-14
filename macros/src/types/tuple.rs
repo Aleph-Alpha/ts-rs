@@ -25,7 +25,7 @@ pub(crate) fn tuple(
         format_field(&mut formatted_fields, &mut dependencies, field, generics)?;
     }
 
-    let generic_args = format_generics(generics).unwrap_or_default();
+    let generic_args = format_generics(&mut dependencies, generics);
     Ok(DerivedTS {
         inline: quote! {
             format!(

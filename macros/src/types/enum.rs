@@ -30,7 +30,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         )?;
     }
 
-    let generic_args = format_generics(&s.generics).unwrap_or_default();
+    let generic_args = format_generics(&mut dependencies, &s.generics);
     Ok(DerivedTS {
         inline: quote!(vec![#(#formatted_variants),*].join(" | ")),
         decl: quote!(format!("type {}{} = {};", #name, #generic_args, Self::inline())),

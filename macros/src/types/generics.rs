@@ -5,22 +5,33 @@ use syn::{GenericArgument, GenericParam, Generics, ItemStruct, PathArguments, Ty
 use crate::{attr::StructAttr, deps::Dependencies};
 
 /// formats the generic arguments (like A, B in struct X<A, B>{..}) as "<X>" where x is a comma
-/// seperated list of generic arguments, or None if there are no generic arguments.
-pub fn format_generics(generics: &Generics) -> Option<String> {
-    match &generics.params {
-        params if !params.is_empty() => {
-            let expanded_params = params
-                .iter()
-                .filter_map(|param| match param {
-                    GenericParam::Type(type_param) => Some(type_param.ident.to_string()),
-                    _ => None,
-                })
-                .collect::<Vec<_>>()
-                .join(", ");
-            Some(format!("<{}>", expanded_params))
-        }
-        _ => None,
+/// seperated list of generic arguments, or an empty string if there are no generics.
+/// this expands to an expression which evaluates to a `String`.
+/// 
+/// If a default type arg is encountered, it will be added to the dependencies.
+pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStream {
+    if generics.params.is_empty() {
+        return quote!("");
     }
+
+    let expanded_params = generics
+        .params
+        .iter()
+        .filter_map(|param| match param {
+            GenericParam::Type(type_param) => Some({
+                let ty = type_param.ident.to_string();
+                if let Some(default) = &type_param.default {
+                    let default = format_type(default, deps, generics);
+                    quote!(format!("{} = {}", #ty, #default))
+                } else {
+                    quote!(#ty.to_owned())
+                }
+            }),
+            _ => None,
+        });
+    
+    let comma_separated = quote!(vec![#(#expanded_params),*].join(", "));
+    quote!(format!("<{}>", #comma_separated))
 }
 
 pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generics) -> TokenStream {

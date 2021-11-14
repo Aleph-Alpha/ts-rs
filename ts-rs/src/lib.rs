@@ -255,7 +255,7 @@ pub trait TS: 'static {
 
 /// A typescript type which is depended upon by other types.
 /// This information is required for generating the correct import statements.
-#[derive(Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Dependency {
     /// Type ID of the rust type
     pub type_id: TypeId,

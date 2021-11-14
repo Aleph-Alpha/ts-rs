@@ -29,7 +29,7 @@ pub(crate) fn named(
     }
 
     let fields = quote!(vec![#(#formatted_fields),*].join(" "));
-    let generic_args = format_generics(generics).unwrap_or_default();
+    let generic_args = format_generics(&mut dependencies, generics);
 
     Ok(DerivedTS {
         inline: quote! {
