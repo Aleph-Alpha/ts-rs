@@ -3,7 +3,10 @@
 
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
-use syn::{parse_quote, spanned::Spanned, GenericParam, Generics, Item, Result, WhereClause};
+use syn::{
+    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, Result, TypeParam,
+    WhereClause,
+};
 
 use crate::deps::Dependencies;
 
@@ -43,7 +46,7 @@ impl DerivedTS {
         })
     }
 
-    fn into_impl(self, rust_ty: Ident, generics: Generics) -> TokenStream {
+    fn into_impl(self, rust_ty: Ident, mut generics: Generics) -> TokenStream {
         let export_to = self
             .export_to
             .clone()
@@ -71,13 +74,13 @@ impl DerivedTS {
             })
             .unwrap_or_else(TokenStream::new);
 
+        remove_defaults_from_generics(&mut generics);
         let Generics {
             ref lt_token,
             ref params,
             ref gt_token,
             where_clause: _,
         } = generics;
-
         let where_clause = add_ts_trait_bound(&generics);
         quote! {
             impl #lt_token #params #gt_token ts_rs::TS for #rust_ty #lt_token #params #gt_token #where_clause {
@@ -102,6 +105,27 @@ impl DerivedTS {
             }
 
             #export
+        }
+    }
+}
+
+// removes default types (e.g "= String" in "T: ToString = String") from the given generics
+fn remove_defaults_from_generics(generics: &mut Generics) {
+    for param in generics.params.iter_mut() {
+        match param {
+            GenericParam::Type(TypeParam {
+                default, eq_token, ..
+            }) => {
+                *default = None;
+                *eq_token = None;
+            }
+            GenericParam::Const(ConstParam {
+                default, eq_token, ..
+            }) => {
+                *default = None;
+                *eq_token = None;
+            }
+            _ => (),
         }
     }
 }

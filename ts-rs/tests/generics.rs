@@ -122,3 +122,51 @@ fn generic_struct() {
         "interface Struct<T> { a: T, b: [T, T], c: [T, [T, T]], d: Array<T>, e: Array<[T, T]>, f: Array<T>, g: Array<Array<T>>, h: Array<Array<[T, T]>>, }"
     )
 }
+
+#[test]
+#[ignore]
+// https://github.com/Aleph-Alpha/ts-rs/issues/56
+fn inline() {
+    #[derive(TS)]
+    struct Generic<T> {
+        t: T,
+    }
+
+    #[derive(TS)]
+    struct Container {
+        g: Generic<String>,
+        #[ts(inline)]
+        gi: Generic<String>,
+        #[ts(flatten)]
+        t: Generic<String>,
+    }
+
+    assert_eq!(Generic::<()>::decl(), "interface Generic<T> { t: T, }");
+    assert_eq!(
+        Container::decl(),
+        "interface Container { g: Generic<string>, gi: { t: string }, t: string, }"
+    );
+}
+
+#[test]
+fn default() {
+    #[derive(TS)]
+    struct X<T = String> {
+        t: T,
+    }
+    assert_eq!(X::<()>::decl(), "interface X<T> { t: T, }");
+
+    #[derive(TS)]
+    struct Y {
+        x: X,
+        x2: X<i32>,
+        // https://github.com/Aleph-Alpha/ts-rs/issues/56
+        // TODO: fixme
+        // #[ts(inline)]
+        // xi: X,
+        // #[ts(inline)]
+        // xi2: X<i32>
+    }
+    // assert_eq!(Y::decl(), "interface Y { x: X, x2: X<number>, xi: { t: string, }, xi2: { t: number, }, }")
+    assert_eq!(Y::decl(), "interface Y { x: X, x2: X<number>, }")
+}
