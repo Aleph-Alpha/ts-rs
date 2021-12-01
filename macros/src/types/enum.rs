@@ -128,13 +128,13 @@ fn format_variant(
                 }
                 Fields::Unit => quote!(format!("{{ {}: \"{}\" }}", #tag, #name)),
                 _ => {
-                    dependencies.append(variant_dependencies);
                     quote!(format!("{{ {}: \"{}\" }} & {}", #tag, #name, #inline_type))
                 }
             },
         },
     };
 
+    dependencies.append(variant_dependencies);
     formatted_variants.push(formatted);
     Ok(())
 }
