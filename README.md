@@ -42,7 +42,7 @@ We recommend doing this in your tests.
 ### get started
 ```toml
 [dependencies]
-ts-rs = "6.0"
+ts-rs = "6.1"
 ```
 
 ```rust
@@ -69,14 +69,23 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 
 ### cargo features
 - `serde-compat` (default)
+
   Enable serde compatibility. See below for more info.
+- `format` (default)
+
+  When enabled, the generated typescript will be formatted.
+  Currently, this sadly adds quite a bit of dependencies.
 - `chrono-impl`
+
   Implement `TS` for types from chrono
 - `bigdecimal-impl`
+
   Implement `TS` for types from bigdecimal
 - `uuid-impl`
+
   Implement `TS` for types from uuid
 - `bytes-impl`
+
   Implement `TS` for types from bytes
 
 If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.

@@ -5,7 +5,6 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
-pub use dprint_plugin_typescript::{configuration::ConfigurationBuilder, format_text};
 use thiserror::Error;
 use ExportError::*;
 
@@ -16,6 +15,7 @@ use crate::TS;
 pub enum ExportError {
     #[error("this type cannot be exported")]
     CannotBeExported,
+    #[cfg(feature = "format")]
     #[error("an error occurred while formatting the generated typescript output")]
     Formatting(String),
     #[error("an error occurred while performing IO")]
@@ -34,8 +34,13 @@ pub(crate) fn export_type<T: TS + ?Sized>() -> Result<(), ExportError> {
     generate_decl::<T>(&mut buffer);
 
     // format output
-    let fmt_cfg = ConfigurationBuilder::new().deno().build();
-    let buffer = format_text(&path, &buffer, &fmt_cfg).map_err(Formatting)?;
+    #[cfg(feature = "format")]
+    {
+        use dprint_plugin_typescript::{configuration::ConfigurationBuilder, format_text};
+
+        let fmt_cfg = ConfigurationBuilder::new().deno().build();
+        buffer = format_text(&path, &buffer, &fmt_cfg).map_err(Formatting)?;
+    }
 
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;

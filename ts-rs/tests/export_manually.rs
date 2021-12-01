@@ -16,13 +16,17 @@ struct User {
 fn export_manually() {
     User::export().unwrap();
 
-    let expected_content = concat!(
-        "export interface User {\n",
-        "  name: string;\n",
-        "  age: number;\n",
-        "  active: boolean;\n",
-        "}\n"
-    );
+    let expected_content = if cfg!(feature = "format") {
+        concat!(
+            "export interface User {\n",
+            "  name: string;\n",
+            "  age: number;\n",
+            "  active: boolean;\n",
+            "}\n"
+        )
+    } else {
+        concat!("\nexport interface User { name: string, age: number, active: boolean, }")
+    };
 
     let actual_content = fs::read_to_string("export_here_test.ts").unwrap();
 
