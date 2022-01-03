@@ -47,10 +47,16 @@ impl DerivedTS {
     }
 
     fn into_impl(self, rust_ty: Ident, generics: Generics) -> TokenStream {
-        let export_to = self
-            .export_to
-            .clone()
-            .unwrap_or_else(|| format!("bindings/{}.ts", self.name));
+        let export_to = match &self.export_to {
+            Some(dirname) if dirname.ends_with('/') => {
+                format!("{}{}.ts", dirname, self.name)
+            }
+            Some(filename) => filename.clone(),
+            None => {
+                format!("bindings/{}.ts", self.name)
+            }
+        };
+
         let export = match self.export {
             true => Some(self.generate_export_test(&rust_ty, &generics)),
             false => None,
