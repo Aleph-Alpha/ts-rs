@@ -12,6 +12,14 @@ struct User {
     active: bool,
 }
 
+#[derive(TS)]
+#[ts(export_to = "export_here_dir_test/")]
+struct UserDir {
+    name: String,
+    age: i32,
+    active: bool,
+}
+
 #[test]
 fn export_manually() {
     User::export().unwrap();
@@ -29,6 +37,27 @@ fn export_manually() {
     };
 
     let actual_content = fs::read_to_string("export_here_test.ts").unwrap();
+
+    assert_eq!(actual_content, expected_content);
+}
+
+#[test]
+fn export_manually_dir() {
+    UserDir::export().unwrap();
+
+    let expected_content = if cfg!(feature = "format") {
+        concat!(
+            "export interface UserDir {\n",
+            "  name: string;\n",
+            "  age: number;\n",
+            "  active: boolean;\n",
+            "}\n"
+        )
+    } else {
+        concat!("\nexport interface UserDir { name: string, age: number, active: boolean, }")
+    };
+
+    let actual_content = fs::read_to_string("export_here_dir_test/UserDir.ts").unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
