@@ -1,6 +1,6 @@
 use std::{
     any::TypeId,
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeMap,
     fmt::Write,
     path::{Component, Path, PathBuf},
 };
@@ -67,13 +67,14 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
 fn generate_imports<T: TS + ?Sized>(out: &mut String) -> Result<(), ExportError> {
     let path = Path::new(T::EXPORT_TO.ok_or(ExportError::CannotBeExported)?);
 
-    let deps = T::dependencies()
-        .into_iter()
+    let deps = T::dependencies();
+    let deduplicated_deps = deps
+        .iter()
         .filter(|dep| dep.type_id != TypeId::of::<T>())
-        .map(|dep| (dep.ts_name.clone(), dep))
+        .map(|dep| (&dep.ts_name, dep))
         .collect::<BTreeMap<_, _>>();
 
-    for (_, dep) in deps {
+    for (_, dep) in deduplicated_deps {
         let rel_path = import_path(path, Path::new(dep.exported_to));
         writeln!(
             out,
