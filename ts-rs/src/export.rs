@@ -1,6 +1,6 @@
 use std::{
     any::TypeId,
-    collections::BTreeSet,
+    collections::{BTreeMap, BTreeSet},
     fmt::Write,
     path::{Component, Path, PathBuf},
 };
@@ -70,9 +70,10 @@ fn generate_imports<T: TS + ?Sized>(out: &mut String) -> Result<(), ExportError>
     let deps = T::dependencies()
         .into_iter()
         .filter(|dep| dep.type_id != TypeId::of::<T>())
-        .collect::<BTreeSet<_>>();
+        .map(|dep| (dep.ts_name.clone(), dep))
+        .collect::<BTreeMap<_, _>>();
 
-    for dep in deps {
+    for (_, dep) in deps {
         let rel_path = import_path(path, Path::new(dep.exported_to));
         writeln!(
             out,
