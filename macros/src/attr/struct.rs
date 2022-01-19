@@ -13,6 +13,7 @@ pub struct StructAttr {
     pub rename: Option<String>,
     pub export_to: Option<String>,
     pub export: bool,
+    pub tag: Option<String>,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -35,12 +36,14 @@ impl StructAttr {
             rename,
             export,
             export_to,
+            tag,
         }: StructAttr,
     ) {
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
         self.export_to = self.export_to.take().or(export_to);
         self.export = self.export || export;
+        self.tag = self.tag.take().or(tag);
     }
 }
 
@@ -58,5 +61,6 @@ impl_parse! {
     SerdeStructAttr(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.0.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
+        "tag" => out.0.tag = Some(parse_assign_str(input)?),
     }
 }

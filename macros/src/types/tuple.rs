@@ -18,6 +18,9 @@ pub(crate) fn tuple(
     if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to tuple structs");
     }
+    if attr.tag.is_some() {
+        syn_err!("`tag` is not applicable to tuple structs");
+    }
 
     let mut formatted_fields = Vec::new();
     let mut dependencies = Dependencies::default();
