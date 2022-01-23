@@ -18,6 +18,13 @@ pub(crate) fn named(
 ) -> Result<DerivedTS> {
     let mut formatted_fields = vec![];
     let mut dependencies = Dependencies::default();
+    if let Some(tag) = &attr.tag {
+        let formatted = format!("{}: \"{}\",", tag, name);
+        formatted_fields.push(quote! {
+            #formatted.to_string()
+        });
+    }
+
     for field in &fields.named {
         format_field(
             &mut formatted_fields,

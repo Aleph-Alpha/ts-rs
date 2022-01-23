@@ -17,6 +17,9 @@ pub(crate) fn newtype(
     if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to newtype structs");
     }
+    if attr.tag.is_some() {
+        syn_err!("`tag` is not applicable to newtype structs");
+    }
     let inner = fields.unnamed.first().unwrap();
     let FieldAttr {
         type_override,
