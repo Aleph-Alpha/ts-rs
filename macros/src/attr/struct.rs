@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use syn::{Attribute, Ident, Result, Token};
+use syn::{Attribute, Ident, Result};
 
 use crate::{
     attr::{parse_assign_str, Inflection},
@@ -64,6 +64,7 @@ impl_parse! {
         "tag" => out.0.tag = Some(parse_assign_str(input)?),
         // parse #[serde(default)] to not emit a warning
         "default" => {
+            use syn::Token;
             if input.peek(Token![=]) {
                 input.parse::<Token![=]>()?;
                 parse_assign_str(input)?;

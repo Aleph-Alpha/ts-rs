@@ -1,4 +1,4 @@
-use syn::{Attribute, Ident, Result, Token};
+use syn::{Attribute, Ident, Result};
 
 use super::parse_assign_str;
 use crate::utils::parse_attrs;
@@ -68,6 +68,7 @@ impl_parse! {
         "flatten" => out.0.flatten = true,
         // parse #[serde(default)] to not emit a warning
         "default" => {
+            use syn::Token;
             if input.peek(Token![=]) {
                 input.parse::<Token![=]>()?;
                 parse_assign_str(input)?;

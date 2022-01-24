@@ -1,4 +1,5 @@
 use std::ops::{Range, RangeInclusive};
+
 use ts_rs::{Dependency, TS};
 
 #[derive(TS)]
@@ -11,7 +12,7 @@ struct RangeTest {
     b: Range<&'static str>,
     c: Range<Range<i32>>,
     d: RangeInclusive<u32>,
-    e: Range<Inner>
+    e: Range<Inner>,
 }
 
 #[test]
@@ -22,6 +23,9 @@ fn range() {
     );
     assert_eq!(
         RangeTest::dependencies(),
-        vec![Dependency::from_ty::<Inner>().unwrap(), Dependency::from_ty::<Inner>().unwrap()]
+        vec![
+            Dependency::from_ty::<Inner>().unwrap(),
+            Dependency::from_ty::<Inner>().unwrap()
+        ]
     );
 }
