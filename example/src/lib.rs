@@ -60,6 +60,7 @@ where
 }
 
 #[derive(Serialize, TS)]
+#[serde(default)]
 #[ts(export)]
 struct Series {
     points: Vec<Point<u64>>,
@@ -101,6 +102,6 @@ enum InlineComplexEnum {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 struct ComplexStruct {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub string_tree: Option<Rc<BTreeSet<String>>>,
 }

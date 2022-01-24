@@ -62,5 +62,6 @@ impl_parse! {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.0.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
         "tag" => out.0.tag = Some(parse_assign_str(input)?),
+        "default" => {},
     }
 }
