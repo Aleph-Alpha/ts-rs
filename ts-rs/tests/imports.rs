@@ -32,7 +32,14 @@ fn test_def() {
     // Checks to make sure imports are ordered and deduplicated
     assert_eq!(
         text,
-        "import type { TestTypeA } from \"./ts_rs_test_type_a\";\nimport type { TestTypeB } from \"./ts_rs_test_type_b\";\n\nexport type TestEnum = { C: { value: TestTypeB<number>, } } | { A1: { value: TestTypeA<number>, } } | { A2: { value: TestTypeA<number>, } };"
+"\
+import type { TestTypeA } from \"./ts_rs_test_type_a\";
+import type { TestTypeB } from \"./ts_rs_test_type_b\";
+
+export type TestEnum = { C: { value: TestTypeB<number> } } | {
+  A1: { value: TestTypeA<number> };
+} | { A2: { value: TestTypeA<number> } };
+"
     );
 
     std::fs::remove_file(TestEnum::EXPORT_TO.unwrap()).unwrap();

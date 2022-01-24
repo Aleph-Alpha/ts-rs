@@ -126,7 +126,6 @@ use std::{
 };
 
 pub use ts_rs_macros::TS;
-
 pub use crate::export::ExportError;
 
 #[cfg(feature = "chrono-impl")]
@@ -533,3 +532,5 @@ impl_primitives! {
     Path, PathBuf, String, &'static str => "string",
     () => "null"
 }
+#[rustfmt::skip]
+pub(crate) use impl_primitives;
