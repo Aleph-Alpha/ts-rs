@@ -24,6 +24,7 @@ pub enum TestEnum {
 }
 
 #[test]
+#[cfg(feature = "format")]
 fn test_def() {
     // The only way to get access to how the imports look is to export the type and load the exported file
     TestEnum::export().unwrap();
