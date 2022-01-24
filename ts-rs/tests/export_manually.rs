@@ -5,7 +5,7 @@ use std::{concat, fs};
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export_to = "export_here_test.ts")]
+#[ts(export_to = "tests-out/export_here_test.ts")]
 struct User {
     name: String,
     age: i32,
@@ -13,7 +13,7 @@ struct User {
 }
 
 #[derive(TS)]
-#[ts(export_to = "export_here_dir_test/")]
+#[ts(export_to = "tests-out/export_here_dir_test/")]
 struct UserDir {
     name: String,
     age: i32,
@@ -36,7 +36,7 @@ fn export_manually() {
         concat!("\nexport interface User { name: string, age: number, active: boolean, }")
     };
 
-    let actual_content = fs::read_to_string("export_here_test.ts").unwrap();
+    let actual_content = fs::read_to_string("tests-out/export_here_test.ts").unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -57,7 +57,7 @@ fn export_manually_dir() {
         concat!("\nexport interface UserDir { name: string, age: number, active: boolean, }")
     };
 
-    let actual_content = fs::read_to_string("export_here_dir_test/UserDir.ts").unwrap();
+    let actual_content = fs::read_to_string("tests-out/export_here_dir_test/UserDir.ts").unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
