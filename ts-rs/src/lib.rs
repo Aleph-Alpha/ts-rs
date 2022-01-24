@@ -67,23 +67,23 @@
 //!
 //! ## cargo features
 //! - `serde-compat` (default)  
-//! 
+//!
 //!   Enable serde compatibility. See below for more info.  
 //! - `format` (default)  
-//! 
+//!
 //!   When enabled, the generated typescript will be formatted.
 //!   Currently, this sadly adds quite a bit of dependencies.
 //! - `chrono-impl`  
-//! 
+//!
 //!   Implement `TS` for types from chrono  
 //! - `bigdecimal-impl`  
-//! 
+//!
 //!   Implement `TS` for types from bigdecimal  
 //! - `uuid-impl`  
-//! 
+//!
 //!   Implement `TS` for types from uuid  
 //! - `bytes-impl`  
-//! 
+//!
 //!   Implement `TS` for types from bytes  
 //!
 //! If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.

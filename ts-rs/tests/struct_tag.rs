@@ -1,10 +1,10 @@
 #![allow(dead_code)]
 
-use ts_rs::TS;
 use serde::Serialize;
+use ts_rs::TS;
 
 #[derive(TS, Serialize)]
-#[serde(tag="type")]
+#[serde(tag = "type")]
 struct TaggedType {
     a: i32,
     b: i32,
@@ -13,7 +13,10 @@ struct TaggedType {
 #[test]
 #[cfg(feature = "serde-compat")]
 fn test() {
-    assert_eq!(TaggedType::inline(), "{ type: \"TaggedType\", a: number, b: number, }")
+    assert_eq!(
+        TaggedType::inline(),
+        "{ type: \"TaggedType\", a: number, b: number, }"
+    )
 }
 
 #[test]
