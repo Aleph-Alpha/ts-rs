@@ -122,6 +122,7 @@ use std::{
     any::TypeId,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
 };
+use std::ops::{Range, RangeInclusive};
 
 pub use ts_rs_macros::TS;
 
@@ -280,10 +281,11 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS>() -> Option<Self> {
+        let exported_to = T::EXPORT_TO?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
             ts_name: T::name(),
-            exported_to: T::EXPORT_TO?,
+            exported_to,
         })
     }
 }
@@ -303,8 +305,6 @@ macro_rules! impl_primitives {
         }
     )*)* };
 }
-pub(crate) use impl_primitives;
-
 // generate impls for tuples
 macro_rules! impl_tuples {
     ( impl $($i:ident),* ) => {
@@ -442,6 +442,45 @@ impl<K: TS, V: TS> TS for HashMap<K, V> {
             .into_iter()
             .flatten()
             .collect()
+    }
+
+    fn transparent() -> bool {
+        true
+    }
+}
+
+impl<I: TS> TS for Range<I> {
+    fn name() -> String {
+        panic!("called Range::name - Did you use a type alias?")
+    }
+
+    fn name_with_type_args(args: Vec<String>) -> String {
+        assert_eq!(args.len(), 1, "called Range::name_with_type_args with {} args", args.len());
+        format!("{{ start: {}, end: {}, }}", &args[0], &args[0])
+    }
+
+    fn dependencies() -> Vec<Dependency> {
+        [Dependency::from_ty::<I>()].into_iter().flatten().collect()
+    }
+
+    fn transparent() -> bool {
+        true
+    }
+
+}
+
+impl<I: TS> TS for RangeInclusive<I> {
+    fn name() -> String {
+        panic!("called RangeInclusive::name - Did you use a type alias?")
+    }
+
+    fn name_with_type_args(args: Vec<String>) -> String {
+        assert_eq!(args.len(), 1, "called RangeInclusive::name_with_type_args with {} args", args.len());
+        format!("{{ start: {}, end: {}, }}", &args[0], &args[0])
+    }
+
+    fn dependencies() -> Vec<Dependency> {
+        [Dependency::from_ty::<I>()].into_iter().flatten().collect()
     }
 
     fn transparent() -> bool {
