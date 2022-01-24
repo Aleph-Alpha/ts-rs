@@ -1,4 +1,4 @@
-use syn::{Attribute, Ident, Result};
+use syn::{Attribute, Ident, Result, Token};
 
 use super::parse_assign_str;
 use crate::utils::parse_attrs;
@@ -66,6 +66,12 @@ impl_parse! {
         "skip_deserializing" => out.0.skip = true,
         "skip_serializing_if" => out.0.optional = parse_assign_str(input)? == *"Option::is_none",
         "flatten" => out.0.flatten = true,
-        "default" => {},
+        // parse #[serde(default)] to not emit a warning
+        "default" => {
+            if input.peek(Token![=]) {
+                input.parse::<Token![=]>()?;
+                parse_assign_str(input)?;
+            }
+        },
     }
 }
