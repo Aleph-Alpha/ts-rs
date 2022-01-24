@@ -11,6 +11,13 @@ struct TaggedType {
 }
 
 #[test]
+#[cfg(feature = "serde-compat")]
 fn test() {
     assert_eq!(TaggedType::inline(), "{ type: \"TaggedType\", a: number, b: number, }")
+}
+
+#[test]
+#[cfg(not(feature = "serde-compat"))]
+fn test() {
+    assert_eq!(TaggedType::inline(), "{ a: number, b: number, }")
 }
