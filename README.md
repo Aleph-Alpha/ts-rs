@@ -87,6 +87,9 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - `bytes-impl`
 
   Implement `TS` for types from bytes
+- `indexmap-impl`
+
+  Implement `TS` for `IndexMap` and `IndexSet` from indexmap
 
 If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 
