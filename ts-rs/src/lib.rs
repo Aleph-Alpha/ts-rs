@@ -84,7 +84,10 @@
 //!   Implement `TS` for types from uuid  
 //! - `bytes-impl`  
 //!
-//!   Implement `TS` for types from bytes  
+//!   Implement `TS` for types from bytes    
+//! - `indexmap-impl`  
+//!
+//!   Implement `TS` for `IndexMap` and `IndexSet` from indexmap  
 //!
 //! If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 //!
@@ -125,8 +128,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub use ts_rs_macros::TS;
 pub use crate::export::ExportError;
+pub use ts_rs_macros::TS;
 
 #[cfg(feature = "chrono-impl")]
 mod chrono;
@@ -516,6 +519,12 @@ impl_primitives! { bigdecimal::BigDecimal => "string" }
 
 #[cfg(feature = "uuid-impl")]
 impl_primitives! { uuid::Uuid => "string" }
+
+#[cfg(feature = "indexmap-impl")]
+impl_shadow!(as Vec<T>: impl<T: TS> TS for indexmap::IndexSet<T>);
+
+#[cfg(feature = "indexmap-impl")]
+impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for indexmap::IndexMap<K, V>);
 
 #[cfg(feature = "bytes-impl")]
 mod bytes {
