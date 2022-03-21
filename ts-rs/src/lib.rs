@@ -66,28 +66,28 @@
 //! - generic types
 //!
 //! ## cargo features
-//! - `serde-compat` (default)  
+//! - `serde-compat` (default)
 //!
-//!   Enable serde compatibility. See below for more info.  
-//! - `format` (default)  
+//!   Enable serde compatibility. See below for more info.
+//! - `format` (default)
 //!
 //!   When enabled, the generated typescript will be formatted.
 //!   Currently, this sadly adds quite a bit of dependencies.
-//! - `chrono-impl`  
+//! - `chrono-impl`
 //!
-//!   Implement `TS` for types from chrono  
-//! - `bigdecimal-impl`  
+//!   Implement `TS` for types from chrono
+//! - `bigdecimal-impl`
 //!
-//!   Implement `TS` for types from bigdecimal  
-//! - `uuid-impl`  
+//!   Implement `TS` for types from bigdecimal
+//! - `uuid-impl`
 //!
-//!   Implement `TS` for types from uuid  
-//! - `bytes-impl`  
+//!   Implement `TS` for types from uuid
+//! - `bytes-impl`
 //!
-//!   Implement `TS` for types from bytes    
-//! - `indexmap-impl`  
+//!   Implement `TS` for types from bytes
+//! - `indexmap-impl`
 //!
-//!   Implement `TS` for `IndexMap` and `IndexSet` from indexmap  
+//!   Implement `TS` for `IndexMap` and `IndexSet` from indexmap
 //!
 //! If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 //!
@@ -128,15 +128,16 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub use crate::export::ExportError;
 pub use ts_rs_macros::TS;
+
+pub use crate::export::ExportError;
 
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
 
-/// A type which can be represented in TypeScript.  
-/// Most of the time, you'd want to derive this trait instead of implementing it manually.  
+/// A type which can be represented in TypeScript.
+/// Most of the time, you'd want to derive this trait instead of implementing it manually.
 /// ts-rs comes with implementations for all primitives, most collections, tuples,
 /// arrays and containers.
 ///
@@ -156,67 +157,67 @@ mod export;
 /// ### container attributes
 /// attributes applicable for both structs and enums
 ///
-/// - `#[ts(export)]`:  
+/// - `#[ts(export)]`:
 ///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
 ///   `cargo test`
 ///
-/// - `#[ts(export_to = "..")]`:  
+/// - `#[ts(export_to = "..")]`:
 ///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.
 ///
-/// - `#[ts(rename = "..")]`:  
+/// - `#[ts(rename = "..")]`:
 ///   Sets the typescript name of the generated type
 ///
-/// - `#[ts(rename_all = "..")]`:  
+/// - `#[ts(rename_all = "..")]`:
 ///   Rename all fields/variants of the type.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`
 ///
 ///
 /// ### struct field attributes
 ///
-/// - `#[ts(type = "..")]`:  
-///   Overrides the type used in TypeScript.  
-///   This is useful when there's a type for which you cannot derive `TS`.  
+/// - `#[ts(type = "..")]`:
+///   Overrides the type used in TypeScript.
+///   This is useful when there's a type for which you cannot derive `TS`.
 ///
-/// - `#[ts(rename = "..")]`:  
-///   Renames this field  
+/// - `#[ts(rename = "..")]`:
+///   Renames this field
 ///
-/// - `#[ts(inline)]`:  
-///   Inlines the type of this field  
+/// - `#[ts(inline)]`:
+///   Inlines the type of this field
 ///
-/// - `#[ts(skip)]`:  
-///   Skip this field  
+/// - `#[ts(skip)]`:
+///   Skip this field
 ///
-/// - `#[ts(optional)]`:  
+/// - `#[ts(optional)]`:
 ///   Indicates the field may be omitted from the serialized struct
 ///
-/// - `#[ts(flatten)]`:  
-///   Flatten this field (only works if the field is a struct)  
-///   
+/// - `#[ts(flatten)]`:
+///   Flatten this field (only works if the field is a struct)
+///
 /// ### enum attributes
 ///
-/// - `#[ts(tag = "..")]`:  
+/// - `#[ts(tag = "..")]`:
 ///   Changes the representation of the enum to store its tag in a separate field.
 ///   See [the serde docs](https://serde.rs/enum-representations.html).
 ///
-/// - `#[ts(content = "..")]`:  
+/// - `#[ts(content = "..")]`:
 ///   Changes the representation of the enum to store its content in a separate field.
 ///   See [the serde docs](https://serde.rs/enum-representations.html).
 ///
-/// - `#[ts(untagged)]`:  
+/// - `#[ts(untagged)]`:
 ///   Changes the representation of the enum to not include its tag.
 ///   See [the serde docs](https://serde.rs/enum-representations.html).
 ///
-/// - `#[ts(rename_all = "..")]`:  
-///   Rename all variants of this enum.  
+/// - `#[ts(rename_all = "..")]`:
+///   Rename all variants of this enum.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`
-///  
+///
 /// ### enum variant attributes
 ///
-/// - `#[ts(rename = "..")]`:  
-///   Renames this variant  
+/// - `#[ts(rename = "..")]`:
+///   Renames this variant
 ///
-/// - `#[ts(skip)]`:  
-///   Skip this variant  
+/// - `#[ts(skip)]`:
+///   Skip this variant
 pub trait TS: 'static {
     const EXPORT_TO: Option<&'static str> = None;
 
@@ -240,7 +241,7 @@ pub trait TS: 'static {
         panic!("{} cannot be inlined", Self::name());
     }
 
-    /// Flatten an type declaration.  
+    /// Flatten an type declaration.
     /// This function will panic if the type cannot be flattened.
     fn inline_flattened() -> String {
         panic!("{} cannot be flattened", Self::name())
@@ -250,7 +251,7 @@ pub trait TS: 'static {
     /// This is used for resolving imports when exporting to a file.
     fn dependencies() -> Vec<Dependency>;
 
-    /// `true` if this is a transparent type, e.g tuples or a list.  
+    /// `true` if this is a transparent type, e.g tuples or a list.
     /// This is used for resolving imports when using the `export!` macro.
     fn transparent() -> bool;
 
@@ -263,6 +264,12 @@ pub trait TS: 'static {
     /// test.
     fn export() -> Result<(), ExportError> {
         export::export_type::<Self>()
+    }
+
+    /// Manually export this type to a file with a file with the specified path. This
+    /// function will ignore the `#[ts(export_to = "..)]` attribute.
+    fn export_to(path: impl AsRef<Path>) -> Result<(), ExportError> {
+        export::export_type_to::<Self, _>(path)
     }
 }
 

@@ -28,7 +28,11 @@ pub enum ExportError {
 /// setting in the `ts.toml` config file.
 pub(crate) fn export_type<T: TS + ?Sized>() -> Result<(), ExportError> {
     let path = output_path::<T>()?;
+    export_type_to::<T, _>(&path)
+}
 
+/// Export `T` to the file specified by the `path` argument.
+pub(crate) fn export_type_to<T: TS + ?Sized, P: AsRef<Path>>(path: P) -> Result<(), ExportError> {
     let mut buffer = String::with_capacity(1024);
     generate_imports::<T>(&mut buffer)?;
     generate_decl::<T>(&mut buffer);
@@ -39,13 +43,13 @@ pub(crate) fn export_type<T: TS + ?Sized>() -> Result<(), ExportError> {
         use dprint_plugin_typescript::{configuration::ConfigurationBuilder, format_text};
 
         let fmt_cfg = ConfigurationBuilder::new().deno().build();
-        buffer = format_text(&path, &buffer, &fmt_cfg).map_err(Formatting)?;
+        buffer = format_text(path.as_ref(), &buffer, &fmt_cfg).map_err(Formatting)?;
     }
 
-    if let Some(parent) = path.parent() {
+    if let Some(parent) = path.as_ref().parent() {
         std::fs::create_dir_all(parent)?;
     }
-    std::fs::write(path, &buffer)?;
+    std::fs::write(path.as_ref(), &buffer)?;
     Ok(())
 }
 
