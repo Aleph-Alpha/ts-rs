@@ -65,6 +65,10 @@
 //! - serde compatibility
 //! - generic types
 //!
+//! ## limitations
+//! - generic fields cannot be inlined or flattened (#56)
+//! - type aliases must not alias generic types (#70)
+//!
 //! ## cargo features
 //! - `serde-compat` (default)  
 //!
