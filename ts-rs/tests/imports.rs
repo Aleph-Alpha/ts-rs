@@ -33,7 +33,7 @@ fn test_def() {
     // Checks to make sure imports are ordered and deduplicated
     assert_eq!(
         text,
-"\
+        "\
 import type { TestTypeA } from \"./ts_rs_test_type_a\";
 import type { TestTypeB } from \"./ts_rs_test_type_b\";
 

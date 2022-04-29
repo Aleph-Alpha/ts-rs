@@ -128,8 +128,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub use crate::export::ExportError;
 pub use ts_rs_macros::TS;
+
+pub use crate::export::ExportError;
 
 #[cfg(feature = "chrono-impl")]
 mod chrono;
@@ -263,6 +264,12 @@ pub trait TS: 'static {
     /// test.
     fn export() -> Result<(), ExportError> {
         export::export_type::<Self>()
+    }
+
+    /// Manually export this type to a file with a file with the specified path. This
+    /// function will ignore the `#[ts(export_to = "..)]` attribute.
+    fn export_to(path: impl AsRef<Path>) -> Result<(), ExportError> {
+        export::export_type_to::<Self, _>(path)
     }
 }
 
