@@ -520,6 +520,9 @@ impl_primitives! { bigdecimal::BigDecimal => "string" }
 #[cfg(feature = "uuid-impl")]
 impl_primitives! { uuid::Uuid => "string" }
 
+#[cfg(feature = "bson-uuid-impl")]
+impl_primitives! { bson::Uuid => "string" }
+
 #[cfg(feature = "indexmap-impl")]
 impl_shadow!(as Vec<T>: impl<T: TS> TS for indexmap::IndexSet<T>);
 
