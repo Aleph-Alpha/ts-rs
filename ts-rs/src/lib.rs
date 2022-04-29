@@ -69,7 +69,7 @@
 //! - `serde-compat` (default)  
 //!
 //!   Enable serde compatibility. See below for more info.  
-//! - `format` (default)  
+//! - `format`
 //!
 //!   When enabled, the generated typescript will be formatted.
 //!   Currently, this sadly adds quite a bit of dependencies.
