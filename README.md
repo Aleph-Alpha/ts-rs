@@ -84,6 +84,9 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - `uuid-impl`
 
   Implement `TS` for types from uuid
+- `bson-uuid-impl`
+
+  Implement `TS` for types from bson
 - `bytes-impl`
 
   Implement `TS` for types from bytes
