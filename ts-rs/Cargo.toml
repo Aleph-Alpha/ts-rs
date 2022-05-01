@@ -12,6 +12,10 @@ categories = ["development-tools::ffi", "development-tools::build-utils", "wasm"
 readme = "../README.md"
 
 [features]
+# If enabled, each derived type will be exported in an automaticaly generated test.
+# On by default!
+test-export = ["ts-rs-macros/test-export"]
+
 chrono-impl = ["chrono"]
 bigdecimal-impl = ["bigdecimal"]
 uuid-impl = ["uuid"]
@@ -19,7 +23,7 @@ bson-uuid-impl = ["bson"]
 bytes-impl = ["bytes"]
 serde-compat = ["ts-rs-macros/serde-compat"]
 format = ["dprint-plugin-typescript"]
-default = ["serde-compat"]
+default = ["serde-compat", "test-export"]
 indexmap-impl = ["indexmap"]
 
 [dev-dependencies]

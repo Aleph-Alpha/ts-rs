@@ -58,7 +58,13 @@ impl DerivedTS {
         };
 
         let export = match self.export {
-            true => Some(self.generate_export_test(&rust_ty, &generics)),
+            true => {
+                if cfg!(feature = "test-export") {
+                    Some(self.generate_export_test(&rust_ty, &generics))
+                } else {
+                    None
+                }
+            }
             false => None,
         };
 
