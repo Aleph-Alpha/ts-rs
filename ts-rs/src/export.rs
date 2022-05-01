@@ -1,6 +1,6 @@
 use std::{
     any::TypeId,
-    collections::BTreeMap,
+    collections::{BTreeMap, HashSet},
     fmt::Write,
     path::{Component, Path, PathBuf},
 };
@@ -159,5 +159,95 @@ where
             }
         }
         Some(comps.iter().map(|c| c.as_os_str()).collect())
+    }
+}
+
+#[derive(Debug)]
+pub struct MissingDependenciesError {
+    dependencies: Vec<String>,
+}
+
+impl std::fmt::Display for MissingDependenciesError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Missing required types: {}",
+            self.dependencies.join(", ")
+        )
+    }
+}
+
+impl std::error::Error for MissingDependenciesError {}
+
+/// Allows exporting multiple types to a single file.
+pub struct SingleFileExporter {
+    required_type_ids: HashSet<(TypeId, String)>,
+    added_types: HashSet<TypeId>,
+    buffer: String,
+}
+
+impl SingleFileExporter {
+    pub fn new(with_codegen_warning: bool) -> Self {
+        let buffer = if with_codegen_warning {
+            NOTE.to_string()
+        } else {
+            String::new()
+        };
+
+        Self {
+            required_type_ids: HashSet::new(),
+            added_types: HashSet::new(),
+            buffer,
+        }
+    }
+
+    pub fn add_type<T: TS + 'static>(&mut self) {
+        let id = TypeId::of::<T>();
+        if self.added_types.contains(&id) {
+            return;
+        }
+
+        if !self.buffer.is_empty() {
+            self.buffer.push('\n');
+        }
+        generate_decl::<T>(&mut self.buffer);
+        self.buffer.push('\n');
+        self.added_types.insert(id);
+
+        for dep in T::dependencies() {
+            self.required_type_ids
+                .insert((dep.type_id, dep.ts_name.clone()));
+        }
+    }
+
+    pub fn and<T: TS + 'static>(mut self) -> Self {
+        self.add_type::<T>();
+        self
+    }
+
+    /// Finalize the export.
+    ///
+    /// Returns the generated typescritp code on success, or an error if any
+    /// required type dependencies were not added.
+    pub fn finish(self) -> Result<String, MissingDependenciesError> {
+        let missing: Vec<String> = self
+            .required_type_ids
+            .into_iter()
+            .filter_map(|(id, name)| {
+                if self.added_types.contains(&id) {
+                    None
+                } else {
+                    Some(name)
+                }
+            })
+            .collect();
+
+        if !missing.is_empty() {
+            Err(MissingDependenciesError {
+                dependencies: missing,
+            })
+        } else {
+            Ok(self.buffer)
+        }
     }
 }
