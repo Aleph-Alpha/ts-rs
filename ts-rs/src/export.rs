@@ -35,6 +35,17 @@ pub(crate) fn export_type<T: TS + ?Sized>() -> Result<(), ExportError> {
 
 /// Export `T` to the file specified by the `path` argument.
 pub(crate) fn export_type_to<T: TS + ?Sized, P: AsRef<Path>>(path: P) -> Result<(), ExportError> {
+    let buffer = export_type_to_string::<T>()?;
+
+    if let Some(parent) = path.as_ref().parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(path.as_ref(), &buffer)?;
+    Ok(())
+}
+
+/// Returns the generated defintion for `T`.
+pub(crate) fn export_type_to_string<T: TS + ?Sized>() -> Result<String, ExportError> {
     let mut buffer = String::with_capacity(1024);
     buffer.push_str(NOTE);
     generate_imports::<T>(&mut buffer)?;
@@ -48,11 +59,7 @@ pub(crate) fn export_type_to<T: TS + ?Sized, P: AsRef<Path>>(path: P) -> Result<
         buffer = format_text(path.as_ref(), &buffer, &fmt_cfg).map_err(Formatting)?;
     }
 
-    if let Some(parent) = path.as_ref().parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    std::fs::write(path.as_ref(), &buffer)?;
-    Ok(())
+    Ok(buffer)
 }
 
 /// Compute the output path to where `T` should be exported.

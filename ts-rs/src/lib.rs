@@ -278,6 +278,10 @@ pub trait TS: 'static {
     fn export_to(path: impl AsRef<Path>) -> Result<(), ExportError> {
         export::export_type_to::<Self, _>(path)
     }
+
+    fn export_to_string() -> Result<String, ExportError> {
+        export::export_type_to_string::<Self>()
+    }
 }
 
 /// A typescript type which is depended upon by other types.
