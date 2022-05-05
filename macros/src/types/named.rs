@@ -110,7 +110,7 @@ fn format_field(
     };
 
     let doc_string = match doc_string {
-        Some(doc) => format!("/** {} */ ", doc),
+        Some(s) => format!("\n/**\n* {}\n*/\n", s),
         None => "".to_string(),
     };
 

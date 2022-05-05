@@ -12,5 +12,5 @@ struct DocString {
 
 #[test]
 fn test() {
-    assert_eq!(DocString::inline(), "{ /** @mydoc */ a: number, /** @mydoc2 */ b: string, }");
+    assert_eq!(DocString::inline(), "{ \n/**\n* @mydoc\n*/\na: number, \n/**\n* @mydoc2\n*/\nb: string, }");
 }

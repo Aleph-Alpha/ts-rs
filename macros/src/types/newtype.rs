@@ -53,7 +53,7 @@ pub(crate) fn newtype(
     };
 
     let doc = match doc_string {
-        Some(s) => format!("/** {} */ ", s),
+        Some(s) => format!("\n/**\n* {}\n*/\n", s),
         None => "".to_string(),
     };
 
