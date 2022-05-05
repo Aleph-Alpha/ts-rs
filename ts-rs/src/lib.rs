@@ -200,6 +200,9 @@ mod export;
 /// - `#[ts(flatten)]`:  
 ///   Flatten this field (only works if the field is a struct)  
 ///   
+/// - `#[ts(doc_string = "..")]`:  
+///   Adding typescript docstring to this field
+///
 /// ### enum attributes
 ///
 /// - `#[ts(tag = "..")]`:  

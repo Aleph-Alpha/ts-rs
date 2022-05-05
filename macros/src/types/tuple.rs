@@ -29,6 +29,7 @@ pub(crate) fn tuple(
     }
 
     let generic_args = format_generics(&mut dependencies, generics);
+
     Ok(DerivedTS {
         inline: quote! {
             format!(
@@ -66,6 +67,7 @@ fn format_field(
         skip,
         optional,
         flatten,
+        doc_string,
     } = FieldAttr::from_attrs(&field.attrs)?;
 
     if skip {
@@ -80,6 +82,10 @@ fn format_field(
     if flatten {
         syn_err!("`flatten` is not applicable to tuple fields")
     }
+    if doc_string.is_some() {
+        syn_err!("`doc_string` is not applicable to tuple fields")
+    }
+
 
     formatted_fields.push(match &type_override {
         Some(o) => quote!(#o.to_owned()),

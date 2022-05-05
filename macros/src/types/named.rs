@@ -69,6 +69,7 @@ fn format_field(
         skip,
         optional,
         flatten,
+        doc_string,
     } = FieldAttr::from_attrs(&field.attrs)?;
 
     if skip {
@@ -108,8 +109,13 @@ fn format_field(
         (None, None) => field_name,
     };
 
+    let doc_string = match doc_string {
+        Some(doc) => format!("/** {} */ ", doc),
+        None => "".to_string(),
+    };
+
     formatted_fields.push(quote! {
-        format!("{}{}: {},", #name, #optional_annotation, #formatted_ty)
+        format!("{}{}{}: {},", #doc_string, #name, #optional_annotation, #formatted_ty)
     });
 
     Ok(())

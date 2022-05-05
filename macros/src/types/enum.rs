@@ -72,6 +72,7 @@ fn format_variant(
         skip,
         optional,
         flatten,
+        doc_string,
     } = FieldAttr::from_attrs(&variant.attrs)?;
 
     match (skip, &type_override, inline, optional, flatten) {
@@ -97,25 +98,31 @@ fn format_variant(
     )?;
     let variant_dependencies = variant_type.dependencies;
     let inline_type = variant_type.inline;
+    
+    let doc = match doc_string {
+        Some(s) => format!("/** {} */ ", s),
+        None => "".to_string(),
+    };
 
     let formatted = match enum_attr.tagged()? {
         Tagged::Untagged => quote!(#inline_type),
         Tagged::Externally => match &variant.fields {
             Fields::Unit => quote!(format!("\"{}\"", #name)),
-            _ => quote!(format!("{{ {}: {} }}", #name, #inline_type)),
+            _ => quote!(format!("{}{{ {}: {} }}", #doc, #name, #inline_type)),
         },
         Tagged::Adjacently { tag, content } => match &variant.fields {
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                 let ty = format_type(&unnamed.unnamed[0].ty, dependencies, generics);
-                quote!(format!("{{ {}: \"{}\", {}: {} }}", #tag, #name, #content, #ty))
+                quote!(format!("{}{{ {}: \"{}\", {}: {} }}", #doc, #tag, #name, #content, #ty))
             }
-            Fields::Unit => quote!(format!("{{ {}: \"{}\" }}", #tag, #name)),
-            _ => quote!(format!("{{ {}: \"{}\", {}: {} }}", #tag, #name, #content, #inline_type)),
+            Fields::Unit => quote!(format!("{}{{ {}: \"{}\" }}", #doc, #tag, #name)),
+            _ => quote!(format!("{}{{ {}: \"{}\", {}: {} }}", #doc, #tag, #name, #content, #inline_type)),
         },
         Tagged::Internally { tag } => match variant_type.inline_flattened {
             Some(inline_flattened) => quote! {
                 format!(
-                    "{{ {}: \"{}\", {} }}",
+                    "{}{{ {}: \"{}\", {} }}",
+                    #doc,
                     #tag,
                     #name,
                     #inline_flattened
@@ -124,11 +131,11 @@ fn format_variant(
             None => match &variant.fields {
                 Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                     let ty = format_type(&unnamed.unnamed[0].ty, dependencies, generics);
-                    quote!(format!("{{ {}: \"{}\" }} & {}", #tag, #name, #ty))
+                    quote!(format!("{}{{ {}: \"{}\" }} & {}", #doc, #tag, #name, #ty))
                 }
-                Fields::Unit => quote!(format!("{{ {}: \"{}\" }}", #tag, #name)),
+                Fields::Unit => quote!(format!("{}{{ {}: \"{}\" }}", #doc, #tag, #name)),
                 _ => {
-                    quote!(format!("{{ {}: \"{}\" }} & {}", #tag, #name, #inline_type))
+                    quote!(format!("{}{{ {}: \"{}\" }} & {}", #doc, #tag, #name, #inline_type))
                 }
             },
         },
