@@ -531,6 +531,7 @@ impl_wrapper!(impl<T: TS> TS for std::cell::Cell<T>);
 impl_wrapper!(impl<T: TS> TS for std::cell::RefCell<T>);
 impl_wrapper!(impl<T: TS> TS for std::sync::Mutex<T>);
 impl_wrapper!(impl<T: TS> TS for std::sync::Weak<T>);
+impl_wrapper!(impl<T: TS> TS for std::marker::PhantomData<T>);
 
 impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
 
