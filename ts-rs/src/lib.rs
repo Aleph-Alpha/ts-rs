@@ -96,6 +96,10 @@
 //!
 //!   Implement `TS` for `IndexMap` and `IndexSet` from indexmap  
 //!
+//! - `ordered-float-impl`
+//!
+//!   Implement `TS` for `OrderedFloat` from ordered_float
+//!
 //! If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 //!
 //! ## serde compatability
@@ -539,6 +543,12 @@ impl_primitives! { bigdecimal::BigDecimal => "string" }
 
 #[cfg(feature = "uuid-impl")]
 impl_primitives! { uuid::Uuid => "string" }
+
+#[cfg(feature = "ordered-float-impl")]
+impl_primitives! { ordered_float::OrderedFloat<f32> => "number" }
+
+#[cfg(feature = "ordered-float-impl")]
+impl_primitives! { ordered_float::OrderedFloat<f64> => "number" }
 
 #[cfg(feature = "bson-uuid-impl")]
 impl_primitives! { bson::Uuid => "string" }
