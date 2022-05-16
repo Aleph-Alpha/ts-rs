@@ -6,7 +6,7 @@ use crate::{
     attr::{FieldAttr, Inflection, StructAttr},
     deps::Dependencies,
     types::generics::{format_generics, format_type},
-    utils::to_ts_ident,
+    utils::{raw_name_to_ts_field, to_ts_ident},
     DerivedTS,
 };
 
@@ -107,9 +107,10 @@ fn format_field(
         (None, Some(rn)) => rn.apply(&field_name),
         (None, None) => field_name,
     };
+    let valid_name = raw_name_to_ts_field(name);
 
     formatted_fields.push(quote! {
-        format!("{}{}: {},", #name, #optional_annotation, #formatted_ty)
+        format!("{}{}: {},", #valid_name, #optional_annotation, #formatted_ty)
     });
 
     Ok(())

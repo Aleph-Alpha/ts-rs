@@ -9,7 +9,14 @@ struct Rename {
     b: i32,
 }
 
+#[derive(serde::Serialize, TS)]
+struct RenameSerdeSpecialChar {
+    #[serde(rename = "a/b")]
+    b: i32,
+}
+
 #[test]
 fn test() {
-    assert_eq!(Rename::inline(), "{ A: number, B: number, }")
+    assert_eq!(Rename::inline(), "{ A: number, B: number, }");
+    assert_eq!(RenameSerdeSpecialChar::inline(), r#"{ "a/b": number, }"#);
 }
