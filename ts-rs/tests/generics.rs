@@ -126,7 +126,7 @@ fn generic_struct() {
 
 #[test]
 #[ignore]
-// https://github.com/Aleph-Alpha/ts-rs/issues/56
+// https://github.com/Aleph-Alpha/ts-rs/issues/56 TODO
 fn inline() {
     #[derive(TS)]
     struct Generic<T> {

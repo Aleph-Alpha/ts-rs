@@ -173,7 +173,8 @@ mod export;
 ///   `cargo test`
 ///
 /// - `#[ts(export_to = "..")]`:  
-///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.
+///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.  
+///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
 ///
 /// - `#[ts(rename = "..")]`:  
 ///   Sets the typescript name of the generated type
@@ -283,6 +284,8 @@ pub trait TS: 'static {
         export::export_type_to::<Self, _>(path)
     }
 
+    /// Manually generate bindings for this type, returning a [`String`].  
+    /// This function does not format the output, even if the `format` feature is enabled.
     fn export_to_string() -> Result<String, ExportError> {
         export::export_type_to_string::<Self>()
     }
