@@ -52,14 +52,14 @@ pub(crate) fn newtype(
         None => format_type(inner_ty, &mut dependencies, generics),
     };
 
-    let doc = match doc_string {
+    let doc_string = match doc_string {
         Some(s) => format!("\n/**\n* {}\n*/\n", s),
         None => "".to_string(),
     };
 
     let generic_args = format_generics(&mut dependencies, generics);
     Ok(DerivedTS {
-        decl: quote!(format!("{}type {}{} = {};", #doc, #name, #generic_args, #inline_def)),
+        decl: quote!(format!("{}type {}{} = {};", #doc_string, #name, #generic_args, #inline_def)),
         inline: inline_def,
         inline_flattened: None,
         name: name.to_owned(),

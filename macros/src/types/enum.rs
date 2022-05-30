@@ -99,7 +99,7 @@ fn format_variant(
     let variant_dependencies = variant_type.dependencies;
     let inline_type = variant_type.inline;
     
-    let doc = match doc_string {
+    let doc_string = match doc_string {
         Some(s) => format!("\n/**\n* {}\n*/\n", s),
         None => "".to_string(),
     };
@@ -108,21 +108,21 @@ fn format_variant(
         Tagged::Untagged => quote!(#inline_type),
         Tagged::Externally => match &variant.fields {
             Fields::Unit => quote!(format!("\"{}\"", #name)),
-            _ => quote!(format!("{}{{ {}: {} }}", #doc, #name, #inline_type)),
+            _ => quote!(format!("{}{{ {}: {} }}", #doc_string, #name, #inline_type)),
         },
         Tagged::Adjacently { tag, content } => match &variant.fields {
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                 let ty = format_type(&unnamed.unnamed[0].ty, dependencies, generics);
-                quote!(format!("{}{{ {}: \"{}\", {}: {} }}", #doc, #tag, #name, #content, #ty))
+                quote!(format!("{}{{ {}: \"{}\", {}: {} }}", #doc_string, #tag, #name, #content, #ty))
             }
-            Fields::Unit => quote!(format!("{}{{ {}: \"{}\" }}", #doc, #tag, #name)),
-            _ => quote!(format!("{}{{ {}: \"{}\", {}: {} }}", #doc, #tag, #name, #content, #inline_type)),
+            Fields::Unit => quote!(format!("{}{{ {}: \"{}\" }}", #doc_string, #tag, #name)),
+            _ => quote!(format!("{}{{ {}: \"{}\", {}: {} }}", #doc_string, #tag, #name, #content, #inline_type)),
         },
         Tagged::Internally { tag } => match variant_type.inline_flattened {
             Some(inline_flattened) => quote! {
                 format!(
                     "{}{{ {}: \"{}\", {} }}",
-                    #doc,
+                    #doc_string,
                     #tag,
                     #name,
                     #inline_flattened
@@ -131,11 +131,11 @@ fn format_variant(
             None => match &variant.fields {
                 Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                     let ty = format_type(&unnamed.unnamed[0].ty, dependencies, generics);
-                    quote!(format!("{}{{ {}: \"{}\" }} & {}", #doc, #tag, #name, #ty))
+                    quote!(format!("{}{{ {}: \"{}\" }} & {}", #doc_string, #tag, #name, #ty))
                 }
-                Fields::Unit => quote!(format!("{}{{ {}: \"{}\" }}", #doc, #tag, #name)),
+                Fields::Unit => quote!(format!("{}{{ {}: \"{}\" }}", #doc_string, #tag, #name)),
                 _ => {
-                    quote!(format!("{}{{ {}: \"{}\" }} & {}", #doc, #tag, #name, #inline_type))
+                    quote!(format!("{}{{ {}: \"{}\" }} & {}", #doc_string, #tag, #name, #inline_type))
                 }
             },
         },
