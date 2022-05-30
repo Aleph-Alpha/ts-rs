@@ -67,6 +67,10 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - serde compatibility
 - generic types
 
+### limitations
+- generic fields cannot be inlined or flattened (#56)
+- type aliases must not alias generic types (#70)
+
 ### cargo features
 - `serde-compat` (default)
 
@@ -93,6 +97,10 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - `indexmap-impl`
 
   Implement `TS` for `IndexMap` and `IndexSet` from indexmap
+
+- `ordered-float-impl`
+
+  Implement `TS` for `OrderedFloat` from ordered_float
 
 If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 
