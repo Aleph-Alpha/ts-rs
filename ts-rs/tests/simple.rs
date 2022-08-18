@@ -11,12 +11,14 @@ struct Simple {
     c: (i32, String, RefCell<i32>),
     d: Vec<String>,
     e: Option<String>,
+    f: char,
+    g: Option<char>,
 }
 
 #[test]
 fn test_def() {
     assert_eq!(
         Simple::inline(),
-        "{ a: number, b: string, c: [number, string, number], d: Array<string>, e: string | null, }"
+        "{ a: number, b: string, c: [number, string, number], d: Array<string>, e: string | null, f: string, g: string | null, }"
     )
 }
