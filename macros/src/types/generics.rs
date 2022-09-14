@@ -27,11 +27,34 @@ pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStr
         _ => None,
     });
 
-    let comma_separated = quote!(vec![#(#expanded_params),*].join(", "));
+    let comma_separated = quote!({
+        let v: Vec<String> = vec![#(#expanded_params),*];
+        v.join(", ")
+    });
     quote!(format!("<{}>", #comma_separated))
 }
 
 pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generics) -> TokenStream {
+    // Remap all lifetimes to 'static in ty.
+    struct Visitor;
+    impl syn::visit_mut::VisitMut for Visitor {
+        fn visit_type_mut(&mut self, i: &mut Type) {
+            match i {
+                Type::Reference(ref_type) => {
+                    ref_type.lifetime = ref_type
+                        .lifetime
+                        .as_ref()
+                        .map(|_| syn::parse2(quote!('static)).unwrap());
+                }
+                _ => syn::visit_mut::visit_type_mut(self, i),
+            }
+            syn::visit_mut::visit_type_mut(self, i);
+        }
+    }
+    use syn::visit_mut::VisitMut;
+    let mut ty = ty.clone();
+    Visitor.visit_type_mut(&mut ty);
+
     // If the type matches one of the generic parameters, just pass the identifier:
     if let Some(generic_ident) = generics
         .params
@@ -42,7 +65,7 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
         })
         .find(|type_param| {
             matches!(
-                ty,
+                &ty,
                 Type::Path(type_path)
                     if type_path.qself.is_none()
                     && type_path.path.is_ident(&type_param.ident)
@@ -69,7 +92,7 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
             let tuple_struct = super::type_def(
                 &StructAttr::default(),
                 &format_ident!("_"),
-                &tuple_type_to_tuple_struct(tuple).fields,
+                &tuple_type_to_tuple_struct(&tuple).fields,
                 generics,
             )
             .unwrap();
@@ -80,8 +103,8 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
         _ => (),
     };
 
-    dependencies.push_or_append_from(ty);
-    match extract_type_args(ty) {
+    dependencies.push_or_append_from(&ty);
+    match extract_type_args(&ty) {
         None => quote!(<#ty as ts_rs::TS>::name()),
         Some(type_args) => {
             let args = type_args

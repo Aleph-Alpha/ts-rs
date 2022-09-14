@@ -112,30 +112,26 @@ impl DerivedTS {
 fn generate_impl(ty: &Ident, generics: &Generics) -> TokenStream {
     use GenericParam::*;
 
-    let bounds = generics.params.iter().map(|param| match param {
+    let bounds = generics.params.iter().filter_map(|param| match param {
         Type(TypeParam {
             ident,
             colon_token,
             bounds,
             ..
-        }) => quote!(#ident #colon_token #bounds),
-        Lifetime(LifetimeDef {
-            lifetime,
-            colon_token,
-            bounds,
-            ..
-        }) => quote!(#lifetime #colon_token #bounds),
+        }) => Some(quote!(#ident #colon_token #bounds)),
+        // Filter out all lifetime param quantifiers, because we replace them with 'static.
+        Lifetime(LifetimeDef { .. }) => None,
         Const(ConstParam {
             const_token,
             ident,
             colon_token,
             ty,
             ..
-        }) => quote!(#const_token #ident #colon_token #ty),
+        }) => Some(quote!(#const_token #ident #colon_token #ty)),
     });
     let type_args = generics.params.iter().map(|param| match param {
         Type(TypeParam { ident, .. }) | Const(ConstParam { ident, .. }) => quote!(#ident),
-        Lifetime(LifetimeDef { lifetime, .. }) => quote!(#lifetime),
+        Lifetime(LifetimeDef { .. }) => quote!( 'static ),
     });
 
     let where_bound = add_ts_to_where_clause(generics);
