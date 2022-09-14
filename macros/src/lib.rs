@@ -131,7 +131,7 @@ fn generate_impl(ty: &Ident, generics: &Generics) -> TokenStream {
     });
     let type_args = generics.params.iter().map(|param| match param {
         Type(TypeParam { ident, .. }) | Const(ConstParam { ident, .. }) => quote!(#ident),
-        Lifetime(LifetimeDef { .. }) => quote!( 'static ),
+        Lifetime(LifetimeDef { .. }) => quote!('static),
     });
 
     let where_bound = add_ts_to_where_clause(generics);

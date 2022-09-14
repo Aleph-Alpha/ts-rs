@@ -38,17 +38,17 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
     // Remap all lifetimes to 'static in ty.
     struct Visitor;
     impl syn::visit_mut::VisitMut for Visitor {
-        fn visit_type_mut(&mut self, i: &mut Type) {
-            match i {
+        fn visit_type_mut(&mut self, ty: &mut Type) {
+            match ty {
                 Type::Reference(ref_type) => {
                     ref_type.lifetime = ref_type
                         .lifetime
                         .as_ref()
                         .map(|_| syn::parse2(quote!('static)).unwrap());
                 }
-                _ => syn::visit_mut::visit_type_mut(self, i),
+                _ => syn::visit_mut::visit_type_mut(self, ty),
             }
-            syn::visit_mut::visit_type_mut(self, i);
+            syn::visit_mut::visit_type_mut(self, ty);
         }
     }
     use syn::visit_mut::VisitMut;
