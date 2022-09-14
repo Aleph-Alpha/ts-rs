@@ -212,3 +212,12 @@ fn trait_bounds() {
 
     assert_eq!(D::<&str, 41>::decl(), "interface D<T> { t: Array<T>, }")
 }
+
+#[test]
+fn nonstatic_lifetimes() {
+    #[derive(TS)]
+    struct A<'a> {
+        t: &'a str,
+    }
+    assert_eq!(A::decl(), "interface A<> { t: string, }");
+}
