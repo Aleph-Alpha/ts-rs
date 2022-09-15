@@ -46,9 +46,19 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
                         .as_ref()
                         .map(|_| syn::parse2(quote!('static)).unwrap());
                 }
-                _ => syn::visit_mut::visit_type_mut(self, ty),
+                _ => {}
             }
             syn::visit_mut::visit_type_mut(self, ty);
+        }
+
+        fn visit_generic_argument_mut(&mut self, ga: &mut GenericArgument) {
+            match ga {
+                GenericArgument::Lifetime(lt) => {
+                    *lt = syn::parse2(quote!('static)).unwrap();
+                }
+                _ => {}
+            }
+            syn::visit_mut::visit_generic_argument_mut(self, ga);
         }
     }
     use syn::visit_mut::VisitMut;

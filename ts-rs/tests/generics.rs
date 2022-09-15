@@ -221,3 +221,17 @@ fn nonstatic_lifetimes() {
     }
     assert_eq!(A::decl(), "interface A<> { t: string, }");
 }
+
+#[test]
+fn nonstatic_lifetimes_with_child() {
+    #[derive(TS)]
+    struct A<'a> {
+        t: &'a str,
+    }
+
+    #[derive(TS)]
+    struct B<'a> {
+        t: A<'a>,
+    }
+    assert_eq!(B::decl(), "interface B<> { t: A, }");
+}
