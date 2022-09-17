@@ -1,11 +1,10 @@
 #![allow(dead_code)]
-use serde::Deserialize;
 use ts_rs::TS;
 
-#[derive(TS, Deserialize)]
+#[derive(TS)]
 #[ts(type = "const enum")]
 enum SimpleConstEnum {
-    #[serde(rename = "a")]
+    #[ts(rename = "a")]
     A,
     B,
 }
@@ -18,7 +17,7 @@ fn const_enum() {
     );
 }
 
-#[derive(TS, Deserialize)]
+#[derive(TS)]
 #[ts(type = "enum")]
 enum SimpleEnum {
     A,
@@ -30,11 +29,11 @@ fn simple_enum() {
     assert_eq!(SimpleEnum::decl(), r#"enum SimpleEnum {A, B}"#);
 }
 
-#[derive(TS, Deserialize)]
+#[derive(TS)]
 #[ts(type = "enum")]
 enum EnumWithBothNumberAndARename {
     A = 1,
-    #[serde(rename = "XD")]
+    #[ts(rename = "XD")]
     B,
 }
 
@@ -46,7 +45,7 @@ fn enum_with_both_number_and_rename() {
     );
 }
 
-#[derive(TS, Deserialize)]
+#[derive(TS)]
 #[ts(type = "enum")]
 enum SimpleEnumWithNumberAssigned {
     A = 1,
@@ -61,10 +60,10 @@ fn simple_enum_discriminant() {
     )
 }
 
-#[derive(TS, Deserialize)]
+#[derive(TS)]
 #[ts(type = "enum")]
 enum SimpleEnumWithRename {
-    #[serde(rename = "a")]
+    #[ts(rename = "a")]
     A,
     B,
 }
@@ -77,11 +76,11 @@ fn simple_enum_variant_rename() {
     );
 }
 
-#[derive(TS, Deserialize)]
+#[derive(TS)]
 #[ts(type = "enum")]
-#[serde(rename_all = "lowercase")]
+#[ts(rename_all = "lowercase")]
 enum SimpleEnumWithInflection {
-    #[serde(rename = "a")]
+    #[ts(rename = "a")]
     A,
     B,
 }
@@ -94,10 +93,10 @@ fn simple_enum_inflection() {
     );
 }
 
-#[derive(TS, Deserialize)]
+#[derive(TS)]
 // #[ts(type="type")]
 enum SimpleEnumNotChanged {
-    #[serde(rename = "a")]
+    #[ts(rename = "a")]
     A,
     B,
 }
