@@ -181,7 +181,7 @@ mod export;
 ///
 /// - `#[ts(rename_all = "..")]`:  
 ///   Rename all fields/variants of the type.
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
 ///
 ///
 /// ### struct field attributes
@@ -221,7 +221,7 @@ mod export;
 ///
 /// - `#[ts(rename_all = "..")]`:  
 ///   Rename all variants of this enum.  
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
 ///  
 /// ### enum variant attributes
 ///
