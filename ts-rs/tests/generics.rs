@@ -39,8 +39,29 @@ struct Container {
     baz: Box<BTreeMap<String, Rc<Generic<String>>>>,
 }
 
+macro_rules! declare {
+    ($(#[$meta:meta])* $name:ident { $($fident:ident: $t:ty),+ $(,)? }) => {
+        $(#[$meta])*
+        struct $name {
+            $(pub $fident: $t),+
+        }
+    }
+}
+
+declare! {
+    #[derive(TS)]
+    TypeGroup {
+        foo: Vec<Container>,
+    }
+}
+
 #[test]
 fn test() {
+    assert_eq!(
+        TypeGroup::decl(),
+        "interface TypeGroup { foo: Array<Container>, }",
+    );
+
     assert_eq!(
         Generic::<()>::decl(),
         "interface Generic<T> { value: T, values: Array<T>, }"
