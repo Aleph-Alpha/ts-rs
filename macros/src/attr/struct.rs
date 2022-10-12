@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use syn::{Attribute, Ident, Result};
 
 use crate::{
-    attr::{parse_assign_str, Inflection},
+    attr::{parse_assign_str, Inflection, VariantAttr},
     utils::parse_attrs,
 };
 
@@ -44,6 +44,18 @@ impl StructAttr {
         self.export_to = self.export_to.take().or(export_to);
         self.export = self.export || export;
         self.tag = self.tag.take().or(tag);
+    }
+}
+
+impl From<VariantAttr> for StructAttr {
+    fn from(v: VariantAttr) -> Self {
+        // when we generate a struct from a variant, it has no name.
+        // as such, there's no need to pass "rename" here.
+        // "rename_all" is the only inheritable trait that VariantAttr posesses
+        Self {
+            rename_all: v.rename_all.clone(),
+            ..Self::default()
+        }
     }
 }
 

@@ -7,10 +7,12 @@ use syn::{
     parse::{Parse, ParseStream},
     Error, Lit, Result, Token,
 };
+pub use variant::*;
 
 mod r#enum;
 mod field;
 mod r#struct;
+mod variant;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Inflection {

@@ -3,7 +3,7 @@ use quote::{format_ident, quote};
 use syn::{Fields, Generics, ItemEnum, Variant};
 
 use crate::{
-    attr::{EnumAttr, FieldAttr, StructAttr, Tagged},
+    attr::{EnumAttr, StructAttr, Tagged, VariantAttr},
     deps::Dependencies,
     types,
     types::generics::{format_generics, format_type},
@@ -65,31 +65,20 @@ fn format_variant(
     variant: &Variant,
     generics: &Generics,
 ) -> syn::Result<()> {
-    let FieldAttr {
-        type_override,
-        rename,
-        inline,
-        skip,
-        optional,
-        flatten,
-    } = FieldAttr::from_attrs(&variant.attrs)?;
+    let variant_attr = VariantAttr::from_attrs(&variant.attrs)?;
 
-    match (skip, &type_override, inline, optional, flatten) {
-        (true, ..) => return Ok(()),
-        (_, Some(_), ..) => syn_err!("`type` is not applicable to enum variants"),
-        (_, _, _, true, ..) => syn_err!("`optional` is not applicable to enum variants"),
-        (_, _, _, _, true) => syn_err!("`flatten` is not applicable to enum variants"),
-        _ => {}
-    };
+    if variant_attr.skip {
+        return Ok(());
+    }
 
-    let name = match (rename, &enum_attr.rename_all) {
+    let name = match (variant_attr.rename.clone(), &enum_attr.rename_all) {
         (Some(rn), _) => rn,
         (None, None) => variant.ident.to_string(),
         (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
     };
 
     let variant_type = types::type_def(
-        &StructAttr::default(),
+        &StructAttr::from(variant_attr),
         // since we are generating the variant as a struct, it doesn't have a name
         &format_ident!("_"),
         &variant.fields,
