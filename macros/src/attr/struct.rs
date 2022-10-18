@@ -49,11 +49,10 @@ impl StructAttr {
 
 impl From<VariantAttr> for StructAttr {
     fn from(v: VariantAttr) -> Self {
-        // when we generate a struct from a variant, it has no name.
-        // as such, there's no need to pass "rename" here.
-        // "rename_all" is the only inheritable trait that VariantAttr posesses
         Self {
+            rename: v.rename.clone(),
             rename_all: v.rename_all.clone(),
+            // inline and skip are not supported on StructAttr
             ..Self::default()
         }
     }
