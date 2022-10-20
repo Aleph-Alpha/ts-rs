@@ -136,7 +136,7 @@ use std::{
     any::TypeId,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     ops::{Range, RangeInclusive},
-    path::{Path, PathBuf},
+    path::{Path, PathBuf}, net::{Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr},
 };
 
 pub use ts_rs_macros::TS;
@@ -575,7 +575,8 @@ impl_primitives! {
     u8, i8, u16, i16, u32, i32, f32, f64, usize, isize => "number",
     u64, i64, u128, i128 => "bigint",
     bool => "boolean",
-    char, Path, PathBuf, String, &'static str => "string",
+    char, Path, PathBuf, String, &'static str, 
+    Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr => "string",
     () => "null"
 }
 #[rustfmt::skip]
