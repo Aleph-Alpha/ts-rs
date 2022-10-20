@@ -135,6 +135,10 @@
 use std::{
     any::TypeId,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+    num::{
+        NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize, NonZeroU128,
+        NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize,
+    },
     ops::{Range, RangeInclusive},
     path::{Path, PathBuf},
 };
@@ -572,8 +576,12 @@ mod bytes {
 }
 
 impl_primitives! {
-    u8, i8, u16, i16, u32, i32, f32, f64, usize, isize => "number",
-    u64, i64, u128, i128 => "bigint",
+    u8, i8, NonZeroU8, NonZeroI8,
+    u16, i16, NonZeroU16, NonZeroI16,
+    u32, i32, NonZeroU32, NonZeroI32,
+    usize, isize, NonZeroUsize, NonZeroIsize, f32, f64 => "number",
+    u64, i64, NonZeroU64, NonZeroI64,
+    u128, i128, NonZeroU128, NonZeroI128 => "bigint",
     bool => "boolean",
     char, Path, PathBuf, String, &'static str => "string",
     () => "null"
