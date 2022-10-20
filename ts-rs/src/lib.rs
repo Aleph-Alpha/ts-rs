@@ -140,7 +140,7 @@ use std::{
         NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize,
     },
     ops::{Range, RangeInclusive},
-    path::{Path, PathBuf},
+    path::{Path, PathBuf}, net::{Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr},
 };
 
 pub use ts_rs_macros::TS;
@@ -583,7 +583,8 @@ impl_primitives! {
     u64, i64, NonZeroU64, NonZeroI64,
     u128, i128, NonZeroU128, NonZeroI128 => "bigint",
     bool => "boolean",
-    char, Path, PathBuf, String, &'static str => "string",
+    char, Path, PathBuf, String, &'static str, 
+    Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr => "string",
     () => "null"
 }
 #[rustfmt::skip]
