@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 use syn::{Attribute, Ident, Result};
 
 use crate::{
-    attr::{parse_assign_str, Inflection},
+    attr::{parse_assign_str, Inflection, VariantAttr},
     utils::parse_attrs,
 };
 
@@ -44,6 +44,17 @@ impl StructAttr {
         self.export_to = self.export_to.take().or(export_to);
         self.export = self.export || export;
         self.tag = self.tag.take().or(tag);
+    }
+}
+
+impl From<VariantAttr> for StructAttr {
+    fn from(v: VariantAttr) -> Self {
+        Self {
+            rename: v.rename.clone(),
+            rename_all: v.rename_all.clone(),
+            // inline and skip are not supported on StructAttr
+            ..Self::default()
+        }
     }
 }
 
