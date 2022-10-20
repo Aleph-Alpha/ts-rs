@@ -135,12 +135,13 @@
 use std::{
     any::TypeId,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4, SocketAddrV6},
     num::{
         NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize, NonZeroU128,
         NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize,
     },
     ops::{Range, RangeInclusive},
-    path::{Path, PathBuf}, net::{Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr},
+    path::{Path, PathBuf},
 };
 
 pub use ts_rs_macros::TS;
@@ -583,7 +584,7 @@ impl_primitives! {
     u64, i64, NonZeroU64, NonZeroI64,
     u128, i128, NonZeroU128, NonZeroI128 => "bigint",
     bool => "boolean",
-    char, Path, PathBuf, String, &'static str, 
+    char, Path, PathBuf, String, &'static str,
     Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr => "string",
     () => "null"
 }
