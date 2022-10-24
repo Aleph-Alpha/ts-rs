@@ -91,7 +91,7 @@ fn format_variant(
         Tagged::Untagged => quote!(#inline_type),
         Tagged::Externally => match &variant.fields {
             Fields::Unit => quote!(format!("\"{}\"", #name)),
-            _ => quote!(format!("{{ {}: {} }}", #name, #inline_type)),
+            _ => quote!(format!("{{ \"{}\": {} }}", #name, #inline_type)),
         },
         Tagged::Adjacently { tag, content } => match &variant.fields {
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {

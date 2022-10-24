@@ -84,3 +84,14 @@ fn test_tag_and_content_quoted() {
         r#"{ "kebab-cased-tag": "V", "whitespace in content": { f: string, } }"#
     )
 }
+
+#[cfg(feature = "serde-compat")]
+#[test]
+fn test_variant_quoted() {
+    #[derive(Serialize, TS)]
+    #[serde(rename_all = "kebab-case")]
+    enum E {
+        VariantName { f: String },
+    }
+    assert_eq!(E::inline(), r#"{ "variant-name": { f: string, } }"#)
+}
