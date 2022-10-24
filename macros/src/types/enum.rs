@@ -3,7 +3,7 @@ use quote::{format_ident, quote};
 use syn::{Fields, Generics, ItemEnum, Variant};
 
 use crate::{
-    attr::{EnumAttr, StructAttr, Tagged, VariantAttr},
+    attr::{EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
     deps::Dependencies,
     types,
     types::generics::{format_generics, format_type},
@@ -95,7 +95,13 @@ fn format_variant(
         },
         Tagged::Adjacently { tag, content } => match &variant.fields {
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
-                let ty = format_type(&unnamed.unnamed[0].ty, dependencies, generics);
+                let FieldAttr { type_override, .. } =
+                    FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+                let ty = if let Some(type_override) = type_override {
+                    quote! { #type_override }
+                } else {
+                    format_type(&unnamed.unnamed[0].ty, dependencies, generics)
+                };
                 quote!(format!("{{ {}: \"{}\", {}: {} }}", #tag, #name, #content, #ty))
             }
             Fields::Unit => quote!(format!("{{ {}: \"{}\" }}", #tag, #name)),
@@ -112,7 +118,13 @@ fn format_variant(
             },
             None => match &variant.fields {
                 Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
-                    let ty = format_type(&unnamed.unnamed[0].ty, dependencies, generics);
+                    let FieldAttr { type_override, .. } =
+                        FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+                    let ty = if let Some(type_override) = type_override {
+                        quote! { #type_override }
+                    } else {
+                        format_type(&unnamed.unnamed[0].ty, dependencies, generics)
+                    };
                     quote!(format!("{{ {}: \"{}\" }} & {}", #tag, #name, #ty))
                 }
                 Fields::Unit => quote!(format!("{{ {}: \"{}\" }}", #tag, #name)),
