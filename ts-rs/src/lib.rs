@@ -235,7 +235,7 @@ mod export;
 ///
 /// - `#[ts(skip)]`:  
 ///   Skip this variant  
-pub trait TS: 'static {
+pub trait TS {
     const EXPORT_TO: Option<&'static str> = None;
 
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
@@ -266,7 +266,9 @@ pub trait TS: 'static {
 
     /// Information about types this type depends on.
     /// This is used for resolving imports when exporting to a file.
-    fn dependencies() -> Vec<Dependency>;
+    fn dependencies() -> Vec<Dependency>
+    where
+        Self: 'static;
 
     /// `true` if this is a transparent type, e.g tuples or a list.  
     /// This is used for resolving imports when using the `export!` macro.
@@ -279,19 +281,28 @@ pub trait TS: 'static {
     /// When a type is annotated with `#[ts(export)]`, it is exported automatically within a test.
     /// This function is only usefull if you need to export the type outside of the context of a
     /// test.
-    fn export() -> Result<(), ExportError> {
+    fn export() -> Result<(), ExportError>
+    where
+        Self: 'static,
+    {
         export::export_type::<Self>()
     }
 
     /// Manually export this type to a file with a file with the specified path. This
     /// function will ignore the `#[ts(export_to = "..)]` attribute.
-    fn export_to(path: impl AsRef<Path>) -> Result<(), ExportError> {
+    fn export_to(path: impl AsRef<Path>) -> Result<(), ExportError>
+    where
+        Self: 'static,
+    {
         export::export_type_to::<Self, _>(path)
     }
 
     /// Manually generate bindings for this type, returning a [`String`].  
     /// This function does not format the output, even if the `format` feature is enabled.
-    fn export_to_string() -> Result<String, ExportError> {
+    fn export_to_string() -> Result<String, ExportError>
+    where
+        Self: 'static,
+    {
         export::export_type_to_string::<Self>()
     }
 }
@@ -313,7 +324,7 @@ impl Dependency {
     /// Constructs a [`Dependency`] from the given type `T`.
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
-    pub fn from_ty<T: TS>() -> Option<Self> {
+    pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
         let exported_to = T::EXPORT_TO?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
@@ -348,7 +359,10 @@ macro_rules! impl_tuples {
             fn inline() -> String {
                 format!("[{}]", vec![ $($i::inline()),* ].join(", "))
             }
-            fn dependencies() -> Vec<Dependency> {
+            fn dependencies() -> Vec<Dependency>
+            where
+                Self: 'static
+            {
                 [$( Dependency::from_ty::<$i>() ),*]
                 .into_iter()
                 .flatten()
@@ -375,7 +389,12 @@ macro_rules! impl_wrapper {
             }
             fn inline() -> String { T::inline() }
             fn inline_flattened() -> String { T::inline_flattened() }
-            fn dependencies() -> Vec<Dependency> { T::dependencies() }
+            fn dependencies() -> Vec<Dependency>
+            where
+                Self: 'static
+            {
+                T::dependencies()
+            }
             fn transparent() -> bool { T::transparent() }
         }
     };
@@ -389,7 +408,12 @@ macro_rules! impl_shadow {
             fn name_with_type_args(args: Vec<String>) -> String { <$s>::name_with_type_args(args) }
             fn inline() -> String { <$s>::inline() }
             fn inline_flattened() -> String { <$s>::inline_flattened() }
-            fn dependencies() -> Vec<$crate::Dependency> { <$s>::dependencies() }
+            fn dependencies() -> Vec<$crate::Dependency>
+            where
+                Self: 'static
+            {
+                <$s>::dependencies()
+            }
             fn transparent() -> bool { <$s>::transparent() }
         }
     };
@@ -414,7 +438,10 @@ impl<T: TS> TS for Option<T> {
         format!("{} | null", T::inline())
     }
 
-    fn dependencies() -> Vec<Dependency> {
+    fn dependencies() -> Vec<Dependency>
+    where
+        Self: 'static,
+    {
         [Dependency::from_ty::<T>()].into_iter().flatten().collect()
     }
 
@@ -442,7 +469,10 @@ impl<T: TS> TS for Vec<T> {
         format!("Array<{}>", T::inline())
     }
 
-    fn dependencies() -> Vec<Dependency> {
+    fn dependencies() -> Vec<Dependency>
+    where
+        Self: 'static,
+    {
         [Dependency::from_ty::<T>()].into_iter().flatten().collect()
     }
 
@@ -470,7 +500,10 @@ impl<K: TS, V: TS> TS for HashMap<K, V> {
         format!("Record<{}, {}>", K::inline(), V::inline())
     }
 
-    fn dependencies() -> Vec<Dependency> {
+    fn dependencies() -> Vec<Dependency>
+    where
+        Self: 'static,
+    {
         [Dependency::from_ty::<K>(), Dependency::from_ty::<V>()]
             .into_iter()
             .flatten()
@@ -497,7 +530,10 @@ impl<I: TS> TS for Range<I> {
         format!("{{ start: {}, end: {}, }}", &args[0], &args[0])
     }
 
-    fn dependencies() -> Vec<Dependency> {
+    fn dependencies() -> Vec<Dependency>
+    where
+        Self: 'static,
+    {
         [Dependency::from_ty::<I>()].into_iter().flatten().collect()
     }
 
@@ -521,7 +557,10 @@ impl<I: TS> TS for RangeInclusive<I> {
         format!("{{ start: {}, end: {}, }}", &args[0], &args[0])
     }
 
-    fn dependencies() -> Vec<Dependency> {
+    fn dependencies() -> Vec<Dependency>
+    where
+        Self: 'static,
+    {
         [Dependency::from_ty::<I>()].into_iter().flatten().collect()
     }
 
@@ -530,19 +569,20 @@ impl<I: TS> TS for RangeInclusive<I> {
     }
 }
 
+impl_shadow!(as T: impl<'a, T: TS + ?Sized> TS for &T);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for HashSet<T>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
 impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for [T; N]);
 
-impl_wrapper!(impl<T: TS> TS for Box<T>);
-impl_wrapper!(impl<T: TS> TS for std::sync::Arc<T>);
-impl_wrapper!(impl<T: TS> TS for std::rc::Rc<T>);
-impl_wrapper!(impl<T: TS + ToOwned> TS for std::borrow::Cow<'static, T>);
+impl_wrapper!(impl<T: TS + ?Sized> TS for Box<T>);
+impl_wrapper!(impl<T: TS + ?Sized> TS for std::sync::Arc<T>);
+impl_wrapper!(impl<T: TS + ?Sized> TS for std::rc::Rc<T>);
+impl_wrapper!(impl<'a, T: TS + ToOwned + ?Sized> TS for std::borrow::Cow<'a, T>);
 impl_wrapper!(impl<T: TS> TS for std::cell::Cell<T>);
 impl_wrapper!(impl<T: TS> TS for std::cell::RefCell<T>);
 impl_wrapper!(impl<T: TS> TS for std::sync::Mutex<T>);
-impl_wrapper!(impl<T: TS> TS for std::sync::Weak<T>);
+impl_wrapper!(impl<T: TS + ?Sized> TS for std::sync::Weak<T>);
 impl_wrapper!(impl<T: TS> TS for std::marker::PhantomData<T>);
 
 impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
@@ -584,7 +624,7 @@ impl_primitives! {
     u64, i64, NonZeroU64, NonZeroI64,
     u128, i128, NonZeroU128, NonZeroI128 => "bigint",
     bool => "boolean",
-    char, Path, PathBuf, String, &'static str,
+    char, Path, PathBuf, String, str,
     Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr => "string",
     () => "null"
 }

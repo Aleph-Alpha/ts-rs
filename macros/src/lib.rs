@@ -95,7 +95,10 @@ impl DerivedTS {
                     #inline
                 }
                 #inline_flattened
-                fn dependencies() -> Vec<ts_rs::Dependency> {
+                fn dependencies() -> Vec<ts_rs::Dependency>
+                where
+                    Self: 'static,
+                {
                     #dependencies
                 }
                 fn transparent() -> bool {
