@@ -24,7 +24,7 @@ enum A {
 fn test_enum_variant_rename_all() {
     assert_eq!(
         A::inline(),
-        "{ MESSAGE_ONE: { sender_id: string, number_of_snakes: bigint, } } | { MESSAGE_TWO: { senderId: string, numberOfCamels: bigint, } }",
+        r#"{ "MESSAGE_ONE": { sender_id: string, number_of_snakes: bigint, } } | { "MESSAGE_TWO": { senderId: string, numberOfCamels: bigint, } }"#,
     );
 }
 
@@ -49,7 +49,7 @@ enum B {
 fn test_enum_variant_rename() {
     assert_eq!(
         B::inline(),
-        "{ SnakeMessage: { sender_id: string, number_of_snakes: bigint, } } | { CamelMessage: { sender_id: string, number_of_camels: bigint, } }",
+        r#"{ "SnakeMessage": { sender_id: string, number_of_snakes: bigint, } } | { "CamelMessage": { sender_id: string, number_of_camels: bigint, } }"#,
     );
 }
 
