@@ -70,3 +70,17 @@ pub enum C {
 fn test_enum_variant_with_tag() {
     assert_eq!(C::inline(), "{ kind: \"SQUARE_THING\", name: string, }");
 }
+
+#[cfg(feature = "serde-compat")]
+#[test]
+fn test_tag_and_content_quoted() {
+    #[derive(Serialize, TS)]
+    #[serde(tag = "kebab-cased-tag", content = "whitespace in content")]
+    enum E {
+        V { f: String },
+    }
+    assert_eq!(
+        E::inline(),
+        r#"{ "kebab-cased-tag": "V", "whitespace in content": { f: string, } }"#
+    )
+}
