@@ -42,7 +42,7 @@ We recommend doing this in your tests.
 ### get started
 ```toml
 [dependencies]
-ts-rs = "6.1"
+ts-rs = "6.2"
 ```
 
 ```rust
