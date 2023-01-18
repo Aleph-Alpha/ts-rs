@@ -74,5 +74,9 @@ impl_parse! {
                 parse_assign_str(input)?;
             }
         },
+        // parse #[serde(with = "...")] to not emit a warning
+        "with" => {
+            parse_assign_str(input)?;
+        },
     }
 }
