@@ -126,6 +126,10 @@ mod warning {
         content: impl Display,
         note: impl Display,
     ) -> std::io::Result<()> {
+        if cfg!(feature = "suppress-warnings") {
+            return Ok(());
+        }
+
         let make_color = |color: Color, bold: bool| {
             let mut spec = ColorSpec::new();
             spec.set_fg(Some(color)).set_bold(bold).set_intense(true);

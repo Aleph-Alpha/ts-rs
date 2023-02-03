@@ -22,6 +22,7 @@ format = ["dprint-plugin-typescript"]
 default = ["serde-compat"]
 indexmap-impl = ["indexmap"]
 ordered-float-impl = ["ordered-float"]
+suppress-warnings = ["ts-rs-macros/suppress-warnings"]
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
