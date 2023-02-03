@@ -42,7 +42,7 @@ We recommend doing this in your tests.
 ### get started
 ```toml
 [dependencies]
-ts-rs = "6.2"
+ts-rs = "6.1"
 ```
 
 ```rust
@@ -102,6 +102,10 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 
   Implement `TS` for `OrderedFloat` from ordered_float
 
+- `suppress-warnings`
+
+  Suppress compile-time messages for unknown serde annotations
+
 If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 
 ### serde compatability
@@ -119,7 +123,7 @@ Supported serde attributes:
 - `flatten`
 - `default`
 
-When ts-rs encounters an unsupported serde attribute, a warning is emitted.
+When ts-rs encounters an unsupported serde attribute, a warning is emitted unless the `suppress-warnings` feature is enabled.
 
 ### contributing
 Contributions are always welcome!
