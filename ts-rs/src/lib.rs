@@ -180,6 +180,7 @@ mod export;
 /// - `#[ts(export_to = "..")]`:  
 ///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.  
 ///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
+///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
 ///
 /// - `#[ts(rename = "..")]`:  
 ///   Sets the typescript name of the generated type
