@@ -83,6 +83,9 @@
 //! - `bigdecimal-impl`  
 //!
 //!   Implement `TS` for types from bigdecimal  
+//! - `url-impl`  
+//!
+//!   Implement `TS` for types from url
 //! - `uuid-impl`  
 //!
 //!   Implement `TS` for types from uuid
