@@ -70,20 +70,20 @@
 //! - type aliases must not alias generic types (#70)
 //!
 //! ## cargo features
-//! - `serde-compat` (default)  
+//! - `serde-compat` (default)
 //!
-//!   Enable serde compatibility. See below for more info.  
+//!   Enable serde compatibility. See below for more info.
 //! - `format`
 //!
 //!   When enabled, the generated typescript will be formatted.
 //!   Currently, this sadly adds quite a bit of dependencies.
-//! - `chrono-impl`  
+//! - `chrono-impl`
 //!
-//!   Implement `TS` for types from chrono  
-//! - `bigdecimal-impl`  
+//!   Implement `TS` for types from chrono
+//! - `bigdecimal-impl`
 //!
-//!   Implement `TS` for types from bigdecimal  
-//! - `uuid-impl`  
+//!   Implement `TS` for types from bigdecimal
+//! - `uuid-impl`
 //!
 //!   Implement `TS` for types from uuid
 //! - `bson-uuid-impl`
@@ -91,10 +91,10 @@
 //!   Implement `TS` for types from bson
 //! - `bytes-impl`
 //!
-//!   Implement `TS` for types from bytes    
-//! - `indexmap-impl`  
+//!   Implement `TS` for types from bytes
+//! - `indexmap-impl`
 //!
-//!   Implement `TS` for `IndexMap` and `IndexSet` from indexmap  
+//!   Implement `TS` for `IndexMap` and `IndexSet` from indexmap
 //!
 //! - `ordered-float-impl`
 //!
@@ -152,8 +152,8 @@ pub use crate::export::ExportError;
 mod chrono;
 mod export;
 
-/// A type which can be represented in TypeScript.  
-/// Most of the time, you'd want to derive this trait instead of implementing it manually.  
+/// A type which can be represented in TypeScript.
+/// Most of the time, you'd want to derive this trait instead of implementing it manually.
 /// ts-rs comes with implementations for all primitives, most collections, tuples,
 /// arrays and containers.
 ///
@@ -173,68 +173,68 @@ mod export;
 /// ### container attributes
 /// attributes applicable for both structs and enums
 ///
-/// - `#[ts(export)]`:  
+/// - `#[ts(export)]`:
 ///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
 ///   `cargo test`
 ///
-/// - `#[ts(export_to = "..")]`:  
-///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.  
-///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
+/// - `#[ts(export_to = "..")]`:
+///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.
+///   If the provided path ends in a trailing `/`, it is interpreted as a directory.
 ///
-/// - `#[ts(rename = "..")]`:  
+/// - `#[ts(rename = "..")]`:
 ///   Sets the typescript name of the generated type
 ///
-/// - `#[ts(rename_all = "..")]`:  
+/// - `#[ts(rename_all = "..")]`:
 ///   Rename all fields/variants of the type.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
 ///
 ///
 /// ### struct field attributes
 ///
-/// - `#[ts(type = "..")]`:  
-///   Overrides the type used in TypeScript.  
-///   This is useful when there's a type for which you cannot derive `TS`.  
+/// - `#[ts(type = "..")]`:
+///   Overrides the type used in TypeScript.
+///   This is useful when there's a type for which you cannot derive `TS`.
 ///
-/// - `#[ts(rename = "..")]`:  
-///   Renames this field  
+/// - `#[ts(rename = "..")]`:
+///   Renames this field
 ///
-/// - `#[ts(inline)]`:  
-///   Inlines the type of this field  
+/// - `#[ts(inline)]`:
+///   Inlines the type of this field
 ///
-/// - `#[ts(skip)]`:  
-///   Skip this field  
+/// - `#[ts(skip)]`:
+///   Skip this field
 ///
-/// - `#[ts(optional)]`:  
+/// - `#[ts(optional)]`:
 ///   Indicates the field may be omitted from the serialized struct
 ///
-/// - `#[ts(flatten)]`:  
-///   Flatten this field (only works if the field is a struct)  
-///   
+/// - `#[ts(flatten)]`:
+///   Flatten this field (only works if the field is a struct)
+///
 /// ### enum attributes
 ///
-/// - `#[ts(tag = "..")]`:  
+/// - `#[ts(tag = "..")]`:
 ///   Changes the representation of the enum to store its tag in a separate field.
 ///   See [the serde docs](https://serde.rs/enum-representations.html).
 ///
-/// - `#[ts(content = "..")]`:  
+/// - `#[ts(content = "..")]`:
 ///   Changes the representation of the enum to store its content in a separate field.
 ///   See [the serde docs](https://serde.rs/enum-representations.html).
 ///
-/// - `#[ts(untagged)]`:  
+/// - `#[ts(untagged)]`:
 ///   Changes the representation of the enum to not include its tag.
 ///   See [the serde docs](https://serde.rs/enum-representations.html).
 ///
-/// - `#[ts(rename_all = "..")]`:  
-///   Rename all variants of this enum.  
+/// - `#[ts(rename_all = "..")]`:
+///   Rename all variants of this enum.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
-///  
+///
 /// ### enum variant attributes
 ///
-/// - `#[ts(rename = "..")]`:  
-///   Renames this variant  
+/// - `#[ts(rename = "..")]`:
+///   Renames this variant
 ///
-/// - `#[ts(skip)]`:  
-///   Skip this variant  
+/// - `#[ts(skip)]`:
+///   Skip this variant
 pub trait TS: 'static {
     const EXPORT_TO: Option<&'static str> = None;
 
@@ -258,7 +258,7 @@ pub trait TS: 'static {
         panic!("{} cannot be inlined", Self::name());
     }
 
-    /// Flatten an type declaration.  
+    /// Flatten an type declaration.
     /// This function will panic if the type cannot be flattened.
     fn inline_flattened() -> String {
         panic!("{} cannot be flattened", Self::name())
@@ -268,7 +268,7 @@ pub trait TS: 'static {
     /// This is used for resolving imports when exporting to a file.
     fn dependencies() -> Vec<Dependency>;
 
-    /// `true` if this is a transparent type, e.g tuples or a list.  
+    /// `true` if this is a transparent type, e.g tuples or a list.
     /// This is used for resolving imports when using the `export!` macro.
     fn transparent() -> bool;
 
@@ -289,7 +289,7 @@ pub trait TS: 'static {
         export::export_type_to::<Self, _>(path)
     }
 
-    /// Manually generate bindings for this type, returning a [`String`].  
+    /// Manually generate bindings for this type, returning a [`String`].
     /// This function does not format the output, even if the `format` feature is enabled.
     fn export_to_string() -> Result<String, ExportError> {
         export::export_type_to_string::<Self>()
