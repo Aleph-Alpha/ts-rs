@@ -343,10 +343,10 @@ macro_rules! impl_tuples {
     ( impl $($i:ident),* ) => {
         impl<$($i: TS),*> TS for ($($i,)*) {
             fn name() -> String {
-                format!("[{}]", vec![$($i::name()),*].join(", "))
+                format!("[{}]", [$($i::name()),*].join(", "))
             }
             fn inline() -> String {
-                format!("[{}]", vec![ $($i::inline()),* ].join(", "))
+                format!("[{}]", [ $($i::inline()),* ].join(", "))
             }
             fn dependencies() -> Vec<Dependency> {
                 [$( Dependency::from_ty::<$i>() ),*]

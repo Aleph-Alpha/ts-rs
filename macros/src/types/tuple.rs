@@ -33,7 +33,7 @@ pub(crate) fn tuple(
         inline: quote! {
             format!(
                 "[{}]",
-                vec![#(#formatted_fields),*].join(", ")
+                [#(#formatted_fields),*].join(", ")
             )
         },
         decl: quote! {
