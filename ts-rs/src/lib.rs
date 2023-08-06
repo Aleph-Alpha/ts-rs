@@ -142,6 +142,7 @@ use std::{
     },
     ops::{Range, RangeInclusive},
     path::{Path, PathBuf},
+    time::Duration
 };
 
 pub use ts_rs_macros::TS;
@@ -575,6 +576,8 @@ mod bytes {
     impl_shadow!(as Vec<u8>: impl TS for bytes::Bytes);
     impl_shadow!(as Vec<u8>: impl TS for bytes::BytesMut);
 }
+
+impl_primitives!(Duration => "string");
 
 impl_primitives! {
     u8, i8, NonZeroU8, NonZeroI8,
