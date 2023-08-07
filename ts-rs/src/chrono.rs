@@ -1,6 +1,6 @@
 use chrono::{
-    Date, DateTime, Duration, FixedOffset, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone,
-    Utc,
+    Date, DateTime, Duration, FixedOffset, Local, Month, NaiveDate, NaiveDateTime, NaiveTime,
+    TimeZone, Utc, Weekday,
 };
 
 use super::{impl_primitives, TS};
@@ -17,7 +17,7 @@ macro_rules! impl_dummy {
     )*};
 }
 
-impl_primitives!(NaiveDateTime, NaiveDate, NaiveTime, Duration => "string");
+impl_primitives!(NaiveDateTime, NaiveDate, NaiveTime, Month, Weekday, Duration => "string");
 impl_dummy!(Utc, Local, FixedOffset);
 
 impl<T: TimeZone + 'static> TS for DateTime<T> {
