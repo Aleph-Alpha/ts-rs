@@ -627,8 +627,6 @@ mod bytes {
     impl_shadow!(as Vec<u8>: impl TS for bytes::BytesMut);
 }
 
-impl_primitives!(Duration => "string");
-
 impl_primitives! {
     u8, i8, NonZeroU8, NonZeroI8,
     u16, i16, NonZeroU16, NonZeroI16,
