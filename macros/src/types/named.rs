@@ -35,7 +35,7 @@ pub(crate) fn named(
         )?;
     }
 
-    let fields = quote!([#(#formatted_fields),*].join(" "));
+    let fields = quote!(<[String]>::join(&[#(#formatted_fields),*], " "));
     let generic_args = format_generics(&mut dependencies, generics);
 
     Ok(DerivedTS {
