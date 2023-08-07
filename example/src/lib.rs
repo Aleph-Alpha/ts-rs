@@ -1,4 +1,4 @@
-#![allow(dead_code, clippy::blacklisted_name)]
+#![allow(dead_code, clippy::disallowed_names)]
 
 use std::{collections::BTreeSet, rc::Rc};
 

@@ -145,7 +145,7 @@ use std::{
     },
     ops::{Range, RangeInclusive},
     path::{Path, PathBuf},
-    time::Duration
+    time::Duration,
 };
 
 pub use ts_rs_macros::TS;
@@ -359,10 +359,10 @@ macro_rules! impl_tuples {
     ( impl $($i:ident),* ) => {
         impl<$($i: TS),*> TS for ($($i,)*) {
             fn name() -> String {
-                format!("[{}]", vec![$($i::name()),*].join(", "))
+                format!("[{}]", [$($i::name()),*].join(", "))
             }
             fn inline() -> String {
-                format!("[{}]", vec![ $($i::inline()),* ].join(", "))
+                format!("[{}]", [$($i::inline()),*].join(", "))
             }
             fn dependencies() -> Vec<Dependency>
             where

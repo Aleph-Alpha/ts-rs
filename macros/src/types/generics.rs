@@ -33,7 +33,7 @@ pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStr
         return quote!("");
     }
 
-    let comma_separated = quote!(vec![#(#expanded_params),*].join(", "));
+    let comma_separated = quote!([#(#expanded_params),*].join(", "));
     quote!(format!("<{}>", #comma_separated))
 }
 
