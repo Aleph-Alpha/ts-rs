@@ -83,6 +83,9 @@
 //! - `bigdecimal-impl`  
 //!
 //!   Implement `TS` for types from bigdecimal  
+//! - `url-impl`  
+//!
+//!   Implement `TS` for types from url
 //! - `uuid-impl`  
 //!
 //!   Implement `TS` for types from uuid
@@ -553,6 +556,9 @@ impl_primitives! { bigdecimal::BigDecimal => "string" }
 
 #[cfg(feature = "uuid-impl")]
 impl_primitives! { uuid::Uuid => "string" }
+
+#[cfg(feature = "url-impl")]
+impl_primitives! { url::Url => "string" }
 
 #[cfg(feature = "ordered-float-impl")]
 impl_primitives! { ordered_float::OrderedFloat<f32> => "number" }

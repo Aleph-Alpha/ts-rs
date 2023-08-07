@@ -17,6 +17,7 @@ bigdecimal-impl = ["bigdecimal"]
 uuid-impl = ["uuid"]
 bson-uuid-impl = ["bson"]
 bytes-impl = ["bytes"]
+url-impl = ["url"]
 serde-compat = ["ts-rs-macros/serde-compat"]
 format = ["dprint-plugin-typescript"]
 default = ["serde-compat"]
@@ -37,6 +38,7 @@ bigdecimal = { version = ">=0.0.13, < 0.4.0", features = ["serde"], optional = t
 uuid = { version = "^1.1.2", optional = true }
 bson = { version = "^2.2.0", optional = true }
 bytes = { version = "1.0", optional = true }
+url = { version = "2.3", optional = true }
 thiserror = "1"
 indexmap = { version = "1.6.1", optional = true }
 ordered-float = { version = "3.0.0", optional = true }
