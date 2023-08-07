@@ -74,7 +74,7 @@ impl_parse! {
         "rename_all" => out.0.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
         "tag" => out.0.tag = Some(parse_assign_str(input)?),
         // parse #[serde(default)] to not emit a warning
-        "default" => {
+        "deny_unknown_fields" | "default" => {
             use syn::Token;
             if input.peek(Token![=]) {
                 input.parse::<Token![=]>()?;
