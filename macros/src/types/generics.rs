@@ -7,27 +7,31 @@ use syn::{
 use crate::{attr::StructAttr, deps::Dependencies};
 
 /// formats the generic arguments (like A, B in struct X<A, B>{..}) as "<X>" where x is a comma
-/// seperated list of generic arguments, or an empty string if there are no generics.
+/// seperated list of generic arguments, or an empty string if there are no type generics (lifetime/const generics are ignored).
 /// this expands to an expression which evaluates to a `String`.
 ///
 /// If a default type arg is encountered, it will be added to the dependencies.
 pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStream {
-    if generics.params.is_empty() {
+    let mut expanded_params = generics
+        .params
+        .iter()
+        .filter_map(|param| match param {
+            GenericParam::Type(type_param) => Some({
+                let ty = type_param.ident.to_string();
+                if let Some(default) = &type_param.default {
+                    let default = format_type(default, deps, generics);
+                    quote!(format!("{} = {}", #ty, #default))
+                } else {
+                    quote!(#ty.to_owned())
+                }
+            }),
+            _ => None,
+        })
+        .peekable();
+
+    if expanded_params.peek().is_none() {
         return quote!("");
     }
-
-    let expanded_params = generics.params.iter().filter_map(|param| match param {
-        GenericParam::Type(type_param) => Some({
-            let ty = type_param.ident.to_string();
-            if let Some(default) = &type_param.default {
-                let default = format_type(default, deps, generics);
-                quote!(format!("{} = {}", #ty, #default))
-            } else {
-                quote!(#ty.to_owned())
-            }
-        }),
-        _ => None,
-    });
 
     let comma_separated = quote!(vec![#(#expanded_params),*].join(", "));
     quote!(format!("<{}>", #comma_separated))
