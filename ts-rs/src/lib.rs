@@ -145,7 +145,6 @@ use std::{
     },
     ops::{Range, RangeInclusive},
     path::{Path, PathBuf},
-    time::Duration,
 };
 
 pub use ts_rs_macros::TS;
