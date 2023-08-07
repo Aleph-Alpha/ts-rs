@@ -1,3 +1,6 @@
+// we want to implement TS for deprecated types as well
+#![allow(deprecated)]
+
 use chrono::{
     Date, DateTime, Duration, FixedOffset, Local, Month, NaiveDate, NaiveDateTime, NaiveTime,
     TimeZone, Utc, Weekday,

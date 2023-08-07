@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 #![cfg(feature = "chrono-impl")]
 
 use chrono::{
