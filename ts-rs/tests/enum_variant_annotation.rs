@@ -24,7 +24,7 @@ enum A {
 fn test_enum_variant_rename_all() {
     assert_eq!(
         A::inline(),
-        "{ MESSAGE_ONE: { sender_id: string, number_of_snakes: bigint, } } | { MESSAGE_TWO: { senderId: string, numberOfCamels: bigint, } }",
+        r#"{ "MESSAGE_ONE": { sender_id: string, number_of_snakes: bigint, } } | { "MESSAGE_TWO": { senderId: string, numberOfCamels: bigint, } }"#,
     );
 }
 
@@ -49,7 +49,7 @@ enum B {
 fn test_enum_variant_rename() {
     assert_eq!(
         B::inline(),
-        "{ SnakeMessage: { sender_id: string, number_of_snakes: bigint, } } | { CamelMessage: { sender_id: string, number_of_camels: bigint, } }",
+        r#"{ "SnakeMessage": { sender_id: string, number_of_snakes: bigint, } } | { "CamelMessage": { sender_id: string, number_of_camels: bigint, } }"#,
     );
 }
 
@@ -69,4 +69,29 @@ pub enum C {
 #[test]
 fn test_enum_variant_with_tag() {
     assert_eq!(C::inline(), "{ kind: \"SQUARE_THING\", name: string, }");
+}
+
+#[cfg(feature = "serde-compat")]
+#[test]
+fn test_tag_and_content_quoted() {
+    #[derive(Serialize, TS)]
+    #[serde(tag = "kebab-cased-tag", content = "whitespace in content")]
+    enum E {
+        V { f: String },
+    }
+    assert_eq!(
+        E::inline(),
+        r#"{ "kebab-cased-tag": "V", "whitespace in content": { f: string, } }"#
+    )
+}
+
+#[cfg(feature = "serde-compat")]
+#[test]
+fn test_variant_quoted() {
+    #[derive(Serialize, TS)]
+    #[serde(rename_all = "kebab-case")]
+    enum E {
+        VariantName { f: String },
+    }
+    assert_eq!(E::inline(), r#"{ "variant-name": { f: string, } }"#)
 }

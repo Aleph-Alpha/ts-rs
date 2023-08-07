@@ -32,11 +32,11 @@ enum EnumWithInternalTag2 {
 fn test_enums_with_internal_tags() {
     assert_eq!(
         EnumWithInternalTag::decl(),
-        r#"type EnumWithInternalTag = { type: "A", foo: string, } | { type: "B", bar: number, };"#
+        r#"type EnumWithInternalTag = { "type": "A", foo: string, } | { "type": "B", bar: number, };"#
     );
 
     assert_eq!(
         EnumWithInternalTag2::decl(),
-        r#"type EnumWithInternalTag2 = { type: "A" } & InnerA | { type: "B" } & InnerB;"#
+        r#"type EnumWithInternalTag2 = { "type": "A" } & InnerA | { "type": "B" } & InnerB;"#
     );
 }

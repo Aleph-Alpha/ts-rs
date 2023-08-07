@@ -99,7 +99,7 @@ fn generic_enum() {
 
     assert_eq!(
         Generic::<(), (), ()>::decl(),
-        r#"type Generic<A, B, C> = { A: A } | { B: [B, B, B] } | { C: Array<C> } | { D: Array<Array<Array<A>>> } | { E: { a: A, b: B, c: C, } } | { X: Array<number> } | { Y: number } | { Z: Array<Array<number>> };"#
+        r#"type Generic<A, B, C> = { "A": A } | { "B": [B, B, B] } | { "C": Array<C> } | { "D": Array<Array<Array<A>>> } | { "E": { a: A, b: B, c: C, } } | { "X": Array<number> } | { "Y": number } | { "Z": Array<Array<number>> };"#
     )
 }
 
@@ -223,7 +223,7 @@ fn trait_bounds() {
     }
     assert_eq!(
         C::<&'static str, i32>::decl(),
-        "type C<T, K = number> = { A: { t: T, } } | { B: T } | \"C\" | { D: [T, K] };"
+        r#"type C<T, K = number> = { "A": { t: T, } } | { "B": T } | "C" | { "D": [T, K] };"#
     );
 
     #[derive(TS)]
