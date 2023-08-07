@@ -4,7 +4,7 @@
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
-    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeDef, Result,
+    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Result,
     TypeParam, WhereClause,
 };
 
@@ -122,7 +122,7 @@ fn generate_impl(ty: &Ident, generics: &Generics) -> TokenStream {
             bounds,
             ..
         }) => quote!(#ident #colon_token #bounds),
-        Lifetime(LifetimeDef {
+        Lifetime(LifetimeParam {
             lifetime,
             colon_token,
             bounds,
@@ -138,7 +138,7 @@ fn generate_impl(ty: &Ident, generics: &Generics) -> TokenStream {
     });
     let type_args = generics.params.iter().map(|param| match param {
         Type(TypeParam { ident, .. }) | Const(ConstParam { ident, .. }) => quote!(#ident),
-        Lifetime(LifetimeDef { lifetime, .. }) => quote!(#lifetime),
+        Lifetime(LifetimeParam { lifetime, .. }) => quote!(#lifetime),
     });
 
     let where_bound = add_ts_to_where_clause(generics);

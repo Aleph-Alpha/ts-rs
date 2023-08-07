@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs-macros"
-version = "6.2.0"
+version = "7.0.0"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
 edition = "2021"
 description = "derive macro for ts-rs"
@@ -17,6 +17,6 @@ proc-macro = true
 [dependencies]
 proc-macro2 = "1"
 quote = "1"
-syn = { version = "1", features = ["full", "extra-traits"] }
+syn = { version = "2.0.28", features = ["full", "extra-traits"] }
 Inflector = { version = "0.11", default-features = false }
 termcolor = { version = "1", optional = true }
