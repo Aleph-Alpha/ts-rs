@@ -41,6 +41,7 @@ fn newtype() {
 }
 
 #[test]
+#[cfg(feature = "serde-compat")]
 fn enum_newtype_representations() {
     // regression test for https://github.com/Aleph-Alpha/ts-rs/issues/126
 
