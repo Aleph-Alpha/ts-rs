@@ -26,14 +26,14 @@ fn type_def(
     let name = attr.rename.clone().unwrap_or_else(|| to_ts_ident(ident));
     match fields {
         Fields::Named(named) => match named.named.len() {
-            0 => unit::unit(attr, &name),
+            0 => unit::empty_object(attr, &name),
             _ => named::named(attr, &name, named, generics),
         },
         Fields::Unnamed(unnamed) => match unnamed.unnamed.len() {
-            0 => unit::unit(attr, &name),
+            0 => unit::empty_array(attr, &name),
             1 => newtype::newtype(attr, &name, unnamed, generics),
             _ => tuple::tuple(attr, &name, unnamed, generics),
         },
-        Fields::Unit => unit::unit(attr, &name),
+        Fields::Unit => unit::null(attr, &name),
     }
 }

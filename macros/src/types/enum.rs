@@ -34,7 +34,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         });
     }
 
-    let mut formatted_variants = vec![];
+    let mut formatted_variants = Vec::new();
     let mut dependencies = Dependencies::default();
     for variant in &s.variants {
         format_variant(
@@ -48,7 +48,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 
     let generic_args = format_generics(&mut dependencies, &s.generics);
     Ok(DerivedTS {
-        inline: quote!(vec![#(#formatted_variants),*].join(" | ")),
+        inline: quote!([#(#formatted_variants),*].join(" | ")),
         decl: quote!(format!("type {}{} = {};", #name, #generic_args, Self::inline())),
         inline_flattened: None,
         dependencies,
@@ -91,7 +91,7 @@ fn format_variant(
         Tagged::Untagged => quote!(#inline_type),
         Tagged::Externally => match &variant.fields {
             Fields::Unit => quote!(format!("\"{}\"", #name)),
-            _ => quote!(format!("{{ {}: {} }}", #name, #inline_type)),
+            _ => quote!(format!("{{ \"{}\": {} }}", #name, #inline_type)),
         },
         Tagged::Adjacently { tag, content } => match &variant.fields {
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
@@ -102,15 +102,17 @@ fn format_variant(
                 } else {
                     format_type(&unnamed.unnamed[0].ty, dependencies, generics)
                 };
-                quote!(format!("{{ {}: \"{}\", {}: {} }}", #tag, #name, #content, #ty))
+                quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #ty))
             }
-            Fields::Unit => quote!(format!("{{ {}: \"{}\" }}", #tag, #name)),
-            _ => quote!(format!("{{ {}: \"{}\", {}: {} }}", #tag, #name, #content, #inline_type)),
+            Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name)),
+            _ => quote!(
+                format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #inline_type)
+            ),
         },
         Tagged::Internally { tag } => match variant_type.inline_flattened {
             Some(inline_flattened) => quote! {
                 format!(
-                    "{{ {}: \"{}\", {} }}",
+                    "{{ \"{}\": \"{}\", {} }}",
                     #tag,
                     #name,
                     #inline_flattened
@@ -125,11 +127,11 @@ fn format_variant(
                     } else {
                         format_type(&unnamed.unnamed[0].ty, dependencies, generics)
                     };
-                    quote!(format!("{{ {}: \"{}\" }} & {}", #tag, #name, #ty))
+                    quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #ty))
                 }
-                Fields::Unit => quote!(format!("{{ {}: \"{}\" }}", #tag, #name)),
+                Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name)),
                 _ => {
-                    quote!(format!("{{ {}: \"{}\" }} & {}", #tag, #name, #inline_type))
+                    quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #inline_type))
                 }
             },
         },

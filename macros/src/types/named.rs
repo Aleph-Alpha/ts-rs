@@ -16,7 +16,7 @@ pub(crate) fn named(
     fields: &FieldsNamed,
     generics: &Generics,
 ) -> Result<DerivedTS> {
-    let mut formatted_fields = vec![];
+    let mut formatted_fields = Vec::new();
     let mut dependencies = Dependencies::default();
     if let Some(tag) = &attr.tag {
         let formatted = format!("{}: \"{}\",", tag, name);
@@ -35,7 +35,7 @@ pub(crate) fn named(
         )?;
     }
 
-    let fields = quote!(vec![#(#formatted_fields),*].join(" "));
+    let fields = quote!(<[String]>::join(&[#(#formatted_fields),*], " "));
     let generic_args = format_generics(&mut dependencies, generics);
 
     Ok(DerivedTS {

@@ -48,10 +48,14 @@ impl StructAttr {
 }
 
 impl From<VariantAttr> for StructAttr {
-    fn from(v: VariantAttr) -> Self {
+    fn from(
+        VariantAttr {
+            rename, rename_all, ..
+        }: VariantAttr,
+    ) -> Self {
         Self {
-            rename: v.rename.clone(),
-            rename_all: v.rename_all.clone(),
+            rename,
+            rename_all,
             // inline and skip are not supported on StructAttr
             ..Self::default()
         }
@@ -74,7 +78,7 @@ impl_parse! {
         "rename_all" => out.0.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
         "tag" => out.0.tag = Some(parse_assign_str(input)?),
         // parse #[serde(default)] to not emit a warning
-        "default" => {
+        "deny_unknown_fields" | "default" => {
             use syn::Token;
             if input.peek(Token![=]) {
                 input.parse::<Token![=]>()?;

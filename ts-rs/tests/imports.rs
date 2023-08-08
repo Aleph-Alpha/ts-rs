@@ -37,9 +37,9 @@ fn test_def() {
             "import type { TestTypeA } from \"./ts_rs_test_type_a\";\n",
             "import type { TestTypeB } from \"./ts_rs_test_type_b\";\n",
             "\n",
-            "export type TestEnum = { C: { value: TestTypeB<number> } } | {\n",
-            "  A1: { value: TestTypeA<number> };\n",
-            "} | { A2: { value: TestTypeA<number> } };\n"
+            "export type TestEnum = { \"C\": { value: TestTypeB<number> } } | {\n",
+            "  \"A1\": { value: TestTypeA<number> };\n",
+            "} | { \"A2\": { value: TestTypeA<number> } };\n"
         )
     );
 

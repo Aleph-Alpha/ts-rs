@@ -38,7 +38,7 @@ impl ToTokens for Dependencies {
         let dependencies = &self.0;
         tokens.extend(quote! {
             {
-                let mut dependencies = vec![];
+                let mut dependencies = Vec::new();
                 #( #dependencies )*
                 dependencies
             }
