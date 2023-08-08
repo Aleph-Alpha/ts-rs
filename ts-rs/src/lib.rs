@@ -40,7 +40,7 @@
 //! ## get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "6.1"
+//! ts-rs = "7.0"
 //! ```
 //!
 //! ```rust
@@ -99,9 +99,14 @@
 //!
 //!   Implement `TS` for `IndexMap` and `IndexSet` from indexmap  
 //!
-//! - `ordered-float-impl`
+//! - `ordered-float-impl`  
 //!
 //!   Implement `TS` for `OrderedFloat` from ordered_float
+//!
+//! - `heapless-impl`  
+//! 
+//!   Implement `TS` for `Vec` from heapless
+//!
 //!
 //! If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 //!
