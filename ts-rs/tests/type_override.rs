@@ -2,7 +2,6 @@
 
 use std::time::Instant;
 
-use serde::Serialize;
 use ts_rs::TS;
 
 struct Unsupported<T>(T);
@@ -44,6 +43,8 @@ fn newtype() {
 #[cfg(feature = "serde-compat")]
 fn enum_newtype_representations() {
     // regression test for https://github.com/Aleph-Alpha/ts-rs/issues/126
+
+    use serde::Serialize;
 
     #[derive(Serialize)]
     struct S;
