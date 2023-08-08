@@ -58,4 +58,7 @@ fn enum_newtype_representations() {
     enum Adjacent {
         Newtype(#[ts(type = "unknown")] S),
     }
+
+    assert_eq!(Internal::inline(), r#"{ "t": "Newtype" } & unknown"#);
+    assert_eq!(Adjacent::inline(), r#"{ "t": "Newtype", "c": unknown }"#);
 }
