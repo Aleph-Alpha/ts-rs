@@ -14,9 +14,14 @@ struct Unit2 {}
 #[derive(TS)]
 struct Unit3();
 
+// serde_json serializes this to `null`, so it's TS type is `null` as well.
+#[derive(TS)]
+struct Unit4(());
+
 #[test]
 fn test() {
     assert_eq!("type Unit = null;", Unit::decl());
     assert_eq!("type Unit2 = Record<string, never>;", Unit2::decl());
     assert_eq!("type Unit3 = never[];", Unit3::decl());
+    assert_eq!("type Unit4 = null;", Unit4::decl());
 }

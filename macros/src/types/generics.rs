@@ -71,6 +71,13 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
         // same goes for a tuple (`(A, B, C)`) - it doesn't have a type arg, so we handle it
         // explicitly here.
         Type::Tuple(tuple) => {
+            if tuple.elems.is_empty() {
+                // empty tuples `()` should be treated as `null`
+                return super::unit::null(&StructAttr::default(), "")
+                    .unwrap()
+                    .inline;
+            }
+
             // we convert the tuple field to a struct: `(A, B, C)` => `struct A(A, B, C)`
             let tuple_struct = super::type_def(
                 &StructAttr::default(),
