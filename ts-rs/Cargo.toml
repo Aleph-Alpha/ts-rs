@@ -1,5 +1,5 @@
 [package]
-name = "ts-rs"
+name = "ts-rs-json-value"
 version = "7.0.0"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
 edition = "2021"
