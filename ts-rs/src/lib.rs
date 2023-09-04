@@ -107,6 +107,14 @@
 //!
 //!   Implement `TS` for `Vec` from heapless
 //!
+//! - `serde-json-impl
+//!
+//!   Implement `TS` for `Value` from serde_json
+//!
+//! - `schemars-impl`
+//!
+//!   Implement `TS` for `Schema` from schemars
+//!
 //!
 //! If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 //!
@@ -625,6 +633,9 @@ impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for heapless::Vec<T, N>);
 
 #[cfg(feature = "serde-json-impl")]
 impl_primitives! { serde_json::Value => "string | number | boolean | null" }
+
+#[cfg(feature = "schemars-impl")]
+impl_primitives! { schemars::schema::Schema => "object" }
 
 #[cfg(feature = "bytes-impl")]
 mod bytes {
