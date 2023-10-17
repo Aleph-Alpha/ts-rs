@@ -5,6 +5,7 @@ use crate::utils::parse_attrs;
 
 #[derive(Default)]
 pub struct FieldAttr {
+    pub type_as: Option<String>,
     pub type_override: Option<String>,
     pub rename: Option<String>,
     pub inline: bool,
@@ -29,6 +30,7 @@ impl FieldAttr {
     fn merge(
         &mut self,
         FieldAttr {
+            type_as,
             type_override,
             rename,
             inline,
@@ -38,6 +40,7 @@ impl FieldAttr {
         }: FieldAttr,
     ) {
         self.rename = self.rename.take().or(rename);
+        self.type_as = self.type_as.take().or(type_as);
         self.type_override = self.type_override.take().or(type_override);
         self.inline = self.inline || inline;
         self.skip = self.skip || skip;
@@ -48,6 +51,7 @@ impl FieldAttr {
 
 impl_parse! {
     FieldAttr(input, out) {
+        "as" => out.type_as = Some(parse_assign_str(input)?),
         "type" => out.type_override = Some(parse_assign_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "inline" => out.inline = true,

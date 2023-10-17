@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{FieldsUnnamed, Generics, Result};
+use syn::{FieldsUnnamed, Generics, Result, Type};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -22,6 +22,7 @@ pub(crate) fn newtype(
     }
     let inner = fields.unnamed.first().unwrap();
     let FieldAttr {
+        type_as,
         type_override,
         rename: rename_inner,
         inline,
@@ -38,17 +39,26 @@ pub(crate) fn newtype(
         _ => {}
     };
 
-    let inner_ty = &inner.ty;
+    if let (Some(_type_as), Some(_type_override)) = (&type_as, &type_override) {
+        syn_err!("`type` is not compatible with `as`")
+    }
+
+    let inner_ty = if let Some(_type_as) = &type_as {
+        syn::parse_str::<Type>(_type_as)?
+    } else {
+        inner.ty.clone()
+    };
+
     let mut dependencies = Dependencies::default();
     match (inline, &type_override) {
         (_, Some(_)) => (),
-        (true, _) => dependencies.append_from(inner_ty),
-        (false, _) => dependencies.push_or_append_from(inner_ty),
+        (true, _) => dependencies.append_from(&inner_ty),
+        (false, _) => dependencies.push_or_append_from(&inner_ty),
     };
     let inline_def = match &type_override {
         Some(o) => quote!(#o.to_owned()),
         None if inline => quote!(<#inner_ty as ts_rs::TS>::inline()),
-        None => format_type(inner_ty, &mut dependencies, generics),
+        None => format_type(&inner_ty, &mut dependencies, generics),
     };
 
     let generic_args = format_generics(&mut dependencies, generics);

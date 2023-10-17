@@ -63,6 +63,7 @@ fn format_field(
     generics: &Generics,
 ) -> Result<()> {
     let FieldAttr {
+        type_as,
         type_override,
         rename,
         inline,
@@ -75,16 +76,29 @@ fn format_field(
         return Ok(());
     }
 
-    let (ty, optional_annotation) = match optional {
-        true => (extract_option_argument(&field.ty)?, "?"),
-        false => (&field.ty, ""),
+    if let (Some(_type_as), Some(_type_override)) = (&type_as, &type_override) {
+        syn_err!("`type` is not compatible with `as`")
+    }
+
+    let parsed_ty = if let Some(_type_as) = &type_as {
+        syn::parse_str::<Type>(_type_as)?
+    } else {
+        field.ty.clone()
+    };
+
+    let (ty, optional_annotation) = {
+        match optional {
+            true => (extract_option_argument(&parsed_ty)?, "?"),
+            false => (&parsed_ty, ""),
+        }
     };
 
     if flatten {
-        match (&type_override, &rename, inline) {
-            (Some(_), _, _) => syn_err!("`type` is not compatible with `flatten`"),
-            (_, Some(_), _) => syn_err!("`rename` is not compatible with `flatten`"),
-            (_, _, true) => syn_err!("`inline` is not compatible with `flatten`"),
+        match (&type_as, &type_override, &rename, inline) {
+            (Some(_), _, _, _) => syn_err!("`as` is not compatible with `flatten`"),
+            (_, Some(_), _, _) => syn_err!("`type` is not compatible with `flatten`"),
+            (_, _, Some(_), _) => syn_err!("`rename` is not compatible with `flatten`"),
+            (_, _, _, true) => syn_err!("`inline` is not compatible with `flatten`"),
             _ => {}
         }
 
