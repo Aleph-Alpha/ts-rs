@@ -109,6 +109,9 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 
   Implement `TS` for `Vec` from heapless
 
+- `semver-impl`
+  Implement `TS` for `Version` from semver
+
 
 If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 
