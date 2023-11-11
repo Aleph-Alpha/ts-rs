@@ -469,10 +469,10 @@ impl<T : TS, E : TS> TS for Result<T, E>{
     fn dependencies() -> Vec<Dependency>
     where
         Self: 'static {
-        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
+        [Dependency::from_ty::<T>(), Dependency::from_ty::<E>()].into_iter().flatten().collect()
     }
     fn inline() -> String {
-        format!("{{ ok : {} }} | {{ err : {} }}", T::inline(), E::inline())
+        format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
     }
 }
 
