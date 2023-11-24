@@ -125,8 +125,6 @@
 //! - `flatten`
 //! - `default`
 //!
-//! When ts-rs encounters an unsupported serde attribute, a warning is emitted.
-//!
 //! ## contributing
 //! Contributions are always welcome!
 //! Feel free to open an issue, discuss using GitHub discussions or open a PR.
@@ -175,8 +173,7 @@ mod export;
 /// ### serde compatibility
 /// By default, the feature `serde-compat` is enabled.
 /// ts-rs then parses serde attributes and adjusts the generated typescript bindings accordingly.
-/// Not all serde attributes are supported yet - if you use an unsupported attribute, you'll see a
-/// warning.
+/// Not all serde attributes are supported yet.
 ///
 /// ### container attributes
 /// attributes applicable for both structs and enums

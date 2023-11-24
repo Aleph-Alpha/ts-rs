@@ -127,8 +127,6 @@ Supported serde attributes:
 - `flatten`
 - `default`
 
-When ts-rs encounters an unsupported serde attribute, a warning is emitted.
-
 ### contributing
 Contributions are always welcome!
 Feel free to open an issue, discuss using GitHub discussions or open a PR.
