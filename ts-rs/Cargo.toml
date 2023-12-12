@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs"
-version = "7.0.0"
+version = "7.1.0"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
 edition = "2021"
 license = "MIT"
