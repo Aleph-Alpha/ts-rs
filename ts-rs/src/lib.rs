@@ -583,6 +583,7 @@ impl_shadow!(as Vec<T>: impl<T: TS> TS for HashSet<T>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
 impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for [T; N]);
+impl_shadow!(as Vec<T>: impl<T: TS> TS for [T]);
 
 impl_wrapper!(impl<T: TS + ?Sized> TS for Box<T>);
 impl_wrapper!(impl<T: TS + ?Sized> TS for std::sync::Arc<T>);
