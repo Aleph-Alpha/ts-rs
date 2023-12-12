@@ -2,7 +2,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
     GenericArgument, GenericParam, Generics, ItemStruct, PathArguments, Type, TypeArray, TypeGroup,
-    TypeSlice, TypeTuple,
+    TypeReference, TypeSlice, TypeTuple,
 };
 
 use crate::{attr::StructAttr, deps::Dependencies};
