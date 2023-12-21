@@ -124,6 +124,7 @@ mod warning {
 
     // Sadly, it is impossible to raise a warning in a proc macro.
     // This function prints a message which looks like a compiler warning.
+    #[allow(unused)]
     pub fn print_warning(
         title: impl Display,
         content: impl Display,
