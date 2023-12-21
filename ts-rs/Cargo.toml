@@ -24,6 +24,7 @@ default = ["serde-compat"]
 indexmap-impl = ["indexmap"]
 ordered-float-impl = ["ordered-float"]
 heapless-impl = ["heapless"]
+quiet-serde = ["ts-rs-macros/quiet-serde"]
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
