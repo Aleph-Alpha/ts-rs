@@ -32,7 +32,7 @@ pub(crate) fn newtype(
 
     match (&rename_inner, skip, optional, flatten) {
         (Some(_), ..) => syn_err!("`rename` is not applicable to newtype fields"),
-        (_, true, ..) => syn_err!("`skip` is not applicable to newtype fields"),
+        (_, true, ..) => return super::unit::null(attr, name),
         (_, _, true, ..) => syn_err!("`optional` is not applicable to newtype fields"),
         (_, _, _, true) => syn_err!("`flatten` is not applicable to newtype fields"),
         _ => {}
