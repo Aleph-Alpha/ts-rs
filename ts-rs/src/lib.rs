@@ -261,6 +261,11 @@ pub trait TS {
         format!("{}<{}>", Self::name(), args.join(", "))
     }
 
+    /// All lines of documentation comments for this type.
+    fn docs() -> Vec<String> {
+        vec![]
+    }
+
     /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
     /// This function will panic if the type cannot be inlined.
     fn inline() -> String {

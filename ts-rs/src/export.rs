@@ -78,6 +78,21 @@ fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
 
 /// Push the declaration of `T`
 fn generate_decl<T: TS + ?Sized>(out: &mut String) {
+    let docs = &T::docs();
+    match docs.is_empty() {
+        true => {}
+        false => {
+            // each line of docs starting with " *"
+            let lines = docs
+                .into_iter()
+                .map(|doc| format!(" *{doc}"))
+                .collect::<Vec<_>>();
+            // add front "/**" and back "*/"
+            let docs = format!("/**\n{}\n */\n", lines.join("\n"));
+            out.push_str(&docs);
+        }
+    };
+
     out.push_str("export ");
     out.push_str(&T::decl());
 }

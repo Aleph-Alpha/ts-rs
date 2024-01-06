@@ -18,6 +18,7 @@ mod types;
 
 struct DerivedTS {
     name: String,
+    docs: Vec<String>,
     inline: TokenStream,
     decl: TokenStream,
     inline_flattened: Option<TokenStream>,
@@ -64,6 +65,7 @@ impl DerivedTS {
 
         let DerivedTS {
             name,
+            docs,
             inline,
             decl,
             inline_flattened,
@@ -90,6 +92,9 @@ impl DerivedTS {
                 }
                 fn name() -> String {
                     #name.to_owned()
+                }
+                fn docs() -> Vec<String> {
+                    vec![#( #docs.to_string(), )*]
                 }
                 fn inline() -> String {
                     #inline

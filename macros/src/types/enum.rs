@@ -7,7 +7,7 @@ use crate::{
     deps::Dependencies,
     types,
     types::generics::{format_generics, format_type},
-    DerivedTS,
+    utils, DerivedTS,
 };
 
 pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
@@ -18,13 +18,16 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         None => s.ident.to_string(),
     };
 
+    let docs = utils::get_docs_from_attributes(&s.attrs);
+
     if s.variants.is_empty() {
-        return Ok(empty_enum(name, enum_attr));
+        return Ok(empty_enum(name, docs, enum_attr));
     }
 
     if s.variants.is_empty() {
         return Ok(DerivedTS {
             name,
+            docs,
             inline: quote!("never".to_owned()),
             decl: quote!("type {} = never;"),
             inline_flattened: None,
@@ -53,6 +56,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         inline_flattened: None,
         dependencies,
         name,
+        docs,
         export: enum_attr.export,
         export_to: enum_attr.export_to,
     })
@@ -79,6 +83,8 @@ fn format_variant(
 
     let variant_type = types::type_def(
         &StructAttr::from(variant_attr),
+        // since this is the type of a field, we do not need to pass attributes to calculate docs
+        &vec![],
         // since we are generating the variant as a struct, it doesn't have a name
         &format_ident!("_"),
         &variant.fields,
@@ -165,12 +171,13 @@ fn format_variant(
 }
 
 // bindings for an empty enum (`never` in TS)
-fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
+fn empty_enum(name: impl Into<String>, docs: Vec<String>, enum_attr: EnumAttr) -> DerivedTS {
     let name = name.into();
     DerivedTS {
         inline: quote!("never".to_owned()),
         decl: quote!(format!("type {} = never;", #name)),
         name,
+        docs,
         inline_flattened: None,
         dependencies: Dependencies::default(),
         export: enum_attr.export,
