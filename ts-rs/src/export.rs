@@ -78,21 +78,11 @@ fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
 
 /// Push the declaration of `T`
 fn generate_decl<T: TS + ?Sized>(out: &mut String) {
+    // Type Docs
     let docs = &T::docs();
-    match docs.is_empty() {
-        true => {}
-        false => {
-            // each line of docs starting with " *"
-            let lines = docs
-                .into_iter()
-                .map(|doc| format!(" *{doc}"))
-                .collect::<Vec<_>>();
-            // add front "/**" and back "*/"
-            let docs = format!("/**\n{}\n */\n", lines.join("\n"));
-            out.push_str(&docs);
-        }
-    };
+    out.push_str(&format_docs(&docs));
 
+    // Type Definition
     out.push_str("export ");
     out.push_str(&T::decl());
 }
@@ -187,5 +177,19 @@ where
             }
         }
         Some(comps.iter().map(|c| c.as_os_str()).collect())
+    }
+}
+
+/// Returns an unindented docstring that has a newline at the end if it has content.
+pub fn format_docs(docs: &Vec<String>) -> String {
+    match docs.is_empty() {
+        true => "".to_string(),
+        false => {
+            let lines = docs
+                .into_iter()
+                .map(|doc| format!(" *{doc}"))
+                .collect::<Vec<_>>();
+            format!("/**\n{}\n */\n", lines.join("\n"))
+        }
     }
 }
