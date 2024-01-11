@@ -107,6 +107,11 @@
 //! 
 //!   Implement `TS` for `Vec` from heapless
 //!
+//! - `no-serde-warnings`
+//!
+//!   When `serde-compat` is enabled, warnings are printed during build if unsupported serde
+//!   attributes are encountered. Enabling this feature silences these warnings.
+//!
 //!
 //! If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 //!
@@ -125,7 +130,7 @@
 //! - `flatten`
 //! - `default`
 //!
-//! When ts-rs encounters an unsupported serde attribute, a warning is emitted.
+//! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
 //!
 //! ## contributing
 //! Contributions are always welcome!
