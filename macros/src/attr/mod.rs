@@ -32,9 +32,29 @@ impl Inflection {
         match self {
             Inflection::Lower => string.to_lowercase(),
             Inflection::Upper => string.to_uppercase(),
-            Inflection::Camel => string.to_camel_case(),
+            Inflection::Camel => {
+                let pascal = Inflection::apply(Inflection::Pascal, string);
+                pascal[..1].to_ascii_lowercase() + &pascal[1..]
+            }
             Inflection::Snake => string.to_snake_case(),
-            Inflection::Pascal => string.to_pascal_case(),
+            Inflection::Pascal => {
+                let mut s = String::with_capacity(string.len());
+
+                let mut capitalize = true;
+                for c in string.chars() {
+                    if c == '_' {
+                        capitalize = true;
+                        continue;
+                    } else if capitalize {
+                        s.push(c.to_ascii_uppercase());
+                        capitalize = false;
+                    } else {
+                        s.push(c.to_ascii_lowercase())
+                    }
+                }
+
+                s
+            }
             Inflection::ScreamingSnake => string.to_screaming_snake_case(),
             Inflection::Kebab => string.to_kebab_case(),
         }

@@ -1,3 +1,4 @@
+#![allow(clippy::box_collection)]
 #![allow(dead_code)]
 
 use std::{
