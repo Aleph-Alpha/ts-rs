@@ -104,7 +104,7 @@
 //!   Implement `TS` for `OrderedFloat` from ordered_float
 //!
 //! - `heapless-impl`  
-//! 
+//!
 //!   Implement `TS` for `Vec` from heapless
 //!
 //! - `no-serde-warnings`
@@ -464,20 +464,24 @@ impl<T: TS> TS for Option<T> {
     }
 }
 
-impl<T : TS, E : TS> TS for Result<T, E>{
-    fn name() -> String{
+impl<T: TS, E: TS> TS for Result<T, E> {
+    fn name() -> String {
         unreachable!();
-    }
-    fn transparent() -> bool {
-        return true;
-    }
-    fn dependencies() -> Vec<Dependency>
-    where
-        Self: 'static {
-        [Dependency::from_ty::<T>(), Dependency::from_ty::<E>()].into_iter().flatten().collect()
     }
     fn inline() -> String {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
+    }
+    fn dependencies() -> Vec<Dependency>
+    where
+        Self: 'static,
+    {
+        [Dependency::from_ty::<T>(), Dependency::from_ty::<E>()]
+            .into_iter()
+            .flatten()
+            .collect()
+    }
+    fn transparent() -> bool {
+        true
     }
 }
 
