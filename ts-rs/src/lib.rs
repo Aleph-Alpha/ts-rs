@@ -40,7 +40,7 @@
 //! ## get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "7.0"
+//! ts-rs = "7.1"
 //! ```
 //!
 //! ```rust
