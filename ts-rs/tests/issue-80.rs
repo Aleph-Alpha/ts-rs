@@ -1,5 +1,5 @@
-use ts_rs::TS;
 use serde::Serialize;
+use ts_rs::TS;
 
 #[derive(TS, Serialize)]
 #[ts(export)]
@@ -9,7 +9,7 @@ pub enum SomeTypeList {
         #[ts(skip)]
         skip_this: String,
     },
-    Value2
+    Value2,
 }
 
 #[test]
