@@ -125,7 +125,7 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 
 ### serde compatability
-With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs
+With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
 Supported serde attributes:
 - `rename`
 - `rename-all`
