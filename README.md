@@ -66,6 +66,7 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - generate necessary imports when exporting to multiple files
 - serde compatibility
 - generic types
+- support for ESM imports
 
 ### limitations
 - generic fields cannot be inlined or flattened (#56)
@@ -114,11 +115,17 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
   When `serde-compat` is enabled, warnings are printed during build if unsupported serde
   attributes are encountered. Enabling this feature silences these warnings.
 
+- `import-esm`
+
+  `import` statements in the generated file will have the `.js` extension in the end of
+  the path to conform to the ES Modules spec. (e.g.:
+  `import { MyStruct } from "./my_struct.js"`)
+
 
 If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 
 ### serde compatability
-With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
+With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs
 Supported serde attributes:
 - `rename`
 - `rename-all`
