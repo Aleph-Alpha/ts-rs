@@ -99,10 +99,10 @@ pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
         .flat_map(|attr| match A::try_from(attr) {
             Ok(attr) => Some(attr),
             Err(_) => {
-                #[cfg(not(feature = "quiet-serde"))]
+                #[cfg(not(feature = "no-serde-warnings"))]
                 use quote::ToTokens;
 
-                #[cfg(not(feature = "quiet-serde"))]
+                #[cfg(not(feature = "no-serde-warnings"))]
                 warning::print_warning(
                     "failed to parse serde attribute",
                     format!("{}", attr.to_token_stream()),
