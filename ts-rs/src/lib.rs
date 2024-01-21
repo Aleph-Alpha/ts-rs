@@ -159,7 +159,7 @@ use std::{
 
 pub use ts_rs_macros::TS;
 
-pub use crate::export::{provided_default_path, ExportError};
+pub use crate::export::{ExportError, __private};
 
 #[cfg(feature = "chrono-impl")]
 mod chrono;

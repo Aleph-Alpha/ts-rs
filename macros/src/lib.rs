@@ -56,10 +56,7 @@ impl DerivedTS {
             None => {
                 get_export_to = quote! {
                     fn get_export_to() -> Option<String> {
-                        ts_rs::provided_default_path().as_ref().map_or_else(
-                            || Self::EXPORT_TO.map(ToString::to_string),
-                            |path| Some(format!("{path}/{}.ts", Self::name())),
-                        )
+                        ts_rs::__private::get_export_to_path::<Self>()
                     }
                 };
                 format!("bindings/{}.ts", self.name)
