@@ -64,18 +64,18 @@ pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
 pub mod __private {
     use super::*;
 
-    const EXPORT_PATH_ENV_VAR: &str = "TS_RS_EXPORT_PATH";
-    fn provided_default_path() -> &'static Option<String> {
+    const EXPORT_DIR_ENV_VAR: &str = "TS_RS_EXPORT_DIR";
+    fn provided_default_dir() -> &'static Option<String> {
         static EXPORT_TO: OnceLock<Option<String>> = OnceLock::new();
-        EXPORT_TO.get_or_init(|| std::env::var(EXPORT_PATH_ENV_VAR).ok())
+        EXPORT_TO.get_or_init(|| std::env::var(EXPORT_DIR_ENV_VAR).ok())
     }
 
-    /// Returns the path to where `T` should be exported using the `TS_RS_EXPORT_PATH` environment variable.
+    /// Returns the path to where `T` should be exported using the `TS_RS_EXPORT_DIR` environment variable.
     ///
     /// This should only be used by the TS derive macro; the `get_export_to` trait method should not
     /// be overridden if the `#[ts(export_to = ..)]` attribute exists.
     pub fn get_export_to_path<T: TS + ?Sized>() -> Option<String> {
-        provided_default_path().as_ref().map_or_else(
+        provided_default_dir().as_ref().map_or_else(
             || T::EXPORT_TO.map(ToString::to_string),
             |path| Some(format!("{path}/{}.ts", T::name())),
         )
