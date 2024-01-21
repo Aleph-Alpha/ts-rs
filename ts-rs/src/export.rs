@@ -3,6 +3,7 @@ use std::{
     collections::BTreeMap,
     fmt::Write,
     path::{Component, Path, PathBuf},
+    sync::OnceLock,
 };
 
 use thiserror::Error;
@@ -59,8 +60,15 @@ pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     Ok(())
 }
 
+pub(crate) const EXPORT_PATH_ENV_VAR: &str = "TS_RS_EXPORT_PATH";
+
+pub fn provided_default_path() -> &'static Option<String> {
+    static EXPORT_TO: OnceLock<Option<String>> = OnceLock::new();
+    EXPORT_TO.get_or_init(|| std::env::var(EXPORT_PATH_ENV_VAR).ok())
+}
+
 /// Returns the generated defintion for `T`.
-pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String, ExportError> {
+pub fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String, ExportError> {
     let mut buffer = String::with_capacity(1024);
     buffer.push_str(NOTE);
     generate_imports::<T>(&mut buffer)?;
@@ -72,7 +80,7 @@ pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String
 fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").map_err(|_| ManifestDirNotSet)?;
     let manifest_dir = Path::new(&manifest_dir);
-    let path = PathBuf::from(T::EXPORT_TO.ok_or(CannotBeExported)?);
+    let path = PathBuf::from(T::get_export_to().ok_or(CannotBeExported)?);
     Ok(manifest_dir.join(path))
 }
 
@@ -84,7 +92,8 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
 
 /// Push an import statement for all dependencies of `T`
 fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), ExportError> {
-    let path = Path::new(T::EXPORT_TO.ok_or(ExportError::CannotBeExported)?);
+    let export_to = T::get_export_to().ok_or(CannotBeExported)?;
+    let path = Path::new(&export_to);
 
     let deps = T::dependencies();
     let deduplicated_deps = deps
@@ -94,7 +103,7 @@ fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), Ex
         .collect::<BTreeMap<_, _>>();
 
     for (_, dep) in deduplicated_deps {
-        let rel_path = import_path(path, Path::new(dep.exported_to));
+        let rel_path = import_path(path, Path::new(&dep.exported_to));
         writeln!(
             out,
             "import type {{ {} }} from {:?};",

@@ -47,12 +47,21 @@ impl DerivedTS {
     }
 
     fn into_impl(self, rust_ty: Ident, generics: Generics) -> TokenStream {
+        let mut get_export_to = quote! {};
         let export_to = match &self.export_to {
             Some(dirname) if dirname.ends_with('/') => {
                 format!("{}{}.ts", dirname, self.name)
             }
             Some(filename) => filename.clone(),
             None => {
+                get_export_to = quote! {
+                    fn get_export_to() -> Option<String> {
+                        provided_default_path().as_ref().map_or_else(
+                            || Self::EXPORT_TO.map(ToString::to_string),
+                            |path| Some(format!("{path}/{}.ts", Self::name())),
+                        )
+                    }
+                };
                 format!("bindings/{}.ts", self.name)
             }
         };
@@ -84,7 +93,7 @@ impl DerivedTS {
         quote! {
             #impl_start {
                 const EXPORT_TO: Option<&'static str> = Some(#export_to);
-
+                #get_export_to
                 fn decl() -> String {
                     #decl
                 }

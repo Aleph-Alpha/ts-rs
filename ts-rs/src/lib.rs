@@ -159,7 +159,7 @@ use std::{
 
 pub use ts_rs_macros::TS;
 
-pub use crate::export::ExportError;
+pub use crate::export::{provided_default_path, ExportError};
 
 #[cfg(feature = "chrono-impl")]
 mod chrono;
@@ -252,6 +252,10 @@ mod export;
 pub trait TS {
     const EXPORT_TO: Option<&'static str> = None;
 
+    fn get_export_to() -> Option<String> {
+        Self::EXPORT_TO.map(ToString::to_string)
+    }
+
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
     /// This function will panic if the type has no declaration.
     fn decl() -> String {
@@ -331,7 +335,7 @@ pub struct Dependency {
     pub ts_name: String,
     /// Path to where the type would be exported. By default a filename is derived from the types
     /// name, which can be customized with `#[ts(export_to = "..")]`.
-    pub exported_to: &'static str,
+    pub exported_to: String,
 }
 
 impl Dependency {
@@ -339,7 +343,7 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
-        let exported_to = T::EXPORT_TO?;
+        let exported_to = T::get_export_to()?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
             ts_name: T::name(),
