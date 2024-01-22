@@ -30,6 +30,7 @@ indexmap-impl = ["indexmap"]
 ordered-float-impl = ["ordered-float"]
 heapless-impl = ["heapless"]
 no-serde-warnings = ["ts-rs-macros/no-serde-warnings"]
+import-esm = []
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
