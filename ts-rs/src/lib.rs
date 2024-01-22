@@ -64,6 +64,7 @@
 //! - generate necessary imports when exporting to multiple files
 //! - serde compatibility
 //! - generic types
+//! - support for ESM imports
 //!
 //! ## limitations
 //! - generic fields cannot be inlined or flattened (#56)
@@ -112,6 +113,10 @@
 //!   When `serde-compat` is enabled, warnings are printed during build if unsupported serde
 //!   attributes are encountered. Enabling this feature silences these warnings.
 //!
+//! - `import-esm`
+//!
+//!   `import` statements in the generated file will have the `.js` extension in the end of
+//!   the path to conform to the ES Modules spec. (e.g.: `import { MyStruct } from "./my_struct.js"`)
 //!
 //! If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 //!
