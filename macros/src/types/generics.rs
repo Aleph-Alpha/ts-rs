@@ -91,6 +91,9 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
             dependencies.append(tuple_struct.dependencies);
             return tuple_struct.inline;
         }
+        Type::Reference(syn::TypeReference { ref elem, .. }) => {
+            return format_type(elem, dependencies, generics)
+        }
         _ => (),
     };
 
