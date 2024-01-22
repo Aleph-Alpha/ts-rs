@@ -6,14 +6,17 @@ use ts_rs::TS;
 #[cfg_attr(feature = "serde-compat", serde(rename_all = "camelCase"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "camelCase"))]
 pub enum TaskStatus {
-  #[serde(rename_all = "camelCase")]
-  Running { started_time: String },
-  #[serde(rename_all = "camelCase")]
-  Terminated {
-    status: i32,
-    stdout: String,
-    stderr: String,
-  },
+    #[cfg_attr(feature = "serde-compat", serde(rename_all = "camelCase"))]
+    #[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "camelCase"))]
+    Running { started_time: String },
+
+    #[cfg_attr(feature = "serde-compat", serde(rename_all = "camelCase"))]
+    #[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "camelCase"))]
+    Terminated {
+        status: i32,
+        stdout: String,
+        stderr: String,
+    },
 }
 
 #[test]
