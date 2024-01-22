@@ -1,6 +1,20 @@
 on: [push, pull_request]
 name: Test
 jobs:
+  readme-up-to-date:
+    name: Check that README.md is up-to-date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Check that README.md is up-to-date
+        working-directory: ts-rs
+        run: |
+          cargo install cargo-readme 
+          diff -u ../README.md <(cargo readme)
+
   test:
     name: Test ts-rs
     runs-on: ubuntu-latest
