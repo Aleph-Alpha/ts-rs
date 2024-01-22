@@ -17,3 +17,8 @@ jobs:
         with:
           command: test
           args: --all-features --manifest-path ts-rs/Cargo.toml
+      - name: Check that README.md is up-to-date
+        working-directory: ts-rs
+        run: |
+          cargo install cargo-readme 
+          diff -u ../README.md <(cargo readme)
