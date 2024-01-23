@@ -2,6 +2,7 @@ use serde::Serialize;
 use ts_rs::TS;
 
 #[test]
+#[cfg(feature = "serde-compat")]
 fn externally_tagged() {
     #[derive(Serialize, TS)]
     struct Foo {
@@ -21,6 +22,7 @@ fn externally_tagged() {
 }
 
 #[test]
+#[cfg(feature = "serde-compat")]
 fn adjacently_tagged() {
     #[derive(Serialize, TS)]
     struct Foo {
@@ -42,6 +44,7 @@ fn adjacently_tagged() {
 }
 
 #[test]
+#[cfg(feature = "serde-compat")]
 fn internally_tagged() {
     #[derive(Serialize, TS)]
     struct Foo {
@@ -62,6 +65,7 @@ fn internally_tagged() {
 }
 
 #[test]
+#[cfg(feature = "serde-compat")]
 fn untagged() {
     #[derive(Serialize, TS)]
     struct Foo {
