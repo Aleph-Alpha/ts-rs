@@ -46,11 +46,79 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         )?;
     }
 
+    let flattened_structs = s.variants.iter().flat_map(|x| {
+        let variant_attr = VariantAttr::from_attrs(&x.attrs).ok()?;
+
+        if variant_attr.skip {
+            return None;
+        }
+
+        let variant_type = types::type_def(
+            &StructAttr::from(variant_attr),
+            &x.ident,
+            &x.fields,
+            &s.generics,
+        ).ok()?;
+
+        if variant_type.inline_flattened.is_none() {
+            None
+        } else {
+            Some(variant_type)
+        }
+    }).collect::<Box<[_]>>();
+
     let generic_args = format_generics(&mut dependencies, &s.generics);
+    let inline_flattened = match enum_attr.tagged()? {
+        Tagged::Externally => {
+            let flattened_structs = flattened_structs
+                .iter()
+                .map(|x| {
+                    let ident = &x.name;
+                    let flattened = &x.inline_flattened;
+                    quote!(format!(r#""{}": {{ {} }},"#, #ident, #flattened))
+                });
+            Some(quote!(<[String]>::join(&[#(#flattened_structs),*], " } | { ")))
+        },
+        Tagged::Adjacently { tag, content } => {
+            let flattened_structs = flattened_structs
+                .iter()
+                .map(|x| {
+                    let ident = &x.name;
+                    let flattened = &x.inline_flattened;
+                    quote!(format!(r#""{}": "{}", "{}": {{ {} }},"#, #tag, #ident, #content, #flattened))
+                });
+            Some(quote!(<[String]>::join(&[#(#flattened_structs),*], " } | { ")))
+        },
+        Tagged::Internally { tag } => {
+            if flattened_structs.is_empty() {
+                None
+            } else {
+                let flattened_structs = flattened_structs
+                    .iter()
+                    .map(|x| {
+                        let ident = &x.name;
+                        let flattened = &x.inline_flattened;
+                        quote!(format!(r#""{}": "{}", {}"#, #tag, #ident, #flattened))
+                    });
+                Some(quote!(<[String]>::join(&[#(#flattened_structs),*], " } | { ")))
+            }
+        },
+        Tagged::Untagged => {
+            if flattened_structs.is_empty() {
+                None
+            } else {
+                let flattened_structs = flattened_structs
+                    .iter()
+                    .map(|x| x.inline_flattened.clone());
+                Some(quote!(<[String]>::join(&[#(#flattened_structs),*], " } | { ")))
+            }
+        },
+    };
+
     Ok(DerivedTS {
         inline: quote!([#(#formatted_variants),*].join(" | ")),
         decl: quote!(format!("type {}{} = {};", #name, #generic_args, Self::inline())),
-        inline_flattened: None,
+        inline_flattened,
         dependencies,
         name,
         export: enum_attr.export,
