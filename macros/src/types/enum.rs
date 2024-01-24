@@ -46,73 +46,114 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         )?;
     }
 
-    let flattened_structs = s.variants.iter().flat_map(|x| {
-        let variant_attr = VariantAttr::from_attrs(&x.attrs).ok()?;
+    let flattened_structs = s
+        .variants
+        .iter()
+        .flat_map(|x| {
+            let variant_attr = VariantAttr::from_attrs(&x.attrs).ok()?;
 
-        if variant_attr.skip {
-            return None;
-        }
+            if variant_attr.skip {
+                return None;
+            }
 
-        let variant_type = types::type_def(
-            &StructAttr::from(variant_attr),
-            &x.ident,
-            &x.fields,
-            &s.generics,
-        ).ok()?;
+            let variant_type = types::type_def(
+                &StructAttr::from(variant_attr),
+                &x.ident,
+                &x.fields,
+                &s.generics,
+            )
+            .ok()?;
 
-        if variant_type.inline_flattened.is_none() {
-            None
-        } else {
-            Some(variant_type)
-        }
-    }).collect::<Box<[_]>>();
+            if variant_type.inline_flattened.is_none() {
+                None
+            } else {
+                Some(variant_type)
+            }
+        })
+        .collect::<Box<[_]>>();
 
     let generic_args = format_generics(&mut dependencies, &s.generics);
     let inline_flattened = match enum_attr.tagged()? {
         Tagged::Externally => {
-            let flattened_structs = flattened_structs
-                .iter()
-                .map(|x| {
-                    let ident = &x.name;
-                    let flattened = &x.inline_flattened;
-                    quote!(format!(r#""{}": {{ {} }},"#, #ident, #flattened))
-                });
-            Some(quote!(<[String]>::join(&[#(#flattened_structs),*], " } | { ")))
-        },
+            let flattened_structs = flattened_structs.iter().map(|x| {
+                let ident = &x.name;
+                let flattened = &x.inline_flattened;
+                quote!(format!(r#"{{ "{}": {{ {} }} }}"#, #ident, #flattened))
+            });
+            Some(quote!(<[String]>::join(&[#(#flattened_structs),*], " | ")))
+        }
         Tagged::Adjacently { tag, content } => {
-            let flattened_structs = flattened_structs
-                .iter()
-                .map(|x| {
-                    let ident = &x.name;
-                    let flattened = &x.inline_flattened;
-                    quote!(format!(r#""{}": "{}", "{}": {{ {} }},"#, #tag, #ident, #content, #flattened))
-                });
-            Some(quote!(<[String]>::join(&[#(#flattened_structs),*], " } | { ")))
-        },
+            let flattened_structs = flattened_structs.iter().map(|x| {
+                let ident = &x.name;
+                let flattened = &x.inline_flattened;
+                quote!(
+                    format!(
+                        r#"{{ "{}": "{}", "{}": {{ {} }} }}"#,
+                        #tag,
+                        #ident,
+                        #content,
+                        #flattened
+                    )
+                )
+            });
+            Some(quote!(<[String]>::join(&[#(#flattened_structs),*], " | ")))
+        }
         Tagged::Internally { tag } => {
             if flattened_structs.is_empty() {
                 None
             } else {
-                let flattened_structs = flattened_structs
-                    .iter()
-                    .map(|x| {
-                        let ident = &x.name;
-                        let flattened = &x.inline_flattened;
-                        quote!(format!(r#""{}": "{}", {}"#, #tag, #ident, #flattened))
-                    });
-                Some(quote!(<[String]>::join(&[#(#flattened_structs),*], " } | { ")))
+                let flattened_structs = flattened_structs.iter().map(|x| {
+                    let ident = &x.name;
+                    let flattened = &x.inline_flattened;
+
+                    quote! {
+                        match #flattened
+                            .trim_start_matches("{ ")
+                            .trim_end_matches(" }")
+                            .trim() {
+                            "Record<string, never>" => {
+                                format!(
+                                    r#"{{ "{}": "{}", }}"#,
+                                    #tag,
+                                    #ident,
+                                )
+                            }
+                            x => {
+                                format!(
+                                    "{{ \"{}\": \"{}\", {} }}",
+                                    #tag,
+                                    #ident,
+                                    x
+                                )
+                            }
+                        }
+                    }
+                });
+
+                Some(
+                    quote!(
+                        <[String]>::join(&[#(#flattened_structs),*], " | ")
+                    )
+                )
             }
-        },
+        }
         Tagged::Untagged => {
             if flattened_structs.is_empty() {
                 None
             } else {
-                let flattened_structs = flattened_structs
-                    .iter()
-                    .map(|x| x.inline_flattened.clone());
-                Some(quote!(<[String]>::join(&[#(#flattened_structs),*], " } | { ")))
+                let flattened_structs = flattened_structs.iter().map(|x| {
+                    let a = x.inline_flattened.clone();
+                    quote!(
+                        if #a.contains(':') {
+                            format!("{{ {} }}", #a)
+                        } else {
+                            #a
+                        }
+                    )
+                });
+                Some(quote!(<[String]>::join(&[#(#flattened_structs),*], " | ")))
             }
-        },
+        }
     };
 
     Ok(DerivedTS {
@@ -194,12 +235,23 @@ fn format_variant(
         },
         Tagged::Internally { tag } => match variant_type.inline_flattened {
             Some(inline_flattened) => quote! {
-                format!(
-                    "{{ \"{}\": \"{}\", {} }}",
-                    #tag,
-                    #name,
-                    #inline_flattened
-                )
+                match #inline_flattened.trim() {
+                    "Record<string, never>" => {
+                        format!(
+                            r#"{{ "{}": "{}", }}"#,
+                            #tag,
+                            #name,
+                        )
+                    }
+                    x => {
+                        format!(
+                            "{{ \"{}\": \"{}\", {} }}",
+                            #tag,
+                            #name,
+                            #inline_flattened
+                        )
+                    }
+                }
             },
             None => match &variant.fields {
                 Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {

@@ -35,18 +35,58 @@ pub(crate) fn named(
         )?;
     }
 
-    let fields = quote!(<[String]>::join(&[#(#formatted_fields),*], " "));
+    let fields = quote! {
+        {
+            let fields: Vec<String> = vec![#(#formatted_fields),*];
+            let enums = fields
+                .iter()
+                .filter(|x| {
+                    x.contains('{') && match x.find('|') {
+                        Some(i) => &x[i..] != "| null,", // Avoid mistaking `Option` by flattened enum
+                        None => false,
+                    }
+                })
+                .cloned()
+                .collect::<Box<[_]>>();
+            let other_fields = fields
+                .iter()
+                .filter(|x| !x.contains('{') || match x.find('|') {
+                    Some(i) => &x[i..] == "| null,",
+                    None => true,
+                })
+                .cloned()
+                .collect::<Box<[_]>>();
+
+            match (other_fields.len(), enums.len()) {
+                (0, 0) => "Record<string, never>".to_owned(), // This is the best representation of an empty TS object
+                (_, 0) => format!(
+                    "{{ {} }}",
+                    other_fields.join(" ")
+                ),
+                (0, 1) => {
+                    enums[0].to_owned()
+                },
+                (0, _) => {
+                    enums.iter().map(|x| format!("({})", x)).collect::<Box<[_]>>().join(" & ")
+                },
+                (_, _) => {
+                    format!(
+                        "{{ {} }} & {}",
+                        other_fields.join(" "),
+                        enums.iter().map(|x| format!("({})", x)).collect::<Box<[_]>>().join(" & ")
+                    )
+                }
+            }
+        }
+    };
     let generic_args = format_generics(&mut dependencies, generics);
 
     Ok(DerivedTS {
-        inline: quote! {
-            format!(
-                "{{ {} }}",
-                #fields,
-            )
-        },
-        decl: quote!(format!("interface {}{} {}", #name, #generic_args, Self::inline())),
-        inline_flattened: Some(fields),
+        inline: fields.clone(),
+        decl: quote!(format!("type {}{} = {}", #name, #generic_args, Self::inline())),
+        inline_flattened: Some(
+            quote!(#fields.trim_start_matches("{ ").trim_end_matches(" }").to_owned()),
+        ),
         name: name.to_owned(),
         dependencies,
         export: attr.export,
