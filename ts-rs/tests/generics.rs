@@ -158,16 +158,18 @@ fn inline() {
     #[derive(TS)]
     struct Container {
         g: Generic<String>,
+
         #[ts(inline)]
         gi: Generic<String>,
+
         #[ts(flatten)]
         t: Generic<String>,
     }
 
-    assert_eq!(Generic::<()>::decl(), "interface Generic<T> { t: T, }");
+    assert_eq!(Generic::<()>::decl(), "type Generic<T> = { t: T, }");
     assert_eq!(
         Container::decl(),
-        "interface Container { g: Generic<string>, gi: { t: string }, t: string, }"
+        "type Container = { g: Generic<string>, gi: { t: string }, t: string, }"
     );
 }
 
