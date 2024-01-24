@@ -85,10 +85,7 @@ pub(crate) fn named(
         inline: fields.clone(),
         decl: quote!(format!("type {}{} = {}", #name, #generic_args, Self::inline())),
         inline_flattened: Some(
-            quote!({
-                println!("{}", &#fields);
-                #fields.trim_start_matches("{ ").trim_end_matches(" }").to_owned()
-            }),
+            quote!(#fields.trim_start_matches("{ ").trim_end_matches(" }").to_owned()),
         ),
         name: name.to_owned(),
         dependencies,
