@@ -132,7 +132,7 @@
 //! - `flatten`
 //! - `default`
 //!
-//! Note: `skip_serializing` and `skip_deserializing` are ignored. If you with to exclude a field
+//! Note: `skip_serializing` and `skip_deserializing` are ignored. If you wish to exclude a field
 //! from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 //!
 //! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
