@@ -8,5 +8,8 @@ fn list() {
         data: Option<Vec<u32>>,
     }
 
-    assert_eq!(List::decl(), "type List = { data: Array<number> | null, }");
+    assert_eq!(
+        List::decl(),
+        "type List = { data: Array<number> | null, }"
+    );
 }
