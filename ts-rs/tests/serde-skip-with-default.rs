@@ -22,6 +22,6 @@ pub struct Foobar {
 fn serde_skip_with_default() {
     assert_eq!(
         Foobar::decl(),
-        "interface Foobar { something_else: number, }"
+        "type Foobar = { something_else: number, }"
     );
 }

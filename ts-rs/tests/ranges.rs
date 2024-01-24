@@ -19,7 +19,7 @@ struct RangeTest {
 fn range() {
     assert_eq!(
         RangeTest::decl(),
-        "interface RangeTest { a: { start: number, end: number, }, b: { start: string, end: string, }, c: { start: { start: number, end: number, }, end: { start: number, end: number, }, }, d: { start: number, end: number, }, e: { start: Inner, end: Inner, }, }"
+        "type RangeTest = { a: { start: number, end: number, }, b: { start: string, end: string, }, c: { start: { start: number, end: number, }, end: { start: number, end: number, }, }, d: { start: number, end: number, }, e: { start: Inner, end: Inner, }, }"
     );
     assert_eq!(
         RangeTest::dependencies(),
