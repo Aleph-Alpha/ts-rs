@@ -24,10 +24,10 @@ enum SimpleEnum {
 
 #[test]
 fn test_stateful_enum() {
-    assert_eq!(Bar::decl(), r#"interface Bar { field: number, }"#);
+    assert_eq!(Bar::decl(), r#"type Bar = { field: number, }"#);
     assert_eq!(Bar::dependencies(), vec![]);
 
-    assert_eq!(Foo::decl(), r#"interface Foo { bar: Bar, }"#);
+    assert_eq!(Foo::decl(), r#"type Foo = { bar: Bar, }"#);
     assert_eq!(
         Foo::dependencies(),
         vec![Dependency::from_ty::<Bar>().unwrap()]

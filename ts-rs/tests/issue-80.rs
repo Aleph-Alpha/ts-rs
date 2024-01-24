@@ -15,5 +15,5 @@ pub enum SomeTypeList {
 #[test]
 fn issue_80() {
     let ty = SomeTypeList::inline();
-    assert_eq!(ty, r#"{ "Value1": {  } } | "Value2""#);
+    assert_eq!(ty, r#"{ "Value1": Record<string, never> } | "Value2""#);
 }
