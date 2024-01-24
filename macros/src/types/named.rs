@@ -45,7 +45,7 @@ pub(crate) fn named(
                 #fields,
             )
         },
-        decl: quote!(format!("interface {}{} {}", #name, #generic_args, Self::inline())),
+        decl: quote!(format!("type {}{} = {}", #name, #generic_args, Self::inline())),
         inline_flattened: Some(fields),
         name: name.to_owned(),
         dependencies,

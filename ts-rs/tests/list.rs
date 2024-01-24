@@ -10,6 +10,6 @@ fn list() {
 
     assert_eq!(
         List::decl(),
-        "interface List { data: Array<number> | null, }"
+        "type List = { data: Array<number> | null, }"
     );
 }
