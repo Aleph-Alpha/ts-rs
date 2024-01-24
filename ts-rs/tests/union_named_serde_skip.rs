@@ -11,7 +11,7 @@ enum TestUntagged {
     C {
         #[serde(skip)]
         val: i32,
-    }, // serde_json -> `Record<string, never>`
+    }, // serde_json -> `{ }`
 }
 
 #[derive(TS, Deserialize)]
@@ -21,7 +21,7 @@ enum TestExternally {
     C {
         #[serde(skip)]
         val: i32,
-    }, // serde_json -> `{"C": Record<string, never>}`
+    }, // serde_json -> `{"C": { }}`
 }
 
 #[derive(TS, Deserialize)]
@@ -32,7 +32,7 @@ enum TestAdjacently {
     C {
         #[serde(skip)]
         val: i32,
-    }, // serde_json -> `{"type":"C","content": Record<string, never>}`
+    }, // serde_json -> `{"type":"C","content": { }}`
 }
 
 #[derive(TS, Deserialize)]
@@ -51,17 +51,17 @@ enum TestInternally {
 fn test() {
     assert_eq!(
         TestUntagged::decl(),
-        r#"type TestUntagged = null | never[] | Record<string, never>;"#
+        r#"type TestUntagged = null | never[] | { };"#
     );
 
     assert_eq!(
         TestExternally::decl(),
-        r#"type TestExternally = "A" | { "B": never[] } | { "C": Record<string, never> };"#
+        r#"type TestExternally = "A" | { "B": never[] } | { "C": { } };"#
     );
 
     assert_eq!(
         TestAdjacently::decl(),
-        r#"type TestAdjacently = { "type": "A" } | { "type": "B", "content": never[] } | { "type": "C", "content": Record<string, never> };"#
+        r#"type TestAdjacently = { "type": "A" } | { "type": "B", "content": never[] } | { "type": "C", "content": { } };"#
     );
 
     assert_eq!(

@@ -58,7 +58,7 @@ pub(crate) fn named(
                 .collect::<Box<[_]>>();
 
             match (other_fields.len(), enums.len()) {
-                (0, 0) => "Record<string, never>".to_owned(), // This is the best representation of an empty TS object
+                (0, 0) => "{ }".to_owned(), // This is the best representation of an empty TS object
                 (_, 0) => format!(
                     "{{ {} }}",
                     other_fields.join(" ")
@@ -85,7 +85,10 @@ pub(crate) fn named(
         inline: fields.clone(),
         decl: quote!(format!("type {}{} = {}", #name, #generic_args, Self::inline())),
         inline_flattened: Some(
-            quote!(#fields.trim_start_matches("{ ").trim_end_matches(" }").to_owned()),
+            quote!({
+                println!("{}", &#fields);
+                #fields.trim_start_matches("{ ").trim_end_matches(" }").to_owned()
+            }),
         ),
         name: name.to_owned(),
         dependencies,

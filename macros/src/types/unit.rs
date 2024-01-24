@@ -7,8 +7,8 @@ pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
-        inline: quote!("Record<string, never>".to_owned()),
-        decl: quote!(format!("type {} = Record<string, never>;", #name)),
+        inline: quote!("{ }".to_owned()),
+        decl: quote!(format!("type {} = {{ }};", #name)),
         inline_flattened: None,
         name: name.to_owned(),
         dependencies: Dependencies::default(),

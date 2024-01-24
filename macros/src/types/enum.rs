@@ -111,7 +111,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
                             .trim_start_matches("{ ")
                             .trim_end_matches(" }")
                             .trim() {
-                            "Record<string, never>" => {
+                            "{ }" => {
                                 format!(
                                     r#"{{ "{}": "{}", }}"#,
                                     #tag,
@@ -236,7 +236,7 @@ fn format_variant(
         Tagged::Internally { tag } => match variant_type.inline_flattened {
             Some(inline_flattened) => quote! {
                 match #inline_flattened.trim() {
-                    "Record<string, never>" => {
+                    "{ }" | "}" => {
                         format!(
                             r#"{{ "{}": "{}", }}"#,
                             #tag,
