@@ -61,6 +61,15 @@ pub(crate) fn named(
 }
 
 // build an expresion which expands to a string, representing a single field of a struct.
+//
+// formatted_fields will contain all the fields that do not contain the flatten
+// attribute, in the format
+// key: type,
+//
+// flattened_fields will contain all the fields that contain the flatten attribute
+// in their respective formats, which for a named struct is the same as formatted_fields,
+// but for enums is
+// ({ /* variant data */ } | { /* variant data */ })
 fn format_field(
     formatted_fields: &mut Vec<TokenStream>,
     flattened_fields: &mut Vec<TokenStream>,
