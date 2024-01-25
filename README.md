@@ -11,7 +11,7 @@ generate typescript interface/type declarations from rust types
 
 <div align="center">
 <!-- Github Actions -->
-<img src="https://img.shields.io/github/workflow/status/Aleph-Alpha/ts-rs/Test?style=flat-square" alt="actions status" />
+<img src="https://img.shields.io/github/actions/workflow/status/Aleph-Alpha/ts-rs/test.yml?branch=main" alt="actions status" />
 <a href="https://crates.io/crates/ts-rs">
 <img src="https://img.shields.io/crates/v/ts-rs.svg?style=flat-square"
 alt="Crates.io version" />
