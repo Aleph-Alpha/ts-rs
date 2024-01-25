@@ -4,6 +4,7 @@ use ts_rs::TS;
 
 #[test]
 fn externally_tagged() {
+    #[allow(dead_code)]
     #[cfg_attr(feature = "serde-compat", derive(Serialize, TS))]
     #[cfg_attr(not(feature = "serde-compat"), derive(TS))]
     struct Foo {
