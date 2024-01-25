@@ -2,9 +2,8 @@ use serde::Serialize;
 use ts_rs::TS;
 
 #[test]
-#[cfg(feature = "serde-compat")]
 fn externally_tagged() {
-    #[derive(Serialize, TS)]
+    #[cfg_attr(feature = "serde-compat", derive(Serialize, TS))]
     struct Foo {
         qux: i32,
         #[serde(flatten)]
