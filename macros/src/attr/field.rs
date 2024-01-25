@@ -65,9 +65,6 @@ impl_parse! {
     SerdeFieldAttr(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "skip" => out.0.skip = true,
-        "skip_serializing" => out.0.skip = true,
-        "skip_deserializing" => out.0.skip = true,
-        "skip_serializing_if" => out.0.optional = parse_assign_str(input)? == *"Option::is_none",
         "flatten" => out.0.flatten = true,
         // parse #[serde(default)] to not emit a warning
         "default" => {

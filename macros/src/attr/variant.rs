@@ -60,7 +60,5 @@ impl_parse! {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.0.rename_all = Some(parse_assign_inflection(input)?),
         "skip" => out.0.skip = true,
-        "skip_serializing" => out.0.skip = true,
-        "skip_deserializing" => out.0.skip = true,
     }
 }
