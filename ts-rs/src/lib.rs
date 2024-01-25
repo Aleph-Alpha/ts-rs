@@ -521,7 +521,7 @@ impl<T: TS> TS for Vec<T> {
     }
 }
 
-impl<K: TS, V: TS> TS for HashMap<K, V> {
+impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     fn name() -> String {
         "Record".to_owned()
     }
@@ -610,7 +610,7 @@ impl<I: TS> TS for RangeInclusive<I> {
 }
 
 impl_shadow!(as T: impl<'a, T: TS + ?Sized> TS for &T);
-impl_shadow!(as Vec<T>: impl<T: TS> TS for HashSet<T>);
+impl_shadow!(as Vec<T>: impl<T: TS, H> TS for HashSet<T, H>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
 impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for [T; N]);
