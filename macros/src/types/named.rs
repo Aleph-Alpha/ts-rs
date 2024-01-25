@@ -41,14 +41,16 @@ pub(crate) fn named(
     let flattened = quote!(<[String]>::join(&[#(#flattened_fields),*], " & "));
     let generic_args = format_generics(&mut dependencies, generics);
 
+    let inline = match (formatted_fields.len(), flattened_fields.len()) {
+        (0, 0) => quote!("{  }".to_owned()),
+        (_, 0) => quote!(format!("{{ {} }}", #fields)),
+        (0, 1) => quote!(#flattened.trim_matches(|c| c == '(' || c == ')').to_owned()),
+        (0, _) => quote!(#flattened),
+        (_, _) => quote!(format!("{{ {} }} & {}", #fields, #flattened)),
+    };
+
     Ok(DerivedTS {
-        inline: match (formatted_fields.len(), flattened_fields.len()) {
-            (0, 0) => quote!("{  }".to_owned()),
-            (_, 0) => quote!(format!("{{ {} }}", #fields)),
-            (0, 1) => quote!(#flattened.trim_matches(|c| c == '(' || c == ')').to_owned()),
-            (0, _) => quote!(#flattened),
-            (_, _) => quote!(format!("{{ {} }} & {}", #fields, #flattened)),
-        },
+        inline: quote!(#inline.replace(" } & { ", " ")),
         decl: quote!(format!("type {}{} = {}", #name, #generic_args, Self::inline())),
         inline_flattened: Some(quote!(format!("{{ {} }}", #fields))),
         name: name.to_owned(),

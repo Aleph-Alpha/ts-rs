@@ -26,6 +26,6 @@ struct C {
 fn test_def() {
     assert_eq!(
         C::inline(),
-        "{ b: { c: number, } & { a: number, b: number, }, d: number, }"
+        "{ b: { c: number, a: number, b: number, }, d: number, }"
     );
 }
