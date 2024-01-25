@@ -22,9 +22,9 @@ fn test_singlefile() {
 
     assert_eq!(
         out,
-        r#"export interface Alpha { b: Beta, }
+        r#"export type Alpha = { b: Beta, }
 
-export interface Beta { x: boolean, }
+export type Beta = { x: boolean, }
 "#
     );
 }
