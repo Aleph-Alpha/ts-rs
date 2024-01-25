@@ -1,17 +1,21 @@
+#[cfg(feature = "serde-compat")]
 use serde::Serialize;
 use ts_rs::TS;
 
 #[test]
 fn externally_tagged() {
     #[cfg_attr(feature = "serde-compat", derive(Serialize, TS))]
+    #[cfg_attr(not(feature = "serde-compat"), derive(TS))]
     struct Foo {
         qux: i32,
-        #[serde(flatten)]
+        #[cfg_attr(feature = "serde-compat", serde(flatten))]
+        #[cfg_attr(not(feature = "serde-compat"), ts(flatten))]
         baz: Bar,
         biz: Option<String>,
     }
 
-    #[derive(Serialize, TS)]
+    #[cfg_attr(feature = "serde-compat", derive(Serialize, TS))]
+    #[cfg_attr(not(feature = "serde-compat"), derive(TS))]
     #[allow(dead_code)]
     enum Bar {
         Baz { a: i32, a2: String },
