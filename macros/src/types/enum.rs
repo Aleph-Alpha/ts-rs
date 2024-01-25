@@ -140,8 +140,8 @@ fn format_variant(
                     // To be flattened, an internally tagged enum must not be
                     // surrounded by braces, otherwise each variant will look like
                     // { "tag": "name", { /* ...data */ } }
-                    //
-                    // which is invalid since there is no key before the brackets
+                    // when we want it to look like
+                    // { "tag": "name", /* ...data */ }
                     #inline_flattened.trim_matches(&['{', '}', ' '])
                 )
             },
