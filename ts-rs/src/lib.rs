@@ -107,7 +107,7 @@
 //! - `heapless-impl`  
 //!
 //!   Implement `TS` for `Vec` from heapless
-//! 
+//!
 //! - `semver-impl`  
 //!   Implement `TS` for `Version` from semver
 //!

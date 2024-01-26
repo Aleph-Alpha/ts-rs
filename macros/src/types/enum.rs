@@ -50,11 +50,9 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     Ok(DerivedTS {
         inline: quote!([#(#formatted_variants),*].join(" | ")),
         decl: quote!(format!("type {}{} = {};", #name, #generic_args, Self::inline())),
-        inline_flattened: Some(
-            quote!(
-                format!("({})", [#(#formatted_variants),*].join(" | "))
-            )
-        ),
+        inline_flattened: Some(quote!(
+            format!("({})", [#(#formatted_variants),*].join(" | "))
+        )),
         dependencies,
         name,
         export: enum_attr.export,
@@ -136,7 +134,7 @@ fn format_variant(
                     #name,
                     // At this point inline_flattened looks like
                     // { /* ...data */ }
-                    // 
+                    //
                     // To be flattened, an internally tagged enum must not be
                     // surrounded by braces, otherwise each variant will look like
                     // { "tag": "name", { /* ...data */ } }

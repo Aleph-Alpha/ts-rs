@@ -25,7 +25,10 @@ fn rename_all_camel_case() {
         alreadyCamelCase: i32,
     }
 
-    assert_eq!(Rename::inline(), "{ crc32cHash: number, b: number, alreadyCamelCase: number, }");
+    assert_eq!(
+        Rename::inline(),
+        "{ crc32cHash: number, b: number, alreadyCamelCase: number, }"
+    );
 }
 
 #[test]

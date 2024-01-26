@@ -183,10 +183,7 @@ fn default() {
     struct B<U = Option<A<i32>>> {
         u: U,
     }
-    assert_eq!(
-        B::<()>::decl(),
-        "type B<U = A<number> | null> = { u: U, }"
-    );
+    assert_eq!(B::<()>::decl(), "type B<U = A<number> | null> = { u: U, }");
     assert!(B::<()>::dependencies().iter().any(|dep| dep.ts_name == "A"));
 
     #[derive(TS)]
