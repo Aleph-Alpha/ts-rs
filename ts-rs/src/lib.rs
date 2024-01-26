@@ -531,7 +531,6 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
     fn inline() -> String {
         Self::name()
-        // format!("Array<{}>", T::inline())
     }
 
     fn dependencies() -> Vec<Dependency>
