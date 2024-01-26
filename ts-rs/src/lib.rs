@@ -495,6 +495,30 @@ impl<T: TS> TS for Vec<T> {
         "Array".to_owned()
     }
 
+    fn inline() -> String {
+        format!("Array<{}>", T::inline())
+    }
+
+    fn dependencies() -> Vec<Dependency>
+    where
+        Self: 'static,
+    {
+        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
+    }
+
+    fn transparent() -> bool {
+        true
+    }
+}
+
+impl<T: TS, const N: usize> TS for [T; N] {
+    fn name() -> String {
+        format!(
+            "[{}]",
+            (0..N).map(|_| T::name()).collect::<Box<[_]>>().join(", ")
+        )
+    }
+
     fn name_with_type_args(args: Vec<String>) -> String {
         assert_eq!(
             args.len(),
@@ -506,7 +530,8 @@ impl<T: TS> TS for Vec<T> {
     }
 
     fn inline() -> String {
-        format!("Array<{}>", T::inline())
+        Self::name()
+        // format!("Array<{}>", T::inline())
     }
 
     fn dependencies() -> Vec<Dependency>
@@ -613,7 +638,7 @@ impl_shadow!(as T: impl<'a, T: TS + ?Sized> TS for &T);
 impl_shadow!(as Vec<T>: impl<T: TS, H> TS for HashSet<T, H>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
 impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);
-impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for [T; N]);
+// impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for [T; N]);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for [T]);
 
 impl_wrapper!(impl<T: TS + ?Sized> TS for Box<T>);
