@@ -8,6 +8,7 @@ use ts_rs::TS;
 fn semver() {
     #[derive(TS)]
     struct Semver {
+        #[allow(dead_code)]
         version: Version,
     }
 
