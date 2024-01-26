@@ -144,39 +144,43 @@ where
     let path = path.as_ref();
     let base = base.as_ref();
 
-    if path.is_absolute() != base.is_absolute() {
-        if path.is_absolute() {
-            Some(PathBuf::from(path))
-        } else {
-            None
-        }
+    let path = if path.is_absolute() {
+        path.to_path_buf()
     } else {
-        let mut ita = path.components();
-        let mut itb = base.components();
-        let mut comps: Vec<Component> = vec![];
-        loop {
-            match (ita.next(), itb.next()) {
-                (None, None) => break,
-                (Some(a), None) => {
-                    comps.push(a);
-                    comps.extend(ita.by_ref());
-                    break;
-                }
-                (None, _) => comps.push(Component::ParentDir),
-                (Some(a), Some(b)) if comps.is_empty() && a == b => (),
-                (Some(a), Some(Component::CurDir)) => comps.push(a),
-                (Some(_), Some(Component::ParentDir)) => return None,
-                (Some(a), Some(_)) => {
+        std::env::current_dir().unwrap().join(path)
+    };
+
+    let base = if base.is_absolute() {
+        base.to_path_buf()
+    } else {
+        std::env::current_dir().unwrap().join(base)
+    };
+    
+    let mut ita = path.components();
+    let mut itb = base.components();
+    let mut comps: Vec<Component> = vec![];
+    loop {
+        match (ita.next(), itb.next()) {
+            (None, None) => break,
+            (Some(a), None) => {
+                comps.push(a);
+                comps.extend(ita.by_ref());
+                break;
+            }
+            (None, _) => comps.push(Component::ParentDir),
+            (Some(a), Some(b)) if comps.is_empty() && a == b => (),
+            (Some(a), Some(Component::CurDir)) => comps.push(a),
+            (Some(_), Some(Component::ParentDir)) => return None,
+            (Some(a), Some(_)) => {
+                comps.push(Component::ParentDir);
+                for _ in itb {
                     comps.push(Component::ParentDir);
-                    for _ in itb {
-                        comps.push(Component::ParentDir);
-                    }
-                    comps.push(a);
-                    comps.extend(ita.by_ref());
-                    break;
                 }
+                comps.push(a);
+                comps.extend(ita.by_ref());
+                break;
             }
         }
-        Some(comps.iter().map(|c| c.as_os_str()).collect())
     }
+    Some(comps.iter().map(|c| c.as_os_str()).collect())
 }
