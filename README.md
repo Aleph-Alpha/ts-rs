@@ -110,6 +110,9 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 
   Implement `TS` for `Vec` from heapless
 
+- `semver-impl`
+  Implement `TS` for `Version` from semver
+
 - `no-serde-warnings`
 
   When `serde-compat` is enabled, warnings are printed during build if unsupported serde

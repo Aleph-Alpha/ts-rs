@@ -107,6 +107,9 @@
 //! - `heapless-impl`  
 //!
 //!   Implement `TS` for `Vec` from heapless
+//! 
+//! - `semver-impl`  
+//!   Implement `TS` for `Version` from semver
 //!
 //! - `no-serde-warnings`
 //!
@@ -654,6 +657,9 @@ impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for indexmap::IndexMap<K, V
 
 #[cfg(feature = "heapless-impl")]
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for heapless::Vec<T, N>);
+
+#[cfg(feature = "semver-impl")]
+impl_primitives! { semver::Version => "string" }
 
 #[cfg(feature = "bytes-impl")]
 mod bytes {
