@@ -153,6 +153,6 @@ Feel free to open an issue, discuss using GitHub discussions or open a PR.
 - [x] use typescript types across files
 - [x] more enum representations
 - [x] generics
-- [ ] don't require `'static`
+- [x] don't require `'static`
 
 License: MIT
