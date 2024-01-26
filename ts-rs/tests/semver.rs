@@ -1,5 +1,4 @@
-#![allow(deprecated)]
-#![cfg(feature = "chrono-impl")]
+#![cfg(feature = "semver-impl")]
 
 use semver::Version;
 use ts_rs::TS;
