@@ -151,7 +151,7 @@
 //! - [x] use typescript types across files
 //! - [x] more enum representations
 //! - [x] generics
-//! - [ ] don't require `'static`
+//! - [x] don't require `'static`
 
 use std::{
     any::TypeId,
