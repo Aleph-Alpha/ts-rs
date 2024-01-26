@@ -105,4 +105,3 @@ fn untagged() {
         r#"{ a: number, a2: string, } | { b: boolean, } | { c: string, }"#
     )
 }
-

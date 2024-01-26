@@ -10,6 +10,8 @@ fn references() {
         num_ref: &'a i32,
     }
 
-    assert_eq!(FullOfRefs::inline(), "{ str_slice: string, ref_slice: Array<string>, num_ref: number, }")
+    assert_eq!(
+        FullOfRefs::inline(),
+        "{ str_slice: string, ref_slice: Array<string>, num_ref: number, }"
+    )
 }
-

@@ -21,7 +21,7 @@ fn slice_ref() {
     #[derive(TS)]
     struct Interface<'a> {
         #[allow(dead_code)]
-        a: &'a [&'a str]
+        a: &'a [&'a str],
     }
 
     assert_eq!(Interface::inline(), "{ a: Array<string>, }")

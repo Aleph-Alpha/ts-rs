@@ -7,7 +7,7 @@ use ts_rs::TS;
 struct Optional {
     #[ts(optional)]
     a: Option<i32>,
-    b: Option<String>
+    b: Option<String>,
 }
 
 #[test]
