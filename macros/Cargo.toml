@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs-macros"
-version = "7.0.0"
+version = "7.1.1"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
 edition = "2021"
 description = "derive macro for ts-rs"
@@ -10,6 +10,7 @@ repository = "https://github.com/Aleph-Alpha/ts-rs"
 
 [features]
 serde-compat = ["termcolor"]
+no-serde-warnings = []
 
 [lib]
 proc-macro = true

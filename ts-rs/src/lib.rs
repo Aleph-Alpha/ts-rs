@@ -9,7 +9,7 @@
 //!
 //! <div align="center">
 //! <!-- Github Actions -->
-//! <img src="https://img.shields.io/github/workflow/status/Aleph-Alpha/ts-rs/Test?style=flat-square" alt="actions status" />
+//! <img src="https://img.shields.io/github/actions/workflow/status/Aleph-Alpha/ts-rs/test.yml?branch=main" alt="actions status" />
 //! <a href="https://crates.io/crates/ts-rs">
 //! <img src="https://img.shields.io/crates/v/ts-rs.svg?style=flat-square"
 //! alt="Crates.io version" />
@@ -40,7 +40,7 @@
 //! ## get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "7.0"
+//! ts-rs = "7.1"
 //! ```
 //!
 //! ```rust
@@ -64,6 +64,7 @@
 //! - generate necessary imports when exporting to multiple files
 //! - serde compatibility
 //! - generic types
+//! - support for ESM imports
 //!
 //! ## limitations
 //! - generic fields cannot be inlined or flattened (#56)
@@ -104,12 +105,21 @@
 //!   Implement `TS` for `OrderedFloat` from ordered_float
 //!
 //! - `heapless-impl`  
-//! 
+//!
 //!   Implement `TS` for `Vec` from heapless
 //! 
 //! - `semver-impl`  
 //!   Implement `TS` for `Version` from semver
 //!
+//! - `no-serde-warnings`
+//!
+//!   When `serde-compat` is enabled, warnings are printed during build if unsupported serde
+//!   attributes are encountered. Enabling this feature silences these warnings.
+//!
+//! - `import-esm`
+//!
+//!   `import` statements in the generated file will have the `.js` extension in the end of
+//!   the path to conform to the ES Modules spec. (e.g.: `import { MyStruct } from "./my_struct.js"`)
 //!
 //! If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 //!
@@ -122,13 +132,13 @@
 //! - `content`
 //! - `untagged`
 //! - `skip`
-//! - `skip_serializing`
-//! - `skip_deserializing`
-//! - `skip_serializing_if = "Option::is_none"`
 //! - `flatten`
 //! - `default`
 //!
-//! When ts-rs encounters an unsupported serde attribute, a warning is emitted.
+//! Note: `skip_serializing` and `skip_deserializing` are ignored. If you wish to exclude a field
+//! from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
+//!
+//! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
 //!
 //! ## contributing
 //! Contributions are always welcome!
@@ -462,6 +472,27 @@ impl<T: TS> TS for Option<T> {
     }
 }
 
+impl<T: TS, E: TS> TS for Result<T, E> {
+    fn name() -> String {
+        unreachable!();
+    }
+    fn inline() -> String {
+        format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
+    }
+    fn dependencies() -> Vec<Dependency>
+    where
+        Self: 'static,
+    {
+        [Dependency::from_ty::<T>(), Dependency::from_ty::<E>()]
+            .into_iter()
+            .flatten()
+            .collect()
+    }
+    fn transparent() -> bool {
+        true
+    }
+}
+
 impl<T: TS> TS for Vec<T> {
     fn name() -> String {
         "Array".to_owned()
@@ -493,7 +524,7 @@ impl<T: TS> TS for Vec<T> {
     }
 }
 
-impl<K: TS, V: TS> TS for HashMap<K, V> {
+impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     fn name() -> String {
         "Record".to_owned()
     }
@@ -582,10 +613,11 @@ impl<I: TS> TS for RangeInclusive<I> {
 }
 
 impl_shadow!(as T: impl<'a, T: TS + ?Sized> TS for &T);
-impl_shadow!(as Vec<T>: impl<T: TS> TS for HashSet<T>);
+impl_shadow!(as Vec<T>: impl<T: TS, H> TS for HashSet<T, H>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
 impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for [T; N]);
+impl_shadow!(as Vec<T>: impl<T: TS> TS for [T]);
 
 impl_wrapper!(impl<T: TS + ?Sized> TS for Box<T>);
 impl_wrapper!(impl<T: TS + ?Sized> TS for std::sync::Arc<T>);

@@ -3,8 +3,14 @@ If you are unsure what to work on or want to discuss your idea, feel free to ope
 
 ### Documentation
 After implementing a new feature, please document it in the doc comment on `TS` in `ts_rs/lib.rs`.  
-`README.md` is generated from the module doc comment in `ts_rs/lib.rs`. If you added/updated documentation there, run
-`cargo readme > ../README.md` from the `ts-rs/` directory.  
+`README.md` is generated from the module doc comment in `ts_rs/lib.rs`. If you added/updated documentation there, go to the `ts-rs/` directory and run one of the following commands:
+
+On Windows:
+`cargo readme -o ..\README.md`
+
+On other systems:
+`cargo readme > ../README.md`
+
 You can install `cargo readme` by running `cargo install cargo-readme`.
 
 

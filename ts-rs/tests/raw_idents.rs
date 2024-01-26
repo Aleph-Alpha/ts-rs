@@ -15,6 +15,6 @@ fn raw_idents() {
     let out = <r#enum as TS>::decl();
     assert_eq!(
         out,
-        "interface enum { type: number, use: number, struct: number, let: number, enum: number, }"
+        "type enum = { type: number, use: number, struct: number, let: number, enum: number, }"
     );
 }

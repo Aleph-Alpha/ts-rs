@@ -1,7 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
-    GenericArgument, GenericParam, Generics, ItemStruct, PathArguments, Type, TypeGroup, TypeTuple,
+    GenericArgument, GenericParam, Generics, ItemStruct, PathArguments, Type, TypeArray, TypeGroup,
+    TypeReference, TypeSlice, TypeTuple,
 };
 
 use crate::{attr::StructAttr, deps::Dependencies};
@@ -61,10 +62,10 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
 
     // special treatment for arrays and tuples
     match ty {
-        // the field is an array (`[T; n]`) so it technically doesn't have a generic argument.
-        // therefore, we handle it explicitly here like a `Vec<T>`
-        Type::Array(array) => {
-            let inner_ty = &array.elem;
+        // The field is an array (`[T; n]`) or a slice (`[T]`) so it technically doesn't have a
+        // generic argument. Therefore, we handle it explicitly here like a `Vec<T>`
+        Type::Array(TypeArray { ref elem, .. }) | Type::Slice(TypeSlice { ref elem, .. }) => {
+            let inner_ty = elem;
             let vec_ty = syn::parse2::<Type>(quote!(Vec::<#inner_ty>)).unwrap();
             return format_type(&vec_ty, dependencies, generics);
         }
@@ -90,6 +91,9 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
             dependencies.append(tuple_struct.dependencies);
             return tuple_struct.inline;
         }
+        Type::Reference(syn::TypeReference { ref elem, .. }) => {
+            return format_type(elem, dependencies, generics)
+        }
         _ => (),
     };
 
@@ -109,7 +113,9 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
 
 fn extract_type_args(ty: &Type) -> Option<Vec<&Type>> {
     let last_segment = match ty {
-        Type::Group(TypeGroup { elem, .. }) => return extract_type_args(elem),
+        Type::Group(TypeGroup { elem, .. }) | Type::Reference(TypeReference { elem, .. }) => {
+            return extract_type_args(elem)
+        }
         Type::Path(type_path) => type_path.path.segments.last(),
         _ => None,
     }?;

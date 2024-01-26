@@ -11,7 +11,7 @@ generate typescript interface/type declarations from rust types
 
 <div align="center">
 <!-- Github Actions -->
-<img src="https://img.shields.io/github/workflow/status/Aleph-Alpha/ts-rs/Test?style=flat-square" alt="actions status" />
+<img src="https://img.shields.io/github/actions/workflow/status/Aleph-Alpha/ts-rs/test.yml?branch=main" alt="actions status" />
 <a href="https://crates.io/crates/ts-rs">
 <img src="https://img.shields.io/crates/v/ts-rs.svg?style=flat-square"
 alt="Crates.io version" />
@@ -42,7 +42,7 @@ We recommend doing this in your tests.
 ### get started
 ```toml
 [dependencies]
-ts-rs = "7.0"
+ts-rs = "7.1"
 ```
 
 ```rust
@@ -66,6 +66,7 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - generate necessary imports when exporting to multiple files
 - serde compatibility
 - generic types
+- support for ESM imports
 
 ### limitations
 - generic fields cannot be inlined or flattened (#56)
@@ -112,6 +113,15 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - `semver-impl`
   Implement `TS` for `Version` from semver
 
+- `no-serde-warnings`
+
+  When `serde-compat` is enabled, warnings are printed during build if unsupported serde
+  attributes are encountered. Enabling this feature silences these warnings.
+
+- `import-esm`
+
+  `import` statements in the generated file will have the `.js` extension in the end of
+  the path to conform to the ES Modules spec. (e.g.: `import { MyStruct } from "./my_struct.js"`)
 
 If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
 
@@ -124,13 +134,13 @@ Supported serde attributes:
 - `content`
 - `untagged`
 - `skip`
-- `skip_serializing`
-- `skip_deserializing`
-- `skip_serializing_if = "Option::is_none"`
 - `flatten`
 - `default`
 
-When ts-rs encounters an unsupported serde attribute, a warning is emitted.
+Note: `skip_serializing` and `skip_deserializing` are ignored. If you wish to exclude a field
+from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
+
+When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
 
 ### contributing
 Contributions are always welcome!
