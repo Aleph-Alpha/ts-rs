@@ -40,7 +40,7 @@ pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStr
 
 pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generics) -> TokenStream {
     // If the type matches one of the generic parameters, just pass the identifier:
-    if let Some(generic_ident) = generics
+    if let Some(generic) = generics
         .params
         .iter()
         .filter_map(|param| match param {
@@ -55,9 +55,20 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
                     && type_path.path.is_ident(&type_param.ident)
             )
         })
-        .map(|type_param| type_param.ident.to_string())
     {
-        return quote!(#generic_ident.to_owned());
+        let generic_ident = generic.ident.clone();
+        let generic_ident_str = generic_ident.to_string();
+
+        if !generic.bounds.is_empty() || generic.default.is_some() {
+            return quote!(#generic_ident_str.to_owned());
+        }
+
+        return quote!(
+            match <#generic_ident>::name().as_str() {
+                "null" => #generic_ident_str.to_owned(),
+                x => x.to_owned()
+            }
+        );
     }
 
     // special treatment for arrays and tuples

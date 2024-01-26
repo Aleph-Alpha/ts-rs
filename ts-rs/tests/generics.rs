@@ -147,7 +147,7 @@ fn generic_struct() {
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 // https://github.com/Aleph-Alpha/ts-rs/issues/56 TODO
 fn inline() {
     #[derive(TS)]
@@ -167,7 +167,7 @@ fn inline() {
     assert_eq!(Generic::<()>::decl(), "type Generic<T> = { t: T, }");
     assert_eq!(
         Container::decl(),
-        "type Container = { g: Generic<string>, gi: { t: string }, t: string, }"
+        "type Container = { g: Generic<string>, gi: { t: string, }, t: string, }"
     );
 }
 
