@@ -1,0 +1,18 @@
+#![allow(deprecated)]
+#![cfg(feature = "chrono-impl")]
+
+use semver::Version;
+use ts_rs::TS;
+
+#[test]
+fn semver() {
+    #[derive(TS)]
+    struct Semver {
+        version: Version,
+    }
+
+    assert_eq!(
+        Semver::decl(),
+        "type Semver = { version: string, }"
+    )
+}
