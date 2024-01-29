@@ -108,6 +108,9 @@
 //!
 //!   Implement `TS` for `Vec` from heapless
 //!
+//! - `semver-impl`  
+//!   Implement `TS` for `Version` from semver
+//!
 //! - `no-serde-warnings`
 //!
 //!   When `serde-compat` is enabled, warnings are printed during build if unsupported serde
@@ -129,11 +132,11 @@
 //! - `content`
 //! - `untagged`
 //! - `skip`
-//! - `skip_serializing`
-//! - `skip_deserializing`
-//! - `skip_serializing_if = "Option::is_none"`
 //! - `flatten`
 //! - `default`
+//!
+//! Note: `skip_serializing` and `skip_deserializing` are ignored. If you wish to exclude a field
+//! from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 //!
 //! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
 //!
@@ -148,7 +151,7 @@
 //! - [x] use typescript types across files
 //! - [x] more enum representations
 //! - [x] generics
-//! - [ ] don't require `'static`
+//! - [x] don't require `'static`
 
 use std::{
     any::TypeId,
@@ -678,6 +681,9 @@ impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for indexmap::IndexMap<K, V
 
 #[cfg(feature = "heapless-impl")]
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for heapless::Vec<T, N>);
+
+#[cfg(feature = "semver-impl")]
+impl_primitives! { semver::Version => "string" }
 
 #[cfg(feature = "bytes-impl")]
 mod bytes {
