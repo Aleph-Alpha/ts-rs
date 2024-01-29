@@ -227,7 +227,10 @@ mod export;
 ///   Skip this field  
 ///
 /// - `#[ts(optional)]`:  
-///   Indicates the field may be omitted from the serialized struct
+///   May be applied on a struct field of type `Option<T>`.
+///   By default, such a field would turn into `t: T | null`.
+///   If `#[ts(optional)]` is present, `t?: T` is generated instead.
+///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.
 ///
 /// - `#[ts(flatten)]`:  
 ///   Flatten this field (only works if the field is a struct)  
