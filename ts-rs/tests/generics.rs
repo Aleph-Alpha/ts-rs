@@ -147,8 +147,6 @@ fn generic_struct() {
 }
 
 #[test]
-// #[ignore]
-// https://github.com/Aleph-Alpha/ts-rs/issues/56 TODO
 fn inline() {
     #[derive(TS)]
     struct Generic<T> {
@@ -168,6 +166,56 @@ fn inline() {
     assert_eq!(
         Container::decl(),
         "type Container = { g: Generic<string>, gi: { t: string, }, t: string, }"
+    );
+}
+
+#[test]
+#[ignore = "We haven't figured out how to inline generics with bounds yet"]
+fn inline_with_bounds() {
+    #[derive(TS)]
+    struct Generic<T: ToString> {
+        t: T,
+    }
+
+    #[derive(TS)]
+    struct Container {
+        g: Generic<String>,
+        #[ts(inline)]
+        gi: Generic<String>,
+        #[ts(flatten)]
+        t: Generic<u32>,
+    }
+
+    assert_eq!(Generic::<&'static str>::decl(), "type Generic<T> = { t: T, }");
+    assert_eq!(
+        Container::decl(),
+        "type Container = { g: Generic<string>, gi: { t: string, }, t: number, }"
+        // Actual output: { g: Generic<string>, gi: { t: T, }, t: T, }
+    );
+}
+
+#[test]
+#[ignore = "We haven't figured out how to inline generics with defaults yet"]
+fn inline_with_default() {
+    #[derive(TS)]
+    struct Generic<T = String> {
+        t: T,
+    }
+
+    #[derive(TS)]
+    struct Container {
+        g: Generic<String>,
+        #[ts(inline)]
+        gi: Generic<String>,
+        #[ts(flatten)]
+        t: Generic<u32>,
+    }
+
+    assert_eq!(Generic::<&'static str>::decl(), "type Generic<T = string> = { t: T, }");
+    assert_eq!(
+        Container::decl(),
+        "type Container = { g: Generic<string>, gi: { t: string, }, t: number, }"
+        // Actual output: { g: Generic<string>, gi: { t: T, }, t: T, }
     );
 }
 
