@@ -9,6 +9,7 @@ use crate::{
     utils::{raw_name_to_ts_field, to_ts_ident},
     DerivedTS,
 };
+use crate::attr::Optional;
 
 pub(crate) fn named(
     attr: &StructAttr,
@@ -92,8 +93,14 @@ fn format_field(
     }
 
     let (ty, optional_annotation) = match optional {
-        true => (extract_option_argument(&field.ty)?, "?"),
-        false => (&field.ty, ""),
+        Optional { optional: true, nullable } => {
+            let inner_type = extract_option_argument(&field.ty)?; // inner type of the optional
+            match nullable {
+                true => (&field.ty, "?"),  // if it's nullable, we keep the original type
+                false => (inner_type, "?"), // if not, we use the Option's inner type
+            }
+        },
+        Optional { optional: false, .. } => (&field.ty, "")
     };
 
     if flatten {
