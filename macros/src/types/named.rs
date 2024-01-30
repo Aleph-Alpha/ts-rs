@@ -92,21 +92,19 @@ fn format_field(
         return Ok(());
     }
 
-    if let (Some(_type_as), Some(_type_override)) = (&type_as, &type_override) {
+    if type_as.is_some() && type_override.is_some() {
         syn_err!("`type` is not compatible with `as`")
     }
 
-    let parsed_ty = if let Some(_type_as) = &type_as {
-        syn::parse_str::<Type>(_type_as)?
+    let parsed_ty = if let Some(ref type_as) = type_as {
+        syn::parse_str::<Type>(type_as)?
     } else {
         field.ty.clone()
     };
 
-    let (ty, optional_annotation) = {
-        match optional {
-            true => (extract_option_argument(&parsed_ty)?, "?"),
-            false => (&parsed_ty, ""),
-        }
+    let (ty, optional_annotation) = match optional {
+        true => (extract_option_argument(&parsed_ty)?, "?"),
+        false => (&parsed_ty, ""),
     };
 
     if flatten {
