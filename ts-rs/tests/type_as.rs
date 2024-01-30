@@ -1,8 +1,14 @@
 #![allow(dead_code)]
 
+use std::cell::UnsafeCell;
+use std::mem::MaybeUninit;
+use std::ptr::NonNull;
+use std::sync::atomic::AtomicPtr;
 use std::time::Instant;
 
 use ts_rs::TS;
+
+type Unsupported = UnsafeCell<MaybeUninit<NonNull<AtomicPtr<i32>>>>;
 
 #[derive(TS)]
 struct ExternalTypeDef {
@@ -19,12 +25,18 @@ fn struct_properties() {
         #[ts(as = "ExternalTypeDef")]
         #[ts(inline)]
         x: Instant,
+        // here, 'as' just behaves like 'type' (though it adds a dependency!)
+        #[ts(as = "ExternalTypeDef")]
+        y: Unsupported,
     }
 
     assert_eq!(
         Override::inline(),
-        "{ a: number, x: { a: number, b: number, c: number, }, }"
-    )
+        "{ a: number, x: { a: number, b: number, c: number, }, y: ExternalTypeDef, }"
+    );
+    assert!(Override::dependencies()
+        .iter()
+        .any(|d| d.ts_name == "ExternalTypeDef"));
 }
 
 #[test]
@@ -34,7 +46,7 @@ fn enum_variants() {
         A(#[ts(as = "ExternalTypeDef")] Instant),
         B {
             #[ts(as = "ExternalTypeDef")]
-            x: i32,
+            x: Unsupported,
             y: i32,
             z: i32,
         },
@@ -43,5 +55,24 @@ fn enum_variants() {
     assert_eq!(
         OverrideEnum::inline(),
         r#"{ "A": ExternalTypeDef } | { "B": { x: ExternalTypeDef, y: number, z: number, } }"#
+    )
+}
+
+#[test]
+fn complex() {
+    #[derive(TS)]
+    struct Outer {
+        #[ts(as = "Option<ExternalTypeDef>")]
+        #[ts(optional = nullable, inline)]
+        x: Unsupported,
+        #[ts(as = "Option<ExternalTypeDef>")]
+        #[ts(optional = nullable)]
+        y: Unsupported,
+    }
+
+    let external = ExternalTypeDef::inline();
+    assert_eq!(
+        Outer::inline(),
+        format!(r#"{{ x?: {external} | null, y?: ExternalTypeDef | null, }}"#)
     )
 }

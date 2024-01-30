@@ -2,6 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, Type};
 
+use crate::attr::Optional;
 use crate::{
     attr::{FieldAttr, Inflection, StructAttr},
     deps::Dependencies,
@@ -9,7 +10,6 @@ use crate::{
     utils::{raw_name_to_ts_field, to_ts_ident},
     DerivedTS,
 };
-use crate::attr::Optional;
 
 pub(crate) fn named(
     attr: &StructAttr,
@@ -104,14 +104,19 @@ fn format_field(
     };
 
     let (ty, optional_annotation) = match optional {
-        Optional { optional: true, nullable } => {
-            let inner_type = extract_option_argument(&field.ty)?; // inner type of the optional
+        Optional {
+            optional: true,
+            nullable,
+        } => {
+            let inner_type = extract_option_argument(&parsed_ty)?; // inner type of the optional
             match nullable {
                 true => (&parsed_ty, "?"),  // if it's nullable, we keep the original type
                 false => (inner_type, "?"), // if not, we use the Option's inner type
             }
-        },
-        Optional { optional: false, .. } => (&parsed_ty, "")
+        }
+        Optional {
+            optional: false, ..
+        } => (&parsed_ty, ""),
     };
 
     if flatten {
