@@ -99,7 +99,10 @@ pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
         .flat_map(|attr| match A::try_from(attr) {
             Ok(attr) => Some(attr),
             Err(_) => {
+                #[cfg(not(feature = "no-serde-warnings"))]
                 use quote::ToTokens;
+
+                #[cfg(not(feature = "no-serde-warnings"))]
                 warning::print_warning(
                     "failed to parse serde attribute",
                     format!("{}", attr.to_token_stream()),
@@ -121,6 +124,7 @@ mod warning {
 
     // Sadly, it is impossible to raise a warning in a proc macro.
     // This function prints a message which looks like a compiler warning.
+    #[allow(unused)]
     pub fn print_warning(
         title: impl Display,
         content: impl Display,

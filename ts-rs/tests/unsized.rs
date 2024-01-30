@@ -15,6 +15,6 @@ fn contains_str() {
 
     assert_eq!(
         S::decl(),
-        "interface S { b: string, c: string, r: string, a: string, }"
+        "type S = { b: string, c: string, r: string, a: string, }"
     )
 }

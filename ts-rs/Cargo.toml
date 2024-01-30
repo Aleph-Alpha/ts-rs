@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs"
-version = "7.0.0"
+version = "7.1.1"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -8,7 +8,12 @@ description = "generate typescript bindings from rust types"
 homepage = "https://github.com/Aleph-Alpha/ts-rs"
 repository = "https://github.com/Aleph-Alpha/ts-rs"
 keywords = ["typescript", "ts", "bindings", "ts-rs", "wasm"]
-categories = ["development-tools::ffi", "development-tools::build-utils", "wasm", "web-programming"]
+categories = [
+  "development-tools::ffi",
+  "development-tools::build-utils",
+  "wasm",
+  "web-programming",
+]
 readme = "../README.md"
 
 [features]
@@ -24,6 +29,9 @@ default = ["serde-compat"]
 indexmap-impl = ["indexmap"]
 ordered-float-impl = ["ordered-float"]
 heapless-impl = ["heapless"]
+semver-impl = ["semver"]
+no-serde-warnings = ["ts-rs-macros/no-serde-warnings"]
+import-esm = []
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -31,14 +39,17 @@ chrono = { version = "0.4", features = ["serde"] }
 
 [dependencies]
 heapless = { version = "0.7", optional = true }
-ts-rs-macros = { version = "7.0.0", path = "../macros" }
+ts-rs-macros = { version = "7.1.1", path = "../macros" }
 dprint-plugin-typescript = { version = "0.85.1", optional = true }
 chrono = { version = "0.4", optional = true }
-bigdecimal = { version = ">=0.0.13, < 0.4.0", features = ["serde"], optional = true }
+bigdecimal = { version = ">=0.0.13, < 0.4.0", features = [
+  "serde",
+], optional = true }
 uuid = { version = "1.1.2", optional = true }
 bson = { version = "2.2.0", optional = true }
 bytes = { version = "1.0", optional = true }
 url = { version = "2.3", optional = true }
+semver = { version = "1.0.21", optional = true }
 thiserror = "1"
 indexmap = { version = "2.0.0", optional = true }
 ordered-float = { version = "3.0.0", optional = true }

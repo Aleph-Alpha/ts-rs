@@ -50,7 +50,9 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     Ok(DerivedTS {
         inline: quote!([#(#formatted_variants),*].join(" | ")),
         decl: quote!(format!("type {}{} = {};", #name, #generic_args, Self::inline())),
-        inline_flattened: None,
+        inline_flattened: Some(quote!(
+            format!("({})", [#(#formatted_variants),*].join(" | "))
+        )),
         dependencies,
         name,
         export: enum_attr.export,
@@ -91,6 +93,14 @@ fn format_variant(
         Tagged::Untagged => quote!(#inline_type),
         Tagged::Externally => match &variant.fields {
             Fields::Unit => quote!(format!("\"{}\"", #name)),
+            Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
+                let FieldAttr { skip, .. } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+                if skip {
+                    quote!(format!("\"{}\"", #name))
+                } else {
+                    quote!(format!("{{ \"{}\": {} }}", #name, #inline_type))
+                }
+            }
             _ => quote!(format!("{{ \"{}\": {} }}", #name, #inline_type)),
         },
         Tagged::Adjacently { tag, content } => match &variant.fields {
@@ -98,25 +108,26 @@ fn format_variant(
                 let FieldAttr {
                     type_as,
                     type_override,
+                    skip,
                     ..
                 } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
 
-                if let (Some(_type_as), Some(_type_override)) = (&type_as, &type_override) {
+                if type_as.is_some() && type_override.is_some() {
                     syn_err!("`type` is not compatible with `as`")
                 }
-
-                let parsed_ty = if let Some(_type_as) = &type_as {
-                    syn::parse_str::<Type>(_type_as)?
-                } else {
-                    unnamed.unnamed[0].ty.clone()
+             
+                let ty = match (type_override, type_as) {
+                    (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
+                    (Some(type_override), None) => quote! { #type_override },
+                    (None, Some(type_as)) => format_type(&syn::parse_str::<Type>(type_as)?, dependencies, generics), 
+                    (None, None) => format_type(unnamed.unnamed[0].ty, dependencies, generics),
                 };
 
-                let ty = if let Some(type_override) = type_override {
-                    quote! { #type_override }
+                if skip {
+                    quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                 } else {
-                    format_type(&parsed_ty, dependencies, generics)
-                };
-                quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #ty))
+                    quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #ty))
+                }
             }
             Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name)),
             _ => quote!(
@@ -129,34 +140,38 @@ fn format_variant(
                     "{{ \"{}\": \"{}\", {} }}",
                     #tag,
                     #name,
-                    #inline_flattened
+                    // At this point inline_flattened looks like
+                    // { /* ...data */ }
+                    //
+                    // To be flattened, an internally tagged enum must not be
+                    // surrounded by braces, otherwise each variant will look like
+                    // { "tag": "name", { /* ...data */ } }
+                    // when we want it to look like
+                    // { "tag": "name", /* ...data */ }
+                    #inline_flattened.trim_matches(&['{', '}', ' '])
                 )
             },
             None => match &variant.fields {
                 Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                     let FieldAttr {
                         type_as,
+                        skip,
                         type_override,
                         ..
                     } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
 
-                    if let (Some(_type_as), Some(_type_override)) = (&type_as, &type_override) {
-                        syn_err!("`type` is not compatible with `as`")
+                    let ty = match (type_override, type_as) {
+                        (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
+                        (Some(type_override), None) => quote! { #type_override },
+                        (None, Some(type_as)) => format_type(&syn::parse_str::<Type>(type_as)?, dependencies, generics), 
+                        (None, None) => format_type(unnamed.unnamed[0].ty, dependencies, generics),
+                    };
+
+                    if skip {
+                        quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
+                    } else {
+                        quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #ty))
                     }
-
-                    let parsed_ty = if let Some(_type_as) = &type_as {
-                        syn::parse_str::<Type>(_type_as)?
-                    } else {
-                        unnamed.unnamed[0].ty.clone()
-                    };
-
-                    let ty = if let Some(type_override) = type_override {
-                        quote! { #type_override }
-                    } else {
-                        format_type(&parsed_ty, dependencies, generics)
-                    };
-
-                    quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #ty))
                 }
                 Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name)),
                 _ => {

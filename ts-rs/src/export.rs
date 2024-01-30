@@ -110,12 +110,18 @@ fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), Ex
 fn import_path(from: &Path, import: &Path) -> String {
     let rel_path =
         diff_paths(import, from.parent().unwrap()).expect("failed to calculate import path");
-    match rel_path.components().next() {
+    let path = match rel_path.components().next() {
         Some(Component::Normal(_)) => format!("./{}", rel_path.to_string_lossy()),
         _ => rel_path.to_string_lossy().into(),
+    };
+
+    let path_without_extension = path.trim_end_matches(".ts");
+
+    if cfg!(feature = "import-esm") {
+        format!("{}.js", path_without_extension)
+    } else {
+        path_without_extension.to_owned()
     }
-    .trim_end_matches(".ts")
-    .to_owned()
 }
 
 // Construct a relative path from a provided base directory path to the provided path.

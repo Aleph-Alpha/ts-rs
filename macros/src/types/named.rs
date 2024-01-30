@@ -17,6 +17,7 @@ pub(crate) fn named(
     generics: &Generics,
 ) -> Result<DerivedTS> {
     let mut formatted_fields = Vec::new();
+    let mut flattened_fields = Vec::new();
     let mut dependencies = Dependencies::default();
     if let Some(tag) = &attr.tag {
         let formatted = format!("{}: \"{}\",", tag, name);
@@ -28,6 +29,7 @@ pub(crate) fn named(
     for field in &fields.named {
         format_field(
             &mut formatted_fields,
+            &mut flattened_fields,
             &mut dependencies,
             field,
             &attr.rename_all,
@@ -36,17 +38,21 @@ pub(crate) fn named(
     }
 
     let fields = quote!(<[String]>::join(&[#(#formatted_fields),*], " "));
+    let flattened = quote!(<[String]>::join(&[#(#flattened_fields),*], " & "));
     let generic_args = format_generics(&mut dependencies, generics);
 
+    let inline = match (formatted_fields.len(), flattened_fields.len()) {
+        (0, 0) => quote!("{  }".to_owned()),
+        (_, 0) => quote!(format!("{{ {} }}", #fields)),
+        (0, 1) => quote!(#flattened.trim_matches(|c| c == '(' || c == ')').to_owned()),
+        (0, _) => quote!(#flattened),
+        (_, _) => quote!(format!("{{ {} }} & {}", #fields, #flattened)),
+    };
+
     Ok(DerivedTS {
-        inline: quote! {
-            format!(
-                "{{ {} }}",
-                #fields,
-            )
-        },
-        decl: quote!(format!("interface {}{} {}", #name, #generic_args, Self::inline())),
-        inline_flattened: Some(fields),
+        inline: quote!(#inline.replace(" } & { ", " ")),
+        decl: quote!(format!("type {}{} = {}", #name, #generic_args, Self::inline())),
+        inline_flattened: Some(quote!(format!("{{ {} }}", #fields))),
         name: name.to_owned(),
         dependencies,
         export: attr.export,
@@ -55,8 +61,18 @@ pub(crate) fn named(
 }
 
 // build an expresion which expands to a string, representing a single field of a struct.
+//
+// formatted_fields will contain all the fields that do not contain the flatten
+// attribute, in the format
+// key: type,
+//
+// flattened_fields will contain all the fields that contain the flatten attribute
+// in their respective formats, which for a named struct is the same as formatted_fields,
+// but for enums is
+// ({ /* variant data */ } | { /* variant data */ })
 fn format_field(
     formatted_fields: &mut Vec<TokenStream>,
+    flattened_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     field: &Field,
     rename_all: &Option<Inflection>,
@@ -102,7 +118,7 @@ fn format_field(
             _ => {}
         }
 
-        formatted_fields.push(quote!(<#ty as ts_rs::TS>::inline_flattened()));
+        flattened_fields.push(quote!(<#ty as ts_rs::TS>::inline_flattened()));
         dependencies.append_from(ty);
         return Ok(());
     }

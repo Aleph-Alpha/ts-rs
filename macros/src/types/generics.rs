@@ -1,7 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
-    GenericArgument, GenericParam, Generics, ItemStruct, PathArguments, Type, TypeGroup, TypeTuple,
+    GenericArgument, GenericParam, Generics, ItemStruct, PathArguments, Type, TypeArray, TypeGroup,
+    TypeReference, TypeSlice, TypeTuple,
 };
 
 use crate::{attr::StructAttr, deps::Dependencies};
@@ -39,7 +40,7 @@ pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStr
 
 pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generics) -> TokenStream {
     // If the type matches one of the generic parameters, just pass the identifier:
-    if let Some(generic_ident) = generics
+    if let Some(generic) = generics
         .params
         .iter()
         .filter_map(|param| match param {
@@ -54,17 +55,34 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
                     && type_path.path.is_ident(&type_param.ident)
             )
         })
-        .map(|type_param| type_param.ident.to_string())
     {
-        return quote!(#generic_ident.to_owned());
+        let generic_ident = generic.ident.clone();
+        let generic_ident_str = generic_ident.to_string();
+
+        if !generic.bounds.is_empty() || generic.default.is_some() {
+            return quote!(#generic_ident_str.to_owned());
+        }
+
+        return quote!(
+            match <#generic_ident>::inline().as_str() {
+                // When exporting a generic, the default type used is `()`,
+                // which gives "null" when calling `.name()`. In this case, we
+                // want to preserve the type param's identifier as the name used
+                "null" => #generic_ident_str.to_owned(),
+
+                // If name is not "null", a type has been provided, so we use its
+                // name instead
+                x => x.to_owned()
+            }
+        );
     }
 
     // special treatment for arrays and tuples
     match ty {
-        // the field is an array (`[T; n]`) so it technically doesn't have a generic argument.
-        // therefore, we handle it explicitly here like a `Vec<T>`
-        Type::Array(array) => {
-            let inner_ty = &array.elem;
+        // The field is an array (`[T; n]`) or a slice (`[T]`) so it technically doesn't have a
+        // generic argument. Therefore, we handle it explicitly here like a `Vec<T>`
+        Type::Array(TypeArray { ref elem, .. }) | Type::Slice(TypeSlice { ref elem, .. }) => {
+            let inner_ty = elem;
             let vec_ty = syn::parse2::<Type>(quote!(Vec::<#inner_ty>)).unwrap();
             return format_type(&vec_ty, dependencies, generics);
         }
@@ -90,6 +108,9 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
             dependencies.append(tuple_struct.dependencies);
             return tuple_struct.inline;
         }
+        Type::Reference(syn::TypeReference { ref elem, .. }) => {
+            return format_type(elem, dependencies, generics)
+        }
         _ => (),
     };
 
@@ -109,7 +130,9 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
 
 fn extract_type_args(ty: &Type) -> Option<Vec<&Type>> {
     let last_segment = match ty {
-        Type::Group(TypeGroup { elem, .. }) => return extract_type_args(elem),
+        Type::Group(TypeGroup { elem, .. }) | Type::Reference(TypeReference { elem, .. }) => {
+            return extract_type_args(elem)
+        }
         Type::Path(type_path) => type_path.path.segments.last(),
         _ => None,
     }?;
