@@ -31,7 +31,7 @@ pub(crate) fn newtype(
         flatten,
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
-    match (&rename_inner, skip, optional, flatten) {
+    match (&rename_inner, skip, optional.optional, flatten) {
         (Some(_), ..) => syn_err!("`rename` is not applicable to newtype fields"),
         (_, true, ..) => return super::unit::null(attr, name),
         (_, _, true, ..) => syn_err!("`optional` is not applicable to newtype fields"),

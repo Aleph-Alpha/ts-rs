@@ -86,7 +86,7 @@ fn format_field(
         syn_err!("`rename` is not applicable to tuple structs")
     }
 
-    if optional {
+    if optional.optional {
         syn_err!("`optional` is not applicable to tuple fields")
     }
 
