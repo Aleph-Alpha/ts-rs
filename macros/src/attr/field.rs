@@ -1,7 +1,9 @@
 use syn::{Attribute, Ident, Result};
+use syn::spanned::Spanned;
+
+use crate::utils::parse_attrs;
 
 use super::parse_assign_str;
-use crate::utils::parse_attrs;
 
 #[derive(Default)]
 pub struct FieldAttr {
@@ -9,8 +11,17 @@ pub struct FieldAttr {
     pub rename: Option<String>,
     pub inline: bool,
     pub skip: bool,
-    pub optional: bool,
+    pub optional: Optional,
     pub flatten: bool,
+}
+
+/// Indicates whether the field is marked with `#[ts(optional)]`.
+/// `#[ts(optional)]` turns an `t: Option<T>` into `t?: T`, while
+/// `#[ts(optional = nullable)]` turns it into `t?: T | null`.
+#[derive(Default)]
+pub struct Optional {
+    pub optional: bool,
+    pub nullable: bool,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -36,7 +47,7 @@ impl FieldAttr {
             rename,
             inline,
             skip,
-            optional,
+            optional: Optional { optional, nullable },
             flatten,
         }: FieldAttr,
     ) {
@@ -44,7 +55,10 @@ impl FieldAttr {
         self.type_override = self.type_override.take().or(type_override);
         self.inline = self.inline || inline;
         self.skip = self.skip || skip;
-        self.optional |= optional;
+        self.optional = Optional {
+            optional: self.optional.optional || optional,
+            nullable: self.optional.nullable || nullable
+        };
         self.flatten |= flatten;
     }
 }
@@ -55,7 +69,22 @@ impl_parse! {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "inline" => out.inline = true,
         "skip" => out.skip = true,
-        "optional" => out.optional = true,
+        "optional" => {
+          use syn::{Token, Error};
+            let nullable = if input.peek(Token![=]) {
+                input.parse::<Token![=]>()?;
+                match Ident::parse(input)?.to_string().as_str() {
+                    "nullable" => true,
+                    other => Err(Error::new(other.span(), "expected 'nullable'"))?
+                }
+            } else {
+                false
+            };
+            out.optional = Optional {
+                optional: true,
+                nullable,
+            }
+        },
         "flatten" => out.flatten = true,
     }
 }
