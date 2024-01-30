@@ -107,11 +107,11 @@ fn format_field(
         Optional { optional: true, nullable } => {
             let inner_type = extract_option_argument(&field.ty)?; // inner type of the optional
             match nullable {
-                true => (&field.ty, "?"),  // if it's nullable, we keep the original type
+                true => (&parsed_ty, "?"),  // if it's nullable, we keep the original type
                 false => (inner_type, "?"), // if not, we use the Option's inner type
             }
         },
-        Optional { optional: false, .. } => (&field.ty, "")
+        Optional { optional: false, .. } => (&parsed_ty, "")
     };
 
     if flatten {
