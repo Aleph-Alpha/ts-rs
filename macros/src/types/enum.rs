@@ -120,7 +120,7 @@ fn format_variant(
                     (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
                     (Some(type_override), None) => quote! { #type_override },
                     (None, Some(type_as)) => format_type(&syn::parse_str::<Type>(&type_as)?, dependencies, generics), 
-                    (None, None) => format_type(unnamed.unnamed[0].ty, dependencies, generics),
+                    (None, None) => format_type(&unnamed.unnamed[0].ty, dependencies, generics),
                 };
 
                 if skip {
@@ -164,7 +164,7 @@ fn format_variant(
                         (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
                         (Some(type_override), None) => quote! { #type_override },
                         (None, Some(type_as)) => format_type(&syn::parse_str::<Type>(&type_as)?, dependencies, generics), 
-                        (None, None) => format_type(unnamed.unnamed[0].ty, dependencies, generics),
+                        (None, None) => format_type(&unnamed.unnamed[0].ty, dependencies, generics),
                     };
 
                     if skip {
