@@ -1,4 +1,4 @@
-#![allow(clippy::box_collection)]
+#![allow(clippy::box_collection, clippy::enum_variant_names, dead_code)]
 #![allow(dead_code)]
 
 use std::{
@@ -142,12 +142,11 @@ fn generic_struct() {
 
     assert_eq!(
         Struct::<()>::decl(),
-        "type Struct<T> = { a: T, b: [T, T], c: [T, [T, T]], d: Array<T>, e: Array<[T, T]>, f: Array<T>, g: Array<Array<T>>, h: Array<Array<[T, T]>>, }"
+        "type Struct<T> = { a: T, b: [T, T], c: [T, [T, T]], d: [T, T, T], e: [[T, T], [T, T], [T, T]], f: Array<T>, g: Array<Array<T>>, h: Array<[[T, T], [T, T], [T, T]]>, }"
     )
 }
 
 #[test]
-// https://github.com/Aleph-Alpha/ts-rs/issues/56 TODO
 fn inline() {
     #[derive(TS)]
     struct Generic<T> {
@@ -173,6 +172,8 @@ fn inline() {
 #[test]
 #[ignore = "We haven't figured out how to inline generics with bounds yet"]
 fn inline_with_bounds() {
+    todo!("FIX ME: https://github.com/Aleph-Alpha/ts-rs/issues/214");
+
     #[derive(TS)]
     struct Generic<T: ToString> {
         t: T,
@@ -181,13 +182,16 @@ fn inline_with_bounds() {
     #[derive(TS)]
     struct Container {
         g: Generic<String>,
+
         #[ts(inline)]
         gi: Generic<String>,
+
         #[ts(flatten)]
         t: Generic<u32>,
     }
 
     assert_eq!(Generic::<&'static str>::decl(), "type Generic<T> = { t: T, }");
+    //                   ^^^^^^^^^^^^ Replace with something else
     assert_eq!(
         Container::decl(),
         "type Container = { g: Generic<string>, gi: { t: string, }, t: number, }"
@@ -196,7 +200,6 @@ fn inline_with_bounds() {
 }
 
 #[test]
-#[ignore = "We haven't figured out how to inline generics with defaults yet"]
 fn inline_with_default() {
     #[derive(TS)]
     struct Generic<T = String> {
@@ -206,17 +209,18 @@ fn inline_with_default() {
     #[derive(TS)]
     struct Container {
         g: Generic<String>,
+        
         #[ts(inline)]
         gi: Generic<String>,
+
         #[ts(flatten)]
         t: Generic<u32>,
     }
 
-    assert_eq!(Generic::<&'static str>::decl(), "type Generic<T = string> = { t: T, }");
+    assert_eq!(Generic::<()>::decl(), "type Generic<T = string> = { t: T, }");
     assert_eq!(
         Container::decl(),
         "type Container = { g: Generic<string>, gi: { t: string, }, t: number, }"
-        // Actual output: { g: Generic<string>, gi: { t: T, }, t: T, }
     );
 }
 
@@ -278,5 +282,6 @@ fn trait_bounds() {
         t: [T; N],
     }
 
-    assert_eq!(D::<&str, 41>::decl(), "type D<T> = { t: Array<T>, }")
+    let ty = format!("type D<T> = {{ t: [{}], }}", "T, ".repeat(41).trim_end_matches(", "));
+    assert_eq!(D::<&str, 41>::decl(), ty)
 }

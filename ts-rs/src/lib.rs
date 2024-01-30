@@ -227,7 +227,10 @@ mod export;
 ///   Skip this field  
 ///
 /// - `#[ts(optional)]`:  
-///   Indicates the field may be omitted from the serialized struct
+///   May be applied on a struct field of type `Option<T>`.
+///   By default, such a field would turn into `t: T | null`.
+///   If `#[ts(optional)]` is present, `t?: T` is generated instead.
+///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.
 ///
 /// - `#[ts(flatten)]`:  
 ///   Flatten this field (only works if the field is a struct)  
@@ -498,18 +501,60 @@ impl<T: TS> TS for Vec<T> {
         "Array".to_owned()
     }
 
+    fn inline() -> String {
+        format!("Array<{}>", T::inline())
+    }
+
+    fn dependencies() -> Vec<Dependency>
+    where
+        Self: 'static,
+    {
+        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
+    }
+
+    fn transparent() -> bool {
+        true
+    }
+}
+
+// Arrays longer than this limit will be emmited as Array<T>
+const ARRAY_TUPLE_LIMIT: usize = 128;
+impl<T: TS, const N: usize> TS for [T; N] {
+    fn name() -> String {
+        if N > ARRAY_TUPLE_LIMIT {
+            return Vec::<T>::name()
+        }
+
+        "[]".to_owned()
+    }
+
     fn name_with_type_args(args: Vec<String>) -> String {
+        if N > ARRAY_TUPLE_LIMIT {
+            return Vec::<T>::name_with_type_args(args);
+        }
+
         assert_eq!(
             args.len(),
             1,
-            "called Vec::name_with_type_args with {} args",
+            "called [T; N]::name_with_type_args with {} args",
             args.len()
         );
-        format!("Array<{}>", args[0])
+
+        format!(
+            "[{}]",
+            (0..N).map(|_| args[0].clone()).collect::<Box<[_]>>().join(", ")
+        )
     }
 
     fn inline() -> String {
-        format!("Array<{}>", T::inline())
+        if N > ARRAY_TUPLE_LIMIT {
+            return Vec::<T>::inline();
+        }
+
+        format!(
+            "[{}]",
+            (0..N).map(|_| T::inline()).collect::<Box<[_]>>().join(", ")
+        )
     }
 
     fn dependencies() -> Vec<Dependency>
@@ -616,7 +661,6 @@ impl_shadow!(as T: impl<'a, T: TS + ?Sized> TS for &T);
 impl_shadow!(as Vec<T>: impl<T: TS, H> TS for HashSet<T, H>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
 impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);
-impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for [T; N]);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for [T]);
 
 impl_wrapper!(impl<T: TS + ?Sized> TS for Box<T>);

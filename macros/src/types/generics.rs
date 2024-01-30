@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
-    GenericArgument, GenericParam, Generics, ItemStruct, PathArguments, Type, TypeArray, TypeGroup,
+    GenericArgument, GenericParam, Generics, ItemStruct, PathArguments, Type, TypeGroup,
     TypeReference, TypeSlice, TypeTuple,
 };
 
@@ -59,7 +59,7 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
         let generic_ident = generic.ident.clone();
         let generic_ident_str = generic_ident.to_string();
 
-        if !generic.bounds.is_empty() || generic.default.is_some() {
+        if !generic.bounds.is_empty() {
             return quote!(#generic_ident_str.to_owned());
         }
 
@@ -79,9 +79,15 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
 
     // special treatment for arrays and tuples
     match ty {
-        // The field is an array (`[T; n]`) or a slice (`[T]`) so it technically doesn't have a
+        // Arrays have their own implementation that needs to be handle separetly
+        // be cause the T in `[T; N]` is technically not a generic
+        Type::Array(type_array) => {
+            let formatted = format_type(&type_array.elem, dependencies, generics);
+            return quote!(<#type_array>::name_with_type_args(vec![#formatted]))
+        }
+        // The field is a slice (`[T]`) so it technically doesn't have a
         // generic argument. Therefore, we handle it explicitly here like a `Vec<T>`
-        Type::Array(TypeArray { ref elem, .. }) | Type::Slice(TypeSlice { ref elem, .. }) => {
+        Type::Slice(TypeSlice { ref elem, .. }) => {
             let inner_ty = elem;
             let vec_ty = syn::parse2::<Type>(quote!(Vec::<#inner_ty>)).unwrap();
             return format_type(&vec_ty, dependencies, generics);
