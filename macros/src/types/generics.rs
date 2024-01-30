@@ -1,8 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::{
-    GenericArgument, GenericParam, Generics, ItemStruct, PathArguments, Type, TypeArray, TypeGroup,
-    TypeReference, TypeSlice, TypeTuple, Expr, ExprLit, Lit,
+    GenericArgument, GenericParam, Generics, ItemStruct, PathArguments, Type, TypeGroup,
+    TypeReference, TypeSlice, TypeTuple,
 };
 
 use crate::{attr::StructAttr, deps::Dependencies};
@@ -62,23 +62,15 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
 
     // special treatment for arrays and tuples
     match ty {
-        // When possible, convert a Rust array into a fixed size TS tuple
-        // this is only possible when the length of the array is a numeric literal,
-        // rather than the name of a constant
-        Type::Array(TypeArray {
-            ref elem,
-            len: Expr::Lit(ExprLit { lit: Lit::Int(lit_int), .. }),
-            ..
-        }) => {
-            let inner_ty = elem;
-            let len = lit_int.base10_parse::<usize>().unwrap();
-            let item_ty = (0..len).map(|_| quote!(#inner_ty));
-            let tuple_ty = syn::parse2::<Type>(quote!{ (#(#item_ty),*) }).unwrap();
-            return format_type(&tuple_ty, dependencies, generics)
+        // Arrays have their own implementation that needs to be handle separetly
+        // be cause the T in `[T; N]` is technically not a generic
+        Type::Array(type_array) => {
+            let formatted = format_type(&type_array.elem, dependencies, generics);
+            return quote!(<#type_array>::name_with_type_args(vec![#formatted]))
         }
-        // The field is an array (`[T; n]`) or a slice (`[T]`) so it technically doesn't have a
+        // The field is a slice (`[T]`) so it technically doesn't have a
         // generic argument. Therefore, we handle it explicitly here like a `Vec<T>`
-        Type::Array(TypeArray { ref elem, .. }) | Type::Slice(TypeSlice { ref elem, .. }) => {
+        Type::Slice(TypeSlice { ref elem, .. }) => {
             let inner_ty = elem;
             let vec_ty = syn::parse2::<Type>(quote!(Vec::<#inner_ty>)).unwrap();
             return format_type(&vec_ty, dependencies, generics);

@@ -511,26 +511,44 @@ impl<T: TS> TS for Vec<T> {
     }
 }
 
+// Arrays longer than this limit will be emmited as Array<T>
+const ARRAY_TUPLE_LIMIT: usize = 100; // Temp value
 impl<T: TS, const N: usize> TS for [T; N] {
     fn name() -> String {
-        format!(
-            "[{}]",
-            (0..N).map(|_| T::name()).collect::<Box<[_]>>().join(", ")
-        )
+        if N > ARRAY_TUPLE_LIMIT {
+            return Vec::<T>::name()
+        }
+
+        "[]".to_owned()
     }
 
     fn name_with_type_args(args: Vec<String>) -> String {
+        if N > ARRAY_TUPLE_LIMIT {
+            return Vec::<T>::name_with_type_args(args);
+        }
+
         assert_eq!(
             args.len(),
             1,
-            "called Vec::name_with_type_args with {} args",
+            "called [T; N]::name_with_type_args with {} args",
             args.len()
         );
-        format!("Array<{}>", args[0])
+
+        format!(
+            "[{}]",
+            (0..N).map(|_| args[0].clone()).collect::<Box<[_]>>().join(", ")
+        )
     }
 
     fn inline() -> String {
-        Self::name()
+        if N > ARRAY_TUPLE_LIMIT {
+            return Vec::<T>::inline();
+        }
+
+        format!(
+            "[{}]",
+            (0..N).map(|_| T::inline()).collect::<Box<[_]>>().join(", ")
+        )
     }
 
     fn dependencies() -> Vec<Dependency>
@@ -637,7 +655,6 @@ impl_shadow!(as T: impl<'a, T: TS + ?Sized> TS for &T);
 impl_shadow!(as Vec<T>: impl<T: TS, H> TS for HashSet<T, H>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
 impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);
-// impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for [T; N]);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for [T]);
 
 impl_wrapper!(impl<T: TS + ?Sized> TS for Box<T>);

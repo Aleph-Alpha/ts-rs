@@ -1,4 +1,4 @@
-#![allow(clippy::box_collection)]
+#![allow(clippy::box_collection, clippy::enum_variant_names, dead_code)]
 #![allow(dead_code)]
 
 use std::{
@@ -232,5 +232,6 @@ fn trait_bounds() {
         t: [T; N],
     }
 
-    assert_eq!(D::<&str, 41>::decl(), "type D<T> = { t: Array<T>, }")
+    let ty = format!("type D<T> = {{ t: [{}], }}", "T, ".repeat(41).trim_end_matches(", "));
+    assert_eq!(D::<&str, 41>::decl(), ty)
 }
