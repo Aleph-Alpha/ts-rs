@@ -71,32 +71,36 @@ fn format_field(
     if skip {
         return Ok(());
     }
-    
-    let ty = if let Some(_type_as) = &type_as {
-        syn::parse_str::<Type>(_type_as)?
+
+    let ty = if let Some(ref type_as) = type_as {
+        syn::parse_str::<Type>(type_as)?
     } else {
         field.ty.clone()
     };
-    if let (Some(_type_as), Some(_type_override)) = (&type_as, &type_override) {
+
+    if type_as.is_some() && type_override.is_some() {
         syn_err!("`type` is not compatible with `as`")
     }
+
     if rename.is_some() {
         syn_err!("`rename` is not applicable to tuple structs")
     }
+
     if optional {
         syn_err!("`optional` is not applicable to tuple fields")
     }
+
     if flatten {
         syn_err!("`flatten` is not applicable to tuple fields")
     }
 
-    formatted_fields.push(match &type_override {
-        Some(o) => quote!(#o.to_owned()),
+    formatted_fields.push(match type_override {
+        Some(ref o) => quote!(#o.to_owned()),
         None if inline => quote!(<#ty as ts_rs::TS>::inline()),
         None => format_type(&ty, dependencies, generics),
     });
 
-    match (inline, &type_override) {
+    match (inline, type_override) {
         (_, Some(_)) => (),
         (false, _) => {
             dependencies.push_or_append_from(&ty);
