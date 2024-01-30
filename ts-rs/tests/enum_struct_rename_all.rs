@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 #[derive(Serialize, Deserialize, TS, Clone)]
@@ -21,5 +21,8 @@ pub enum TaskStatus {
 
 #[test]
 pub fn enum_struct_rename_all() {
-    assert_eq!(TaskStatus::inline(), r#"{ "running": { startedTime: string, } } | { "terminated": { status: number, stdout: string, stderr: string, } }"#)
+    assert_eq!(
+        TaskStatus::inline(),
+        r#"{ "running": { startedTime: string, } } | { "terminated": { status: number, stdout: string, stderr: string, } }"#
+    )
 }

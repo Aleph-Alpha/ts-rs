@@ -110,6 +110,9 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 
   Implement `TS` for `Vec` from heapless
 
+- `semver-impl`
+  Implement `TS` for `Version` from semver
+
 - `no-serde-warnings`
 
   When `serde-compat` is enabled, warnings are printed during build if unsupported serde
@@ -131,11 +134,11 @@ Supported serde attributes:
 - `content`
 - `untagged`
 - `skip`
-- `skip_serializing`
-- `skip_deserializing`
-- `skip_serializing_if = "Option::is_none"`
 - `flatten`
 - `default`
+
+Note: `skip_serializing` and `skip_deserializing` are ignored. If you wish to exclude a field
+from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 
 When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
 
@@ -150,6 +153,6 @@ Feel free to open an issue, discuss using GitHub discussions or open a PR.
 - [x] use typescript types across files
 - [x] more enum representations
 - [x] generics
-- [ ] don't require `'static`
+- [x] don't require `'static`
 
 License: MIT
