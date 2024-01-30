@@ -112,10 +112,6 @@ fn format_variant(
                     ..
                 } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
 
-                if type_as.is_some() && type_override.is_some() {
-                    syn_err!("`type` is not compatible with `as`")
-                }
-             
                 let ty = match (type_override, type_as) {
                     (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
                     (Some(type_override), None) => quote! { #type_override },
