@@ -1,4 +1,4 @@
-#![allow(clippy::box_collection)]
+#![allow(clippy::box_collection, clippy::enum_variant_names, dead_code)]
 #![allow(dead_code)]
 
 use std::{
@@ -142,7 +142,7 @@ fn generic_struct() {
 
     assert_eq!(
         Struct::<()>::decl(),
-        "type Struct<T> = { a: T, b: [T, T], c: [T, [T, T]], d: Array<T>, e: Array<[T, T]>, f: Array<T>, g: Array<Array<T>>, h: Array<Array<[T, T]>>, }"
+        "type Struct<T> = { a: T, b: [T, T], c: [T, [T, T]], d: [T, T, T], e: [[T, T], [T, T], [T, T]], f: Array<T>, g: Array<Array<T>>, h: Array<[[T, T], [T, T], [T, T]]>, }"
     )
 }
 
@@ -282,5 +282,6 @@ fn trait_bounds() {
         t: [T; N],
     }
 
-    assert_eq!(D::<&str, 41>::decl(), "type D<T> = { t: Array<T>, }")
+    let ty = format!("type D<T> = {{ t: [{}], }}", "T, ".repeat(41).trim_end_matches(", "));
+    assert_eq!(D::<&str, 41>::decl(), ty)
 }
