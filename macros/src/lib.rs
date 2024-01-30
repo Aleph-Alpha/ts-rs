@@ -2,10 +2,10 @@
 #![deny(unused)]
 
 use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote};
+use quote::{format_ident, quote, ToTokens};
 use syn::{
     parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Result,
-    TypeParam, WhereClause,
+    TypeParam, WhereClause, Path,
 };
 
 use crate::deps::Dependencies;
@@ -22,6 +22,7 @@ struct DerivedTS {
     decl: TokenStream,
     inline_flattened: Option<TokenStream>,
     dependencies: Dependencies,
+    unit_type: Option<Path>,
 
     export: bool,
     export_to: Option<String>,
@@ -34,7 +35,7 @@ impl DerivedTS {
             .params
             .iter()
             .filter(|param| matches!(param, GenericParam::Type(_)))
-            .map(|_| quote! { () });
+            .map(|_| self.unit_type.as_ref().map(|x| x.to_token_stream()).unwrap_or(quote!{ () }));
         let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
 
         Some(quote! {

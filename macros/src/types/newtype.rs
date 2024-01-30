@@ -58,6 +58,7 @@ pub(crate) fn newtype(
         inline_flattened: None,
         name: name.to_owned(),
         dependencies,
+        unit_type: attr.unit_type.clone(),
         export: attr.export,
         export_to: attr.export_to.clone(),
     })

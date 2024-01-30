@@ -12,6 +12,7 @@ pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
         inline_flattened: None,
         name: name.to_owned(),
         dependencies: Dependencies::default(),
+        unit_type: attr.unit_type.clone(),
         export: attr.export,
         export_to: attr.export_to.clone(),
     })
@@ -26,6 +27,7 @@ pub(crate) fn empty_array(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
         inline_flattened: None,
         name: name.to_owned(),
         dependencies: Dependencies::default(),
+        unit_type: attr.unit_type.clone(),
         export: attr.export,
         export_to: attr.export_to.clone(),
     })
@@ -40,6 +42,7 @@ pub(crate) fn null(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
         inline_flattened: None,
         name: name.to_owned(),
         dependencies: Dependencies::default(),
+        unit_type: attr.unit_type.clone(),
         export: attr.export,
         export_to: attr.export_to.clone(),
     })

@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use syn::{Attribute, Ident, Result};
+use syn::{Attribute, Ident, Result, Path};
 
 use crate::{
     attr::{parse_assign_str, Inflection, VariantAttr},
@@ -14,6 +14,7 @@ pub struct StructAttr {
     pub export_to: Option<String>,
     pub export: bool,
     pub tag: Option<String>,
+    pub unit_type: Option<Path>,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -37,6 +38,7 @@ impl StructAttr {
             export,
             export_to,
             tag,
+            unit_type,
         }: StructAttr,
     ) {
         self.rename = self.rename.take().or(rename);
@@ -44,6 +46,7 @@ impl StructAttr {
         self.export_to = self.export_to.take().or(export_to);
         self.export = self.export || export;
         self.tag = self.tag.take().or(tag);
+        self.unit_type = self.unit_type.take().or(unit_type);
     }
 }
 
@@ -66,6 +69,9 @@ impl_parse! {
     StructAttr(input, out) {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
+        "unit_type" => out.unit_type = Some(
+            parse_assign_str(input).and_then(|x| syn::parse_str::<Path>(&x))?
+        ),
         "export" => out.export = true,
         "export_to" => out.export_to = Some(parse_assign_str(input)?)
     }

@@ -29,6 +29,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
             decl: quote!("type {} = never;"),
             inline_flattened: None,
             dependencies: Dependencies::default(),
+            unit_type: enum_attr.unit_type,
             export: enum_attr.export,
             export_to: enum_attr.export_to,
         });
@@ -55,6 +56,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         )),
         dependencies,
         name,
+        unit_type: enum_attr.unit_type,
         export: enum_attr.export,
         export_to: enum_attr.export_to,
     })
@@ -183,6 +185,7 @@ fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
         name,
         inline_flattened: None,
         dependencies: Dependencies::default(),
+        unit_type: enum_attr.unit_type,
         export: enum_attr.export,
         export_to: enum_attr.export_to,
     }

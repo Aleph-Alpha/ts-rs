@@ -56,6 +56,7 @@ pub(crate) fn named(
         inline_flattened: Some(quote!(format!("{{ {} }}", #fields))),
         name: name.to_owned(),
         dependencies,
+        unit_type: attr.unit_type.clone(),
         export: attr.export,
         export_to: attr.export_to.clone(),
     })

@@ -59,10 +59,6 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
         let generic_ident = generic.ident.clone();
         let generic_ident_str = generic_ident.to_string();
 
-        if !generic.bounds.is_empty() {
-            return quote!(#generic_ident_str.to_owned());
-        }
-
         return quote!(
             match <#generic_ident>::inline().as_str() {
                 // When exporting a generic, the default type used is `()`,

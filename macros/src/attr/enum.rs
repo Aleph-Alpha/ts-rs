@@ -1,4 +1,4 @@
-use syn::{Attribute, Ident, Result};
+use syn::{Attribute, Ident, Result, Path};
 
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, Inflection},
@@ -11,6 +11,7 @@ pub struct EnumAttr {
     pub rename: Option<String>,
     pub export_to: Option<String>,
     pub export: bool,
+    pub unit_type: Option<Path>,
     tag: Option<String>,
     untagged: bool,
     content: Option<String>,
@@ -59,6 +60,7 @@ impl EnumAttr {
             untagged,
             export_to,
             export,
+            unit_type,
         }: EnumAttr,
     ) {
         self.rename = self.rename.take().or(rename);
@@ -68,6 +70,7 @@ impl EnumAttr {
         self.content = self.content.take().or(content);
         self.export = self.export || export;
         self.export_to = self.export_to.take().or(export_to);
+        self.unit_type = self.unit_type.take().or(unit_type);
     }
 }
 
@@ -75,6 +78,9 @@ impl_parse! {
     EnumAttr(input, out) {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
+        "unit_type" => out.unit_type = Some(
+            parse_assign_str(input).and_then(|x| syn::parse_str::<Path>(&x))?
+        ),
         "export_to" => out.export_to = Some(parse_assign_str(input)?),
         "export" => out.export = true
     }

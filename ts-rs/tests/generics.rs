@@ -9,6 +9,14 @@ use std::{
 
 use ts_rs::TS;
 
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, TS)]
+struct Unit;
+impl ToString for Unit {
+    fn to_string(&self) -> String {
+        "".to_owned()
+    }
+}
+
 #[derive(TS)]
 struct Generic<T>
 where
@@ -170,11 +178,9 @@ fn inline() {
 }
 
 #[test]
-#[ignore = "We haven't figured out how to inline generics with bounds yet"]
 fn inline_with_bounds() {
-    todo!("FIX ME: https://github.com/Aleph-Alpha/ts-rs/issues/214");
-
     #[derive(TS)]
+    #[ts(unit_type = "Unit")]
     struct Generic<T: ToString> {
         t: T,
     }
@@ -190,12 +196,10 @@ fn inline_with_bounds() {
         t: Generic<u32>,
     }
 
-    assert_eq!(Generic::<&'static str>::decl(), "type Generic<T> = { t: T, }");
-    //                   ^^^^^^^^^^^^ Replace with something else
+    assert_eq!(Generic::<Unit>::decl(), "type Generic<T> = { t: T, }");
     assert_eq!(
         Container::decl(),
         "type Container = { g: Generic<string>, gi: { t: string, }, t: number, }"
-        // Actual output: { g: Generic<string>, gi: { t: T, }, t: T, }
     );
 }
 
@@ -256,16 +260,19 @@ fn default() {
 #[test]
 fn trait_bounds() {
     #[derive(TS)]
+    #[ts(unit_type = "Unit")]
     struct A<T: ToString = i32> {
         t: T,
     }
-    assert_eq!(A::<i32>::decl(), "type A<T = number> = { t: T, }");
+    assert_eq!(A::<Unit>::decl(), "type A<T = number> = { t: T, }");
 
     #[derive(TS)]
+    #[ts(unit_type = "Unit")]
     struct B<T: ToString + Debug + Clone + 'static>(T);
-    assert_eq!(B::<&'static str>::decl(), "type B<T> = T;");
+    assert_eq!(B::<Unit>::decl(), "type B<T> = T;");
 
     #[derive(TS)]
+    #[ts(unit_type = "Unit")]
     enum C<T: Copy + Clone + PartialEq, K: Copy + PartialOrd = i32> {
         A { t: T },
         B(T),
@@ -273,15 +280,16 @@ fn trait_bounds() {
         D(T, K),
     }
     assert_eq!(
-        C::<&'static str, i32>::decl(),
+        C::<Unit, Unit>::decl(),
         r#"type C<T, K = number> = { "A": { t: T, } } | { "B": T } | "C" | { "D": [T, K] };"#
     );
 
     #[derive(TS)]
+    #[ts(unit_type = "Unit")]
     struct D<T: ToString, const N: usize> {
         t: [T; N],
     }
 
     let ty = format!("type D<T> = {{ t: [{}], }}", "T, ".repeat(41).trim_end_matches(", "));
-    assert_eq!(D::<&str, 41>::decl(), ty)
+    assert_eq!(D::<Unit, 41>::decl(), ty)
 }
