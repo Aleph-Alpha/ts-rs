@@ -64,7 +64,7 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
         }
 
         return quote!(
-            match <#generic_ident>::name().as_str() {
+            match <#generic_ident>::inline().as_str() {
                 // When exporting a generic, the default type used is `()`,
                 // which gives "null" when calling `.name()`. In this case, we
                 // want to preserve the type param's identifier as the name used
