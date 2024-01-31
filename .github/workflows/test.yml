@@ -1,8 +1,8 @@
 on: [push, pull_request]
 name: Test
 jobs:
-  end-to-end-tests:
-    name: Run end-to-end tests
+  e2e-dependencies:
+    name: Run 'dependencies' end-to-end test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -14,6 +14,14 @@ jobs:
         run: |
           cargo t 
           tsc bindings/* --noEmit
+  e2e-workspace:
+    name: Run 'workspace' end-to-end test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
       - name: workspace e2e test
         working-directory: e2e/workspace
         run: |
