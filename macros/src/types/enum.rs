@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Fields, Generics, ItemEnum, Variant};
+use syn::{Fields, Generics, ItemEnum, Type, Variant};
 
 use crate::{
     attr::{EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
@@ -106,18 +106,22 @@ fn format_variant(
         Tagged::Adjacently { tag, content } => match &variant.fields {
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                 let FieldAttr {
+                    type_as,
                     type_override,
                     skip,
                     ..
                 } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+
+                let ty = match (type_override, type_as) {
+                    (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
+                    (Some(type_override), None) => quote! { #type_override },
+                    (None, Some(type_as)) => format_type(&syn::parse_str::<Type>(&type_as)?, dependencies, generics), 
+                    (None, None) => format_type(&unnamed.unnamed[0].ty, dependencies, generics),
+                };
+
                 if skip {
                     quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                 } else {
-                    let ty = if let Some(type_override) = type_override {
-                        quote! { #type_override }
-                    } else {
-                        format_type(&unnamed.unnamed[0].ty, dependencies, generics)
-                    };
                     quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #ty))
                 }
             }
@@ -146,18 +150,22 @@ fn format_variant(
             None => match &variant.fields {
                 Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                     let FieldAttr {
-                        type_override,
+                        type_as,
                         skip,
+                        type_override,
                         ..
                     } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+
+                    let ty = match (type_override, type_as) {
+                        (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
+                        (Some(type_override), None) => quote! { #type_override },
+                        (None, Some(type_as)) => format_type(&syn::parse_str::<Type>(&type_as)?, dependencies, generics), 
+                        (None, None) => format_type(&unnamed.unnamed[0].ty, dependencies, generics),
+                    };
+
                     if skip {
                         quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                     } else {
-                        let ty = if let Some(type_override) = type_override {
-                            quote! { #type_override }
-                        } else {
-                            format_type(&unnamed.unnamed[0].ty, dependencies, generics)
-                        };
                         quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #ty))
                     }
                 }
