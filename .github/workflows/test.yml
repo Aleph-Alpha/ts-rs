@@ -1,6 +1,25 @@
 on: [push, pull_request]
 name: Test
 jobs:
+  end-to-end-tests:
+    name: Run end-to-end tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: dependencies e2e test
+        working-directory: e2e/dependencies/consumer
+        run: |
+          cargo t 
+          tsc bindings/* --noEmit
+      - name: workspace e2e test
+        working-directory: e2e/workspace
+        run: |
+          cargo t 
+          tsc parent/bindings/* --noEmit
+
   readme-up-to-date:
     name: Check that README.md is up-to-date
     runs-on: ubuntu-latest
