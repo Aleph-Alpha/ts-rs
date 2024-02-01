@@ -8,7 +8,8 @@ pub struct Dependencies(Vec<TokenStream>);
 impl Dependencies {
     /// Adds all dependencies from the given type
     pub fn append_from(&mut self, ty: &Type) {
-        self.0.push(quote![.extend(<#ty as ts_rs::TS>::dependency_types())]);
+        self.0
+            .push(quote![.extend(<#ty as ts_rs::TS>::dependency_types())]);
     }
 
     /// Adds the given type if it's *not* transparent.

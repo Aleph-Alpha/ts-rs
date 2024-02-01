@@ -23,9 +23,11 @@ fn range() {
         "type RangeTest = { a: { start: number, end: number, }, b: { start: string, end: string, }, c: { start: { start: number, end: number, }, end: { start: number, end: number, }, }, d: { start: number, end: number, }, e: { start: Inner, end: Inner, }, }"
     );
     assert_eq!(
-        RangeTest::dependencies().into_iter().collect::<BTreeSet<_>>().into_iter().collect::<Vec<_>>(),
-        vec![
-            Dependency::from_ty::<Inner>().unwrap(),
-        ]
+        RangeTest::dependencies()
+            .into_iter()
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect::<Vec<_>>(),
+        vec![Dependency::from_ty::<Inner>().unwrap(),]
     );
 }

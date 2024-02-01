@@ -1,5 +1,5 @@
-use syn::{Attribute, Ident, Result};
 use syn::spanned::Spanned;
+use syn::{Attribute, Ident, Result};
 
 use crate::utils::parse_attrs;
 
@@ -60,7 +60,7 @@ impl FieldAttr {
         self.skip = self.skip || skip;
         self.optional = Optional {
             optional: self.optional.optional || optional,
-            nullable: self.optional.nullable || nullable
+            nullable: self.optional.nullable || nullable,
         };
         self.flatten |= flatten;
     }

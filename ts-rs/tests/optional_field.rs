@@ -24,11 +24,19 @@ fn in_struct() {
 fn in_enum() {
     #[derive(Serialize, TS)]
     enum Optional {
-        A { #[ts(optional)] a: Option<i32> },
-        B { b: Option<String>, }
+        A {
+            #[ts(optional)]
+            a: Option<i32>,
+        },
+        B {
+            b: Option<String>,
+        },
     }
 
-    assert_eq!(Optional::inline(), r#"{ "A": { a?: number, } } | { "B": { b: string | null, } }"#);
+    assert_eq!(
+        Optional::inline(),
+        r#"{ "A": { a?: number, } } | { "B": { b: string | null, } }"#
+    );
 }
 
 #[test]

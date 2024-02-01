@@ -293,10 +293,15 @@ pub trait TS {
     }
 
     fn dependency_types() -> impl TypeList
-        where
-            Self: 'static {}
+    where
+        Self: 'static,
+    {
+    }
 
-    fn dependencies() -> Vec<Dependency> where Self: 'static {
+    fn dependencies() -> Vec<Dependency>
+    where
+        Self: 'static,
+    {
         use crate::typelist::TypeVisitor;
 
         let mut deps: Vec<Dependency> = vec![];
@@ -478,8 +483,8 @@ impl<T: TS> TS for Option<T> {
     }
 
     fn dependency_types() -> impl TypeList
-        where
-            Self: 'static
+    where
+        Self: 'static,
     {
         ().push::<T>()
     }
@@ -497,8 +502,8 @@ impl<T: TS, E: TS> TS for Result<T, E> {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
     }
     fn dependency_types() -> impl TypeList
-        where
-            Self: 'static
+    where
+        Self: 'static,
     {
         ().push::<T>().push::<E>()
     }
@@ -517,8 +522,8 @@ impl<T: TS> TS for Vec<T> {
     }
 
     fn dependency_types() -> impl TypeList
-        where
-            Self: 'static
+    where
+        Self: 'static,
     {
         ().push::<T>()
     }
@@ -532,7 +537,7 @@ const ARRAY_TUPLE_LIMIT: usize = 128;
 impl<T: TS, const N: usize> TS for [T; N] {
     fn name() -> String {
         if N > ARRAY_TUPLE_LIMIT {
-            return Vec::<T>::name()
+            return Vec::<T>::name();
         }
 
         "[]".to_owned()
@@ -552,7 +557,10 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
         format!(
             "[{}]",
-            (0..N).map(|_| args[0].clone()).collect::<Box<[_]>>().join(", ")
+            (0..N)
+                .map(|_| args[0].clone())
+                .collect::<Box<[_]>>()
+                .join(", ")
         )
     }
 
@@ -568,8 +576,8 @@ impl<T: TS, const N: usize> TS for [T; N] {
     }
 
     fn dependency_types() -> impl TypeList
-        where
-            Self: 'static
+    where
+        Self: 'static,
     {
         ().push::<T>()
     }
@@ -599,8 +607,8 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     }
 
     fn dependency_types() -> impl TypeList
-        where
-            Self: 'static
+    where
+        Self: 'static,
     {
         ().push::<K>().push::<V>()
     }
@@ -626,8 +634,8 @@ impl<I: TS> TS for Range<I> {
     }
 
     fn dependency_types() -> impl TypeList
-        where
-            Self: 'static
+    where
+        Self: 'static,
     {
         ().push::<I>()
     }
@@ -653,8 +661,8 @@ impl<I: TS> TS for RangeInclusive<I> {
     }
 
     fn dependency_types() -> impl TypeList
-        where
-            Self: 'static
+    where
+        Self: 'static,
     {
         ().push::<I>()
     }

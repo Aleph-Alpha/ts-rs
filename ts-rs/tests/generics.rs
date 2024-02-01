@@ -191,12 +191,14 @@ fn inline_with_bounds() {
         t: Generic<u32>,
     }
 
-    assert_eq!(Generic::<&'static str>::decl(), "type Generic<T> = { t: T, }");
+    assert_eq!(
+        Generic::<&'static str>::decl(),
+        "type Generic<T> = { t: T, }"
+    );
     //                   ^^^^^^^^^^^^ Replace with something else
     assert_eq!(
         Container::decl(),
-        "type Container = { g: Generic<string>, gi: { t: string, }, t: number, }"
-        // Actual output: { g: Generic<string>, gi: { t: T, }, t: T, }
+        "type Container = { g: Generic<string>, gi: { t: string, }, t: number, }" // Actual output: { g: Generic<string>, gi: { t: T, }, t: T, }
     );
 }
 
@@ -210,7 +212,7 @@ fn inline_with_default() {
     #[derive(TS)]
     struct Container {
         g: Generic<String>,
-        
+
         #[ts(inline)]
         gi: Generic<String>,
 
@@ -218,7 +220,10 @@ fn inline_with_default() {
         t: Generic<u32>,
     }
 
-    assert_eq!(Generic::<()>::decl(), "type Generic<T = string> = { t: T, }");
+    assert_eq!(
+        Generic::<()>::decl(),
+        "type Generic<T = string> = { t: T, }"
+    );
     assert_eq!(
         Container::decl(),
         "type Container = { g: Generic<string>, gi: { t: string, }, t: number, }"
@@ -283,6 +288,9 @@ fn trait_bounds() {
         t: [T; N],
     }
 
-    let ty = format!("type D<T> = {{ t: [{}], }}", "T, ".repeat(41).trim_end_matches(", "));
+    let ty = format!(
+        "type D<T> = {{ t: [{}], }}",
+        "T, ".repeat(41).trim_end_matches(", ")
+    );
     assert_eq!(D::<&str, 41>::decl(), ty)
 }
