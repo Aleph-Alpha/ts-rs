@@ -13,7 +13,10 @@ fn interface() {
         a: [i32; 4],
     }
 
-    assert_eq!(Interface::inline(), "{ a: [number, number, number, number], }")
+    assert_eq!(
+        Interface::inline(),
+        "{ a: [number, number, number, number], }"
+    )
 }
 
 #[test]
