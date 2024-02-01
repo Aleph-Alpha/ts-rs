@@ -532,8 +532,8 @@ impl<T: TS> TS for Vec<T> {
     }
 }
 
-// Arrays longer than this limit will be emmited as Array<T>
-const ARRAY_TUPLE_LIMIT: usize = 128;
+// Arrays longer than this limit will be emitted as Array<T>
+const ARRAY_TUPLE_LIMIT: usize = 64;
 impl<T: TS, const N: usize> TS for [T; N] {
     fn name() -> String {
         if N > ARRAY_TUPLE_LIMIT {

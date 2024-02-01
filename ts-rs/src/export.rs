@@ -4,6 +4,7 @@ use std::{
     fmt::Write,
     path::{Component, Path, PathBuf},
 };
+use std::sync::Mutex;
 
 use thiserror::Error;
 
@@ -98,6 +99,11 @@ pub(crate) fn export_type<T: TS + ?Sized + 'static>() -> Result<(), ExportError>
 pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     path: P,
 ) -> Result<(), ExportError> {
+    // Lock to make sure only one file will be written at a time.
+    // In the future, it might make sense to replace this with something more clever to only prevent
+    // two threads from writing the **same** file concurrently.
+    static FILE_LOCK: Mutex<()> = Mutex::new(());
+
     #[allow(unused_mut)]
     let mut buffer = export_type_to_string::<T>()?;
 
@@ -117,7 +123,9 @@ pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     if let Some(parent) = path.as_ref().parent() {
         std::fs::create_dir_all(parent)?;
     }
+    let lock = FILE_LOCK.lock().unwrap();
     std::fs::write(path.as_ref(), buffer)?;
+    drop(lock);
     Ok(())
 }
 
