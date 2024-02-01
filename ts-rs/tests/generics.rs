@@ -171,6 +171,7 @@ fn inline() {
 
 #[test]
 #[ignore = "We haven't figured out how to inline generics with bounds yet"]
+#[allow(unreachable_code)]
 fn inline_with_bounds() {
     todo!("FIX ME: https://github.com/Aleph-Alpha/ts-rs/issues/214");
 

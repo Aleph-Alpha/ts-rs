@@ -165,6 +165,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::typelist::TypeList;
+
 pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
@@ -292,34 +294,26 @@ pub trait TS {
 
     fn dependency_types() -> impl TypeList
         where
-            Self: 'static { () }
+            Self: 'static {}
 
-    fn dependencies() -> Vec<Dependency>
-        where
-            Self: 'static;
+    fn dependencies() -> Vec<Dependency> where Self: 'static {
+        use crate::typelist::TypeVisitor;
 
-    //fn dependencies() -> Vec<Dependency> where Self: 'static {
-    //    use crate::typelist::{TypeList, TypeVisitor};
-    //
-    //    let mut deps: Vec<Dependency> = vec![];
-    //    struct Visit<'a>(&'a mut Vec<Dependency>);
-    //    impl<'a> TypeVisitor for Visit<'a> {
-    //        fn visit<T: TS + 'static + ?Sized>(&mut self) {
-    //            if let Some(dep) = Dependency::from_ty::<T>() {
-    //                self.0.push(dep);
-    //            }
-    //        }
-    //    }
-    //    Self::dependency_types().for_each(&mut Visit(&mut deps));
-    //
-    //    deps
-    //}
+        let mut deps: Vec<Dependency> = vec![];
+        struct Visit<'a>(&'a mut Vec<Dependency>);
+        impl<'a> TypeVisitor for Visit<'a> {
+            fn visit<T: TS + 'static + ?Sized>(&mut self) {
+                if let Some(dep) = Dependency::from_ty::<T>() {
+                    self.0.push(dep);
+                }
+            }
+        }
+        Self::dependency_types().for_each(&mut Visit(&mut deps));
 
-    fn _push_to(l: impl TypeList) -> impl TypeList where Self: 'static {
-        l.push::<Self>()
+        deps
     }
 
-    /// `true` if this is a transparent type, e.g tuples or a list.  
+    /// `true` if this is a transparent type, e.g tuples or a list.
     /// This is used for resolving imports when using the `export!` macro.
     fn transparent() -> bool;
 
@@ -393,7 +387,6 @@ macro_rules! impl_primitives {
                 $l.to_owned()
             }
             fn inline() -> String { $l.to_owned() }
-            fn dependencies() -> Vec<Dependency> { vec![] }
             fn transparent() -> bool { false }
         }
     )*)* };
@@ -413,15 +406,6 @@ macro_rules! impl_tuples {
                 Self: 'static
             {
                 ()$(.push::<$i>())*
-            }
-            fn dependencies() -> Vec<Dependency>
-            where
-                Self: 'static
-            {
-                [$( Dependency::from_ty::<$i>() ),*]
-                    .into_iter()
-                    .flatten()
-                    .collect()
             }
             fn transparent() -> bool { true }
         }
@@ -450,12 +434,6 @@ macro_rules! impl_wrapper {
             {
                 T::dependency_types()
             }
-            fn dependencies() -> Vec<Dependency>
-            where
-                Self: 'static
-            {
-                T::dependencies()
-            }
             fn transparent() -> bool { T::transparent() }
         }
     };
@@ -474,12 +452,6 @@ macro_rules! impl_shadow {
                 Self: 'static
             {
                 <$s>::dependency_types()
-            }
-            fn dependencies() -> Vec<$crate::Dependency>
-            where
-                Self: 'static
-            {
-                <$s>::dependencies()
             }
             fn transparent() -> bool { <$s>::transparent() }
         }
@@ -511,12 +483,6 @@ impl<T: TS> TS for Option<T> {
     {
         ().push::<T>()
     }
-    fn dependencies() -> Vec<Dependency>
-        where
-            Self: 'static
-    {
-         [Dependency::from_ty::<T>()].into_iter().flatten().collect()
-    }
 
     fn transparent() -> bool {
         true
@@ -535,15 +501,6 @@ impl<T: TS, E: TS> TS for Result<T, E> {
             Self: 'static
     {
         ().push::<T>().push::<E>()
-    }
-    fn dependencies() -> Vec<Dependency>
-        where
-            Self: 'static
-    {
-        [Dependency::from_ty::<T>(), Dependency::from_ty::<E>()]
-            .into_iter()
-            .flatten()
-            .collect()
     }
     fn transparent() -> bool {
         true
@@ -564,12 +521,6 @@ impl<T: TS> TS for Vec<T> {
             Self: 'static
     {
         ().push::<T>()
-    }
-    fn dependencies() -> Vec<Dependency>
-        where
-            Self: 'static
-    {
-        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
     }
     fn transparent() -> bool {
         true
@@ -622,12 +573,6 @@ impl<T: TS, const N: usize> TS for [T; N] {
     {
         ().push::<T>()
     }
-    fn dependencies() -> Vec<Dependency>
-        where
-            Self: 'static
-    {
-        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
-    }
 
     fn transparent() -> bool {
         true
@@ -659,15 +604,6 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     {
         ().push::<K>().push::<V>()
     }
-    fn dependencies() -> Vec<Dependency>
-        where
-            Self: 'static
-    {
-        [Dependency::from_ty::<K>(), Dependency::from_ty::<V>()]
-            .into_iter()
-            .flatten()
-            .collect()
-    }
 
     fn transparent() -> bool {
         true
@@ -695,12 +631,6 @@ impl<I: TS> TS for Range<I> {
     {
         ().push::<I>()
     }
-    fn dependencies() -> Vec<Dependency>
-        where
-            Self: 'static
-    {
-        [Dependency::from_ty::<I>()].into_iter().flatten().collect()
-    }
 
     fn transparent() -> bool {
         true
@@ -727,12 +657,6 @@ impl<I: TS> TS for RangeInclusive<I> {
             Self: 'static
     {
         ().push::<I>()
-    }
-    fn dependencies() -> Vec<Dependency>
-        where
-            Self: 'static
-    {
-        [Dependency::from_ty::<I>()].into_iter().flatten().collect()
     }
 
     fn transparent() -> bool {
@@ -810,4 +734,3 @@ impl_primitives! {
 }
 #[rustfmt::skip]
 pub(crate) use impl_primitives;
-use crate::typelist::TypeList;
