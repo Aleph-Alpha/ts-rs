@@ -96,12 +96,15 @@ impl DerivedTS {
                     #inline
                 }
                 #inline_flattened
-                fn dependencies() -> Vec<ts_rs::Dependency>
+
+                #[allow(clippy::unused_unit)]
+                fn dependency_types() -> impl ts_rs::typelist::TypeList
                 where
                     Self: 'static,
                 {
                     #dependencies
                 }
+
                 fn transparent() -> bool {
                     false
                 }

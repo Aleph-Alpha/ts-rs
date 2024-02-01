@@ -195,7 +195,7 @@ fn inline_with_bounds() {
         #[ts(flatten)]
         t: Generic<u32>,
     }
-
+  
     assert_eq!(Generic::<Unit>::decl(), "type Generic<T> = { t: T, }");
     assert_eq!(
         Container::decl(),
@@ -213,7 +213,7 @@ fn inline_with_default() {
     #[derive(TS)]
     struct Container {
         g: Generic<String>,
-        
+
         #[ts(inline)]
         gi: Generic<String>,
 
@@ -221,7 +221,10 @@ fn inline_with_default() {
         t: Generic<u32>,
     }
 
-    assert_eq!(Generic::<()>::decl(), "type Generic<T = string> = { t: T, }");
+    assert_eq!(
+        Generic::<()>::decl(),
+        "type Generic<T = string> = { t: T, }"
+    );
     assert_eq!(
         Container::decl(),
         "type Container = { g: Generic<string>, gi: { t: string, }, t: number, }"

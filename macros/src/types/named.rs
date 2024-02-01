@@ -2,6 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, Type};
 
+use crate::attr::Optional;
 use crate::{
     attr::{FieldAttr, Inflection, StructAttr},
     deps::Dependencies,
@@ -9,7 +10,6 @@ use crate::{
     utils::{raw_name_to_ts_field, to_ts_ident},
     DerivedTS,
 };
-use crate::attr::Optional;
 
 pub(crate) fn named(
     attr: &StructAttr,
@@ -81,6 +81,7 @@ fn format_field(
     generics: &Generics,
 ) -> Result<()> {
     let FieldAttr {
+        type_as,
         type_override,
         rename,
         inline,
@@ -93,22 +94,38 @@ fn format_field(
         return Ok(());
     }
 
+    if type_as.is_some() && type_override.is_some() {
+        syn_err!("`type` is not compatible with `as`")
+    }
+
+    let parsed_ty = if let Some(ref type_as) = type_as {
+        syn::parse_str::<Type>(type_as)?
+    } else {
+        field.ty.clone()
+    };
+
     let (ty, optional_annotation) = match optional {
-        Optional { optional: true, nullable } => {
-            let inner_type = extract_option_argument(&field.ty)?; // inner type of the optional
+        Optional {
+            optional: true,
+            nullable,
+        } => {
+            let inner_type = extract_option_argument(&parsed_ty)?; // inner type of the optional
             match nullable {
-                true => (&field.ty, "?"),  // if it's nullable, we keep the original type
+                true => (&parsed_ty, "?"),  // if it's nullable, we keep the original type
                 false => (inner_type, "?"), // if not, we use the Option's inner type
             }
-        },
-        Optional { optional: false, .. } => (&field.ty, "")
+        }
+        Optional {
+            optional: false, ..
+        } => (&parsed_ty, ""),
     };
 
     if flatten {
-        match (&type_override, &rename, inline) {
-            (Some(_), _, _) => syn_err!("`type` is not compatible with `flatten`"),
-            (_, Some(_), _) => syn_err!("`rename` is not compatible with `flatten`"),
-            (_, _, true) => syn_err!("`inline` is not compatible with `flatten`"),
+        match (&type_as, &type_override, &rename, inline) {
+            (Some(_), _, _, _) => syn_err!("`as` is not compatible with `flatten`"),
+            (_, Some(_), _, _) => syn_err!("`type` is not compatible with `flatten`"),
+            (_, _, Some(_), _) => syn_err!("`rename` is not compatible with `flatten`"),
+            (_, _, _, true) => syn_err!("`inline` is not compatible with `flatten`"),
             _ => {}
         }
 
