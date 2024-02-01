@@ -56,6 +56,7 @@ mod recursive_export {
 
     /// Exports `T` to the file specified by the `#[ts(export_to = ..)]` attribute.
     /// Additionally, all dependencies of `T` will be exported as well.
+    ///
     /// TODO: This might cause a race condition:
     ///       If two types `A` and `B` are `#[ts(export)]` and depend on type `C`,
     ///       then both tests for exporting `A` and `B` will try to write `C` to `C.ts`.
@@ -145,8 +146,7 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
 
 /// Push an import statement for all dependencies of `T`
 fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), ExportError> {
-    let path =
-        Path::new(T::EXPORT_TO.ok_or(ExportError::CannotBeExported(std::any::type_name::<T>()))?);
+    let path = Path::new(T::EXPORT_TO.ok_or(CannotBeExported(std::any::type_name::<T>()))?);
 
     let deps = T::dependencies();
     let deduplicated_deps = deps
