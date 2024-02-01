@@ -328,7 +328,7 @@ pub trait TS {
     where
         Self: 'static,
     {
-        export::export_type::<Self>()
+        export::export_type_with_dependencies::<Self>()
     }
 
     /// Manually export this type to a file with a file with the specified path. This
