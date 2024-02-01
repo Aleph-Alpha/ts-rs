@@ -177,7 +177,8 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
 
 /// Push an import statement for all dependencies of `T`
 fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), ExportError> {
-    let path = Path::new(&T::get_export_to().ok_or(CannotBeExported(std::any::type_name::<T>()))?);
+    let export_to = T::get_export_to().ok_or(CannotBeExported(std::any::type_name::<T>()))?;
+    let path = Path::new(&export_to);
 
     let deps = T::dependencies();
     let deduplicated_deps = deps
