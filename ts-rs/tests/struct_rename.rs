@@ -18,12 +18,17 @@ fn rename_all() {
 fn rename_all_camel_case() {
     #[derive(TS)]
     #[ts(rename_all = "camelCase")]
+    #[allow(non_snake_case)]
     struct Rename {
         crc32c_hash: i32,
         b: i32,
+        alreadyCamelCase: i32,
     }
 
-    assert_eq!(Rename::inline(), "{ crc32cHash: number, b: number, }");
+    assert_eq!(
+        Rename::inline(),
+        "{ crc32cHash: number, b: number, alreadyCamelCase: number, }"
+    );
 }
 
 #[test]

@@ -49,7 +49,7 @@ impl Inflection {
                         s.push(c.to_ascii_uppercase());
                         capitalize = false;
                     } else {
-                        s.push(c.to_ascii_lowercase())
+                        s.push(c)
                     }
                 }
 
