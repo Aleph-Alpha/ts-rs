@@ -12,6 +12,7 @@ jobs:
       - name: dependencies e2e test
         working-directory: e2e/dependencies/consumer
         run: |
+          cargo t -p dependency1
           cargo t 
           tsc bindings/* --noEmit
   e2e-workspace:
