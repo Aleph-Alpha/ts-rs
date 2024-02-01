@@ -81,6 +81,7 @@ impl DerivedTS {
             .unwrap_or_else(TokenStream::new);
 
         let impl_start = generate_impl(&rust_ty, &generics);
+        let dependencies_v2 = dependencies.to_tokens_v2();
         quote! {
             #impl_start {
                 const EXPORT_TO: Option<&'static str> = Some(#export_to);
@@ -95,12 +96,21 @@ impl DerivedTS {
                     #inline
                 }
                 #inline_flattened
+
                 fn dependencies() -> Vec<ts_rs::Dependency>
                 where
                     Self: 'static,
                 {
                     #dependencies
                 }
+
+                fn dependency_types() -> impl ts_rs::typelist::TypeList
+                where
+                    Self: 'static,
+                {
+                    #dependencies_v2
+                }
+
                 fn transparent() -> bool {
                     false
                 }
