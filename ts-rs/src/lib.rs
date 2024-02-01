@@ -469,13 +469,13 @@ macro_rules! impl_shadow {
             fn name_with_type_args(args: Vec<String>) -> String { <$s>::name_with_type_args(args) }
             fn inline() -> String { <$s>::inline() }
             fn inline_flattened() -> String { <$s>::inline_flattened() }
-            fn dependency_types() -> impl TypeList
+            fn dependency_types() -> impl $crate::typelist::TypeList
             where
                 Self: 'static
             {
                 <$s>::dependency_types()
             }
-            fn dependencies() -> Vec<Dependency>
+            fn dependencies() -> Vec<$crate::Dependency>
             where
                 Self: 'static
             {
