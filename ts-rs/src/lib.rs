@@ -165,6 +165,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::typelist::TypeList;
+
 pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
@@ -172,6 +174,7 @@ pub use crate::export::ExportError;
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
+pub mod typelist;
 
 /// A type which can be represented in TypeScript.  
 /// Most of the time, you'd want to derive this trait instead of implementing it manually.  
@@ -289,13 +292,33 @@ pub trait TS {
         panic!("{} cannot be flattened", Self::name())
     }
 
-    /// Information about types this type depends on.
-    /// This is used for resolving imports when exporting to a file.
+    fn dependency_types() -> impl TypeList
+    where
+        Self: 'static,
+    {
+    }
+
     fn dependencies() -> Vec<Dependency>
     where
-        Self: 'static;
+        Self: 'static,
+    {
+        use crate::typelist::TypeVisitor;
 
-    /// `true` if this is a transparent type, e.g tuples or a list.  
+        let mut deps: Vec<Dependency> = vec![];
+        struct Visit<'a>(&'a mut Vec<Dependency>);
+        impl<'a> TypeVisitor for Visit<'a> {
+            fn visit<T: TS + 'static + ?Sized>(&mut self) {
+                if let Some(dep) = Dependency::from_ty::<T>() {
+                    self.0.push(dep);
+                }
+            }
+        }
+        Self::dependency_types().for_each(&mut Visit(&mut deps));
+
+        deps
+    }
+
+    /// `true` if this is a transparent type, e.g tuples or a list.
     /// This is used for resolving imports when using the `export!` macro.
     fn transparent() -> bool;
 
@@ -310,7 +333,7 @@ pub trait TS {
     where
         Self: 'static,
     {
-        export::export_type::<Self>()
+        export::export_type_with_dependencies::<Self>()
     }
 
     /// Manually export this type to a file with a file with the specified path. This
@@ -369,7 +392,6 @@ macro_rules! impl_primitives {
                 $l.to_owned()
             }
             fn inline() -> String { $l.to_owned() }
-            fn dependencies() -> Vec<Dependency> { vec![] }
             fn transparent() -> bool { false }
         }
     )*)* };
@@ -384,14 +406,11 @@ macro_rules! impl_tuples {
             fn inline() -> String {
                 format!("[{}]", [$($i::inline()),*].join(", "))
             }
-            fn dependencies() -> Vec<Dependency>
+            fn dependency_types() -> impl TypeList
             where
                 Self: 'static
             {
-                [$( Dependency::from_ty::<$i>() ),*]
-                .into_iter()
-                .flatten()
-                .collect()
+                ()$(.push::<$i>())*
             }
             fn transparent() -> bool { true }
         }
@@ -414,11 +433,11 @@ macro_rules! impl_wrapper {
             }
             fn inline() -> String { T::inline() }
             fn inline_flattened() -> String { T::inline_flattened() }
-            fn dependencies() -> Vec<Dependency>
+            fn dependency_types() -> impl TypeList
             where
                 Self: 'static
             {
-                T::dependencies()
+                T::dependency_types()
             }
             fn transparent() -> bool { T::transparent() }
         }
@@ -433,11 +452,11 @@ macro_rules! impl_shadow {
             fn name_with_type_args(args: Vec<String>) -> String { <$s>::name_with_type_args(args) }
             fn inline() -> String { <$s>::inline() }
             fn inline_flattened() -> String { <$s>::inline_flattened() }
-            fn dependencies() -> Vec<$crate::Dependency>
+            fn dependency_types() -> impl $crate::typelist::TypeList
             where
                 Self: 'static
             {
-                <$s>::dependencies()
+                <$s>::dependency_types()
             }
             fn transparent() -> bool { <$s>::transparent() }
         }
@@ -463,11 +482,11 @@ impl<T: TS> TS for Option<T> {
         format!("{} | null", T::inline())
     }
 
-    fn dependencies() -> Vec<Dependency>
+    fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
-        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
+        ().push::<T>()
     }
 
     fn transparent() -> bool {
@@ -482,14 +501,11 @@ impl<T: TS, E: TS> TS for Result<T, E> {
     fn inline() -> String {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
     }
-    fn dependencies() -> Vec<Dependency>
+    fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
-        [Dependency::from_ty::<T>(), Dependency::from_ty::<E>()]
-            .into_iter()
-            .flatten()
-            .collect()
+        ().push::<T>().push::<E>()
     }
     fn transparent() -> bool {
         true
@@ -505,24 +521,23 @@ impl<T: TS> TS for Vec<T> {
         format!("Array<{}>", T::inline())
     }
 
-    fn dependencies() -> Vec<Dependency>
+    fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
-        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
+        ().push::<T>()
     }
-
     fn transparent() -> bool {
         true
     }
 }
 
-// Arrays longer than this limit will be emmited as Array<T>
-const ARRAY_TUPLE_LIMIT: usize = 128;
+// Arrays longer than this limit will be emitted as Array<T>
+const ARRAY_TUPLE_LIMIT: usize = 64;
 impl<T: TS, const N: usize> TS for [T; N] {
     fn name() -> String {
         if N > ARRAY_TUPLE_LIMIT {
-            return Vec::<T>::name()
+            return Vec::<T>::name();
         }
 
         "[]".to_owned()
@@ -542,7 +557,10 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
         format!(
             "[{}]",
-            (0..N).map(|_| args[0].clone()).collect::<Box<[_]>>().join(", ")
+            (0..N)
+                .map(|_| args[0].clone())
+                .collect::<Box<[_]>>()
+                .join(", ")
         )
     }
 
@@ -557,11 +575,11 @@ impl<T: TS, const N: usize> TS for [T; N] {
         )
     }
 
-    fn dependencies() -> Vec<Dependency>
+    fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
-        [Dependency::from_ty::<T>()].into_iter().flatten().collect()
+        ().push::<T>()
     }
 
     fn transparent() -> bool {
@@ -588,14 +606,11 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
         format!("Record<{}, {}>", K::inline(), V::inline())
     }
 
-    fn dependencies() -> Vec<Dependency>
+    fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
-        [Dependency::from_ty::<K>(), Dependency::from_ty::<V>()]
-            .into_iter()
-            .flatten()
-            .collect()
+        ().push::<K>().push::<V>()
     }
 
     fn transparent() -> bool {
@@ -618,11 +633,11 @@ impl<I: TS> TS for Range<I> {
         format!("{{ start: {}, end: {}, }}", &args[0], &args[0])
     }
 
-    fn dependencies() -> Vec<Dependency>
+    fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
-        [Dependency::from_ty::<I>()].into_iter().flatten().collect()
+        ().push::<I>()
     }
 
     fn transparent() -> bool {
@@ -645,11 +660,11 @@ impl<I: TS> TS for RangeInclusive<I> {
         format!("{{ start: {}, end: {}, }}", &args[0], &args[0])
     }
 
-    fn dependencies() -> Vec<Dependency>
+    fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
-        [Dependency::from_ty::<I>()].into_iter().flatten().collect()
+        ().push::<I>()
     }
 
     fn transparent() -> bool {
@@ -657,7 +672,7 @@ impl<I: TS> TS for RangeInclusive<I> {
     }
 }
 
-impl_shadow!(as T: impl<'a, T: TS + ?Sized> TS for &T);
+impl_shadow!(as T: impl<T: TS + ?Sized> TS for &T);
 impl_shadow!(as Vec<T>: impl<T: TS, H> TS for HashSet<T, H>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
 impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);

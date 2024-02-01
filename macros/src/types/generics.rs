@@ -83,7 +83,7 @@ pub fn format_type(ty: &Type, dependencies: &mut Dependencies, generics: &Generi
         // be cause the T in `[T; N]` is technically not a generic
         Type::Array(type_array) => {
             let formatted = format_type(&type_array.elem, dependencies, generics);
-            return quote!(<#type_array>::name_with_type_args(vec![#formatted]))
+            return quote!(<#type_array>::name_with_type_args(vec![#formatted]));
         }
         // The field is a slice (`[T]`) so it technically doesn't have a
         // generic argument. Therefore, we handle it explicitly here like a `Vec<T>`

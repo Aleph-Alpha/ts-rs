@@ -1,0 +1,10 @@
+[package]
+name = "consumer"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+ts-rs = { path = "../../../ts-rs" }
+dependency1 = { path = "../dependency1" }
