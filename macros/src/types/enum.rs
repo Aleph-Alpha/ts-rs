@@ -68,6 +68,10 @@ fn format_variant(
     generics: &Generics,
 ) -> syn::Result<()> {
     let variant_attr = VariantAttr::from_attrs(&variant.attrs)?;
+    let variant_attr = VariantAttr {
+        rename_all: variant_attr.rename_all.or(enum_attr.rename_all_fields),
+        ..variant_attr
+    };
 
     if variant_attr.skip {
         return Ok(());
