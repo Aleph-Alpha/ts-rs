@@ -236,7 +236,7 @@ pub mod typelist;
 ///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.
 ///
 /// - `#[ts(flatten)]`:  
-///   Flatten this field (only works if the field is a struct)  
+///   Flatten this field
 ///   
 /// ### enum attributes
 ///
