@@ -47,12 +47,14 @@ fn adjacently_tagged() {
     enum Bar {
         Baz { a: i32, a2: String },
         Biz { b: bool },
+
+        #[serde(untagged)]
         Buz { c: String, d: Option<i32> },
     }
 
     assert_eq!(
         Foo::inline(),
-        r#"{ one: number, qux: string | null, } & ({ "type": "Baz", "stuff": { a: number, a2: string, } } | { "type": "Biz", "stuff": { b: boolean, } } | { "type": "Buz", "stuff": { c: string, d: number | null, } })"#
+        r#"{ one: number, qux: string | null, } & ({ "type": "Baz", "stuff": { a: number, a2: string, } } | { "type": "Biz", "stuff": { b: boolean, } } | { c: string, d: number | null, })"#
     )
 }
 
