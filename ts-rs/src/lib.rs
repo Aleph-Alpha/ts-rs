@@ -169,7 +169,7 @@ use crate::typelist::TypeList;
 
 pub use ts_rs_macros::TS;
 
-pub use crate::export::ExportError;
+pub use crate::export::{ExportError, MissingDependenciesError, SingleFileExporter};
 
 #[cfg(feature = "chrono-impl")]
 mod chrono;
