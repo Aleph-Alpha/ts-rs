@@ -1,3 +1,4 @@
+use std::sync::Mutex;
 use std::{
     any::TypeId,
     collections::BTreeMap,
@@ -5,7 +6,6 @@ use std::{
     path::{Component, Path, PathBuf},
     sync::OnceLock,
 };
-use std::sync::Mutex;
 
 use thiserror::Error;
 
@@ -153,7 +153,7 @@ pub mod __private {
 }
 
 /// Returns the generated defintion for `T`.
-pub fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String, ExportError> {
+pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String, ExportError> {
     let mut buffer = String::with_capacity(1024);
     buffer.push_str(NOTE);
     generate_imports::<T>(&mut buffer)?;
@@ -165,7 +165,8 @@ pub fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String, Expor
 fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").map_err(|_| ManifestDirNotSet)?;
     let manifest_dir = Path::new(&manifest_dir);
-    let path = PathBuf::from(T::get_export_to().ok_or(CannotBeExported(std::any::type_name::<T>()))?);
+    let path =
+        PathBuf::from(T::get_export_to().ok_or(CannotBeExported(std::any::type_name::<T>()))?);
     Ok(manifest_dir.join(path))
 }
 
