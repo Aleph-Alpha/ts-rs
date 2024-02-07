@@ -199,10 +199,18 @@ pub mod typelist;
 ///
 /// - `#[ts(export)]`:  
 ///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
-///   `cargo test`
+///   `cargo test`. The default base directory can be overridden with the `TS_RS_EXPORT_DIR` environment variable.
+///   Adding the variable to a project's [config.toml](https://doc.rust-lang.org/cargo/reference/config.html#env) can
+///   make it easier to manage.
+/// ```toml
+/// # <project-root>/.cargo/config.toml
+/// [env]
+/// TS_RS_EXPORT_DIR = { value = "<OVERRIDE_DIR>", relative = true }
+/// ```
 ///
 /// - `#[ts(export_to = "..")]`:  
 ///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.  
+///   The `export_to` attribute will also override the `TS_RS_EXPORT_DIR` environment variable.  
 ///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
 ///
