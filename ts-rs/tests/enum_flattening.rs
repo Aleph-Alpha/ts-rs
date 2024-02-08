@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 #[cfg(feature = "serde-compat")]
 use serde::Serialize;
 use ts_rs::TS;
@@ -31,19 +33,22 @@ fn externally_tagged() {
 }
 
 #[test]
-#[cfg(feature = "serde-compat")]
 fn adjacently_tagged() {
-    #[derive(Serialize, TS)]
+    #[cfg_attr(feature = "serde-compat", derive(Serialize))]
+    #[derive(TS)]
     struct Foo {
         one: i32,
-        #[serde(flatten)]
+        #[cfg_attr(feature = "serde-compat", serde(flatten))]
+        #[cfg_attr(not(feature = "serde-compat"), ts(flatten))]
         baz: Bar,
         qux: Option<String>,
     }
 
-    #[derive(Serialize, TS)]
+    #[cfg_attr(feature = "serde-compat", derive(Serialize))]
+    #[derive(TS)]
     #[allow(dead_code)]
-    #[serde(tag = "type", content = "stuff")]
+    #[cfg_attr(feature = "serde-compat", serde(tag = "type", content = "stuff"))]
+    #[cfg_attr(not(feature = "serde-compat"), ts(tag = "type", content = "stuff"))]
     enum Bar {
         Baz {
             a: i32,
@@ -67,19 +72,22 @@ fn adjacently_tagged() {
 }
 
 #[test]
-#[cfg(feature = "serde-compat")]
 fn internally_tagged() {
-    #[derive(Serialize, TS)]
+    #[cfg_attr(feature = "serde-compat", derive(Serialize))]
+    #[derive(TS)]
     struct Foo {
         qux: Option<String>,
 
-        #[serde(flatten)]
+        #[cfg_attr(feature = "serde-compat", serde(flatten))]
+        #[cfg_attr(not(feature = "serde-compat"), ts(flatten))]
         baz: Bar,
     }
 
-    #[derive(Serialize, TS)]
+    #[cfg_attr(feature = "serde-compat", derive(Serialize))]
+    #[derive(TS)]
     #[allow(dead_code)]
-    #[serde(tag = "type")]
+    #[cfg_attr(feature = "serde-compat", serde(tag = "type"))]
+    #[cfg_attr(not(feature = "serde-compat"), ts(tag = "type"))]
     enum Bar {
         Baz { a: i32, a2: String },
         Biz { b: bool },
@@ -93,17 +101,19 @@ fn internally_tagged() {
 }
 
 #[test]
-#[cfg(feature = "serde-compat")]
 fn untagged() {
-    #[derive(Serialize, TS)]
+    #[cfg_attr(feature = "serde-compat", derive(Serialize))]
+    #[derive(TS)]
     struct Foo {
-        #[serde(flatten)]
+        #[cfg_attr(feature = "serde-compat", serde(flatten))]
+        #[cfg_attr(not(feature = "serde-compat"), ts(flatten))]
         baz: Bar,
     }
 
-    #[derive(Serialize, TS)]
-    #[allow(dead_code)]
-    #[serde(untagged)]
+    #[derive(TS)]
+    #[cfg_attr(feature = "serde-compat", derive(Serialize))]
+    #[cfg_attr(feature = "serde-compat", serde(untagged))]
+    #[cfg_attr(not(feature = "serde-compat"), ts(untagged))]
     enum Bar {
         Baz { a: i32, a2: String },
         Biz { b: bool },

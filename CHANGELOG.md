@@ -16,6 +16,8 @@
 - Add `semver-impl` cargo feature with support for the *semver* crate ([#176](https://github.com/Aleph-Alpha/ts-rs/pull/176))
 - Support `HashMap` with custom hashers ([#173](https://github.com/Aleph-Alpha/ts-rs/pull/173))
 - Add `import-esm` cargo feature to import files with a `.js` extension ([#192](https://github.com/Aleph-Alpha/ts-rs/pull/192))
+- Implement `#[ts(...)]` equivalents for `#[serde(tag = "...")]`, `#[serde(tag = "...", content = "...")]` and `#[serde(untagged)]` ([#227](https://github.com/Aleph-Alpha/ts-rs/pull/227))
+- Support `#[serde(untagged)]` on individual enum variants ((#226)[https://github.com/Aleph-Alpha/ts-rs/pull/226])
 
 ### Fixes
 - `rename_all` with `camelCase` produces wrong names if fields were already in camelCase ([#198](https://github.com/Aleph-Alpha/ts-rs/pull/198))

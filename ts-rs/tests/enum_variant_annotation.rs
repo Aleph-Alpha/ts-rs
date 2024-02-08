@@ -1,9 +1,11 @@
 #![allow(dead_code)]
 
-use serde::{Deserialize, Serialize};
+#[cfg(feature = "serde-compat")]
+use serde::Serialize;
 use ts_rs::TS;
 
-#[derive(Serialize, Deserialize, TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[derive(TS)]
 #[cfg_attr(feature = "serde-compat", serde(rename_all = "SCREAMING_SNAKE_CASE"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "SCREAMING_SNAKE_CASE"))]
 #[ts(export)]
@@ -28,7 +30,8 @@ fn test_enum_variant_rename_all() {
     );
 }
 
-#[derive(Serialize, Deserialize, TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[derive(TS)]
 #[ts(export)]
 enum B {
     #[cfg_attr(feature = "serde-compat", serde(rename = "SnakeMessage"))]
@@ -53,22 +56,23 @@ fn test_enum_variant_rename() {
     );
 }
 
-#[cfg(feature = "serde")]
-#[derive(Serialize, Deserialize, TS)]
-#[serde(tag = "kind")]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", serde(tag = "kind"))]
+#[cfg_attr(not(feature = "serde-compat"), ts(tag = "kind"))]
 #[ts(export)]
 pub enum C {
-    #[serde(rename = "SQUARE_THING")]
+    #[cfg_attr(feature = "serde-compat", serde(rename = "SQUARE_THING"))]
+    #[cfg_attr(not(feature = "serde-compat"), ts(rename = "SQUARE_THING"))]
     SquareThing {
         name: String,
         // ...
     },
 }
 
-#[cfg(feature = "serde")]
 #[test]
 fn test_enum_variant_with_tag() {
-    assert_eq!(C::inline(), "{ kind: \"SQUARE_THING\", name: string, }");
+    assert_eq!(C::inline(), r#"{ "kind": "SQUARE_THING", name: string, }"#);
 }
 
 #[cfg(feature = "serde-compat")]
