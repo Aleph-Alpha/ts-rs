@@ -1,5 +1,6 @@
 use syn::{Attribute, Ident, Result};
 
+use super::EnumAttr;
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, Inflection},
     utils::parse_attrs,
@@ -19,9 +20,10 @@ pub struct VariantAttr {
 pub struct SerdeVariantAttr(VariantAttr);
 
 impl VariantAttr {
-    pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
+    pub fn new(attrs: &[Attribute], enum_attr: &EnumAttr) -> Result<Self> {
         let mut result = Self::default();
         parse_attrs(attrs)?.for_each(|a| result.merge(a));
+        result.rename_all = result.rename_all.or(enum_attr.rename_all_fields);
         #[cfg(feature = "serde-compat")]
         if !result.skip {
             crate::utils::parse_serde_attrs::<SerdeVariantAttr>(attrs)

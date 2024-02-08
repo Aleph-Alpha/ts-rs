@@ -67,7 +67,7 @@ fn format_variant(
     variant: &Variant,
     generics: &Generics,
 ) -> syn::Result<()> {
-    let variant_attr = VariantAttr::from_attrs(&variant.attrs)?;
+    let variant_attr = VariantAttr::new(&variant.attrs, enum_attr)?;
 
     if variant_attr.skip {
         return Ok(());
