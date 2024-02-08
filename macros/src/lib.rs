@@ -72,6 +72,15 @@ impl DerivedTS {
             dependencies,
             ..
         } = self;
+
+        let docs = match docs.len() {
+            0 => None,
+            _ => {
+                let docs_str = docs.join("\n");
+                Some(quote!(const DOCS: Option<&'static str> = Some(#docs_str);))
+            }
+        };
+
         let inline_flattened = inline_flattened
             .map(|t| {
                 quote! {
@@ -86,15 +95,13 @@ impl DerivedTS {
         quote! {
             #impl_start {
                 const EXPORT_TO: Option<&'static str> = Some(#export_to);
+                #docs
 
                 fn decl() -> String {
                     #decl
                 }
                 fn name() -> String {
                     #name.to_owned()
-                }
-                fn docs() -> Vec<String> {
-                    vec![#( #docs.to_string(), )*]
                 }
                 fn inline() -> String {
                     #inline

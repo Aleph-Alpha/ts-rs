@@ -264,6 +264,7 @@ pub mod typelist;
 ///   Skip this variant  
 pub trait TS {
     const EXPORT_TO: Option<&'static str> = None;
+    const DOCS: Option<&'static str> = None;
 
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
     /// This function will panic if the type has no declaration.
@@ -277,11 +278,6 @@ pub trait TS {
     /// Name of this type in TypeScript, with type arguments.
     fn name_with_type_args(args: Vec<String>) -> String {
         format!("{}<{}>", Self::name(), args.join(", "))
-    }
-
-    /// All lines of documentation comments for this type.
-    fn docs() -> Vec<String> {
-        vec![]
     }
 
     /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
