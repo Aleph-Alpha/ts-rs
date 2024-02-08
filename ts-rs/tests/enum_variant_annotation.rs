@@ -1,9 +1,10 @@
 #![allow(dead_code)]
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use ts_rs::TS;
 
-#[derive(Serialize, Deserialize, TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[derive(TS)]
 #[cfg_attr(feature = "serde-compat", serde(rename_all = "SCREAMING_SNAKE_CASE"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "SCREAMING_SNAKE_CASE"))]
 #[ts(export)]
@@ -28,7 +29,8 @@ fn test_enum_variant_rename_all() {
     );
 }
 
-#[derive(Serialize, Deserialize, TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[derive(TS)]
 #[ts(export)]
 enum B {
     #[cfg_attr(feature = "serde-compat", serde(rename = "SnakeMessage"))]

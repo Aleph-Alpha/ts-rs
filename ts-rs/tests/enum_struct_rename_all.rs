@@ -1,8 +1,9 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use ts_rs::TS;
 
-#[derive(Serialize, Deserialize, TS, Clone)]
+#[derive(TS)]
 #[ts(export)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(rename_all = "camelCase"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "camelCase"))]
 pub enum TaskStatus {
