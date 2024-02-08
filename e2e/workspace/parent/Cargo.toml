@@ -1,0 +1,9 @@
+[package]
+name = "parent"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ts-rs = { path = "../../../ts-rs" }
+crate1 = { path = "../crate1" }
+crate2 = { path = "../crate2" }

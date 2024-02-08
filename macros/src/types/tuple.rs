@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Field, FieldsUnnamed, Generics, Result};
+use syn::{Field, FieldsUnnamed, Generics, Result, Type};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -60,8 +60,8 @@ fn format_field(
     field: &Field,
     generics: &Generics,
 ) -> Result<()> {
-    let ty = &field.ty;
     let FieldAttr {
+        type_as,
         type_override,
         rename,
         inline,
@@ -73,29 +73,42 @@ fn format_field(
     if skip {
         return Ok(());
     }
+
+    let ty = if let Some(ref type_as) = type_as {
+        syn::parse_str::<Type>(type_as)?
+    } else {
+        field.ty.clone()
+    };
+
+    if type_as.is_some() && type_override.is_some() {
+        syn_err!("`type` is not compatible with `as`")
+    }
+
     if rename.is_some() {
         syn_err!("`rename` is not applicable to tuple structs")
     }
-    if optional {
+
+    if optional.optional {
         syn_err!("`optional` is not applicable to tuple fields")
     }
+
     if flatten {
         syn_err!("`flatten` is not applicable to tuple fields")
     }
 
-    formatted_fields.push(match &type_override {
-        Some(o) => quote!(#o.to_owned()),
+    formatted_fields.push(match type_override {
+        Some(ref o) => quote!(#o.to_owned()),
         None if inline => quote!(<#ty as ts_rs::TS>::inline()),
-        None => format_type(ty, dependencies, generics),
+        None => format_type(&ty, dependencies, generics),
     });
 
-    match (inline, &type_override) {
+    match (inline, type_override) {
         (_, Some(_)) => (),
         (false, _) => {
-            dependencies.push_or_append_from(ty);
+            dependencies.push_or_append_from(&ty);
         }
         (true, _) => {
-            dependencies.append_from(ty);
+            dependencies.append_from(&ty);
         }
     };
 

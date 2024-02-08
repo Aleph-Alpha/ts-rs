@@ -1,3 +1,4 @@
+#![allow(clippy::box_collection, clippy::enum_variant_names, dead_code)]
 #![allow(dead_code)]
 
 use std::{
@@ -59,27 +60,27 @@ declare! {
 fn test() {
     assert_eq!(
         TypeGroup::decl(),
-        "interface TypeGroup { foo: Array<Container>, }",
+        "type TypeGroup = { foo: Array<Container>, }",
     );
 
     assert_eq!(
         Generic::<()>::decl(),
-        "interface Generic<T> { value: T, values: Array<T>, }"
+        "type Generic<T> = { value: T, values: Array<T>, }"
     );
 
     assert_eq!(
         GenericAutoBound::<()>::decl(),
-        "interface GenericAutoBound<T> { value: T, values: Array<T>, }"
+        "type GenericAutoBound<T> = { value: T, values: Array<T>, }"
     );
 
     assert_eq!(
         GenericAutoBound2::<()>::decl(),
-        "interface GenericAutoBound2<T> { value: T, values: Array<T>, }"
+        "type GenericAutoBound2<T> = { value: T, values: Array<T>, }"
     );
 
     assert_eq!(
         Container::decl(),
-        "interface Container { foo: Generic<number>, bar: Array<Generic<number>>, baz: Record<string, Generic<string>>, }"
+        "type Container = { foo: Generic<number>, bar: Array<Generic<number>>, baz: Record<string, Generic<string>>, }"
     );
 }
 
@@ -141,13 +142,11 @@ fn generic_struct() {
 
     assert_eq!(
         Struct::<()>::decl(),
-        "interface Struct<T> { a: T, b: [T, T], c: [T, [T, T]], d: Array<T>, e: Array<[T, T]>, f: Array<T>, g: Array<Array<T>>, h: Array<Array<[T, T]>>, }"
+        "type Struct<T> = { a: T, b: [T, T], c: [T, [T, T]], d: [T, T, T], e: [[T, T], [T, T], [T, T]], f: Array<T>, g: Array<Array<T>>, h: Array<[[T, T], [T, T], [T, T]]>, }"
     )
 }
 
 #[test]
-#[ignore]
-// https://github.com/Aleph-Alpha/ts-rs/issues/56 TODO
 fn inline() {
     #[derive(TS)]
     struct Generic<T> {
@@ -160,13 +159,74 @@ fn inline() {
         #[ts(inline)]
         gi: Generic<String>,
         #[ts(flatten)]
-        t: Generic<String>,
+        t: Generic<Vec<String>>,
     }
 
-    assert_eq!(Generic::<()>::decl(), "interface Generic<T> { t: T, }");
+    assert_eq!(Generic::<()>::decl(), "type Generic<T> = { t: T, }");
     assert_eq!(
         Container::decl(),
-        "interface Container { g: Generic<string>, gi: { t: string }, t: string, }"
+        "type Container = { g: Generic<string>, gi: { t: string, }, t: Array<string>, }"
+    );
+}
+
+#[test]
+#[ignore = "We haven't figured out how to inline generics with bounds yet"]
+#[allow(unreachable_code)]
+fn inline_with_bounds() {
+    todo!("FIX ME: https://github.com/Aleph-Alpha/ts-rs/issues/214");
+
+    #[derive(TS)]
+    struct Generic<T: ToString> {
+        t: T,
+    }
+
+    #[derive(TS)]
+    struct Container {
+        g: Generic<String>,
+
+        #[ts(inline)]
+        gi: Generic<String>,
+
+        #[ts(flatten)]
+        t: Generic<u32>,
+    }
+
+    assert_eq!(
+        Generic::<&'static str>::decl(),
+        "type Generic<T> = { t: T, }"
+    );
+    //                   ^^^^^^^^^^^^ Replace with something else
+    assert_eq!(
+        Container::decl(),
+        "type Container = { g: Generic<string>, gi: { t: string, }, t: number, }" // Actual output: { g: Generic<string>, gi: { t: T, }, t: T, }
+    );
+}
+
+#[test]
+fn inline_with_default() {
+    #[derive(TS)]
+    struct Generic<T = String> {
+        t: T,
+    }
+
+    #[derive(TS)]
+    struct Container {
+        g: Generic<String>,
+
+        #[ts(inline)]
+        gi: Generic<String>,
+
+        #[ts(flatten)]
+        t: Generic<u32>,
+    }
+
+    assert_eq!(
+        Generic::<()>::decl(),
+        "type Generic<T = string> = { t: T, }"
+    );
+    assert_eq!(
+        Container::decl(),
+        "type Container = { g: Generic<string>, gi: { t: string, }, t: number, }"
     );
 }
 
@@ -176,16 +236,13 @@ fn default() {
     struct A<T = String> {
         t: T,
     }
-    assert_eq!(A::<()>::decl(), "interface A<T = string> { t: T, }");
+    assert_eq!(A::<()>::decl(), "type A<T = string> = { t: T, }");
 
     #[derive(TS)]
     struct B<U = Option<A<i32>>> {
         u: U,
     }
-    assert_eq!(
-        B::<()>::decl(),
-        "interface B<U = A<number> | null> { u: U, }"
-    );
+    assert_eq!(B::<()>::decl(), "type B<U = A<number> | null> = { u: U, }");
     assert!(B::<()>::dependencies().iter().any(|dep| dep.ts_name == "A"));
 
     #[derive(TS)]
@@ -199,7 +256,7 @@ fn default() {
         // #[ts(inline)]
         // xi2: X<i32>
     }
-    assert_eq!(Y::decl(), "interface Y { a1: A, a2: A<number>, }")
+    assert_eq!(Y::decl(), "type Y = { a1: A, a2: A<number>, }")
 }
 
 #[test]
@@ -208,7 +265,7 @@ fn trait_bounds() {
     struct A<T: ToString = i32> {
         t: T,
     }
-    assert_eq!(A::<i32>::decl(), "interface A<T = number> { t: T, }");
+    assert_eq!(A::<i32>::decl(), "type A<T = number> = { t: T, }");
 
     #[derive(TS)]
     struct B<T: ToString + Debug + Clone + 'static>(T);
@@ -231,5 +288,64 @@ fn trait_bounds() {
         t: [T; N],
     }
 
-    assert_eq!(D::<&str, 41>::decl(), "interface D<T> { t: Array<T>, }")
+    let ty = format!(
+        "type D<T> = {{ t: [{}], }}",
+        "T, ".repeat(41).trim_end_matches(", ")
+    );
+    assert_eq!(D::<&str, 41>::decl(), ty)
+}
+
+#[test]
+fn deeply_nested() {
+    #[derive(TS)]
+    struct T0<T> {
+        t0: T,
+    }
+
+    #[derive(TS)]
+    struct P0<T> {
+        p0: T,
+    }
+
+    #[derive(TS)]
+    struct T1<T> {
+        t0: T,
+    }
+
+    #[derive(TS)]
+    struct P1<T> {
+        p0: T,
+    }
+
+    #[derive(TS)]
+    struct Parent {
+        a: T1<T0<u32>>,
+        b: T1<P1<T0<P0<u32>>>>,
+        c: T1<P1<()>>,
+    }
+    #[derive(TS)]
+    struct GenericParent<T> {
+        a_t: T1<T0<T>>,
+        b_t: T1<P1<T0<P0<T>>>>,
+        c_t: T1<P1<T>>,
+        a_null: T1<T0<()>>,
+        b_null: T1<P1<T0<P0<()>>>>,
+        c_null: T1<P1<()>>,
+    }
+
+    assert_eq!(
+        Parent::inline(),
+        "{ a: T1<T0<number>>, b: T1<P1<T0<P0<number>>>>, c: T1<P1<null>>, }"
+    );
+    assert_eq!(
+        GenericParent::<()>::decl(),
+        "type GenericParent<T> = { \
+            a_t: T1<T0<T>>, \
+            b_t: T1<P1<T0<P0<T>>>>, \
+            c_t: T1<P1<T>>, \
+            a_null: T1<T0<null>>, \
+            b_null: T1<P1<T0<P0<null>>>>, \
+            c_null: T1<P1<null>>, \
+         }"
+    );
 }

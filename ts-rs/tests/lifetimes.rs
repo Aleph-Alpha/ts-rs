@@ -8,7 +8,7 @@ fn contains_borrow() {
         s: &'a str,
     }
 
-    assert_eq!(S::decl(), "interface S { s: string, }")
+    assert_eq!(S::decl(), "type S = { s: string, }")
 }
 
 #[test]
@@ -29,6 +29,6 @@ fn contains_borrow_type_args() {
 
     assert_eq!(
         A::decl(),
-        "interface A { a: Array<number>, b: Array<B<number>>, c: Record<string, boolean>, }"
+        "type A = { a: Array<number>, b: Array<B<number>>, c: Record<string, boolean>, }"
     );
 }

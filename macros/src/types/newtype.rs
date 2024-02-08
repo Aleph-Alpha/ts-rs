@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{FieldsUnnamed, Generics, Result};
+use syn::{FieldsUnnamed, Generics, Result, Type};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -23,6 +23,7 @@ pub(crate) fn newtype(
     }
     let inner = fields.unnamed.first().unwrap();
     let FieldAttr {
+        type_as,
         type_override,
         rename: rename_inner,
         inline,
@@ -31,7 +32,7 @@ pub(crate) fn newtype(
         flatten,
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
-    match (&rename_inner, skip, optional, flatten) {
+    match (&rename_inner, skip, optional.optional, flatten) {
         (Some(_), ..) => syn_err!("`rename` is not applicable to newtype fields"),
         (_, true, ..) => return super::unit::null(attr, name, docs),
         (_, _, true, ..) => syn_err!("`optional` is not applicable to newtype fields"),
@@ -39,17 +40,28 @@ pub(crate) fn newtype(
         _ => {}
     };
 
-    let inner_ty = &inner.ty;
-    let mut dependencies = Dependencies::default();
-    match (inline, &type_override) {
-        (_, Some(_)) => (),
-        (true, _) => dependencies.append_from(inner_ty),
-        (false, _) => dependencies.push_or_append_from(inner_ty),
+    if type_as.is_some() && type_override.is_some() {
+        syn_err!("`type` is not compatible with `as`")
+    }
+
+    let inner_ty = if let Some(ref type_as) = type_as {
+        syn::parse_str::<Type>(type_as)?
+    } else {
+        inner.ty.clone()
     };
-    let inline_def = match &type_override {
-        Some(o) => quote!(#o.to_owned()),
+
+    let mut dependencies = Dependencies::default();
+
+    match (type_override.is_none(), inline) {
+        (false, _) => (),
+        (true, true) => dependencies.append_from(&inner_ty),
+        (true, false) => dependencies.push_or_append_from(&inner_ty),
+    };
+
+    let inline_def = match type_override {
+        Some(ref o) => quote!(#o.to_owned()),
         None if inline => quote!(<#inner_ty as ts_rs::TS>::inline()),
-        None => format_type(inner_ty, &mut dependencies, generics),
+        None => format_type(&inner_ty, &mut dependencies, generics),
     };
 
     let generic_args = format_generics(&mut dependencies, generics);

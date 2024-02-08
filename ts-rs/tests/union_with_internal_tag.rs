@@ -1,4 +1,4 @@
-#![allow(dead_code, clippy::blacklisted_name)]
+#![allow(dead_code, clippy::disallowed_names)]
 
 use serde::Serialize;
 use ts_rs::TS;

@@ -7,14 +7,12 @@ use chrono::{
 };
 
 use super::{impl_primitives, TS};
-use crate::Dependency;
 
 macro_rules! impl_dummy {
     ($($t:ty),*) => {$(
         impl TS for $t {
             fn name() -> String { String::new() }
             fn inline() -> String { String::new() }
-            fn dependencies() -> Vec<Dependency> { vec![] }
             fn transparent() -> bool { false }
         }
     )*};
@@ -33,9 +31,6 @@ impl<T: TimeZone + 'static> TS for DateTime<T> {
     fn inline() -> String {
         "string".to_owned()
     }
-    fn dependencies() -> Vec<Dependency> {
-        vec![]
-    }
     fn transparent() -> bool {
         false
     }
@@ -50,9 +45,6 @@ impl<T: TimeZone + 'static> TS for Date<T> {
     }
     fn inline() -> String {
         "string".to_owned()
-    }
-    fn dependencies() -> Vec<Dependency> {
-        vec![]
     }
     fn transparent() -> bool {
         false
