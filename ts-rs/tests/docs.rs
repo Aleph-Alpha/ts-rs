@@ -75,9 +75,7 @@ fn export_a() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type A = {\n",
-            "  name: string;\n",
-            "}\n"
+            "export type A = { name: string };\n"
         )
     } else {
         concat!(
@@ -110,9 +108,7 @@ fn export_b() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type B = {\n",
-            "  name: string;\n",
-            "}\n"
+            "export type B = { name: string };\n"
         )
     } else {
         concat!(
