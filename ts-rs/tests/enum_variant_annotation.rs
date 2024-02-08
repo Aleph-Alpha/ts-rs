@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+#[cfg(feature = "serde-compat")]
 use serde::Serialize;
 use ts_rs::TS;
 
