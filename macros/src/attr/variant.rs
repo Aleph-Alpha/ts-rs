@@ -11,7 +11,7 @@ pub struct VariantAttr {
     pub rename_all: Option<Inflection>,
     pub inline: bool,
     pub skip: bool,
-    pub untagged: bool
+    pub untagged: bool,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -37,7 +37,7 @@ impl VariantAttr {
             rename_all,
             inline,
             skip,
-            untagged
+            untagged,
         }: VariantAttr,
     ) {
         self.rename = self.rename.take().or(rename);

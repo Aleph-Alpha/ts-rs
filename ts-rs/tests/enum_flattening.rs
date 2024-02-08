@@ -45,11 +45,19 @@ fn adjacently_tagged() {
     #[allow(dead_code)]
     #[serde(tag = "type", content = "stuff")]
     enum Bar {
-        Baz { a: i32, a2: String },
-        Biz { b: bool },
+        Baz {
+            a: i32,
+            a2: String,
+        },
+        Biz {
+            b: bool,
+        },
 
         #[serde(untagged)]
-        Buz { c: String, d: Option<i32> },
+        Buz {
+            c: String,
+            d: Option<i32>,
+        },
     }
 
     assert_eq!(

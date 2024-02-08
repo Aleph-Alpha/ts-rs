@@ -133,7 +133,7 @@ fn format_variant(
                 format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #inline_type)
             ),
         },
-        (false, Tagged::Internally { tag })=> match variant_type.inline_flattened {
+        (false, Tagged::Internally { tag }) => match variant_type.inline_flattened {
             Some(inline_flattened) => quote! {
                 format!(
                     "{{ \"{}\": \"{}\", {} }}",

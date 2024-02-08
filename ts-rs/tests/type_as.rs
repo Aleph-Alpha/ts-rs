@@ -1,10 +1,8 @@
 #![allow(dead_code)]
 
-use std::cell::UnsafeCell;
-use std::mem::MaybeUninit;
-use std::ptr::NonNull;
-use std::sync::atomic::AtomicPtr;
-use std::time::Instant;
+use std::{
+    cell::UnsafeCell, mem::MaybeUninit, ptr::NonNull, sync::atomic::AtomicPtr, time::Instant,
+};
 
 use ts_rs::TS;
 
