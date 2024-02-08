@@ -95,7 +95,8 @@ fn untagged() {
     #[cfg_attr(feature = "serde-compat", derive(Serialize))]
     #[derive(TS)]
     struct Foo {
-        #[serde(flatten)]
+        #[cfg_attr(feature = "serde-compat", serde(flatten))]
+        #[cfg_attr(not(feature = "serde-compat"), ts(flatten))]
         baz: Bar,
     }
 
