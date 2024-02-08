@@ -1,10 +1,6 @@
 use syn::{Fields, Generics, Ident, ItemStruct, Result};
 
-use crate::{
-    attr::StructAttr,
-    utils::to_ts_ident,
-    DerivedTS,
-};
+use crate::{attr::StructAttr, utils::to_ts_ident, DerivedTS};
 
 mod r#enum;
 mod generics;

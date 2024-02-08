@@ -2,7 +2,7 @@ use syn::{Attribute, Ident, Result};
 
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, Inflection},
-    utils::{parse_docs, parse_attrs},
+    utils::{parse_attrs, parse_docs},
 };
 
 #[derive(Default)]

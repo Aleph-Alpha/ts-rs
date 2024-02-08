@@ -122,10 +122,13 @@ pub fn parse_docs(attrs: &[Attribute]) -> Result<Vec<String>> {
         .into_iter()
         .filter_map(|a| match a.meta {
             Meta::NameValue(ref x) if x.path.is_ident("doc") => Some(x),
-            _ => None
+            _ => None,
         })
         .map(|attr| match attr.value {
-            Expr::Lit(ExprLit { lit: Lit::Str(ref str), .. }) => Ok(str.value()),
+            Expr::Lit(ExprLit {
+                lit: Lit::Str(ref str),
+                ..
+            }) => Ok(str.value()),
             _ => syn_err!(attr.span(); "doc attribute with non literal expression found"),
         })
         .collect::<Result<Vec<_>>>()
