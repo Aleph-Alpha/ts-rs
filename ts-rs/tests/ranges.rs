@@ -1,5 +1,7 @@
-use std::collections::BTreeSet;
-use std::ops::{Range, RangeInclusive};
+use std::{
+    collections::BTreeSet,
+    ops::{Range, RangeInclusive},
+};
 
 use ts_rs::{Dependency, TS};
 

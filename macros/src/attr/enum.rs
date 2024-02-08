@@ -8,6 +8,7 @@ use crate::{
 #[derive(Default)]
 pub struct EnumAttr {
     pub rename_all: Option<Inflection>,
+    pub rename_all_fields: Option<Inflection>,
     pub rename: Option<String>,
     pub export_to: Option<String>,
     pub export: bool,
@@ -53,6 +54,7 @@ impl EnumAttr {
         &mut self,
         EnumAttr {
             rename_all,
+            rename_all_fields,
             rename,
             tag,
             content,
@@ -63,6 +65,7 @@ impl EnumAttr {
     ) {
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
+        self.rename_all_fields = self.rename_all_fields.take().or(rename_all_fields);
         self.tag = self.tag.take().or(tag);
         self.untagged = self.untagged || untagged;
         self.content = self.content.take().or(content);
@@ -75,8 +78,12 @@ impl_parse! {
     EnumAttr(input, out) {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
+        "rename_all_fields" => out.rename_all_fields = Some(parse_assign_inflection(input)?),
         "export_to" => out.export_to = Some(parse_assign_str(input)?),
-        "export" => out.export = true
+        "export" => out.export = true,
+        "tag" => out.tag = Some(parse_assign_str(input)?),
+        "content" => out.content = Some(parse_assign_str(input)?),
+        "untagged" => out.untagged = true
     }
 }
 
@@ -85,6 +92,7 @@ impl_parse! {
     SerdeEnumAttr(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.0.rename_all = Some(parse_assign_inflection(input)?),
+        "rename_all_fields" => out.0.rename_all_fields = Some(parse_assign_inflection(input)?),
         "tag" => out.0.tag = Some(parse_assign_str(input)?),
         "content" => out.0.content = Some(parse_assign_str(input)?),
         "untagged" => out.0.untagged = true

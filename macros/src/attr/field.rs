@@ -1,9 +1,7 @@
-use syn::spanned::Spanned;
-use syn::{Attribute, Ident, Result};
-
-use crate::utils::parse_attrs;
+use syn::{spanned::Spanned, Attribute, Ident, Result};
 
 use super::parse_assign_str;
+use crate::utils::parse_attrs;
 
 #[derive(Default)]
 pub struct FieldAttr {

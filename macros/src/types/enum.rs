@@ -67,12 +67,13 @@ fn format_variant(
     variant: &Variant,
     generics: &Generics,
 ) -> syn::Result<()> {
-    let variant_attr = VariantAttr::from_attrs(&variant.attrs)?;
+    let variant_attr = VariantAttr::new(&variant.attrs, enum_attr)?;
 
     if variant_attr.skip {
         return Ok(());
     }
 
+    let untagged_variant = variant_attr.untagged;
     let name = match (variant_attr.rename.clone(), &enum_attr.rename_all) {
         (Some(rn), _) => rn,
         (None, None) => variant.ident.to_string(),
@@ -89,9 +90,9 @@ fn format_variant(
     let variant_dependencies = variant_type.dependencies;
     let inline_type = variant_type.inline;
 
-    let formatted = match enum_attr.tagged()? {
-        Tagged::Untagged => quote!(#inline_type),
-        Tagged::Externally => match &variant.fields {
+    let formatted = match (untagged_variant, enum_attr.tagged()?) {
+        (true, _) | (_, Tagged::Untagged) => quote!(#inline_type),
+        (false, Tagged::Externally) => match &variant.fields {
             Fields::Unit => quote!(format!("\"{}\"", #name)),
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                 let FieldAttr { skip, .. } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
@@ -103,7 +104,7 @@ fn format_variant(
             }
             _ => quote!(format!("{{ \"{}\": {} }}", #name, #inline_type)),
         },
-        Tagged::Adjacently { tag, content } => match &variant.fields {
+        (false, Tagged::Adjacently { tag, content }) => match &variant.fields {
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                 let FieldAttr {
                     type_as,
@@ -132,7 +133,7 @@ fn format_variant(
                 format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #inline_type)
             ),
         },
-        Tagged::Internally { tag } => match variant_type.inline_flattened {
+        (false, Tagged::Internally { tag }) => match variant_type.inline_flattened {
             Some(inline_flattened) => quote! {
                 format!(
                     "{{ \"{}\": \"{}\", {} }}",

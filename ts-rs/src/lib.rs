@@ -128,6 +128,7 @@
 //! Supported serde attributes:
 //! - `rename`
 //! - `rename-all`
+//! - `rename-all-fields`
 //! - `tag`
 //! - `content`
 //! - `untagged`
@@ -165,11 +166,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::typelist::TypeList;
-
 pub use ts_rs_macros::TS;
 
 pub use crate::export::{ExportError, __private};
+use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
 mod chrono;
@@ -244,7 +244,7 @@ pub mod typelist;
 ///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.
 ///
 /// - `#[ts(flatten)]`:  
-///   Flatten this field (only works if the field is a struct)  
+///   Flatten this field
 ///   
 /// ### enum attributes
 ///
@@ -262,6 +262,10 @@ pub mod typelist;
 ///
 /// - `#[ts(rename_all = "..")]`:  
 ///   Rename all variants of this enum.  
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///
+/// - `#[ts(rename_all_fieds = "..")]`
+///   Renames the fields of all the struct variants of this enum.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
 ///  
 /// ### enum variant attributes

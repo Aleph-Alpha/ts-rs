@@ -1,14 +1,13 @@
-use std::sync::Mutex;
 use std::{
     any::TypeId,
     collections::BTreeMap,
     fmt::Write,
     path::{Component, Path, PathBuf},
     sync::OnceLock,
+    sync::Mutex,
 };
 
 use thiserror::Error;
-
 use ExportError::*;
 
 use crate::TS;

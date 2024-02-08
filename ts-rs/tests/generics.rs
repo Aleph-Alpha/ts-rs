@@ -294,3 +294,58 @@ fn trait_bounds() {
     );
     assert_eq!(D::<&str, 41>::decl(), ty)
 }
+
+#[test]
+fn deeply_nested() {
+    #[derive(TS)]
+    struct T0<T> {
+        t0: T,
+    }
+
+    #[derive(TS)]
+    struct P0<T> {
+        p0: T,
+    }
+
+    #[derive(TS)]
+    struct T1<T> {
+        t0: T,
+    }
+
+    #[derive(TS)]
+    struct P1<T> {
+        p0: T,
+    }
+
+    #[derive(TS)]
+    struct Parent {
+        a: T1<T0<u32>>,
+        b: T1<P1<T0<P0<u32>>>>,
+        c: T1<P1<()>>,
+    }
+    #[derive(TS)]
+    struct GenericParent<T> {
+        a_t: T1<T0<T>>,
+        b_t: T1<P1<T0<P0<T>>>>,
+        c_t: T1<P1<T>>,
+        a_null: T1<T0<()>>,
+        b_null: T1<P1<T0<P0<()>>>>,
+        c_null: T1<P1<()>>,
+    }
+
+    assert_eq!(
+        Parent::inline(),
+        "{ a: T1<T0<number>>, b: T1<P1<T0<P0<number>>>>, c: T1<P1<null>>, }"
+    );
+    assert_eq!(
+        GenericParent::<()>::decl(),
+        "type GenericParent<T> = { \
+            a_t: T1<T0<T>>, \
+            b_t: T1<P1<T0<P0<T>>>>, \
+            c_t: T1<P1<T>>, \
+            a_null: T1<T0<null>>, \
+            b_null: T1<P1<T0<P0<null>>>>, \
+            c_null: T1<P1<null>>, \
+         }"
+    );
+}
