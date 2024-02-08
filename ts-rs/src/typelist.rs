@@ -1,5 +1,4 @@
-use std::any::TypeId;
-use std::marker::PhantomData;
+use std::{any::TypeId, marker::PhantomData};
 
 use crate::TS;
 

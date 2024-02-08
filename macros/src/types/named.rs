@@ -2,9 +2,8 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, Type};
 
-use crate::attr::Optional;
 use crate::{
-    attr::{FieldAttr, Inflection, StructAttr},
+    attr::{FieldAttr, Inflection, Optional, StructAttr},
     deps::Dependencies,
     types::generics::{format_generics, format_type},
     utils::{raw_name_to_ts_field, to_ts_ident},

@@ -166,11 +166,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::typelist::TypeList;
-
 pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
+use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
 mod chrono;
