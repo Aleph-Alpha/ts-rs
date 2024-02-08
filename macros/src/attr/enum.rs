@@ -2,7 +2,7 @@ use syn::{Attribute, Ident, Result};
 
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, Inflection},
-    utils::parse_attrs,
+    utils::{parse_docs, parse_attrs},
 };
 
 #[derive(Default)]
@@ -11,6 +11,7 @@ pub struct EnumAttr {
     pub rename: Option<String>,
     pub export_to: Option<String>,
     pub export: bool,
+    pub docs: Vec<String>,
     tag: Option<String>,
     untagged: bool,
     content: Option<String>,
@@ -44,6 +45,10 @@ impl EnumAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = Self::default();
         parse_attrs(attrs)?.for_each(|a| result.merge(a));
+
+        let docs = parse_docs(attrs)?;
+        result.docs = docs;
+
         #[cfg(feature = "serde-compat")]
         crate::utils::parse_serde_attrs::<SerdeEnumAttr>(attrs).for_each(|a| result.merge(a.0));
         Ok(result)
@@ -59,6 +64,7 @@ impl EnumAttr {
             untagged,
             export_to,
             export,
+            docs,
         }: EnumAttr,
     ) {
         self.rename = self.rename.take().or(rename);
@@ -68,6 +74,7 @@ impl EnumAttr {
         self.content = self.content.take().or(content);
         self.export = self.export || export;
         self.export_to = self.export_to.take().or(export_to);
+        self.docs = docs;
     }
 }
 

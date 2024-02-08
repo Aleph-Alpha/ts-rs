@@ -13,7 +13,6 @@ use crate::{
 pub(crate) fn named(
     attr: &StructAttr,
     name: &str,
-    docs: &Vec<String>,
     fields: &FieldsNamed,
     generics: &Generics,
 ) -> Result<DerivedTS> {
@@ -55,7 +54,7 @@ pub(crate) fn named(
         decl: quote!(format!("type {}{} = {}", #name, #generic_args, Self::inline())),
         inline_flattened: Some(quote!(format!("{{ {} }}", #fields))),
         name: name.to_owned(),
-        docs: docs.to_owned(),
+        docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),

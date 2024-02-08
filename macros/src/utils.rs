@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 
 use proc_macro2::Ident;
-use syn::{Attribute, Error, Expr, Lit, Meta, Result};
+use syn::{spanned::Spanned, Attribute, Error, Expr, ExprLit, Lit, Meta, Result};
 
 macro_rules! syn_err {
     ($l:literal $(, $a:expr)*) => {
@@ -117,28 +117,18 @@ pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
 }
 
 /// Return a vector of all lines of doc comments in the given vector of attributes.
-pub fn get_docs_from_attributes(attrs: &Vec<Attribute>) -> Vec<String> {
+pub fn parse_docs(attrs: &[Attribute]) -> Result<Vec<String>> {
     attrs
         .into_iter()
-        .map(|attr| match &attr.meta {
-            Meta::Path(_) => None,
-            Meta::List(_) => None,
-            Meta::NameValue(name_value) => {
-                if name_value.path.is_ident("doc") {
-                    match &name_value.value {
-                        Expr::Lit(lit) => match &lit.lit {
-                            Lit::Str(str) => Some(str.value()),
-                            _ => panic!("doc attribute with non string literal found"),
-                        },
-                        _ => panic!("doc attribute with non literal expression found"),
-                    }
-                } else {
-                    None
-                }
-            }
+        .filter_map(|a| match a.meta {
+            Meta::NameValue(ref x) if x.path.is_ident("doc") => Some(x),
+            _ => None
         })
-        .flatten()
-        .collect()
+        .map(|attr| match attr.value {
+            Expr::Lit(ExprLit { lit: Lit::Str(ref str), .. }) => Ok(str.value()),
+            _ => syn_err!(attr.span(); "doc attribute with non literal expression found"),
+        })
+        .collect::<Result<Vec<_>>>()
 }
 
 #[cfg(feature = "serde-compat")]

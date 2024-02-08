@@ -3,7 +3,7 @@ use syn::Result;
 
 use crate::{attr::StructAttr, deps::Dependencies, DerivedTS};
 
-pub(crate) fn empty_object(attr: &StructAttr, name: &str, docs: &Vec<String>) -> Result<DerivedTS> {
+pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
@@ -11,14 +11,14 @@ pub(crate) fn empty_object(attr: &StructAttr, name: &str, docs: &Vec<String>) ->
         decl: quote!(format!("type {} = Record<string, never>;", #name)),
         inline_flattened: None,
         name: name.to_owned(),
-        docs: docs.to_owned(),
+        docs: attr.docs.clone(),
         dependencies: Dependencies::default(),
         export: attr.export,
         export_to: attr.export_to.clone(),
     })
 }
 
-pub(crate) fn empty_array(attr: &StructAttr, name: &str, docs: &Vec<String>) -> Result<DerivedTS> {
+pub(crate) fn empty_array(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
@@ -26,14 +26,14 @@ pub(crate) fn empty_array(attr: &StructAttr, name: &str, docs: &Vec<String>) -> 
         decl: quote!(format!("type {} = never[];", #name)),
         inline_flattened: None,
         name: name.to_owned(),
-        docs: docs.to_owned(),
+        docs: attr.docs.clone(),
         dependencies: Dependencies::default(),
         export: attr.export,
         export_to: attr.export_to.clone(),
     })
 }
 
-pub(crate) fn null(attr: &StructAttr, name: &str, docs: &Vec<String>) -> Result<DerivedTS> {
+pub(crate) fn null(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
@@ -41,7 +41,7 @@ pub(crate) fn null(attr: &StructAttr, name: &str, docs: &Vec<String>) -> Result<
         decl: quote!(format!("type {} = null;", #name)),
         inline_flattened: None,
         name: name.to_owned(),
-        docs: docs.to_owned(),
+        docs: attr.docs.clone(),
         dependencies: Dependencies::default(),
         export: attr.export,
         export_to: attr.export_to.clone(),

@@ -12,7 +12,6 @@ use crate::{
 pub(crate) fn tuple(
     attr: &StructAttr,
     name: &str,
-    docs: &Vec<String>,
     fields: &FieldsUnnamed,
     generics: &Generics,
 ) -> Result<DerivedTS> {
@@ -47,7 +46,7 @@ pub(crate) fn tuple(
         },
         inline_flattened: None,
         name: name.to_owned(),
-        docs: docs.to_owned(),
+        docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),
