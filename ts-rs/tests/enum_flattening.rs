@@ -68,7 +68,8 @@ fn internally_tagged() {
     struct Foo {
         qux: Option<String>,
 
-        #[serde(flatten)]
+        #[cfg_attr(feature = "serde-compat", serde(flatten))]
+        #[cfg_attr(not(feature = "serde-compat"), ts(flatten))]
         baz: Bar,
     }
 
