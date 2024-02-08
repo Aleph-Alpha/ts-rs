@@ -181,7 +181,7 @@ where
 }
 
 /// Returns an unindented docstring that has a newline at the end if it has content.
-pub fn format_docs(docs: &Vec<String>) -> String {
+fn format_docs(docs: &Vec<String>) -> String {
     match docs.is_empty() {
         true => "".to_string(),
         false => {
