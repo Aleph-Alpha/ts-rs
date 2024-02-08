@@ -50,14 +50,25 @@ fn adjacently_tagged() {
     #[cfg_attr(feature = "serde-compat", serde(tag = "type", content = "stuff"))]
     #[cfg_attr(not(feature = "serde-compat"), ts(tag = "type", content = "stuff"))]
     enum Bar {
-        Baz { a: i32, a2: String },
-        Biz { b: bool },
-        Buz { c: String, d: Option<i32> },
+        Baz {
+            a: i32,
+            a2: String,
+        },
+        Biz {
+            b: bool,
+        },
+
+        #[cfg_attr(feature = "serde-compat", serde(untagged))]
+        #[cfg_attr(not(feature = "serde-compat"), ts(untagged))]
+        Buz {
+            c: String,
+            d: Option<i32>,
+        },
     }
 
     assert_eq!(
         Foo::inline(),
-        r#"{ one: number, qux: string | null, } & ({ "type": "Baz", "stuff": { a: number, a2: string, } } | { "type": "Biz", "stuff": { b: boolean, } } | { "type": "Buz", "stuff": { c: string, d: number | null, } })"#
+        r#"{ one: number, qux: string | null, } & ({ "type": "Baz", "stuff": { a: number, a2: string, } } | { "type": "Biz", "stuff": { b: boolean, } } | { c: string, d: number | null, })"#
     )
 }
 

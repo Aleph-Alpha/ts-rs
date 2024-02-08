@@ -3,11 +3,10 @@ use std::{
     collections::BTreeMap,
     fmt::Write,
     path::{Component, Path, PathBuf},
+    sync::Mutex,
 };
-use std::sync::Mutex;
 
 use thiserror::Error;
-
 use ExportError::*;
 
 use crate::TS;
