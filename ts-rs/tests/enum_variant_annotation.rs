@@ -56,22 +56,23 @@ fn test_enum_variant_rename() {
     );
 }
 
-#[cfg(feature = "serde")]
-#[derive(Serialize, Deserialize, TS)]
-#[serde(tag = "kind")]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", serde(tag = "kind"))]
+#[cfg_attr(not(feature = "serde-compat"), ts(tag = "kind"))]
 #[ts(export)]
 pub enum C {
-    #[serde(rename = "SQUARE_THING")]
+    #[cfg_attr(feature = "serde-compat", serde(rename = "SQUARE_THING"))]
+    #[cfg_attr(not(feature = "serde-compat"), ts(rename = "SQUARE_THING"))]
     SquareThing {
         name: String,
         // ...
     },
 }
 
-#[cfg(feature = "serde")]
 #[test]
 fn test_enum_variant_with_tag() {
-    assert_eq!(C::inline(), "{ kind: \"SQUARE_THING\", name: string, }");
+    assert_eq!(C::inline(), r#"{ "kind": "SQUARE_THING", name: string, }"#);
 }
 
 #[cfg(feature = "serde-compat")]
