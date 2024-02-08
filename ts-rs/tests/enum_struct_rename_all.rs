@@ -29,13 +29,14 @@ pub fn enum_struct_rename_all() {
     )
 }
 
-
 #[derive(Serialize, Deserialize, TS, Clone)]
 #[ts(export)]
 #[cfg_attr(feature = "serde-compat", serde(rename_all_fields = "kebab-case"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(rename_all_fields = "kebab-case"))]
 pub enum TaskStatus2 {
-    Running { started_time: String },
+    Running {
+        started_time: String,
+    },
 
     Terminated {
         status: i32,
@@ -51,5 +52,3 @@ pub fn enum_struct_rename_all_fields() {
         r#"{ "Running": { "started-time": string, } } | { "Terminated": { status: number, stdout: string, stderr: string, } }"#
     )
 }
-
-
