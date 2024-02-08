@@ -58,7 +58,8 @@ fn adjacently_tagged() {
             b: bool,
         },
 
-        #[serde(untagged)]
+        #[cfg_attr(feature = "serde-compat", serde(untagged))]
+        #[cfg_attr(not(feature = "serde-compat"), ts(untagged))]
         Buz {
             c: String,
             d: Option<i32>,
