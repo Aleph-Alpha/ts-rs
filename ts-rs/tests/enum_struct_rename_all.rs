@@ -29,7 +29,8 @@ pub fn enum_struct_rename_all() {
     )
 }
 
-#[derive(Serialize, TS, Clone)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[derive(TS, Clone)]
 #[ts(export)]
 #[cfg_attr(feature = "serde-compat", serde(rename_all_fields = "kebab-case"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(rename_all_fields = "kebab-case"))]
