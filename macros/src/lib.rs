@@ -73,9 +73,9 @@ impl DerivedTS {
             ..
         } = self;
 
-        let docs = match docs.len() {
-            0 => None,
-            _ => {
+        let docs = match docs.is_empty() {
+            true => None,
+            false => {
                 let docs_str = docs.join("\n");
                 Some(quote!(const DOCS: Option<&'static str> = Some(#docs_str);))
             }
