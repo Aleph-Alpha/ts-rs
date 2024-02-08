@@ -75,7 +75,7 @@ fn export_a() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export interface A {\n",
+            "export type A = {\n",
             "  name: string;\n",
             "}\n"
         )
@@ -88,7 +88,7 @@ fn export_a() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export interface A { name: string, }"
+            "export type A = { name: string, }"
         )
     };
 
@@ -110,7 +110,7 @@ fn export_b() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export interface B {\n",
+            "export type B = {\n",
             "  name: string;\n",
             "}\n"
         )
@@ -123,7 +123,7 @@ fn export_b() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export interface B { name: string, }"
+            "export type B = { name: string, }"
         )
     };
 
