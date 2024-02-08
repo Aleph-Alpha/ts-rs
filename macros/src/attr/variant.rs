@@ -54,6 +54,7 @@ impl_parse! {
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
         "inline" => out.inline = true,
         "skip" => out.skip = true,
+        "untagged" => out.untagged = true,
     }
 }
 
