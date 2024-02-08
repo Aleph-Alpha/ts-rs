@@ -130,6 +130,7 @@ With the `serde-compat` feature (enabled by default), serde attributes can be pa
 Supported serde attributes:
 - `rename`
 - `rename-all`
+- `rename-all-fields`
 - `tag`
 - `content`
 - `untagged`

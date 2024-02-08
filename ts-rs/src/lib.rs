@@ -128,6 +128,7 @@
 //! Supported serde attributes:
 //! - `rename`
 //! - `rename-all`
+//! - `rename-all-fields`
 //! - `tag`
 //! - `content`
 //! - `untagged`
@@ -253,6 +254,10 @@ pub mod typelist;
 ///
 /// - `#[ts(rename_all = "..")]`:  
 ///   Rename all variants of this enum.  
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///
+/// - `#[ts(rename_all_fieds = "..")]`
+///   Renames the fields of all the struct variants of this enum.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
 ///  
 /// ### enum variant attributes
