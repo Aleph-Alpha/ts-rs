@@ -25,6 +25,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     if s.variants.is_empty() {
         return Ok(DerivedTS {
             name,
+            docs: enum_attr.docs,
             inline: quote!("never".to_owned()),
             decl: quote!("type {} = never;"),
             inline_flattened: None,
@@ -55,6 +56,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         )),
         dependencies,
         name,
+        docs: enum_attr.docs,
         export: enum_attr.export,
         export_to: enum_attr.export_to,
     })
@@ -194,6 +196,7 @@ fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
         inline: quote!("never".to_owned()),
         decl: quote!(format!("type {} = never;", #name)),
         name,
+        docs: enum_attr.docs,
         inline_flattened: None,
         dependencies: Dependencies::default(),
         export: enum_attr.export,

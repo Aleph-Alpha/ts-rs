@@ -269,6 +269,7 @@ pub mod typelist;
 ///   Skip this variant  
 pub trait TS {
     const EXPORT_TO: Option<&'static str> = None;
+    const DOCS: Option<&'static str> = None;
 
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
     /// This function will panic if the type has no declaration.

@@ -4,7 +4,7 @@ use syn::{Attribute, Ident, Result};
 
 use crate::{
     attr::{parse_assign_str, Inflection, VariantAttr},
-    utils::parse_attrs,
+    utils::{parse_attrs, parse_docs},
 };
 
 #[derive(Default, Clone)]
@@ -14,6 +14,7 @@ pub struct StructAttr {
     pub export_to: Option<String>,
     pub export: bool,
     pub tag: Option<String>,
+    pub docs: Vec<String>,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -24,6 +25,10 @@ impl StructAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = Self::default();
         parse_attrs(attrs)?.for_each(|a| result.merge(a));
+
+        let docs = parse_docs(attrs)?;
+        result.docs = docs;
+
         #[cfg(feature = "serde-compat")]
         crate::utils::parse_serde_attrs::<SerdeStructAttr>(attrs).for_each(|a| result.merge(a.0));
         Ok(result)
@@ -37,6 +42,7 @@ impl StructAttr {
             export,
             export_to,
             tag,
+            docs,
         }: StructAttr,
     ) {
         self.rename = self.rename.take().or(rename);
@@ -44,6 +50,7 @@ impl StructAttr {
         self.export_to = self.export_to.take().or(export_to);
         self.export = self.export || export;
         self.tag = self.tag.take().or(tag);
+        self.docs = docs;
     }
 }
 
