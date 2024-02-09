@@ -74,10 +74,10 @@ impl DerivedTS {
         } = self;
 
         let docs = match docs.is_empty() {
-            true => quote!(None),
+            true => None,
             false => {
                 let docs_str = docs.join("\n");
-                quote!(Some(#docs_str))
+                Some(quote!(const DOCS: Option<&'static str> = Some(#docs_str);))
             }
         };
 
@@ -95,7 +95,7 @@ impl DerivedTS {
         quote! {
             #impl_start {
                 const EXPORT_TO: Option<&'static str> = Some(#export_to);
-                const DOCS: Option<&'static str> = #docs;
+                #docs
 
                 fn decl() -> String {
                     #decl
