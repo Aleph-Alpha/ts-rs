@@ -37,3 +37,18 @@ fn type_def(
         Fields::Unit => unit::null(attr, &name),
     }
 }
+
+// TODO: This is a copy, because we do not have access to the `ts_rs` module or have a `utils` module.
+/// Returns an unindented docstring that has a newline at the end if it has content.
+fn format_docs(docs: &str) -> String {
+    match docs.is_empty() {
+        true => "".to_string(),
+        false => {
+            let lines = docs
+                .lines()
+                .map(|doc| format!(" *{doc}"))
+                .collect::<Vec<_>>();
+            format!("/**\n{}\n */\n", lines.join("\n"))
+        }
+    }
+}

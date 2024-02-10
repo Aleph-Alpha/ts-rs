@@ -10,6 +10,8 @@ use crate::{
     DerivedTS,
 };
 
+use super::format_docs;
+
 pub(crate) fn named(
     attr: &StructAttr,
     name: &str,
@@ -37,7 +39,9 @@ pub(crate) fn named(
         )?;
     }
 
-    let fields = quote!(<[String]>::join(&[#(#formatted_fields),*], " "));
+    // TODO: Doc Strings have to start with a newline, and usually span multiple lines
+    let fields = quote!(<[String]>::join(&[#(#formatted_fields),*], "\n"));
+    let fields = quote!(format!("\n{}\n", #fields));
     let flattened = quote!(<[String]>::join(&[#(#flattened_fields),*], " & "));
     let generic_args = format_generics(&mut dependencies, generics);
 
@@ -87,6 +91,7 @@ fn format_field(
         skip,
         optional,
         flatten,
+        docs,
     } = FieldAttr::from_attrs(&field.attrs)?;
 
     if skip {
@@ -149,8 +154,10 @@ fn format_field(
     };
     let valid_name = raw_name_to_ts_field(name);
 
+    let docs = format_docs(&docs.join("\n"));
+
     formatted_fields.push(quote! {
-        format!("{}{}: {},", #valid_name, #optional_annotation, #formatted_ty)
+        format!("{}{}{}: {},", #docs, #valid_name, #optional_annotation, #formatted_ty)
     });
 
     Ok(())

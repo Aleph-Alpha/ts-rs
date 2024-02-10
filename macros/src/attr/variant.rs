@@ -3,7 +3,7 @@ use syn::{Attribute, Ident, Result};
 use super::EnumAttr;
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, Inflection},
-    utils::parse_attrs,
+    utils::{parse_attrs, parse_docs},
 };
 
 #[derive(Default)]
@@ -13,6 +13,8 @@ pub struct VariantAttr {
     pub inline: bool,
     pub skip: bool,
     pub untagged: bool,
+    // TODO: Parsing works just fine, but JSDocs don't work on unions (enums variants)
+    pub docs: Vec<String>,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -23,6 +25,7 @@ impl VariantAttr {
     pub fn new(attrs: &[Attribute], enum_attr: &EnumAttr) -> Result<Self> {
         let mut result = Self::default();
         parse_attrs(attrs)?.for_each(|a| result.merge(a));
+        result.docs = parse_docs(attrs)?;
         result.rename_all = result.rename_all.or(enum_attr.rename_all_fields);
         #[cfg(feature = "serde-compat")]
         if !result.skip {
@@ -40,13 +43,15 @@ impl VariantAttr {
             inline,
             skip,
             untagged,
+            mut docs,
         }: VariantAttr,
     ) {
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
         self.inline = self.inline || inline;
         self.skip = self.skip || skip;
-        self.untagged = self.untagged || untagged
+        self.untagged = self.untagged || untagged;
+        self.docs.append(&mut docs)
     }
 }
 

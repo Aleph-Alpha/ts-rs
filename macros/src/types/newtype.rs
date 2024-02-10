@@ -29,6 +29,7 @@ pub(crate) fn newtype(
         skip,
         optional,
         flatten,
+        docs: _, // TODO: Not sure what to do here with docs yet
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
     match (&rename_inner, skip, optional.optional, flatten) {

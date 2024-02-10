@@ -13,6 +13,9 @@ use ts_rs::TS;
 #[derive(TS)]
 #[ts(export_to = "tests-out/docs/")]
 struct A {
+    /// Doc of field
+    ///
+    /// Testing
     name: String,
 }
 
@@ -23,6 +26,9 @@ struct A {
 ///
 /// Testing
 struct B {
+    /// Doc of field
+    ///
+    /// Testing
     name: String,
 }
 
@@ -57,7 +63,23 @@ enum E {}
 ///
 /// Testing
 enum F {
+    /// Doc of variant
+    ///
+    /// Testing
     VarA,
+    /// Doc of variant
+    ///
+    /// Testing
+    VarB(),
+    /// Doc of variant
+    ///
+    /// Testing
+    VarC {
+        /// Doc of field of variant
+        ///
+        /// Testing
+        variant_vield: i32,
+    },
 }
 
 /* ============================================================================================== */
@@ -75,7 +97,13 @@ fn export_a() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type A = { name: string };\n"
+            "export type A = {",
+            "/**\n",
+            " * Doc of field\n",
+            " *\n",
+            " * Testing\n",
+            " */\n",
+            "name: string };\n",
         )
     } else {
         concat!(
@@ -86,7 +114,13 @@ fn export_a() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type A = { name: string, }"
+            "export type A = {",
+            "/**\n",
+            " * Doc of field\n",
+            " *\n",
+            " * Testing\n",
+            " */\n",
+            "name: string, }"
         )
     };
 
