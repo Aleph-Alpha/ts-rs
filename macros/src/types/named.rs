@@ -39,9 +39,7 @@ pub(crate) fn named(
         )?;
     }
 
-    // TODO: Doc Strings have to start with a newline, and usually span multiple lines
-    let fields = quote!(<[String]>::join(&[#(#formatted_fields),*], "\n"));
-    let fields = quote!(format!("\n{}\n", #fields));
+    let fields = quote!(<[String]>::join(&[#(#formatted_fields),*], " "));
     let flattened = quote!(<[String]>::join(&[#(#flattened_fields),*], " & "));
     let generic_args = format_generics(&mut dependencies, generics);
 
@@ -154,7 +152,11 @@ fn format_field(
     };
     let valid_name = raw_name_to_ts_field(name);
 
-    let docs = format_docs(&docs.join("\n"));
+    // Start every doc string with a newline, because when other characters are in front, it is not "understood" by VSCode
+    let docs = match docs.is_empty() {
+        true => "".to_string(),
+        false => format!("\n{}", format_docs(&docs.join("\n"))),
+    };
 
     formatted_fields.push(quote! {
         format!("{}{}{}: {},", #docs, #valid_name, #optional_annotation, #formatted_ty)

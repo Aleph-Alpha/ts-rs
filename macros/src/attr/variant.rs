@@ -13,7 +13,7 @@ pub struct VariantAttr {
     pub inline: bool,
     pub skip: bool,
     pub untagged: bool,
-    // TODO: Parsing works just fine, but JSDocs don't work on unions (enums variants)
+    // `docs` is parsed, but JSDocs don't work on unions, therefore it's value is not used
     pub docs: Vec<String>,
 }
 

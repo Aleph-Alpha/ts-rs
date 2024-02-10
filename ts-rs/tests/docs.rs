@@ -97,13 +97,14 @@ fn export_a() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type A = {",
-            "/**\n",
-            " * Doc of field\n",
-            " *\n",
-            " * Testing\n",
-            " */\n",
-            "name: string };\n",
+            "export type A = {\n",
+            "  /**\n",
+            "   * Doc of field\n",
+            "   *\n",
+            "   * Testing\n",
+            "   */\n",
+            "  name: string;\n",
+            "};\n",
         )
     } else {
         concat!(
@@ -114,7 +115,7 @@ fn export_a() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type A = {",
+            "export type A = { \n",
             "/**\n",
             " * Doc of field\n",
             " *\n",
@@ -142,7 +143,14 @@ fn export_b() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type B = { name: string };\n"
+            "export type B = {\n",
+            "  /**\n",
+            "   * Doc of field\n",
+            "   *\n",
+            "   * Testing\n",
+            "   */\n",
+            "  name: string;\n",
+            "};\n",
         )
     } else {
         concat!(
@@ -153,7 +161,13 @@ fn export_b() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type B = { name: string, }"
+            "export type B = { \n",
+            "/**\n",
+            " * Doc of field\n",
+            " *\n",
+            " * Testing\n",
+            " */\n",
+            "name: string, }",
         )
     };
 
@@ -273,7 +287,16 @@ fn export_f() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type F = \"VarA\";\n"
+            "export type F = \"VarA\" | { \"VarB\": never[] } | {\n",
+            "  \"VarC\": {\n",
+            "    /**\n",
+            "     * Doc of field of variant\n",
+            "     *\n",
+            "     * Testing\n",
+            "     */\n",
+            "    variant_vield: number;\n",
+            "  };\n",
+            "};\n"
         )
     } else {
         concat!(
@@ -284,7 +307,13 @@ fn export_f() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type F = \"VarA\";"
+            "export type F = \"VarA\" | { \"VarB\": never[] } | { \"VarC\": { \n",
+            "/**\n",
+            " * Doc of field of variant\n",
+            " *\n",
+            " * Testing\n",
+            " */\n",
+            "variant_vield: number, } };"
         )
     };
 
