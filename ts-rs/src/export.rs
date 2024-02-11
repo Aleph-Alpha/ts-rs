@@ -3,8 +3,8 @@ use std::{
     collections::BTreeMap,
     fmt::Write,
     path::{Component, Path, PathBuf},
-    sync::OnceLock,
     sync::Mutex,
+    sync::OnceLock,
 };
 
 use thiserror::Error;
