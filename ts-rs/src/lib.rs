@@ -281,6 +281,7 @@ pub mod typelist;
 ///   Skip this variant  
 pub trait TS {
     const EXPORT_TO: Option<&'static str> = None;
+    const DOCS: Option<&'static str> = None;
 
     fn get_export_to() -> Option<String> {
         Self::EXPORT_TO.map(ToString::to_string)

@@ -25,6 +25,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     if s.variants.is_empty() {
         return Ok(DerivedTS {
             name,
+            docs: enum_attr.docs,
             inline: quote!("never".to_owned()),
             decl: quote!("type {} = never;"),
             inline_flattened: None,
@@ -55,6 +56,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         )),
         dependencies,
         name,
+        docs: enum_attr.docs,
         export: enum_attr.export,
         export_to: enum_attr.export_to,
     })
@@ -113,18 +115,20 @@ fn format_variant(
                     ..
                 } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
 
-                let ty = match (type_override, type_as) {
-                    (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
-                    (Some(type_override), None) => quote! { #type_override },
-                    (None, Some(type_as)) => {
-                        format_type(&syn::parse_str::<Type>(&type_as)?, dependencies, generics)
-                    }
-                    (None, None) => format_type(&unnamed.unnamed[0].ty, dependencies, generics),
-                };
+
 
                 if skip {
                     quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                 } else {
+                    let ty = match (type_override, type_as) {
+                        (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
+                        (Some(type_override), None) => quote! { #type_override },
+                        (None, Some(type_as)) => {
+                            format_type(&syn::parse_str::<Type>(&type_as)?, dependencies, generics)
+                        }
+                        (None, None) => format_type(&unnamed.unnamed[0].ty, dependencies, generics),
+                    };
+
                     quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #ty))
                 }
             }
@@ -159,18 +163,18 @@ fn format_variant(
                         ..
                     } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
 
-                    let ty = match (type_override, type_as) {
-                        (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
-                        (Some(type_override), None) => quote! { #type_override },
-                        (None, Some(type_as)) => {
-                            format_type(&syn::parse_str::<Type>(&type_as)?, dependencies, generics)
-                        }
-                        (None, None) => format_type(&unnamed.unnamed[0].ty, dependencies, generics),
-                    };
-
                     if skip {
                         quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                     } else {
+                        let ty = match (type_override, type_as) {
+                            (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
+                            (Some(type_override), None) => quote! { #type_override },
+                            (None, Some(type_as)) => {
+                                format_type(&syn::parse_str::<Type>(&type_as)?, dependencies, generics)
+                            }
+                            (None, None) => format_type(&unnamed.unnamed[0].ty, dependencies, generics),
+                        };
+
                         quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #ty))
                     }
                 }
@@ -194,6 +198,7 @@ fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
         inline: quote!("never".to_owned()),
         decl: quote!(format!("type {} = never;", #name)),
         name,
+        docs: enum_attr.docs,
         inline_flattened: None,
         dependencies: Dependencies::default(),
         export: enum_attr.export,

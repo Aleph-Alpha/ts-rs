@@ -171,6 +171,13 @@ fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
 
 /// Push the declaration of `T`
 fn generate_decl<T: TS + ?Sized>(out: &mut String) {
+    // Type Docs
+    let docs = &T::DOCS;
+    if let Some(docs) = docs {
+        out.push_str(&format_docs(docs));
+    }
+
+    // Type Definition
     out.push_str("export ");
     out.push_str(&T::decl());
 }
@@ -272,5 +279,19 @@ where
             }
         }
         Some(comps.iter().map(|c| c.as_os_str()).collect())
+    }
+}
+
+/// Returns an unindented docstring that has a newline at the end if it has content.
+fn format_docs(docs: &str) -> String {
+    match docs.is_empty() {
+        true => "".to_string(),
+        false => {
+            let lines = docs
+                .lines()
+                .map(|doc| format!(" *{doc}"))
+                .collect::<Vec<_>>();
+            format!("/**\n{}\n */\n", lines.join("\n"))
+        }
     }
 }

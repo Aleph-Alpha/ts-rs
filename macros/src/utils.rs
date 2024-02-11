@@ -1,7 +1,7 @@
 use std::convert::TryFrom;
 
 use proc_macro2::Ident;
-use syn::{Attribute, Error, Result};
+use syn::{spanned::Spanned, Attribute, Error, Expr, ExprLit, Lit, Meta, Result};
 
 macro_rules! syn_err {
     ($l:literal $(, $a:expr)*) => {
@@ -114,6 +114,24 @@ pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
         })
         .collect::<Vec<_>>()
         .into_iter()
+}
+
+/// Return a vector of all lines of doc comments in the given vector of attributes.
+pub fn parse_docs(attrs: &[Attribute]) -> Result<Vec<String>> {
+    attrs
+        .into_iter()
+        .filter_map(|a| match a.meta {
+            Meta::NameValue(ref x) if x.path.is_ident("doc") => Some(x),
+            _ => None,
+        })
+        .map(|attr| match attr.value {
+            Expr::Lit(ExprLit {
+                lit: Lit::Str(ref str),
+                ..
+            }) => Ok(str.value()),
+            _ => syn_err!(attr.span(); "doc attribute with non literal expression found"),
+        })
+        .collect::<Result<Vec<_>>>()
 }
 
 #[cfg(feature = "serde-compat")]

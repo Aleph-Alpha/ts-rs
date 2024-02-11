@@ -18,6 +18,7 @@ mod types;
 
 struct DerivedTS {
     name: String,
+    docs: Vec<String>,
     inline: TokenStream,
     decl: TokenStream,
     inline_flattened: Option<TokenStream>,
@@ -70,12 +71,22 @@ impl DerivedTS {
 
         let DerivedTS {
             name,
+            docs,
             inline,
             decl,
             inline_flattened,
             dependencies,
             ..
         } = self;
+
+        let docs = match docs.is_empty() {
+            true => None,
+            false => {
+                let docs_str = docs.join("\n");
+                Some(quote!(const DOCS: Option<&'static str> = Some(#docs_str);))
+            }
+        };
+
         let inline_flattened = inline_flattened
             .map(|t| {
                 quote! {
@@ -91,6 +102,9 @@ impl DerivedTS {
             #impl_start {
                 const EXPORT_TO: Option<&'static str> = Some(#export_to);
                 #get_export_to
+
+                #docs
+
                 fn decl() -> String {
                     #decl
                 }
