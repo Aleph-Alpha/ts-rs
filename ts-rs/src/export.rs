@@ -134,9 +134,9 @@ pub mod __private {
     use super::*;
 
     const EXPORT_DIR_ENV_VAR: &str = "TS_RS_EXPORT_DIR";
-    fn provided_default_dir() -> &'static Option<String> {
+    fn provided_default_dir() -> Option<&'static str> {
         static EXPORT_TO: OnceLock<Option<String>> = OnceLock::new();
-        EXPORT_TO.get_or_init(|| std::env::var(EXPORT_DIR_ENV_VAR).ok())
+        EXPORT_TO.get_or_init(|| std::env::var(EXPORT_DIR_ENV_VAR).ok()).as_deref()
     }
 
     /// Returns the path to where `T` should be exported using the `TS_RS_EXPORT_DIR` environment variable.
@@ -144,7 +144,7 @@ pub mod __private {
     /// This should only be used by the TS derive macro; the `get_export_to` trait method should not
     /// be overridden if the `#[ts(export_to = ..)]` attribute exists.
     pub fn get_export_to_path<T: TS + ?Sized>() -> Option<String> {
-        provided_default_dir().as_ref().map_or_else(
+        provided_default_dir().map_or_else(
             || T::EXPORT_TO.map(ToString::to_string),
             |path| Some(format!("{path}/{}.ts", T::name())),
         )
