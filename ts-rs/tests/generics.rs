@@ -349,3 +349,33 @@ fn deeply_nested() {
          }"
     );
 }
+
+#[test]
+fn inline_generic_enum() {
+    #[derive(TS)]
+    struct SomeType(String);
+
+    #[derive(TS)]
+    enum MyEnum<A, B> {
+        VariantA(A),
+        VariantB(B)
+    }
+
+    #[derive(TS)]
+    struct Parent {
+        e: MyEnum<i32, i32>,
+        #[ts(inline)]
+        e1: MyEnum<i32, SomeType>
+    }
+
+    // This fails!
+    // The #[ts(inline)] seems to inline recursively, so not only the definition of `MyEnum`, but
+    // also the definition of `SomeType`.
+    assert_eq!(
+        Parent::decl(),
+        "type Parent = { \
+            e: MyEnum<number, number>, \
+            e1: { \"VariantA\": number } | { \"VariantB\": SomeType }, \
+        }"
+    );
+}
