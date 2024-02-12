@@ -171,6 +171,10 @@ pub use ts_rs_macros::TS;
 pub use crate::export::ExportError;
 use crate::typelist::TypeList;
 
+// Used in generated code. Not public API
+#[doc(hidden)]
+pub use crate::export::__private;
+
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
@@ -199,10 +203,18 @@ pub mod typelist;
 ///
 /// - `#[ts(export)]`:  
 ///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
-///   `cargo test`
+///   `cargo test`. The default base directory can be overridden with the `TS_RS_EXPORT_DIR` environment variable.
+///   Adding the variable to a project's [config.toml](https://doc.rust-lang.org/cargo/reference/config.html#env) can
+///   make it easier to manage.
+/// ```toml
+/// # <project-root>/.cargo/config.toml
+/// [env]
+/// TS_RS_EXPORT_DIR = { value = "<OVERRIDE_DIR>", relative = true }
+/// ```
 ///
 /// - `#[ts(export_to = "..")]`:  
 ///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.  
+///   The `export_to` attribute will also override the `TS_RS_EXPORT_DIR` environment variable.  
 ///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
 ///
@@ -270,6 +282,10 @@ pub mod typelist;
 pub trait TS {
     const EXPORT_TO: Option<&'static str> = None;
     const DOCS: Option<&'static str> = None;
+
+    fn get_export_to() -> Option<String> {
+        Self::EXPORT_TO.map(ToString::to_string)
+    }
 
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
     /// This function will panic if the type has no declaration.
@@ -370,7 +386,7 @@ pub struct Dependency {
     pub ts_name: String,
     /// Path to where the type would be exported. By default a filename is derived from the types
     /// name, which can be customized with `#[ts(export_to = "..")]`.
-    pub exported_to: &'static str,
+    pub exported_to: String,
 }
 
 impl Dependency {
@@ -378,7 +394,7 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
-        let exported_to = T::EXPORT_TO?;
+        let exported_to = T::get_export_to()?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
             ts_name: T::name(),

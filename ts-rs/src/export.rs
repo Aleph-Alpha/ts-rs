@@ -4,6 +4,7 @@ use std::{
     fmt::Write,
     path::{Component, Path, PathBuf},
     sync::Mutex,
+    sync::OnceLock,
 };
 
 use thiserror::Error;
@@ -128,6 +129,28 @@ pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     Ok(())
 }
 
+#[doc(hidden)]
+pub mod __private {
+    use super::*;
+
+    const EXPORT_DIR_ENV_VAR: &str = "TS_RS_EXPORT_DIR";
+    fn provided_default_dir() -> Option<&'static str> {
+        static EXPORT_TO: OnceLock<Option<String>> = OnceLock::new();
+        EXPORT_TO.get_or_init(|| std::env::var(EXPORT_DIR_ENV_VAR).ok()).as_deref()
+    }
+
+    /// Returns the path to where `T` should be exported using the `TS_RS_EXPORT_DIR` environment variable.
+    ///
+    /// This should only be used by the TS derive macro; the `get_export_to` trait method should not
+    /// be overridden if the `#[ts(export_to = ..)]` attribute exists.
+    pub fn get_export_to_path<T: TS + ?Sized>() -> Option<String> {
+        provided_default_dir().map_or_else(
+            || T::EXPORT_TO.map(ToString::to_string),
+            |path| Some(format!("{path}/{}.ts", T::name())),
+        )
+    }
+}
+
 /// Returns the generated defintion for `T`.
 pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String, ExportError> {
     let mut buffer = String::with_capacity(1024);
@@ -141,7 +164,8 @@ pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String
 fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").map_err(|_| ManifestDirNotSet)?;
     let manifest_dir = Path::new(&manifest_dir);
-    let path = PathBuf::from(T::EXPORT_TO.ok_or(CannotBeExported(std::any::type_name::<T>()))?);
+    let path =
+        PathBuf::from(T::get_export_to().ok_or(CannotBeExported(std::any::type_name::<T>()))?);
     Ok(manifest_dir.join(path))
 }
 
@@ -160,7 +184,8 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
 
 /// Push an import statement for all dependencies of `T`
 fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), ExportError> {
-    let path = Path::new(T::EXPORT_TO.ok_or(CannotBeExported(std::any::type_name::<T>()))?);
+    let export_to = T::get_export_to().ok_or(CannotBeExported(std::any::type_name::<T>()))?;
+    let path = Path::new(&export_to);
 
     let deps = T::dependencies();
     let deduplicated_deps = deps
@@ -170,7 +195,7 @@ fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), Ex
         .collect::<BTreeMap<_, _>>();
 
     for (_, dep) in deduplicated_deps {
-        let rel_path = import_path(path, Path::new(dep.exported_to));
+        let rel_path = import_path(path, Path::new(&dep.exported_to));
         writeln!(
             out,
             "import type {{ {} }} from {:?};",
