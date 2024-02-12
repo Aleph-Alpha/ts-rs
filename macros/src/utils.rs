@@ -116,7 +116,7 @@ pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
         .into_iter()
 }
 
-/// Return a vector of all lines of doc comments in the given vector of attributes.
+/// Return doc comments parsed and formatted as JSDoc.
 pub fn parse_docs(attrs: &[Attribute]) -> Result<String> {
     let lines = attrs
         .iter()
