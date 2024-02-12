@@ -134,7 +134,7 @@ pub fn parse_docs(attrs: &[Attribute]) -> Result<String> {
         .map(|attr| {
             attr.map(|line| match line.trim() {
                 "" => " *".to_owned(),
-                str => format!(" * {str}")
+                _ => format!(" *{}", line.trim_end())
             })
         })
         .collect::<Result<Vec<_>>>()?;
