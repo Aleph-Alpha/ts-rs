@@ -117,9 +117,9 @@ pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
 }
 
 /// Return a vector of all lines of doc comments in the given vector of attributes.
-pub fn parse_docs(attrs: &[Attribute]) -> Result<Vec<String>> {
-    attrs
-        .into_iter()
+pub fn parse_docs(attrs: &[Attribute]) -> Result<String> {
+    let lines = attrs
+        .iter()
         .filter_map(|a| match a.meta {
             Meta::NameValue(ref x) if x.path.is_ident("doc") => Some(x),
             _ => None,
@@ -131,7 +131,18 @@ pub fn parse_docs(attrs: &[Attribute]) -> Result<Vec<String>> {
             }) => Ok(str.value()),
             _ => syn_err!(attr.span(); "doc attribute with non literal expression found"),
         })
-        .collect::<Result<Vec<_>>>()
+        .map(|attr| {
+            attr.map(|line| match line.trim() {
+                "" => " *".to_owned(),
+                _ => format!(" *{}", line.trim_end())
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    Ok(match lines.is_empty() {
+        true => "".to_owned(),
+        false => format!("/**\n{}\n */\n", lines.join("\n")),
+    })
 }
 
 #[cfg(feature = "serde-compat")]

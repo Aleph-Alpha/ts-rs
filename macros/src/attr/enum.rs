@@ -12,7 +12,7 @@ pub struct EnumAttr {
     pub rename: Option<String>,
     pub export_to: Option<String>,
     pub export: bool,
-    pub docs: Vec<String>,
+    pub docs: String,
     tag: Option<String>,
     untagged: bool,
     content: Option<String>,

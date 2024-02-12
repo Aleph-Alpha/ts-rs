@@ -67,6 +67,7 @@ fn format_field(
         skip,
         optional,
         flatten,
+        docs: _,
     } = FieldAttr::from_attrs(&field.attrs)?;
 
     if skip {

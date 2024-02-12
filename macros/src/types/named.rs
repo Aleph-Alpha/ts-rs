@@ -87,6 +87,7 @@ fn format_field(
         skip,
         optional,
         flatten,
+        docs,
     } = FieldAttr::from_attrs(&field.attrs)?;
 
     if skip {
@@ -149,8 +150,14 @@ fn format_field(
     };
     let valid_name = raw_name_to_ts_field(name);
 
+    // Start every doc string with a newline, because when other characters are in front, it is not "understood" by VSCode
+    let docs = match docs.is_empty() {
+        true => "".to_string(),
+        false => format!("\n{}", &docs),
+    };
+
     formatted_fields.push(quote! {
-        format!("{}{}: {},", #valid_name, #optional_annotation, #formatted_ty)
+        format!("{}{}{}: {},", #docs, #valid_name, #optional_annotation, #formatted_ty)
     });
 
     Ok(())

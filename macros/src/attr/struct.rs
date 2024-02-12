@@ -14,7 +14,7 @@ pub struct StructAttr {
     pub export_to: Option<String>,
     pub export: bool,
     pub tag: Option<String>,
-    pub docs: Vec<String>,
+    pub docs: String,
 }
 
 #[cfg(feature = "serde-compat")]

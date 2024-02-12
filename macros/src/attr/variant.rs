@@ -46,7 +46,7 @@ impl VariantAttr {
         self.rename_all = self.rename_all.take().or(rename_all);
         self.inline = self.inline || inline;
         self.skip = self.skip || skip;
-        self.untagged = self.untagged || untagged
+        self.untagged = self.untagged || untagged;
     }
 }
 

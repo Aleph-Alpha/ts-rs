@@ -1,7 +1,7 @@
 use syn::{spanned::Spanned, Attribute, Ident, Result};
 
 use super::parse_assign_str;
-use crate::utils::parse_attrs;
+use crate::utils::{parse_attrs, parse_docs};
 
 #[derive(Default)]
 pub struct FieldAttr {
@@ -12,6 +12,7 @@ pub struct FieldAttr {
     pub skip: bool,
     pub optional: Optional,
     pub flatten: bool,
+    pub docs: String,
 }
 
 /// Indicates whether the field is marked with `#[ts(optional)]`.
@@ -31,6 +32,7 @@ impl FieldAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = Self::default();
         parse_attrs(attrs)?.for_each(|a| result.merge(a));
+        result.docs = parse_docs(attrs)?;
         #[cfg(feature = "serde-compat")]
         if !result.skip {
             crate::utils::parse_serde_attrs::<SerdeFieldAttr>(attrs)
@@ -49,6 +51,7 @@ impl FieldAttr {
             skip,
             optional: Optional { optional, nullable },
             flatten,
+            docs,
         }: FieldAttr,
     ) {
         self.rename = self.rename.take().or(rename);
@@ -61,6 +64,7 @@ impl FieldAttr {
             nullable: self.optional.nullable || nullable,
         };
         self.flatten |= flatten;
+        self.docs.push_str(&docs);
     }
 }
 
