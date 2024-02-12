@@ -12,7 +12,7 @@ pub struct FieldAttr {
     pub skip: bool,
     pub optional: Optional,
     pub flatten: bool,
-    pub docs: Vec<String>,
+    pub docs: String,
 }
 
 /// Indicates whether the field is marked with `#[ts(optional)]`.
@@ -51,7 +51,7 @@ impl FieldAttr {
             skip,
             optional: Optional { optional, nullable },
             flatten,
-            mut docs,
+            docs,
         }: FieldAttr,
     ) {
         self.rename = self.rename.take().or(rename);
@@ -64,7 +64,7 @@ impl FieldAttr {
             nullable: self.optional.nullable || nullable,
         };
         self.flatten |= flatten;
-        self.docs.append(&mut docs);
+        self.docs.push_str(&docs);
     }
 }
 

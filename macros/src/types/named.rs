@@ -10,8 +10,6 @@ use crate::{
     DerivedTS,
 };
 
-use super::format_docs;
-
 pub(crate) fn named(
     attr: &StructAttr,
     name: &str,
@@ -155,7 +153,7 @@ fn format_field(
     // Start every doc string with a newline, because when other characters are in front, it is not "understood" by VSCode
     let docs = match docs.is_empty() {
         true => "".to_string(),
-        false => format!("\n{}", format_docs(&docs.join("\n"))),
+        false => format!("\n{}", &docs),
     };
 
     formatted_fields.push(quote! {
