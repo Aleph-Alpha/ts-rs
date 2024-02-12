@@ -173,7 +173,7 @@ fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
 fn generate_decl<T: TS + ?Sized>(out: &mut String) {
     // Type Docs
     let docs = &T::DOCS;
-    if let Some(ref docs) = docs {
+    if let Some(docs) = docs {
         out.push_str(docs);
     }
 
