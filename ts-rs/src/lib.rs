@@ -98,9 +98,11 @@
 //!   Implement `TS` for types from bytes    
 //! - `indexmap-impl`  
 //!
-//!   Implement `TS` for `IndexMap` and `IndexSet` from indexmap  
+//!   Implement `TS` for `IndexMap` and `IndexSet` from indexmap
+//! - `index_vec-impl`
 //!
-//! - `ordered-float-impl`  
+//!   Implement `TS` for `IndexVec` from index_vec
+//! - `ordered-float-impl`
 //!
 //!   Implement `TS` for `OrderedFloat` from ordered_float
 //!
@@ -737,6 +739,9 @@ impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for indexmap::IndexMap<K, V
 
 #[cfg(feature = "heapless-impl")]
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for heapless::Vec<T, N>);
+
+#[cfg(feature = "index_vec-impl")]
+impl_shadow!(as Vec<T>: impl<K: index_vec::Idx, T: TS> TS for index_vec::IndexVec<K, T>);
 
 #[cfg(feature = "semver-impl")]
 impl_primitives! { semver::Version => "string" }

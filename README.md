@@ -101,7 +101,9 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - `indexmap-impl`
 
   Implement `TS` for `IndexMap` and `IndexSet` from indexmap
+- `index_vec-impl`
 
+  Implement `TS` for `IndexVec` from index_vec
 - `ordered-float-impl`
 
   Implement `TS` for `OrderedFloat` from ordered_float

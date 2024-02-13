@@ -32,6 +32,7 @@ heapless-impl = ["heapless"]
 semver-impl = ["semver"]
 no-serde-warnings = ["ts-rs-macros/no-serde-warnings"]
 import-esm = []
+index_vec-impl = ["index_vec"]
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -53,3 +54,4 @@ semver = { version = "1.0.21", optional = true }
 thiserror = "1"
 indexmap = { version = "2.0.0", optional = true }
 ordered-float = { version = "3.0.0", optional = true }
+index_vec = { version = "0.1.0", optional = true }
