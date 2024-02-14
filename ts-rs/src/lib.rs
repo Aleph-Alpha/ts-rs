@@ -298,7 +298,10 @@ pub trait TS {
 
     /// Name of this type in TypeScript, with type arguments.
     fn name_with_type_args(args: Vec<String>) -> String {
-        format!("{}<{}>", Self::name().split_once('<').unwrap().0, args.join(", "))
+        match Self::name().split_once('<') {
+            None => Self::name(),
+            Some(x) => format!("{}<{}>", x.0, args.join(", "))
+        }
     }
 
     /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
