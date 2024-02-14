@@ -97,6 +97,7 @@ impl DerivedTS {
             .unwrap_or_else(TokenStream::new);
 
         let impl_start = generate_impl(&rust_ty, &generics);
+        let generic_idents = generics.type_params().map(|x| x.ident.clone());
         quote! {
             #impl_start {
                 const EXPORT_TO: Option<&'static str> = Some(#export_to);
@@ -108,7 +109,11 @@ impl DerivedTS {
                     #decl
                 }
                 fn name() -> String {
-                    #name.to_owned()
+                    let generics: Vec<String> = vec![#(<#generic_idents>::name()),*];
+                    match generics.is_empty() {
+                        true => #name.to_owned(),
+                        false => format!("{}<{}>", #name, generics.join(", ")),
+                    }
                 }
                 fn inline() -> String {
                     #inline

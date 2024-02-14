@@ -256,7 +256,7 @@ fn default() {
         // #[ts(inline)]
         // xi2: X<i32>
     }
-    assert_eq!(Y::decl(), "type Y = { a1: A, a2: A<number>, }")
+    assert_eq!(Y::decl(), "type Y = { a1: A<string>, a2: A<number>, }")
 }
 
 #[test]
@@ -353,7 +353,10 @@ fn deeply_nested() {
 #[test]
 fn inline_generic_enum() {
     #[derive(TS)]
-    struct SomeType(String);
+    struct OtherType<T>(T);
+
+    #[derive(TS)]
+    struct SomeType<T>(OtherType<T>);
 
     #[derive(TS)]
     enum MyEnum<A, B> {
@@ -365,7 +368,7 @@ fn inline_generic_enum() {
     struct Parent {
         e: MyEnum<i32, i32>,
         #[ts(inline)]
-        e1: MyEnum<i32, SomeType>
+        e1: MyEnum<i32, SomeType<String>>
     }
 
     // This fails!
@@ -375,7 +378,7 @@ fn inline_generic_enum() {
         Parent::decl(),
         "type Parent = { \
             e: MyEnum<number, number>, \
-            e1: { \"VariantA\": number } | { \"VariantB\": SomeType }, \
+            e1: { \"VariantA\": number } | { \"VariantB\": SomeType<string> }, \
         }"
     );
 }

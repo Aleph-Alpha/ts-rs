@@ -298,7 +298,7 @@ pub trait TS {
 
     /// Name of this type in TypeScript, with type arguments.
     fn name_with_type_args(args: Vec<String>) -> String {
-        format!("{}<{}>", Self::name(), args.join(", "))
+        format!("{}<{}>", Self::name().split_once('<').unwrap().0, args.join(", "))
     }
 
     /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
@@ -397,7 +397,10 @@ impl Dependency {
         let exported_to = T::get_export_to()?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
-            ts_name: T::name(),
+            ts_name: match T::name() {
+                x if !x.contains('<') => x,
+                x => x.split('<').next().unwrap().to_owned()
+            },
             exported_to,
         })
     }
@@ -535,7 +538,7 @@ impl<T: TS, E: TS> TS for Result<T, E> {
 
 impl<T: TS> TS for Vec<T> {
     fn name() -> String {
-        "Array".to_owned()
+        format!("Array<{}>", T::name())
     }
 
     fn inline() -> String {
@@ -561,7 +564,13 @@ impl<T: TS, const N: usize> TS for [T; N] {
             return Vec::<T>::name();
         }
 
-        "[]".to_owned()
+        format!(
+            "[{}]",
+            (0..N)
+                .map(|_| T::name())
+                .collect::<Box<[_]>>()
+                .join(", ")
+        )
     }
 
     fn name_with_type_args(args: Vec<String>) -> String {
@@ -610,7 +619,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     fn name() -> String {
-        "Record".to_owned()
+        format!("Record<{}, {}>", K::name(), V::name())
     }
 
     fn name_with_type_args(args: Vec<String>) -> String {
