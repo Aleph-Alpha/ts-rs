@@ -5,9 +5,8 @@ use syn::{Fields, Generics, ItemEnum, Type, Variant};
 use crate::{
     attr::{EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
     deps::Dependencies,
-    types,
-    types::generics::{format_generics, format_type},
     DerivedTS,
+    types,
 };
 
 pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
@@ -19,15 +18,15 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     };
 
     if s.variants.is_empty() {
-        return Ok(empty_enum(name, enum_attr));
+        return Ok(empty_enum(name, enum_attr, s.generics.clone()));
     }
 
     if s.variants.is_empty() {
         return Ok(DerivedTS {
-            name,
+            generics: s.generics.clone(),
+            ts_name: name,
             docs: enum_attr.docs,
             inline: quote!("never".to_owned()),
-            decl: quote!("type {} = never;"),
             inline_flattened: None,
             dependencies: Dependencies::default(),
             export: enum_attr.export,
@@ -47,18 +46,17 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         )?;
     }
 
-    let generic_args = format_generics(&mut dependencies, &s.generics);
     Ok(DerivedTS {
+        generics: s.generics.clone(),
         inline: quote!([#(#formatted_variants),*].join(" | ")),
-        decl: quote!(format!("type {}{} = {};", #name, #generic_args, Self::inline())),
         inline_flattened: Some(quote!(
             format!("({})", [#(#formatted_variants),*].join(" | "))
         )),
         dependencies,
-        name,
         docs: enum_attr.docs,
         export: enum_attr.export,
         export_to: enum_attr.export_to,
+        ts_name: name,
     })
 }
 
@@ -124,9 +122,13 @@ fn format_variant(
                         (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
                         (Some(type_override), None) => quote! { #type_override },
                         (None, Some(type_as)) => {
-                            format_type(&syn::parse_str::<Type>(&type_as)?, dependencies, generics)
+                            let ty = syn::parse_str::<Type>(&type_as)?;
+                            quote!(<#ty as ts_rs::TS>::name())
                         }
-                        (None, None) => format_type(&unnamed.unnamed[0].ty, dependencies, generics),
+                        (None, None) => {
+                            let ty = &unnamed.unnamed[0].ty;
+                            quote!(<#ty as ts_rs::TS>::name())
+                        },
                     };
 
                     quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #ty))
@@ -170,9 +172,13 @@ fn format_variant(
                             (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
                             (Some(type_override), None) => quote! { #type_override },
                             (None, Some(type_as)) => {
-                                format_type(&syn::parse_str::<Type>(&type_as)?, dependencies, generics)
+                                let ty = syn::parse_str::<Type>(&type_as)?;
+                                quote!(<#ty as ts_rs::TS>::name())
                             }
-                            (None, None) => format_type(&unnamed.unnamed[0].ty, dependencies, generics),
+                            (None, None) => {
+                                let ty = &unnamed.unnamed[0].ty;
+                                quote!(<#ty as ts_rs::TS>::name())
+                            },
                         };
 
                         quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #ty))
@@ -192,16 +198,16 @@ fn format_variant(
 }
 
 // bindings for an empty enum (`never` in TS)
-fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
+fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr, generics: Generics) -> DerivedTS {
     let name = name.into();
     DerivedTS {
+        generics: generics.clone(),
         inline: quote!("never".to_owned()),
-        decl: quote!(format!("type {} = never;", #name)),
-        name,
         docs: enum_attr.docs,
         inline_flattened: None,
         dependencies: Dependencies::default(),
         export: enum_attr.export,
         export_to: enum_attr.export_to,
+        ts_name: name,
     }
 }

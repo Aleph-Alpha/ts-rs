@@ -12,9 +12,9 @@ impl Dependencies {
             .push(quote![.extend(<#ty as ts_rs::TS>::dependency_types())]);
     }
 
-    /// Adds the given type if it's *not* transparent.
-    /// If it is, all it's child dependencies are added instead.
-    pub fn push_or_append_from(&mut self, ty: &Type) {
+    /// Adds the given type.
+    /// If the type is transparent, then we'll get resolve the child dependencies during runtime.
+    pub fn push(&mut self, ty: &Type) {
         self.0.push(quote![.push::<#ty>()]);
     }
 

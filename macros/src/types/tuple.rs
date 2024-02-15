@@ -5,7 +5,6 @@ use syn::{Field, FieldsUnnamed, Generics, Result, Type};
 use crate::{
     attr::{FieldAttr, StructAttr},
     deps::Dependencies,
-    types::generics::{format_generics, format_type},
     DerivedTS,
 };
 
@@ -28,28 +27,20 @@ pub(crate) fn tuple(
         format_field(&mut formatted_fields, &mut dependencies, field, generics)?;
     }
 
-    let generic_args = format_generics(&mut dependencies, generics);
     Ok(DerivedTS {
+        generics: generics.clone(),
         inline: quote! {
             format!(
                 "[{}]",
                 [#(#formatted_fields),*].join(", ")
             )
         },
-        decl: quote! {
-            format!(
-                "type {}{} = {};",
-                #name,
-                #generic_args,
-                Self::inline()
-            )
-        },
         inline_flattened: None,
-        name: name.to_owned(),
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),
+        ts_name: name.to_owned(),
     })
 }
 
@@ -57,7 +48,7 @@ fn format_field(
     formatted_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     field: &Field,
-    generics: &Generics,
+    _generics: &Generics,
 ) -> Result<()> {
     let FieldAttr {
         type_as,
@@ -99,17 +90,13 @@ fn format_field(
     formatted_fields.push(match type_override {
         Some(ref o) => quote!(#o.to_owned()),
         None if inline => quote!(<#ty as ts_rs::TS>::inline()),
-        None => format_type(&ty, dependencies, generics),
+        None => quote!(<#ty as ts_rs::TS>::name()),
     });
 
     match (inline, type_override) {
         (_, Some(_)) => (),
-        (false, _) => {
-            dependencies.push_or_append_from(&ty);
-        }
-        (true, _) => {
-            dependencies.append_from(&ty);
-        }
+        (false, _) => dependencies.push(&ty),
+        (true, _) => dependencies.append_from(&ty),
     };
 
     Ok(())

@@ -168,12 +168,11 @@ use std::{
 
 pub use ts_rs_macros::TS;
 
-pub use crate::export::ExportError;
-use crate::typelist::TypeList;
-
 // Used in generated code. Not public API
 #[doc(hidden)]
 pub use crate::export::__private;
+pub use crate::export::ExportError;
+use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
 mod chrono;
@@ -289,17 +288,24 @@ pub trait TS {
 
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
     /// This function will panic if the type has no declaration.
+    ///
+    /// If this type is generic, then all provided generic parameters will be swapped for
+    /// placeholders, resulting in a generic typescript definition.
+    /// Both `SomeType::<i32>::decl()` and `SomeType::<String>::decl()` will therefore result in
+    /// the same TypeScript declaration `type SomeType<A> = ...`.
     fn decl() -> String {
+        panic!("{} cannot be declared", Self::name());
+    }
+
+    /// Declaration of this type using the supplied generic arguments.
+    /// The resulting TypeScript definition will not be generic. For that, see `TS::decl()`.
+    /// If this type is not generic, then this function is equivalent to `TS::decl()`.
+    fn decl_concrete() -> String {
         panic!("{} cannot be declared", Self::name());
     }
 
     /// Name of this type in TypeScript.
     fn name() -> String;
-
-    /// Name of this type in TypeScript, with type arguments.
-    fn name_with_type_args(args: Vec<String>) -> String {
-        format!("{}<{}>", Self::name(), args.join(", "))
-    }
 
     /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
     /// This function will panic if the type cannot be inlined.
@@ -313,12 +319,14 @@ pub trait TS {
         panic!("{} cannot be flattened", Self::name())
     }
 
+    /// Returns a `TypeList` of all types on which this type depends.
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
     }
 
+    /// Resolves all dependencies of this type recursively.
     fn dependencies() -> Vec<Dependency>
     where
         Self: 'static,
@@ -329,7 +337,12 @@ pub trait TS {
         struct Visit<'a>(&'a mut Vec<Dependency>);
         impl<'a> TypeVisitor for Visit<'a> {
             fn visit<T: TS + 'static + ?Sized>(&mut self) {
-                if let Some(dep) = Dependency::from_ty::<T>() {
+                if T::transparent() {
+                    // the dependency `T` is "transparent", meaning that our original type depends
+                    // on the dependencies of `T` as well.
+                    T::dependency_types().for_each(self);
+                } else if let Some(dep) = Dependency::from_ty::<T>() {
+                    // the dependency `T` is not transparent, so we just add it to the output
                     self.0.push(dep);
                 }
             }
@@ -408,11 +421,7 @@ macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
         impl TS for $ty {
             fn name() -> String { $l.to_owned() }
-            fn name_with_type_args(args: Vec<String>) -> String {
-                assert!(args.is_empty(), "called name_with_type_args on primitive");
-                $l.to_owned()
-            }
-            fn inline() -> String { $l.to_owned() }
+            fn inline() -> String { Self::name() }
             fn transparent() -> bool { false }
         }
     )*)* };
@@ -425,7 +434,7 @@ macro_rules! impl_tuples {
                 format!("[{}]", [$($i::name()),*].join(", "))
             }
             fn inline() -> String {
-                format!("[{}]", [$($i::inline()),*].join(", "))
+                panic!("tuple cannot be inlined!");
             }
             fn dependency_types() -> impl TypeList
             where
@@ -448,10 +457,6 @@ macro_rules! impl_wrapper {
     ($($t:tt)*) => {
         $($t)* {
             fn name() -> String { T::name() }
-            fn name_with_type_args(mut args: Vec<String>) -> String {
-                assert_eq!(args.len(), 1);
-                args.remove(0)
-            }
             fn inline() -> String { T::inline() }
             fn inline_flattened() -> String { T::inline_flattened() }
             fn dependency_types() -> impl TypeList
@@ -470,7 +475,6 @@ macro_rules! impl_shadow {
     (as $s:ty: $($impl:tt)*) => {
         $($impl)* {
             fn name() -> String { <$s>::name() }
-            fn name_with_type_args(args: Vec<String>) -> String { <$s>::name_with_type_args(args) }
             fn inline() -> String { <$s>::inline() }
             fn inline_flattened() -> String { <$s>::inline_flattened() }
             fn dependency_types() -> impl $crate::typelist::TypeList
@@ -486,17 +490,7 @@ macro_rules! impl_shadow {
 
 impl<T: TS> TS for Option<T> {
     fn name() -> String {
-        unreachable!();
-    }
-
-    fn name_with_type_args(args: Vec<String>) -> String {
-        assert_eq!(
-            args.len(),
-            1,
-            "called Option::name_with_type_args with {} args",
-            args.len()
-        );
-        format!("{} | null", args[0])
+        format!("{} | null", T::name())
     }
 
     fn inline() -> String {
@@ -517,7 +511,7 @@ impl<T: TS> TS for Option<T> {
 
 impl<T: TS, E: TS> TS for Result<T, E> {
     fn name() -> String {
-        unreachable!();
+        format!("{{ Ok : {} }} | {{ Err : {} }}", T::name(), E::name())
     }
     fn inline() -> String {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
@@ -535,7 +529,7 @@ impl<T: TS, E: TS> TS for Result<T, E> {
 
 impl<T: TS> TS for Vec<T> {
     fn name() -> String {
-        "Array".to_owned()
+        format!("Array<{}>", T::name())
     }
 
     fn inline() -> String {
@@ -561,25 +555,10 @@ impl<T: TS, const N: usize> TS for [T; N] {
             return Vec::<T>::name();
         }
 
-        "[]".to_owned()
-    }
-
-    fn name_with_type_args(args: Vec<String>) -> String {
-        if N > ARRAY_TUPLE_LIMIT {
-            return Vec::<T>::name_with_type_args(args);
-        }
-
-        assert_eq!(
-            args.len(),
-            1,
-            "called [T; N]::name_with_type_args with {} args",
-            args.len()
-        );
-
         format!(
             "[{}]",
             (0..N)
-                .map(|_| args[0].clone())
+                .map(|_| T::name())
                 .collect::<Box<[_]>>()
                 .join(", ")
         )
@@ -592,7 +571,10 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
         format!(
             "[{}]",
-            (0..N).map(|_| T::inline()).collect::<Box<[_]>>().join(", ")
+            (0..N)
+                .map(|_| T::inline())
+                .collect::<Box<[_]>>()
+                .join(", ")
         )
     }
 
@@ -610,17 +592,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     fn name() -> String {
-        "Record".to_owned()
-    }
-
-    fn name_with_type_args(args: Vec<String>) -> String {
-        assert_eq!(
-            args.len(),
-            2,
-            "called HashMap::name_with_type_args with {} args",
-            args.len()
-        );
-        format!("Record<{}, {}>", args[0], args[1])
+        format!("Record<{}, {}>", K::name(), V::name())
     }
 
     fn inline() -> String {
@@ -641,17 +613,7 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
 
 impl<I: TS> TS for Range<I> {
     fn name() -> String {
-        panic!("called Range::name - Did you use a type alias?")
-    }
-
-    fn name_with_type_args(args: Vec<String>) -> String {
-        assert_eq!(
-            args.len(),
-            1,
-            "called Range::name_with_type_args with {} args",
-            args.len()
-        );
-        format!("{{ start: {}, end: {}, }}", &args[0], &args[0])
+        format!("{{ start: {}, end: {}, }}", I::name(), I::name())
     }
 
     fn dependency_types() -> impl TypeList
@@ -668,17 +630,7 @@ impl<I: TS> TS for Range<I> {
 
 impl<I: TS> TS for RangeInclusive<I> {
     fn name() -> String {
-        panic!("called RangeInclusive::name - Did you use a type alias?")
-    }
-
-    fn name_with_type_args(args: Vec<String>) -> String {
-        assert_eq!(
-            args.len(),
-            1,
-            "called RangeInclusive::name_with_type_args with {} args",
-            args.len()
-        );
-        format!("{{ start: {}, end: {}, }}", &args[0], &args[0])
+        format!("{{ start: {}, end: {}, }}", I::name(), I::name())
     }
 
     fn dependency_types() -> impl TypeList

@@ -1,50 +1,50 @@
 use quote::quote;
-use syn::Result;
+use syn::{Generics, Result};
 
 use crate::{attr::StructAttr, deps::Dependencies, DerivedTS};
 
-pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
+pub(crate) fn empty_object(attr: &StructAttr, name: &str, generics: Generics) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
+        generics: generics.clone(),
         inline: quote!("Record<string, never>".to_owned()),
-        decl: quote!(format!("type {} = Record<string, never>;", #name)),
         inline_flattened: None,
-        name: name.to_owned(),
         docs: attr.docs.clone(),
         dependencies: Dependencies::default(),
         export: attr.export,
         export_to: attr.export_to.clone(),
+        ts_name: name.to_owned(),
     })
 }
 
-pub(crate) fn empty_array(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
+pub(crate) fn empty_array(attr: &StructAttr, name: &str, generics: Generics) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
+        generics: generics.clone(),
         inline: quote!("never[]".to_owned()),
-        decl: quote!(format!("type {} = never[];", #name)),
         inline_flattened: None,
-        name: name.to_owned(),
         docs: attr.docs.clone(),
         dependencies: Dependencies::default(),
         export: attr.export,
         export_to: attr.export_to.clone(),
+        ts_name: name.to_owned(),
     })
 }
 
-pub(crate) fn null(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
+pub(crate) fn null(attr: &StructAttr, name: &str, generics: Generics) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
+        generics: generics.clone(),
         inline: quote!("null".to_owned()),
-        decl: quote!(format!("type {} = null;", #name)),
         inline_flattened: None,
-        name: name.to_owned(),
         docs: attr.docs.clone(),
         dependencies: Dependencies::default(),
         export: attr.export,
         export_to: attr.export_to.clone(),
+        ts_name: name.to_owned(),
     })
 }
 

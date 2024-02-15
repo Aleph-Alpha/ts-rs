@@ -3,7 +3,6 @@ use syn::{Fields, Generics, Ident, ItemStruct, Result};
 use crate::{attr::StructAttr, utils::to_ts_ident, DerivedTS};
 
 mod r#enum;
-mod generics;
 mod named;
 mod newtype;
 mod tuple;
@@ -26,14 +25,14 @@ fn type_def(
     let name = attr.rename.clone().unwrap_or_else(|| to_ts_ident(ident));
     match fields {
         Fields::Named(named) => match named.named.len() {
-            0 => unit::empty_object(attr, &name),
+            0 => unit::empty_object(attr, &name, generics.clone()),
             _ => named::named(attr, &name, named, generics),
         },
         Fields::Unnamed(unnamed) => match unnamed.unnamed.len() {
-            0 => unit::empty_array(attr, &name),
+            0 => unit::empty_array(attr, &name, generics.clone()),
             1 => newtype::newtype(attr, &name, unnamed, generics),
             _ => tuple::tuple(attr, &name, unnamed, generics),
         },
-        Fields::Unit => unit::null(attr, &name),
+        Fields::Unit => unit::null(attr, &name, generics.clone()),
     }
 }

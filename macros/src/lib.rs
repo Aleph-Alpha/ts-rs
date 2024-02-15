@@ -1,5 +1,5 @@
 #![macro_use]
-#![deny(unused)]
+//#![deny(unused)]
 
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
@@ -9,6 +9,7 @@ use syn::{
 };
 
 use crate::deps::Dependencies;
+use crate::utils::format_generics;
 
 #[macro_use]
 mod utils;
@@ -17,10 +18,10 @@ mod deps;
 mod types;
 
 struct DerivedTS {
-    name: String,
+    generics: Generics,
+    ts_name: String,
     docs: String,
     inline: TokenStream,
-    decl: TokenStream,
     inline_flattened: Option<TokenStream>,
     dependencies: Dependencies,
 
@@ -29,29 +30,11 @@ struct DerivedTS {
 }
 
 impl DerivedTS {
-    fn generate_export_test(&self, rust_ty: &Ident, generics: &Generics) -> Option<TokenStream> {
-        let test_fn = format_ident!("export_bindings_{}", &self.name.to_lowercase());
-        let generic_params = generics
-            .params
-            .iter()
-            .filter(|param| matches!(param, GenericParam::Type(_)))
-            .map(|_| quote! { () });
-        let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
-
-        Some(quote! {
-            #[cfg(test)]
-            #[test]
-            fn #test_fn() {
-                #ty::export().expect("could not export type");
-            }
-        })
-    }
-
-    fn into_impl(self, rust_ty: Ident, generics: Generics) -> TokenStream {
+    fn into_impl(mut self, rust_ty: Ident, generics: Generics) -> TokenStream {
         let mut get_export_to = quote! {};
         let export_to = match &self.export_to {
             Some(dirname) if dirname.ends_with('/') => {
-                format!("{}{}.ts", dirname, self.name)
+                format!("{}{}.ts", dirname, self.ts_name)
             }
             Some(filename) => filename.clone(),
             None => {
@@ -60,7 +43,7 @@ impl DerivedTS {
                         ts_rs::__private::get_export_to_path::<Self>()
                     }
                 };
-                format!("bindings/{}.ts", self.name)
+                format!("bindings/{}.ts", self.ts_name)
             }
         };
 
@@ -69,51 +52,26 @@ impl DerivedTS {
             false => None,
         };
 
-        let DerivedTS {
-            name,
-            docs,
-            inline,
-            decl,
-            inline_flattened,
-            dependencies,
-            ..
-        } = self;
-
-        let docs = match docs.is_empty() {
-            true => None,
-            false => {
-                Some(quote!(const DOCS: Option<&'static str> = Some(#docs);))
-            }
+        let docs = match &*self.docs {
+            "" => None,
+            docs => Some(quote!(const DOCS: Option<&'static str> = Some(#docs);)),
         };
 
-        let inline_flattened = inline_flattened
-            .map(|t| {
-                quote! {
-                    fn inline_flattened() -> String {
-                        #t
-                    }
-                }
-            })
-            .unwrap_or_else(TokenStream::new);
+        let impl_start = generate_impl_block_header(&rust_ty, &generics);
+        let name = self.generate_name_fn();
+        let inline = self.generate_inline_fn();
+        let decl = self.generate_decl_fn(&rust_ty);
+        let dependencies = &self.dependencies;
 
-        let impl_start = generate_impl(&rust_ty, &generics);
         quote! {
             #impl_start {
                 const EXPORT_TO: Option<&'static str> = Some(#export_to);
+
                 #get_export_to
-
                 #docs
-
-                fn decl() -> String {
-                    #decl
-                }
-                fn name() -> String {
-                    #name.to_owned()
-                }
-                fn inline() -> String {
-                    #inline
-                }
-                #inline_flattened
+                #name
+                #decl
+                #inline
 
                 #[allow(clippy::unused_unit)]
                 fn dependency_types() -> impl ts_rs::typelist::TypeList
@@ -131,10 +89,151 @@ impl DerivedTS {
             #export
         }
     }
+
+    /// Returns an expression which evaluates to the TypeScript name of the type, including generic
+    /// parameters.
+    fn name_with_generics(&self) -> TokenStream {
+        let name = &self.ts_name;
+        let mut generics_ts_names = self
+            .generics
+            .params
+            .iter()
+            .filter_map(|g| match g {
+                GenericParam::Lifetime(_) => None,
+                GenericParam::Type(ty) => Some(&ty.ident),
+                GenericParam::Const(_) => None,
+            })
+            .map(|generic| quote!(<#generic as ts_rs::TS>::name()))
+            .peekable();
+
+        if generics_ts_names.peek().is_some() {
+            quote! {
+                format!("{}<{}>", #name, vec![#(#generics_ts_names),*].join(", "))
+            }
+        } else {
+            quote!(#name.to_owned())
+        }
+    }
+
+    /// Generate a dummy unit struct for every generic type parameter of this type.
+    /// Example:
+    /// ```ignore
+    /// struct Generic<A, B, const C: usize> { /* ... */ }
+    /// ```
+    /// has two generic type parameters, `A` and `B`. This function will therefor generate
+    /// ```ignore
+    /// struct A;
+    /// impl ts_rs::TS for A { /* .. */ }
+    ///
+    /// struct B;
+    /// impl ts_rs::TS for B { /* .. */ }
+    /// ```
+    fn generate_generic_types(&self) -> TokenStream {
+        let generics = self.generics.params.iter().filter_map(|g| match g {
+            GenericParam::Lifetime(_) => None,
+            GenericParam::Type(t) => Some(t.ident.clone()),
+            GenericParam::Const(_) => None,
+        });
+
+        quote! {
+            #(
+                #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
+                struct #generics;
+                impl std::fmt::Display for #generics {
+                    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(f, "{:?}", self)
+                    }
+                }
+                impl TS for #generics {
+                    fn name() -> String { stringify!(#generics).to_owned() }
+                    fn transparent() -> bool { false }
+                }
+            )*
+        }
+    }
+
+    fn generate_export_test(&self, rust_ty: &Ident, generics: &Generics) -> Option<TokenStream> {
+        let test_fn = format_ident!("export_bindings_{}", rust_ty.to_string().to_lowercase());
+        let generic_params = generics
+            .params
+            .iter()
+            .filter(|param| matches!(param, GenericParam::Type(_)))
+            .map(|_| quote! { () });
+        let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
+
+        Some(quote! {
+            #[cfg(test)]
+            #[test]
+            fn #test_fn() {
+                #ty::export().expect("could not export type");
+            }
+        })
+    }
+
+    fn generate_name_fn(&self) -> TokenStream {
+        let name = self.name_with_generics();
+        quote! {
+             fn name() -> String {
+                 #name
+             }
+        }
+    }
+
+    fn generate_inline_fn(&self) -> TokenStream {
+        let inline = &self.inline;
+
+        let inline_flattened = self.inline_flattened.as_ref().map(|inline_flattened| {
+            quote! {
+                fn inline_flattened() -> String {
+                    #inline_flattened
+                }
+            }
+        });
+        let inline = quote! {
+            fn inline() -> String {
+                #inline
+            }
+        };
+        quote! {
+            #inline
+            #inline_flattened
+        }
+    }
+
+    /// Generates the `decl()` and `decl_concrete()` methods.
+    /// `decl_concrete()` is simple, and simply defers to `inline()`.
+    /// For `decl()`, however, we need to change out the generic parameters of the type, replacing
+    /// them with the dummy types generated by `generate_generic_types()`.
+    fn generate_decl_fn(&mut self, rust_ty: &Ident) -> TokenStream {
+        let name = &self.ts_name;
+        let generic_types = self.generate_generic_types();
+        let ts_generics = format_generics(&mut self.dependencies, &self.generics);
+        // These are the generic parameters we'll be using.
+        let generic_idents = self.generics.params.iter().filter_map(|p| match p {
+            GenericParam::Lifetime(_) => None,
+            // Since we named our dummy types the same as the generic parameters, we can just keep
+            // the identifier of the generic parameter - its name is shadowed by the dummy struct.
+            GenericParam::Type(TypeParam { ident, .. }) => Some(quote!(#ident)),
+            // We keep const parameters as they are, since there's no sensible default value we can
+            // use instead. This might be something to change in the future.
+            GenericParam::Const(ConstParam { ident, .. }) => Some(quote!(#ident)),
+        });
+        quote! {
+            fn decl_concrete() -> String {
+                format!("type {} = {};", #name, Self::inline())
+            }
+            fn decl() -> String {
+                #generic_types
+                let inline = <#rust_ty<#(#generic_idents,)*> as ts_rs::TS>::inline();
+                let generics = #ts_generics;
+                format!("type {}{generics} = {inline};", #name)
+            }
+        }
+    }
 }
 
 // generate start of the `impl TS for #ty` block, up to (excluding) the open brace
-fn generate_impl(ty: &Ident, generics: &Generics) -> TokenStream {
+fn generate_impl_block_header(ty: &Ident, generics: &Generics) -> TokenStream {
     use GenericParam::*;
 
     let bounds = generics.params.iter().map(|param| match param {
