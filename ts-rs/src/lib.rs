@@ -278,6 +278,16 @@ pub trait TS {
     const EXPORT_TO: Option<&'static str> = None;
     const DOCS: Option<&'static str> = None;
 
+    fn ident() -> String {
+        let name = Self::name();
+
+        if name.contains('<') {
+            panic!("generic types must implement ident")
+        } else {
+            name
+        }
+    }
+
     fn get_export_to() -> Option<String> {
         Self::EXPORT_TO.map(ToString::to_string)
     }
@@ -406,8 +416,7 @@ impl Dependency {
         let exported_to = T::get_export_to()?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
-            // TODO: maybe introduce T::NAME or T::ident() or something in that vein
-            ts_name: T::name().split('<').next().unwrap().to_owned(),
+            ts_name: T::ident(),
             exported_to,
         })
     }
@@ -525,6 +534,9 @@ impl<T: TS, E: TS> TS for Result<T, E> {
 }
 
 impl<T: TS> TS for Vec<T> {
+    fn ident() -> String {
+        "Array".to_owned()
+    }
     fn name() -> String {
         format!("Array<{}>", T::name())
     }
@@ -588,6 +600,9 @@ impl<T: TS, const N: usize> TS for [T; N] {
 }
 
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
+    fn ident() -> String {
+        "Record".to_owned()
+    }
     fn name() -> String {
         format!("Record<{}, {}>", K::name(), V::name())
     }

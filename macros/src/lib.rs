@@ -67,6 +67,10 @@ impl DerivedTS {
             #impl_start {
                 const EXPORT_TO: Option<&'static str> = Some(#export_to);
 
+                fn ident() -> String {
+                    stringify!(#rust_ty).to_owned()
+                }
+                
                 #get_export_to
                 #docs
                 #name

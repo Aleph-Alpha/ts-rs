@@ -22,6 +22,9 @@ impl_primitives!(NaiveDateTime, NaiveDate, NaiveTime, Month, Weekday, Duration =
 impl_dummy!(Utc, Local, FixedOffset);
 
 impl<T: TimeZone + 'static> TS for DateTime<T> {
+    fn ident() -> String {
+        "string".to_owned()
+    }
     fn name() -> String {
         "string".to_owned()
     }
@@ -34,6 +37,9 @@ impl<T: TimeZone + 'static> TS for DateTime<T> {
 }
 
 impl<T: TimeZone + 'static> TS for Date<T> {
+    fn ident() -> String {
+        "string".to_owned()
+    }
     fn name() -> String {
         "string".to_owned()
     }
