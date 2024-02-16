@@ -57,11 +57,6 @@ mod recursive_export {
 
     /// Exports `T` to the file specified by the `#[ts(export_to = ..)]` attribute.
     /// Additionally, all dependencies of `T` will be exported as well.
-    ///
-    /// TODO: This might cause a race condition:
-    ///       If two types `A` and `B` are `#[ts(export)]` and depend on type `C`,
-    ///       then both tests for exporting `A` and `B` will try to write `C` to `C.ts`.
-    ///       Since rust, by default, executes tests in paralell, this might cause `C.ts` to be corrupted.
     pub(crate) fn export_type_with_dependencies<T: TS + ?Sized + 'static>(
     ) -> Result<(), ExportError> {
         let mut seen = HashSet::new();
