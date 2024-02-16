@@ -256,7 +256,7 @@ fn default() {
         // #[ts(inline)]
         // xi2: X<i32>
     }
-    assert_eq!(Y::decl(), "type Y = { a1: A, a2: A<number>, };")
+    assert_eq!(Y::decl(), "type Y = { a1: A<string>, a2: A<number>, };")
 }
 
 #[test]
