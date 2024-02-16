@@ -14,6 +14,6 @@ fn indexmap() {
 
     assert_eq!(
         Indexes::decl(),
-        "type Indexes = { map: Record<string, string>, set: Array<string>, }"
+        "type Indexes = { map: Record<string, string>, set: Array<string>, };"
     )
 }

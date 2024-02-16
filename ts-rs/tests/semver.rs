@@ -11,5 +11,5 @@ fn semver() {
         version: Version,
     }
 
-    assert_eq!(Semver::decl(), "type Semver = { version: string, }")
+    assert_eq!(Semver::decl(), "type Semver = { version: string, };")
 }

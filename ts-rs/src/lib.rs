@@ -421,7 +421,7 @@ macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
         impl TS for $ty {
             fn name() -> String { $l.to_owned() }
-            fn inline() -> String { Self::name() }
+            fn inline() -> String { <Self as $crate::TS>::name() }
             fn transparent() -> bool { false }
         }
     )*)* };
