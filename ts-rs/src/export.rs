@@ -146,7 +146,8 @@ pub mod __private {
     pub fn get_export_to_path<T: TS + ?Sized>() -> Option<String> {
         provided_default_dir().map_or_else(
             || T::EXPORT_TO.map(ToString::to_string),
-            |path| Some(format!("{path}/{}.ts", T::name())),
+            // TODO: maybe introduce T::NAME or T::ident() or something in that vein
+            |path| Some(format!("{path}/{}.ts", T::name().split('<').next().unwrap())),
         )
     }
 }
