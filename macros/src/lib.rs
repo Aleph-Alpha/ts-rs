@@ -96,13 +96,8 @@ impl DerivedTS {
         let name = &self.ts_name;
         let mut generics_ts_names = self
             .generics
-            .params
-            .iter()
-            .filter_map(|g| match g {
-                GenericParam::Lifetime(_) => None,
-                GenericParam::Type(ty) => Some(&ty.ident),
-                GenericParam::Const(_) => None,
-            })
+            .type_params()
+            .map(|ty| &ty.ident)
             .map(|generic| quote!(<#generic as ts_rs::TS>::name()))
             .peekable();
 
@@ -129,11 +124,7 @@ impl DerivedTS {
     /// impl ts_rs::TS for B { /* .. */ }
     /// ```
     fn generate_generic_types(&self) -> TokenStream {
-        let generics = self.generics.params.iter().filter_map(|g| match g {
-            GenericParam::Lifetime(_) => None,
-            GenericParam::Type(t) => Some(t.ident.clone()),
-            GenericParam::Const(_) => None,
-        });
+        let generics = self.generics.type_params().map(|ty| ty.ident.clone());
 
         quote! {
             #(
@@ -155,9 +146,7 @@ impl DerivedTS {
     fn generate_export_test(&self, rust_ty: &Ident, generics: &Generics) -> Option<TokenStream> {
         let test_fn = format_ident!("export_bindings_{}", rust_ty.to_string().to_lowercase());
         let generic_params = generics
-            .params
-            .iter()
-            .filter(|param| matches!(param, GenericParam::Type(_)))
+            .type_params()
             .map(|_| quote! { () });
         let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
 
@@ -268,12 +257,8 @@ fn generate_impl_block_header(ty: &Ident, generics: &Generics) -> TokenStream {
 
 fn add_ts_to_where_clause(generics: &Generics) -> Option<WhereClause> {
     let generic_types = generics
-        .params
-        .iter()
-        .filter_map(|gp| match gp {
-            GenericParam::Type(ty) => Some(ty.ident.clone()),
-            _ => None,
-        })
+        .type_params()
+        .map(|ty| ty.ident.clone())
         .collect::<Vec<_>>();
     if generic_types.is_empty() {
         return generics.where_clause.clone();
