@@ -68,10 +68,6 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - generic types
 - support for ESM imports
 
-### limitations
-- generic fields cannot be inlined or flattened (#56)
-- type aliases must not alias generic types (#70)
-
 ### cargo features
 - `serde-compat` (default)
 
