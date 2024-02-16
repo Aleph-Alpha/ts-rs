@@ -151,7 +151,7 @@ impl DerivedTS {
         let test_fn = format_ident!("export_bindings_{}", rust_ty.to_string().to_lowercase());
         let generic_params = generics
             .type_params()
-            .map(|_| quote! { () });
+            .map(|_| quote! { ts_rs::Dummy });
         let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
 
         Some(quote! {

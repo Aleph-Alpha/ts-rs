@@ -727,3 +727,22 @@ impl_primitives! {
 }
 #[rustfmt::skip]
 pub(crate) use impl_primitives;
+
+
+#[doc(hidden)]
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
+pub struct Dummy;
+
+#[doc(hidden)]
+impl std::fmt::Display for Dummy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+#[doc(hidden)]
+impl TS for Dummy {
+    fn name() -> String { "Dummy".to_owned() }
+    fn transparent() -> bool { false }
+}
+

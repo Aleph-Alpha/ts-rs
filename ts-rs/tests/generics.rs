@@ -10,6 +10,7 @@ use std::{
 use ts_rs::TS;
 
 #[derive(TS)]
+#[ts(export)]
 struct Generic<T>
 where
     T: TS,
