@@ -244,12 +244,6 @@ fn default() {
     struct Y {
         a1: A,
         a2: A<i32>,
-        // https://github.com/Aleph-Alpha/ts-rs/issues/56
-        // TODO: fixme
-        // #[ts(inline)]
-        // xi: X,
-        // #[ts(inline)]
-        // xi2: X<i32>
     }
     assert_eq!(Y::decl(), "type Y = { a1: A<string>, a2: A<number>, };")
 }
