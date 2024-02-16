@@ -1,5 +1,5 @@
 #![macro_use]
-//#![deny(unused)]
+#![deny(unused)]
 
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};

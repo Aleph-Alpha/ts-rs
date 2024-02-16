@@ -410,7 +410,7 @@ impl Dependency {
         let exported_to = T::get_export_to()?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
-            ts_name: T::name(),
+            ts_name: T::name().split('<').next().unwrap().to_owned(),
             exported_to,
         })
     }
