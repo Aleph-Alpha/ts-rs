@@ -170,11 +170,7 @@ fn inline() {
 }
 
 #[test]
-#[ignore = "We haven't figured out how to inline generics with bounds yet"]
-#[allow(unreachable_code)]
 fn inline_with_bounds() {
-    todo!("FIX ME: https://github.com/Aleph-Alpha/ts-rs/issues/214");
-
     #[derive(TS)]
     struct Generic<T: ToString> {
         t: T,
@@ -195,10 +191,9 @@ fn inline_with_bounds() {
         Generic::<&'static str>::decl(),
         "type Generic<T> = { t: T, };"
     );
-    //                   ^^^^^^^^^^^^ Replace with something else
     assert_eq!(
         Container::decl(),
-        "type Container = { g: Generic<string>, gi: { t: string, }, t: number, };" // Actual output: { g: Generic<string>, gi: { t: T, }, t: T, }
+        "type Container = { g: Generic<string>, gi: { t: string, }, t: number, };"
     );
 }
 
