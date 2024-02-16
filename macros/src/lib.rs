@@ -57,6 +57,7 @@ impl DerivedTS {
             docs => Some(quote!(const DOCS: Option<&'static str> = Some(#docs);)),
         };
 
+        let ident = self.ts_name.clone();
         let impl_start = generate_impl_block_header(&rust_ty, &generics);
         let name = self.generate_name_fn();
         let inline = self.generate_inline_fn();
@@ -68,7 +69,7 @@ impl DerivedTS {
                 const EXPORT_TO: Option<&'static str> = Some(#export_to);
 
                 fn ident() -> String {
-                    stringify!(#rust_ty).to_owned()
+                    #ident.to_owned()
                 }
                 
                 #get_export_to
