@@ -228,22 +228,22 @@ impl DerivedTS {
 
 // generate start of the `impl TS for #ty` block, up to (excluding) the open brace
 fn generate_impl_block_header(ty: &Ident, generics: &Generics) -> TokenStream {
-    use GenericParam::*;
+    use GenericParam as G;
 
     let bounds = generics.params.iter().map(|param| match param {
-        Type(TypeParam {
+        G::Type(TypeParam {
             ident,
             colon_token,
             bounds,
             ..
         }) => quote!(#ident #colon_token #bounds),
-        Lifetime(LifetimeParam {
+        G::Lifetime(LifetimeParam {
             lifetime,
             colon_token,
             bounds,
             ..
         }) => quote!(#lifetime #colon_token #bounds),
-        Const(ConstParam {
+        G::Const(ConstParam {
             const_token,
             ident,
             colon_token,
@@ -252,8 +252,8 @@ fn generate_impl_block_header(ty: &Ident, generics: &Generics) -> TokenStream {
         }) => quote!(#const_token #ident #colon_token #ty),
     });
     let type_args = generics.params.iter().map(|param| match param {
-        Type(TypeParam { ident, .. }) | Const(ConstParam { ident, .. }) => quote!(#ident),
-        Lifetime(LifetimeParam { lifetime, .. }) => quote!(#lifetime),
+        G::Type(TypeParam { ident, .. }) | G::Const(ConstParam { ident, .. }) => quote!(#ident),
+        G::Lifetime(LifetimeParam { lifetime, .. }) => quote!(#lifetime),
     });
 
     let where_bound = add_ts_to_where_clause(generics);
