@@ -47,9 +47,10 @@ impl DerivedTS {
             }
         };
 
-        let export = match self.export {
-            true => Some(self.generate_export_test(&rust_ty, &generics)),
-            false => None,
+        let export = if self.export {
+            Some(self.generate_export_test(&rust_ty, &generics))
+        } else {
+            None
         };
 
         let docs = match &*self.docs {
@@ -148,20 +149,20 @@ impl DerivedTS {
         }
     }
 
-    fn generate_export_test(&self, rust_ty: &Ident, generics: &Generics) -> Option<TokenStream> {
+    fn generate_export_test(&self, rust_ty: &Ident, generics: &Generics) -> TokenStream {
         let test_fn = format_ident!("export_bindings_{}", rust_ty.to_string().to_lowercase());
         let generic_params = generics
             .type_params()
             .map(|_| quote! { ts_rs::Dummy });
         let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
 
-        Some(quote! {
+        quote! {
             #[cfg(test)]
             #[test]
             fn #test_fn() {
                 #ty::export().expect("could not export type");
             }
-        })
+        }
     }
 
     fn generate_name_fn(&self) -> TokenStream {
@@ -202,15 +203,18 @@ impl DerivedTS {
         let name = &self.ts_name;
         let generic_types = self.generate_generic_types();
         let ts_generics = format_generics(&mut self.dependencies, &self.generics);
+
+        use GenericParam as G;
         // These are the generic parameters we'll be using.
         let generic_idents = self.generics.params.iter().filter_map(|p| match p {
-            GenericParam::Lifetime(_) => None,
+            G::Lifetime(_) => None,
             // Since we named our dummy types the same as the generic parameters, we can just keep
             // the identifier of the generic parameter - its name is shadowed by the dummy struct.
-            GenericParam::Type(TypeParam { ident, .. }) => Some(quote!(#ident)),
+            //
             // We keep const parameters as they are, since there's no sensible default value we can
             // use instead. This might be something to change in the future.
-            GenericParam::Const(ConstParam { ident, .. }) => Some(quote!(#ident)),
+            G::Type(TypeParam { ident, .. }) |
+            G::Const(ConstParam { ident, .. }) => Some(quote!(#ident)),
         });
         quote! {
             fn decl_concrete() -> String {
