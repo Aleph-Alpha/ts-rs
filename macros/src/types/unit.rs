@@ -37,7 +37,7 @@ pub(crate) fn null(attr: &StructAttr, name: &str, generics: Generics) -> Result<
     check_attributes(attr)?;
 
     Ok(DerivedTS {
-        generics: generics.clone(),
+        generics,
         inline: quote!("null".to_owned()),
         inline_flattened: None,
         docs: attr.docs.clone(),

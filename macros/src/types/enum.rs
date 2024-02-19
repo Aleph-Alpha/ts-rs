@@ -201,7 +201,7 @@ fn format_variant(
 fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr, generics: Generics) -> DerivedTS {
     let name = name.into();
     DerivedTS {
-        generics: generics.clone(),
+        generics,
         inline: quote!("never".to_owned()),
         docs: enum_attr.docs,
         inline_flattened: None,
