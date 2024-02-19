@@ -59,20 +59,24 @@ pub fn to_ts_ident(ident: &Ident) -> String {
 
 /// Convert an arbitrary name to a valid Typescript field name.
 ///
-/// If the name contains special characters it will be wrapped in quotes.
+/// If the name contains special characters or if its first character
+/// is a number it will be wrapped in quotes.
 pub fn raw_name_to_ts_field(value: String) -> String {
-    let valid = value
+    let valid_chars = value
         .chars()
-        .all(|c| c.is_alphanumeric() || c == '_' || c == '$')
-        && value
-            .chars()
-            .next()
-            .map(|first| !first.is_numeric())
-            .unwrap_or(true);
-    if !valid {
-        format!(r#""{value}""#)
-    } else {
+        .all(|c| c.is_alphanumeric() || c == '_' || c == '$');
+    
+    let does_not_start_with_digit = value
+        .chars()
+        .next()
+        .map_or(true, |first| !first.is_numeric());
+
+    let valid = valid_chars && does_not_start_with_digit;
+
+    if valid {
         value
+    } else {
+        format!(r#""{value}""#)
     }
 }
 
