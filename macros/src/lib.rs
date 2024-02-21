@@ -47,11 +47,9 @@ impl DerivedTS {
             }
         };
 
-        let export = if self.export {
-            Some(self.generate_export_test(&rust_ty, &generics))
-        } else {
-            None
-        };
+        let export = self.export.then(
+            || self.generate_export_test(&rust_ty, &generics)
+        );
 
         let docs = match &*self.docs {
             "" => None,
