@@ -475,6 +475,12 @@ macro_rules! impl_wrapper {
             {
                 T::dependency_types()
             }
+            fn generics() -> impl TypeList
+            where
+                Self: 'static
+            {
+                ().push::<T>()
+            }
             fn transparent() -> bool { T::transparent() }
         }
     };

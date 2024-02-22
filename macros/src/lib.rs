@@ -169,6 +169,7 @@ impl DerivedTS {
         let generics = self.generics.type_params()
             .map(|TypeParam {ident, ..}| quote![.push::<#ident>()]);
         quote! {
+            #[allow(clippy::unused_unit)]
             fn generics() -> impl ts_rs::typelist::TypeList
             where
                 Self: 'static,
