@@ -100,7 +100,7 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 
 - `ordered-float-impl`
 
-  Implement `TS` for `OrderedFloat` from ordered_float
+  Implement `TS` for `OrderedFloat` from `ordered_float`
 
 - `heapless-impl`
 
