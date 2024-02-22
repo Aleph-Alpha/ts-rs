@@ -50,8 +50,8 @@ jobs:
         run: |
           cargo t 
           tsc bindings/* --noEmit
-      - name: workspace e2e with default export env
-        working-directory: e2e/workspace
+      - name: example e2e with default export env
+        working-directory: example
         run: |
           TS_RS_EXPORT_DIR=custom-bindings cargo t 
           tsc custom-bindings/* --noEmit
