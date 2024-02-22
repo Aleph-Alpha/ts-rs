@@ -132,7 +132,7 @@ fn export_a() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "name: string, }"
+            "name: string, };"
         )
     };
 
@@ -178,7 +178,7 @@ fn export_b() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "name: string, }",
+            "name: string, };",
         )
     };
 
@@ -372,11 +372,8 @@ fn export_g() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "variant_field: number, } })",
+            "variant_field: number, } });",
         )
-
-
-
     };
 
     let actual_content = fs::read_to_string("tests-out/docs/G.ts").unwrap();

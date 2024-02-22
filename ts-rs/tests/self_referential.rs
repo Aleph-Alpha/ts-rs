@@ -36,7 +36,7 @@ fn named() {
             t_arc: T, \
             self_arc: T, \
             has_t: { t: T, }, \
-         }"
+         };"
     );
 }
 

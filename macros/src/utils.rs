@@ -1,7 +1,9 @@
 use std::convert::TryFrom;
 
-use proc_macro2::Ident;
-use syn::{spanned::Spanned, Attribute, Error, Expr, ExprLit, Lit, Meta, Result};
+use proc_macro2::{Ident, TokenStream};
+use syn::{Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result, spanned::Spanned};
+use quote::quote;
+use crate::deps::Dependencies;
 
 macro_rules! syn_err {
     ($l:literal $(, $a:expr)*) => {
@@ -57,20 +59,24 @@ pub fn to_ts_ident(ident: &Ident) -> String {
 
 /// Convert an arbitrary name to a valid Typescript field name.
 ///
-/// If the name contains special characters it will be wrapped in quotes.
+/// If the name contains special characters or if its first character
+/// is a number it will be wrapped in quotes.
 pub fn raw_name_to_ts_field(value: String) -> String {
-    let valid = value
+    let valid_chars = value
         .chars()
-        .all(|c| c.is_alphanumeric() || c == '_' || c == '$')
-        && value
-            .chars()
-            .next()
-            .map(|first| !first.is_numeric())
-            .unwrap_or(true);
-    if !valid {
-        format!(r#""{value}""#)
-    } else {
+        .all(|c| c.is_alphanumeric() || c == '_' || c == '$');
+    
+    let does_not_start_with_digit = value
+        .chars()
+        .next()
+        .map_or(true, |first| !first.is_numeric());
+
+    let valid = valid_chars && does_not_start_with_digit;
+
+    if valid {
         value
+    } else {
+        format!(r#""{value}""#)
     }
 }
 
@@ -196,4 +202,35 @@ mod warning {
 
         writer.print(&buffer)
     }
+}
+
+/// formats the generic arguments (like A, B in struct X<A, B>{..}) as "<X>" where x is a comma
+/// seperated list of generic arguments, or an empty string if there are no type generics (lifetime/const generics are ignored).
+/// this expands to an expression which evaluates to a `String`.
+///
+/// If a default type arg is encountered, it will be added to the dependencies.
+pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStream {
+    let mut expanded_params = generics
+        .params
+        .iter()
+        .filter_map(|param| match param {
+            GenericParam::Type(type_param) => Some({
+                let ty = type_param.ident.to_string();
+                if let Some(default) = &type_param.default {
+                    deps.push(default);
+                    quote!(format!("{} = {}", #ty, <#default as ts_rs::TS>::name()))
+                } else {
+                    quote!(#ty.to_owned())
+                }
+            }),
+            _ => None,
+        })
+        .peekable();
+
+    if expanded_params.peek().is_none() {
+        return quote!("");
+    }
+
+    let comma_separated = quote!([#(#expanded_params),*].join(", "));
+    quote!(format!("<{}>", #comma_separated))
 }

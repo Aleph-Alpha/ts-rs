@@ -13,7 +13,7 @@ fn hashmap() {
 
     assert_eq!(
         Hashes::decl(),
-        "type Hashes = { map: Record<string, string>, set: Array<string>, }"
+        "type Hashes = { map: Record<string, string>, set: Array<string>, };"
     )
 }
 
@@ -33,6 +33,6 @@ fn hashmap_with_custom_hasher() {
 
     assert_eq!(
         Hashes::decl(),
-        "type Hashes = { map: Record<string, string>, set: Array<string>, }"
+        "type Hashes = { map: Record<string, string>, set: Array<string>, };"
     )
 }

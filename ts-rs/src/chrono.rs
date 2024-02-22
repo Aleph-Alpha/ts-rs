@@ -22,11 +22,11 @@ impl_primitives!(NaiveDateTime, NaiveDate, NaiveTime, Month, Weekday, Duration =
 impl_dummy!(Utc, Local, FixedOffset);
 
 impl<T: TimeZone + 'static> TS for DateTime<T> {
-    fn name() -> String {
+    fn ident() -> String {
         "string".to_owned()
     }
-    fn name_with_type_args(_: Vec<String>) -> String {
-        Self::name()
+    fn name() -> String {
+        "string".to_owned()
     }
     fn inline() -> String {
         "string".to_owned()
@@ -37,11 +37,11 @@ impl<T: TimeZone + 'static> TS for DateTime<T> {
 }
 
 impl<T: TimeZone + 'static> TS for Date<T> {
-    fn name() -> String {
+    fn ident() -> String {
         "string".to_owned()
     }
-    fn name_with_type_args(_: Vec<String>) -> String {
-        Self::name()
+    fn name() -> String {
+        "string".to_owned()
     }
     fn inline() -> String {
         "string".to_owned()

@@ -5,9 +5,8 @@ use syn::{Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, 
 use crate::{
     attr::{FieldAttr, Inflection, Optional, StructAttr},
     deps::Dependencies,
-    types::generics::{format_generics, format_type},
-    utils::{raw_name_to_ts_field, to_ts_ident},
     DerivedTS,
+    utils::{raw_name_to_ts_field, to_ts_ident},
 };
 
 pub(crate) fn named(
@@ -39,7 +38,6 @@ pub(crate) fn named(
 
     let fields = quote!(<[String]>::join(&[#(#formatted_fields),*], " "));
     let flattened = quote!(<[String]>::join(&[#(#flattened_fields),*], " & "));
-    let generic_args = format_generics(&mut dependencies, generics);
 
     let inline = match (formatted_fields.len(), flattened_fields.len()) {
         (0, 0) => quote!("{  }".to_owned()),
@@ -50,14 +48,14 @@ pub(crate) fn named(
     };
 
     Ok(DerivedTS {
+        generics: generics.clone(),
         inline: quote!(#inline.replace(" } & { ", " ")),
-        decl: quote!(format!("type {}{} = {}", #name, #generic_args, Self::inline())),
         inline_flattened: Some(quote!(format!("{{ {} }}", #fields))),
-        name: name.to_owned(),
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),
+        ts_name: name.to_owned(),
     })
 }
 
@@ -77,7 +75,7 @@ fn format_field(
     dependencies: &mut Dependencies,
     field: &Field,
     rename_all: &Option<Inflection>,
-    generics: &Generics,
+    _generics: &Generics,
 ) -> Result<()> {
     let FieldAttr {
         type_as,
@@ -139,7 +137,8 @@ fn format_field(
             dependencies.append_from(ty);
             quote!(<#ty as ts_rs::TS>::inline())
         } else {
-            format_type(ty, dependencies, generics)
+            dependencies.push(ty);
+            quote!(<#ty as ts_rs::TS>::name())
         }
     });
     let field_name = to_ts_ident(field.ident.as_ref().unwrap());
