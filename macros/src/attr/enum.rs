@@ -57,7 +57,7 @@ impl EnumAttr {
 
     fn merge(
         &mut self,
-        EnumAttr {
+        Self {
             rename_all,
             rename_all_fields,
             rename,
@@ -67,7 +67,7 @@ impl EnumAttr {
             export_to,
             export,
             docs,
-        }: EnumAttr,
+        }: Self,
     ) {
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);

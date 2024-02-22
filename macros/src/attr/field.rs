@@ -43,7 +43,7 @@ impl FieldAttr {
 
     fn merge(
         &mut self,
-        FieldAttr {
+        Self {
             type_as,
             type_override,
             rename,
@@ -52,7 +52,7 @@ impl FieldAttr {
             optional: Optional { optional, nullable },
             flatten,
             docs,
-        }: FieldAttr,
+        }: Self,
     ) {
         self.rename = self.rename.take().or(rename);
         self.type_as = self.type_as.take().or(type_as);

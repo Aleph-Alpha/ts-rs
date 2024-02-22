@@ -5,17 +5,16 @@ use syn::{Fields, Generics, ItemEnum, Type, Variant};
 use crate::{
     attr::{EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
     deps::Dependencies,
-    DerivedTS,
-    types,
+    types, DerivedTS,
 };
 
-pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
+pub fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     let enum_attr: EnumAttr = EnumAttr::from_attrs(&s.attrs)?;
 
-    let name = match &enum_attr.rename {
-        Some(existing) => existing.clone(),
-        None => s.ident.to_string(),
-    };
+    let name = enum_attr.rename.as_ref().map_or_else(
+        || s.ident.to_string(),
+        Clone::clone
+    );
 
     if s.variants.is_empty() {
         return Ok(empty_enum(name, enum_attr, s.generics.clone()));
@@ -87,9 +86,28 @@ fn format_variant(
         &variant.fields,
         generics,
     )?;
-    let variant_dependencies = variant_type.dependencies;
-    let inline_type = variant_type.inline;
 
+    let formatted = inline_variant(
+        &name,
+        &variant_type,
+        enum_attr,
+        variant,
+        untagged_variant,
+    )?;
+
+    let variant_dependencies = variant_type.dependencies;
+    dependencies.append(&variant_dependencies);
+    formatted_variants.push(formatted);
+    Ok(())
+}
+
+fn inline_variant(
+    name: &str,
+    DerivedTS { inline: inline_type, inline_flattened, .. }: &DerivedTS,
+    enum_attr: &EnumAttr,
+    variant: &Variant,
+    untagged_variant: bool,
+) -> Result<TokenStream, syn::Error> {
     let formatted = match (untagged_variant, enum_attr.tagged()?) {
         (true, _) | (_, Tagged::Untagged) => quote!(#inline_type),
         (false, Tagged::Externally) => match &variant.fields {
@@ -113,8 +131,6 @@ fn format_variant(
                     ..
                 } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
 
-
-
                 if skip {
                     quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                 } else {
@@ -128,7 +144,7 @@ fn format_variant(
                         (None, None) => {
                             let ty = &unnamed.unnamed[0].ty;
                             quote!(<#ty as ts_rs::TS>::name())
-                        },
+                        }
                     };
 
                     quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #ty))
@@ -139,7 +155,7 @@ fn format_variant(
                 format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #inline_type)
             ),
         },
-        (false, Tagged::Internally { tag }) => match variant_type.inline_flattened {
+        (false, Tagged::Internally { tag }) => match inline_flattened {
             Some(inline_flattened) => quote! {
                 format!(
                     "{{ \"{}\": \"{}\", {} }}",
@@ -178,7 +194,7 @@ fn format_variant(
                             (None, None) => {
                                 let ty = &unnamed.unnamed[0].ty;
                                 quote!(<#ty as ts_rs::TS>::name())
-                            },
+                            }
                         };
 
                         quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #ty))
@@ -191,10 +207,7 @@ fn format_variant(
             },
         },
     };
-
-    dependencies.append(variant_dependencies);
-    formatted_variants.push(formatted);
-    Ok(())
+    Ok(formatted)
 }
 
 // bindings for an empty enum (`never` in TS)

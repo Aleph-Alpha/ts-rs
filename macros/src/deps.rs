@@ -18,7 +18,7 @@ impl Dependencies {
         self.0.push(quote![.push::<#ty>()]);
     }
 
-    pub fn append(&mut self, other: Dependencies) {
+    pub fn append(&mut self, other: &Self) {
         self.0.push(quote![.extend(#other)]);
     }
 }
@@ -29,6 +29,6 @@ impl ToTokens for Dependencies {
         tokens.extend(quote![{
             use ts_rs::typelist::TypeList;
             ()#(#lines)*
-        }])
+        }]);
     }
 }

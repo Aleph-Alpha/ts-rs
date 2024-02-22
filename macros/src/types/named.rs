@@ -5,11 +5,11 @@ use syn::{Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, 
 use crate::{
     attr::{FieldAttr, Inflection, Optional, StructAttr},
     deps::Dependencies,
-    DerivedTS,
     utils::{raw_name_to_ts_field, to_ts_ident},
+    DerivedTS,
 };
 
-pub(crate) fn named(
+pub fn named(
     attr: &StructAttr,
     name: &str,
     fields: &FieldsNamed,
@@ -19,7 +19,7 @@ pub(crate) fn named(
     let mut flattened_fields = Vec::new();
     let mut dependencies = Dependencies::default();
     if let Some(tag) = &attr.tag {
-        let formatted = format!("{}: \"{}\",", tag, name);
+        let formatted = format!("{tag}: \"{name}\",");
         formatted_fields.push(quote! {
             #formatted.to_string()
         });
@@ -31,7 +31,7 @@ pub(crate) fn named(
             &mut flattened_fields,
             &mut dependencies,
             field,
-            &attr.rename_all,
+            attr.rename_all.as_ref(),
             generics,
         )?;
     }
@@ -74,7 +74,7 @@ fn format_field(
     flattened_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     field: &Field,
-    rename_all: &Option<Inflection>,
+    rename_all: Option<&Inflection>,
     _generics: &Generics,
 ) -> Result<()> {
     let FieldAttr {
@@ -108,9 +108,10 @@ fn format_field(
             nullable,
         } => {
             let inner_type = extract_option_argument(&parsed_ty)?; // inner type of the optional
-            match nullable {
-                true => (&parsed_ty, "?"),  // if it's nullable, we keep the original type
-                false => (inner_type, "?"), // if not, we use the Option's inner type
+            if nullable {
+                (&parsed_ty, "?")  // if it's nullable, we keep the original type
+            } else {
+                (inner_type, "?") // if not, we use the Option's inner type
             }
         }
         Optional {
@@ -132,15 +133,18 @@ fn format_field(
         return Ok(());
     }
 
-    let formatted_ty = type_override.map(|t| quote!(#t)).unwrap_or_else(|| {
-        if inline {
-            dependencies.append_from(ty);
-            quote!(<#ty as ts_rs::TS>::inline())
-        } else {
-            dependencies.push(ty);
-            quote!(<#ty as ts_rs::TS>::name())
-        }
-    });
+    let formatted_ty = type_override.map_or_else(
+        || {
+            if inline {
+                dependencies.append_from(ty);
+                quote!(<#ty as ts_rs::TS>::inline())
+            } else {
+                dependencies.push(ty);
+                quote!(<#ty as ts_rs::TS>::name())
+            }
+        },
+        |t| quote!(#t),
+    );
     let field_name = to_ts_ident(field.ident.as_ref().unwrap());
     let name = match (rename, rename_all) {
         (Some(rn), _) => rn,
@@ -150,9 +154,10 @@ fn format_field(
     let valid_name = raw_name_to_ts_field(name);
 
     // Start every doc string with a newline, because when other characters are in front, it is not "understood" by VSCode
-    let docs = match docs.is_empty() {
-        true => "".to_string(),
-        false => format!("\n{}", &docs),
+    let docs = if docs.is_empty() {
+        String::new()
+    } else {
+        format!("\n{}", &docs)
     };
 
     formatted_fields.push(quote! {

@@ -36,14 +36,14 @@ impl StructAttr {
 
     fn merge(
         &mut self,
-        StructAttr {
+        Self {
             rename_all,
             rename,
             export,
             export_to,
             tag,
             docs,
-        }: StructAttr,
+        }: Self,
     ) {
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
@@ -61,8 +61,8 @@ impl From<VariantAttr> for StructAttr {
         }: VariantAttr,
     ) -> Self {
         Self {
-            rename,
             rename_all,
+            rename,
             // inline and skip are not supported on StructAttr
             ..Self::default()
         }

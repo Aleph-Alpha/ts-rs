@@ -30,14 +30,14 @@ impl Inflection {
         use inflector::Inflector;
 
         match self {
-            Inflection::Lower => string.to_lowercase(),
-            Inflection::Upper => string.to_uppercase(),
-            Inflection::Camel => {
-                let pascal = Inflection::apply(Inflection::Pascal, string);
+            Self::Lower => string.to_lowercase(),
+            Self::Upper => string.to_uppercase(),
+            Self::Camel => {
+                let pascal = Self::apply(Self::Pascal, string);
                 pascal[..1].to_ascii_lowercase() + &pascal[1..]
             }
-            Inflection::Snake => string.to_snake_case(),
-            Inflection::Pascal => {
+            Self::Snake => string.to_snake_case(),
+            Self::Pascal => {
                 let mut s = String::with_capacity(string.len());
 
                 let mut capitalize = true;
@@ -49,14 +49,14 @@ impl Inflection {
                         s.push(c.to_ascii_uppercase());
                         capitalize = false;
                     } else {
-                        s.push(c)
+                        s.push(c);
                     }
                 }
 
                 s
             }
-            Inflection::ScreamingSnake => string.to_screaming_snake_case(),
-            Inflection::Kebab => string.to_kebab_case(),
+            Self::ScreamingSnake => string.to_screaming_snake_case(),
+            Self::Kebab => string.to_kebab_case(),
         }
     }
 }

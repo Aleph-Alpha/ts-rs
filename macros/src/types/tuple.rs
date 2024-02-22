@@ -8,7 +8,7 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn tuple(
+pub fn tuple(
     attr: &StructAttr,
     name: &str,
     fields: &FieldsUnnamed,

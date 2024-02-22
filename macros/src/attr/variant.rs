@@ -34,13 +34,13 @@ impl VariantAttr {
 
     fn merge(
         &mut self,
-        VariantAttr {
+        Self {
             rename,
             rename_all,
             inline,
             skip,
             untagged,
-        }: VariantAttr,
+        }: Self,
     ) {
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);

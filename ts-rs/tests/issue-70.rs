@@ -1,6 +1,7 @@
 #![allow(unused)]
 
 use std::collections::HashMap;
+
 use ts_rs::TS;
 
 #[test]
@@ -16,11 +17,17 @@ fn issue_70() {
     #[derive(TS)]
     struct Struct {
         a: TypeAlias,
-        b: HashMap<String, String>
+        b: HashMap<String, String>,
     }
 
-    assert_eq!(Enum::decl(), "type Enum = { \"A\": Record<string, string> } | { \"B\": Record<string, string> };");
-    assert_eq!(Struct::decl(), "type Struct = { a: Record<string, string>, b: Record<string, string>, };");
+    assert_eq!(
+        Enum::decl(),
+        "type Enum = { \"A\": Record<string, string> } | { \"B\": Record<string, string> };"
+    );
+    assert_eq!(
+        Struct::decl(),
+        "type Struct = { a: Record<string, string>, b: Record<string, string>, };"
+    );
 }
 
 #[test]
@@ -30,7 +37,7 @@ fn generic() {
     #[derive(TS)]
     struct Container {
         a: GenericAlias<Vec<i32>, Vec<String>>,
-        b: GenericAlias
+        b: GenericAlias,
     }
     assert_eq!(
         Container::decl(),
@@ -44,7 +51,7 @@ fn generic() {
     struct GenericContainer<A, B = i32> {
         a: GenericAlias,
         b: GenericAlias<A, B>,
-        c: GenericAlias<A, GenericAlias<A, B>>
+        c: GenericAlias<A, GenericAlias<A, B>>,
     }
     assert_eq!(
         GenericContainer::<(), ()>::decl(),

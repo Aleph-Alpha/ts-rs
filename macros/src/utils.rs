@@ -1,8 +1,11 @@
 use std::convert::TryFrom;
 
 use proc_macro2::{Ident, TokenStream};
-use syn::{Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result, spanned::Spanned};
 use quote::quote;
+use syn::{
+    spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result,
+};
+
 use crate::deps::Dependencies;
 
 macro_rules! syn_err {
@@ -65,7 +68,7 @@ pub fn raw_name_to_ts_field(value: String) -> String {
     let valid_chars = value
         .chars()
         .all(|c| c.is_alphanumeric() || c == '_' || c == '$');
-    
+
     let does_not_start_with_digit = value
         .chars()
         .next()
@@ -102,9 +105,8 @@ pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
     attrs
         .iter()
         .filter(|a| a.path().is_ident("serde"))
-        .flat_map(|attr| match A::try_from(attr) {
-            Ok(attr) => Some(attr),
-            Err(_) => {
+        .filter_map(|attr| {
+            A::try_from(attr).map_or_else(|_| {
                 #[cfg(not(feature = "no-serde-warnings"))]
                 use quote::ToTokens;
 
@@ -115,8 +117,9 @@ pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
                     "ts-rs failed to parse this attribute. It will be ignored.",
                 )
                 .unwrap();
+
                 None
-            }
+            }, Some)
         })
         .collect::<Vec<_>>()
         .into_iter()
@@ -138,16 +141,17 @@ pub fn parse_docs(attrs: &[Attribute]) -> Result<String> {
             _ => syn_err!(attr.span(); "doc attribute with non literal expression found"),
         })
         .map(|attr| {
-            attr.map(|line| match line.trim() {
+            attr.map(|line| match line.trim_end() {
                 "" => " *".to_owned(),
-                _ => format!(" *{}", line.trim_end())
+                x => format!(" *{x}"),
             })
         })
         .collect::<Result<Vec<_>>>()?;
 
-    Ok(match lines.is_empty() {
-        true => "".to_owned(),
-        false => format!("/**\n{}\n */\n", lines.join("\n")),
+    Ok(if lines.is_empty() {
+        String::new()
+    } else {
+        format!("/**\n{}\n */\n", lines.join("\n"))
     })
 }
 
@@ -182,14 +186,14 @@ mod warning {
         buffer.set_color(&yellow_bold)?;
         write!(&mut buffer, "warning")?;
         buffer.set_color(&white_bold)?;
-        writeln!(&mut buffer, ": {}", title)?;
+        writeln!(&mut buffer, ": {title}")?;
 
         buffer.set_color(&blue)?;
         writeln!(&mut buffer, "  | ")?;
 
         write!(&mut buffer, "  | ")?;
         buffer.set_color(&white)?;
-        writeln!(&mut buffer, "{}", content)?;
+        writeln!(&mut buffer, "{content}")?;
 
         buffer.set_color(&blue)?;
         writeln!(&mut buffer, "  | ")?;
@@ -198,7 +202,7 @@ mod warning {
         buffer.set_color(&white_bold)?;
         write!(&mut buffer, "note: ")?;
         buffer.set_color(&white)?;
-        writeln!(&mut buffer, "{}", note)?;
+        writeln!(&mut buffer, "{note}")?;
 
         writer.print(&buffer)
     }
@@ -216,12 +220,10 @@ pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStr
         .filter_map(|param| match param {
             GenericParam::Type(type_param) => Some({
                 let ty = type_param.ident.to_string();
-                if let Some(default) = &type_param.default {
+                type_param.default.as_ref().map_or_else(|| quote!(#ty.to_owned()), |default| {
                     deps.push(default);
                     quote!(format!("{} = {}", #ty, <#default as ts_rs::TS>::name()))
-                } else {
-                    quote!(#ty.to_owned())
-                }
+                })
             }),
             _ => None,
         })

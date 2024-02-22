@@ -1,14 +1,15 @@
+#![allow(clippy::module_name_repetitions)]
+
 use std::{
     any::TypeId,
     collections::BTreeMap,
     fmt::Write,
     path::{Component, Path, PathBuf},
-    sync::Mutex,
-    sync::OnceLock,
+    sync::{Mutex, OnceLock},
 };
 
 use thiserror::Error;
-use ExportError::*;
+use ExportError::{CannotBeExported, ManifestDirNotSet};
 
 use crate::TS;
 
@@ -29,6 +30,7 @@ pub enum ExportError {
 }
 
 pub(crate) use recursive_export::export_type_with_dependencies;
+
 mod recursive_export {
     use std::{any::TypeId, collections::HashSet};
 
@@ -76,11 +78,7 @@ mod recursive_export {
         let mut visitor = Visit { seen, error: None };
         T::dependency_types().for_each(&mut visitor);
 
-        if let Some(e) = visitor.error {
-            Err(e)
-        } else {
-            Ok(())
-        }
+        visitor.error.map_or_else(|| Ok(()), Err)
     }
 }
 
@@ -126,18 +124,21 @@ pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
 
 #[doc(hidden)]
 pub mod __private {
-    use super::*;
+    use super::{OnceLock, TS};
 
     const EXPORT_DIR_ENV_VAR: &str = "TS_RS_EXPORT_DIR";
     fn provided_default_dir() -> Option<&'static str> {
         static EXPORT_TO: OnceLock<Option<String>> = OnceLock::new();
-        EXPORT_TO.get_or_init(|| std::env::var(EXPORT_DIR_ENV_VAR).ok()).as_deref()
+        EXPORT_TO
+            .get_or_init(|| std::env::var(EXPORT_DIR_ENV_VAR).ok())
+            .as_deref()
     }
 
     /// Returns the path to where `T` should be exported using the `TS_RS_EXPORT_DIR` environment variable.
     ///
     /// This should only be used by the TS derive macro; the `get_export_to` trait method should not
     /// be overridden if the `#[ts(export_to = ..)]` attribute exists.
+    #[must_use]
     pub fn get_export_to_path<T: TS + ?Sized>() -> Option<String> {
         provided_default_dir().map_or_else(
             || T::EXPORT_TO.map(ToString::to_string),
@@ -214,7 +215,7 @@ fn import_path(from: &Path, import: &Path) -> String {
     let path_without_extension = path.trim_end_matches(".ts");
 
     if cfg!(feature = "import-esm") {
-        format!("{}.js", path_without_extension)
+        format!("{path_without_extension}.js")
     } else {
         path_without_extension.to_owned()
     }
@@ -241,39 +242,38 @@ where
     let base = base.as_ref();
 
     if path.is_absolute() != base.is_absolute() {
-        if path.is_absolute() {
+        return if path.is_absolute() {
             Some(PathBuf::from(path))
         } else {
             None
-        }
-    } else {
-        let mut ita = path.components();
-        let mut itb = base.components();
-        let mut comps: Vec<Component> = vec![];
-        loop {
-            match (ita.next(), itb.next()) {
-                (None, None) => break,
-                (Some(a), None) => {
-                    comps.push(a);
-                    comps.extend(ita.by_ref());
-                    break;
-                }
-                (None, _) => comps.push(Component::ParentDir),
-                (Some(a), Some(b)) if comps.is_empty() && a == b => (),
-                (Some(a), Some(Component::CurDir)) => comps.push(a),
-                (Some(_), Some(Component::ParentDir)) => return None,
-                (Some(a), Some(_)) => {
+        };
+    }
+
+    let mut iter_path = path.components();
+    let mut iter_base = base.components();
+    let mut comps: Vec<Component> = vec![];
+    loop {
+        match (iter_path.next(), iter_base.next()) {
+            (None, None) => break,
+            (Some(a), None) => {
+                comps.push(a);
+                comps.extend(iter_path.by_ref());
+                break;
+            }
+            (None, _) => comps.push(Component::ParentDir),
+            (Some(a), Some(b)) if comps.is_empty() && a == b => (),
+            (Some(a), Some(Component::CurDir)) => comps.push(a),
+            (Some(_), Some(Component::ParentDir)) => return None,
+            (Some(a), Some(_)) => {
+                comps.push(Component::ParentDir);
+                for _ in iter_base {
                     comps.push(Component::ParentDir);
-                    for _ in itb {
-                        comps.push(Component::ParentDir);
-                    }
-                    comps.push(a);
-                    comps.extend(ita.by_ref());
-                    break;
                 }
+                comps.push(a);
+                comps.extend(iter_path.by_ref());
+                break;
             }
         }
-        Some(comps.iter().map(|c| c.as_os_str()).collect())
     }
+    Some(comps.iter().map(|c| c.as_os_str()).collect())
 }
-

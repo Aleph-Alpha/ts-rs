@@ -1,6 +1,7 @@
 #![allow(dead_code, unused_imports)]
 
 use std::error::Error;
+
 use serde::Serialize;
 use ts_rs::TS;
 
@@ -15,7 +16,7 @@ fn simple() {
         #[ts(skip)]
         c: String,
         #[ts(skip)]
-        d: Box<dyn Error>
+        d: Box<dyn Error>,
     }
 
     assert_eq!(Skip::inline(), "{ a: number, b: number, }");
@@ -26,7 +27,7 @@ fn externally_tagged() {
     #[cfg_attr(feature = "serde-compat", derive(Serialize, TS))]
     #[cfg_attr(not(feature = "serde-compat"), derive(TS))]
     enum Externally {
-        A (
+        A(
             #[cfg_attr(feature = "serde-compat", serde(skip))]
             #[cfg_attr(not(feature = "serde-compat"), ts(skip))]
             Unsupported,
@@ -35,7 +36,7 @@ fn externally_tagged() {
             #[cfg_attr(feature = "serde-compat", serde(skip))]
             #[cfg_attr(not(feature = "serde-compat"), ts(skip))]
             Unsupported,
-            i32
+            i32,
         ),
         C {
             #[cfg_attr(feature = "serde-compat", serde(skip))]
@@ -46,7 +47,7 @@ fn externally_tagged() {
             #[cfg_attr(feature = "serde-compat", serde(skip))]
             #[cfg_attr(not(feature = "serde-compat"), ts(skip))]
             x: Unsupported,
-            y: i32
+            y: i32,
         },
     }
 
@@ -64,7 +65,7 @@ fn internally_tagged() {
     #[cfg_attr(feature = "serde-compat", serde(tag = "t"))]
     #[cfg_attr(not(feature = "serde-compat"), ts(tag = "t"))]
     enum Internally {
-        A (
+        A(
             #[cfg_attr(feature = "serde-compat", serde(skip))]
             #[cfg_attr(not(feature = "serde-compat"), ts(skip))]
             Unsupported,
@@ -95,7 +96,7 @@ fn adjacently_tagged() {
     #[cfg_attr(feature = "serde-compat", serde(tag = "t", content = "c"))]
     #[cfg_attr(not(feature = "serde-compat"), ts(tag = "t", content = "c"))]
     enum Adjacently {
-        A (
+        A(
             #[cfg_attr(feature = "serde-compat", serde(skip))]
             #[cfg_attr(not(feature = "serde-compat"), ts(skip))]
             Unsupported,
@@ -104,7 +105,7 @@ fn adjacently_tagged() {
             #[cfg_attr(feature = "serde-compat", serde(skip))]
             #[cfg_attr(not(feature = "serde-compat"), ts(skip))]
             Unsupported,
-            i32
+            i32,
         ),
         C {
             #[cfg_attr(feature = "serde-compat", serde(skip))]
@@ -115,9 +116,8 @@ fn adjacently_tagged() {
             #[cfg_attr(feature = "serde-compat", serde(skip))]
             #[cfg_attr(not(feature = "serde-compat"), ts(skip))]
             x: Unsupported,
-            y: i32
+            y: i32,
         },
-
     }
 
     // TODO: variant C should probably not generate `{ .., "c": { } }`

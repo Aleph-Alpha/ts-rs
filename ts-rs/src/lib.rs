@@ -1,3 +1,7 @@
+#![deny(clippy::pedantic)]
+#![deny(clippy::nursery)]
+#![allow(clippy::redundant_pub_crate)]
+
 //! <h1 align="center" style="padding-top: 0; margin-top: 0;">
 //! <img width="150px" src="https://raw.githubusercontent.com/Aleph-Alpha/ts-rs/main/logo.png" alt="logo">
 //! <br/>
@@ -98,7 +102,7 @@
 //!
 //! - `ordered-float-impl`  
 //!
-//!   Implement `TS` for `OrderedFloat` from ordered_float
+//!   Implement `TS` for `OrderedFloat` from `ordered_float`
 //!
 //! - `heapless-impl`  
 //!
@@ -164,10 +168,10 @@ use std::{
 
 pub use ts_rs_macros::TS;
 
+pub use crate::export::ExportError;
 // Used in generated code. Not public API
 #[doc(hidden)]
 pub use crate::export::__private;
-pub use crate::export::ExportError;
 use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
@@ -278,6 +282,7 @@ pub trait TS {
     const EXPORT_TO: Option<&'static str> = None;
     const DOCS: Option<&'static str> = None;
 
+    #[must_use]
     fn ident() -> String {
         let name = Self::name();
 
@@ -299,6 +304,7 @@ pub trait TS {
     /// placeholders, resulting in a generic typescript definition.
     /// Both `SomeType::<i32>::decl()` and `SomeType::<String>::decl()` will therefore result in
     /// the same TypeScript declaration `type SomeType<A> = ...`.
+    #[must_use]
     fn decl() -> String {
         panic!("{} cannot be declared", Self::name());
     }
@@ -306,6 +312,7 @@ pub trait TS {
     /// Declaration of this type using the supplied generic arguments.
     /// The resulting TypeScript definition will not be generic. For that, see `TS::decl()`.
     /// If this type is not generic, then this function is equivalent to `TS::decl()`.
+    #[must_use]
     fn decl_concrete() -> String {
         panic!("{} cannot be declared", Self::name());
     }
@@ -315,17 +322,20 @@ pub trait TS {
 
     /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
     /// This function will panic if the type cannot be inlined.
+    #[must_use]
     fn inline() -> String {
         panic!("{} cannot be inlined", Self::name());
     }
 
     /// Flatten an type declaration.  
     /// This function will panic if the type cannot be flattened.
+    #[must_use]
     fn inline_flattened() -> String {
         panic!("{} cannot be flattened", Self::name())
     }
 
     /// Returns a `TypeList` of all types on which this type depends.
+    #[must_use]
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
@@ -333,13 +343,12 @@ pub trait TS {
     }
 
     /// Resolves all dependencies of this type recursively.
+    #[must_use]
     fn dependencies() -> Vec<Dependency>
     where
         Self: 'static,
     {
         use crate::typelist::TypeVisitor;
-
-        let mut deps: Vec<Dependency> = vec![];
         struct Visit<'a>(&'a mut Vec<Dependency>);
         impl<'a> TypeVisitor for Visit<'a> {
             fn visit<T: TS + 'static + ?Sized>(&mut self) {
@@ -353,6 +362,8 @@ pub trait TS {
                 }
             }
         }
+
+        let mut deps: Vec<Dependency> = vec![];
         Self::dependency_types().for_each(&mut Visit(&mut deps));
 
         deps
@@ -369,6 +380,13 @@ pub trait TS {
     /// When a type is annotated with `#[ts(export)]`, it is exported automatically within a test.
     /// This function is only usefull if you need to export the type outside of the context of a
     /// test.
+    ///
+    /// # Errors
+    /// This funcion can error if:
+    /// - The type cannot be exported
+    /// - It is unable to create a TypeScript file due to an io error
+    /// - It is unable to read the `CARGO_MANIFEST_DIR` environment variable
+    /// - An error occurs trying to format the output (only if the `format` feature is enabled)
     fn export() -> Result<(), ExportError>
     where
         Self: 'static,
@@ -378,6 +396,13 @@ pub trait TS {
 
     /// Manually export this type to a file with a file with the specified path. This
     /// function will ignore the `#[ts(export_to = "..)]` attribute.
+    ///
+    /// # Errors
+    /// This funcion can error if:
+    /// - The type cannot be exported
+    /// - It is unable to create a TypeScript file due to an io error
+    /// - It is unable to read the `CARGO_MANIFEST_DIR` environment variable
+    /// - An error occurs trying to format the output (only if the `format` feature is enabled)
     fn export_to(path: impl AsRef<Path>) -> Result<(), ExportError>
     where
         Self: 'static,
@@ -387,6 +412,13 @@ pub trait TS {
 
     /// Manually generate bindings for this type, returning a [`String`].  
     /// This function does not format the output, even if the `format` feature is enabled.
+    ///
+    /// # Errors
+    /// This funcion can error if:
+    /// - The type cannot be exported
+    /// - It is unable to create a TypeScript file due to an io error
+    /// - It is unable to read the `CARGO_MANIFEST_DIR` environment variable
+    /// - An error occurs trying to format the output (only if the `format` feature is enabled)
     fn export_to_string() -> Result<String, ExportError>
     where
         Self: 'static,
@@ -412,9 +444,10 @@ impl Dependency {
     /// Constructs a [`Dependency`] from the given type `T`.
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
+    #[must_use]
     pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
         let exported_to = T::get_export_to()?;
-        Some(Dependency {
+        Some(Self {
             type_id: TypeId::of::<T>(),
             ts_name: T::ident(),
             exported_to,
@@ -566,10 +599,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
         format!(
             "[{}]",
-            (0..N)
-                .map(|_| T::name())
-                .collect::<Box<[_]>>()
-                .join(", ")
+            (0..N).map(|_| T::name()).collect::<Box<[_]>>().join(", ")
         )
     }
 
@@ -580,10 +610,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
         format!(
             "[{}]",
-            (0..N)
-                .map(|_| T::inline())
-                .collect::<Box<[_]>>()
-                .join(", ")
+            (0..N).map(|_| T::inline()).collect::<Box<[_]>>().join(", ")
         )
     }
 
@@ -728,19 +755,21 @@ impl_primitives! {
 #[rustfmt::skip]
 pub(crate) use impl_primitives;
 
-
 #[doc(hidden)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Dummy;
 
 impl std::fmt::Display for Dummy {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
 impl TS for Dummy {
-    fn name() -> String { "Dummy".to_owned() }
-    fn transparent() -> bool { false }
+    fn name() -> String {
+        "Dummy".to_owned()
+    }
+    fn transparent() -> bool {
+        false
+    }
 }
-

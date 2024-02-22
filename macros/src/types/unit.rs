@@ -3,7 +3,7 @@ use syn::{Generics, Result};
 
 use crate::{attr::StructAttr, deps::Dependencies, DerivedTS};
 
-pub(crate) fn empty_object(attr: &StructAttr, name: &str, generics: Generics) -> Result<DerivedTS> {
+pub fn empty_object(attr: &StructAttr, name: &str, generics: &Generics) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
@@ -18,7 +18,7 @@ pub(crate) fn empty_object(attr: &StructAttr, name: &str, generics: Generics) ->
     })
 }
 
-pub(crate) fn empty_array(attr: &StructAttr, name: &str, generics: Generics) -> Result<DerivedTS> {
+pub fn empty_array(attr: &StructAttr, name: &str, generics: &Generics) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
@@ -33,11 +33,11 @@ pub(crate) fn empty_array(attr: &StructAttr, name: &str, generics: Generics) -> 
     })
 }
 
-pub(crate) fn null(attr: &StructAttr, name: &str, generics: Generics) -> Result<DerivedTS> {
+pub fn null(attr: &StructAttr, name: &str, generics: &Generics) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
-        generics,
+        generics: generics.clone(),
         inline: quote!("null".to_owned()),
         inline_flattened: None,
         docs: attr.docs.clone(),
