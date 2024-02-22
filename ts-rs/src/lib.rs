@@ -332,6 +332,10 @@ pub trait TS {
     {
     }
 
+    /// Returns a `TypeList` containing all generic parameters of this type.
+    /// If this type is not generic, this will return an empty `TypeList`.
+    fn generics() -> impl TypeList where Self: 'static {}
+
     /// Resolves all dependencies of this type recursively.
     fn dependencies() -> Vec<Dependency>
     where

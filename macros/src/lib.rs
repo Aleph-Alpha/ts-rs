@@ -62,6 +62,7 @@ impl DerivedTS {
         let inline = self.generate_inline_fn();
         let decl = self.generate_decl_fn(&rust_ty);
         let dependencies = &self.dependencies;
+        let generics_fn = self.generate_generics_fn();
 
         quote! {
             #impl_start {
@@ -76,6 +77,7 @@ impl DerivedTS {
                 #name
                 #decl
                 #inline
+                #generics_fn
 
                 #[allow(clippy::unused_unit)]
                 fn dependency_types() -> impl ts_rs::typelist::TypeList
@@ -159,6 +161,20 @@ impl DerivedTS {
             #[test]
             fn #test_fn() {
                 #ty::export().expect("could not export type");
+            }
+        }
+    }
+
+    fn generate_generics_fn(&self) -> TokenStream {
+        let generics = self.generics.type_params()
+            .map(|TypeParam {ident, ..}| quote![.push::<#ident>()]);
+        quote! {
+            fn generics() -> impl ts_rs::typelist::TypeList
+            where
+                Self: 'static,
+            {
+                use ts_rs::typelist::TypeList;
+                ()#(#generics)*
             }
         }
     }
