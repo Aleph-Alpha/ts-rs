@@ -9,3 +9,6 @@ pub struct LibraryType1 {
 pub struct LibraryType2<T> {
     pub t: T
 }
+
+#[derive(TS)]
+pub struct LibraryType3;

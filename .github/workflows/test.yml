@@ -37,6 +37,24 @@ jobs:
         run: |
           TS_RS_EXPORT_DIR=custom-bindings cargo t 
           tsc parent/custom-bindings/* --noEmit
+  e2e-example:
+    name: End-to-end test example
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: example e2e test
+        working-directory: example
+        run: |
+          cargo t 
+          tsc bindings/* --noEmit
+      - name: workspace e2e with default export env
+        working-directory: e2e/workspace
+        run: |
+          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          tsc custom-bindings/* --noEmit
 
   readme-up-to-date:
     name: Check that README.md is up-to-date

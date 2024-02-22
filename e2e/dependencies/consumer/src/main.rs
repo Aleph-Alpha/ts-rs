@@ -9,6 +9,7 @@ struct ConsumerType {
     pub ty2_2: LibraryType2<&'static Self>,
     pub ty2_3: LibraryType2<LibraryType2<Box<ConsumerType>>>,
     pub ty2_4: LibraryType2<LibraryType2<LibraryType1>>,
+    pub ty2_5: LibraryType2<LibraryType3>,
 }
 
 fn main() {}
