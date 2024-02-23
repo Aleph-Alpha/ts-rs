@@ -474,7 +474,7 @@ macro_rules! impl_tuples {
 macro_rules! impl_wrapper {
     ($($t:tt)*) => {
         $($t)* {
-            type Generics = T::Generics;
+            type Generics = Self;
             fn name() -> String { T::name() }
             fn inline() -> String { T::inline() }
             fn inline_flattened() -> String { T::inline_flattened() }
@@ -488,7 +488,7 @@ macro_rules! impl_wrapper {
             where
                 Self: 'static
             {
-                T::generics()
+                ((std::marker::PhantomData::<T>,), T::generics())
             }
             fn transparent() -> bool { T::transparent() }
         }
