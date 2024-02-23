@@ -515,24 +515,27 @@ macro_rules! impl_shadow {
 }
 
 impl<T: TS> TS for Option<T> {
-    type Generics = Option<Dummy>;
+    type Generics = Self;
     fn name() -> String {
         format!("{} | null", T::name())
     }
-
     fn inline() -> String {
         format!("{} | null", T::inline())
     }
-
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
-        ().push::<T>()
+        T::dependency_types()
     }
-
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+        ((std::marker::PhantomData::<T>,), T::generics())
+    }
     fn transparent() -> bool {
-        true
+        T::transparent()
     }
 }
 
@@ -548,10 +551,20 @@ impl<T: TS, E: TS> TS for Result<T, E> {
     where
         Self: 'static,
     {
-        ().push::<T>().push::<E>()
+        T::dependency_types().extend(E::dependency_types())
+    }
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+        use std::marker::PhantomData;
+        (
+            ((PhantomData::<T>,), T::generics()),
+            ((PhantomData::<E>,), E::generics()),
+        )
     }
     fn transparent() -> bool {
-        true
+        false
     }
 }
 
@@ -563,19 +576,23 @@ impl<T: TS> TS for Vec<T> {
     fn name() -> String {
         format!("Array<{}>", T::name())
     }
-
     fn inline() -> String {
         format!("Array<{}>", T::inline())
     }
-
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
-        ().push::<T>()
+        T::dependency_types()
+    }
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+        ((std::marker::PhantomData::<T>,), T::generics())
     }
     fn transparent() -> bool {
-        true
+        false
     }
 }
 
@@ -609,11 +626,18 @@ impl<T: TS, const N: usize> TS for [T; N] {
     where
         Self: 'static,
     {
-        ().push::<T>()
+        T::dependency_types()
+    }
+
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+        ((std::marker::PhantomData::<T>,), T::generics())
     }
 
     fn transparent() -> bool {
-        true
+        false
     }
 }
 
@@ -634,11 +658,20 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     where
         Self: 'static,
     {
-        ().push::<K>().push::<V>()
+        K::dependency_types().extend(V::dependency_types())
     }
-
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+        use std::marker::PhantomData;
+        (
+            ((PhantomData::<K>,), K::generics()),
+            ((PhantomData::<V>,), V::generics()),
+        )
+    }
     fn transparent() -> bool {
-        true
+        false
     }
 }
 
