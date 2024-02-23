@@ -42,6 +42,7 @@ enum Enum {
 }
 
 #[test]
+#[cfg(not(feature = "import-esm"))]
 fn issue_232() {
     println!("{}", StateInlinedVec::export_to_string().unwrap());
     assert_eq!(

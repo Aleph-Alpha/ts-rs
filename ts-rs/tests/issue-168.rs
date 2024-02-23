@@ -32,7 +32,7 @@ struct Baz {
 
 
 #[test]
-#[ignore]
+#[cfg(not(feature = "import-esm"))]
 fn issue_168() {
     assert_eq!(
         FooInlined::export_to_string().unwrap(),
