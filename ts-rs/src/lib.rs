@@ -165,9 +165,9 @@ use std::{
 pub use ts_rs_macros::TS;
 
 // Used in generated code. Not public API
+pub use crate::export::ExportError;
 #[doc(hidden)]
 pub use crate::export::__private;
-pub use crate::export::ExportError;
 use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
@@ -275,6 +275,8 @@ pub mod typelist;
 /// - `#[ts(skip)]`:  
 ///   Skip this variant  
 pub trait TS {
+    type Generics: TS + ?Sized;
+
     const EXPORT_TO: Option<&'static str> = None;
     const DOCS: Option<&'static str> = None;
 
@@ -334,7 +336,11 @@ pub trait TS {
 
     /// Returns a `TypeList` containing all generic parameters of this type.
     /// If this type is not generic, this will return an empty `TypeList`.
-    fn generics() -> impl TypeList where Self: 'static {}
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+    }
 
     /// Resolves all dependencies of this type recursively.
     fn dependencies() -> Vec<Dependency>
@@ -430,6 +436,7 @@ impl Dependency {
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
         impl TS for $ty {
+            type Generics = Self;
             fn name() -> String { $l.to_owned() }
             fn inline() -> String { <Self as $crate::TS>::name() }
             fn transparent() -> bool { false }
@@ -440,6 +447,7 @@ macro_rules! impl_primitives {
 macro_rules! impl_tuples {
     ( impl $($i:ident),* ) => {
         impl<$($i: TS),*> TS for ($($i,)*) {
+            type Generics = (Dummy, );
             fn name() -> String {
                 format!("[{}]", [$($i::name()),*].join(", "))
             }
@@ -466,6 +474,7 @@ macro_rules! impl_tuples {
 macro_rules! impl_wrapper {
     ($($t:tt)*) => {
         $($t)* {
+            type Generics = T::Generics;
             fn name() -> String { T::name() }
             fn inline() -> String { T::inline() }
             fn inline_flattened() -> String { T::inline_flattened() }
@@ -479,7 +488,7 @@ macro_rules! impl_wrapper {
             where
                 Self: 'static
             {
-                ().push::<T>()
+                T::generics()
             }
             fn transparent() -> bool { T::transparent() }
         }
@@ -490,6 +499,7 @@ macro_rules! impl_wrapper {
 macro_rules! impl_shadow {
     (as $s:ty: $($impl:tt)*) => {
         $($impl)* {
+            type Generics = <$s as TS>::Generics;
             fn name() -> String { <$s>::name() }
             fn inline() -> String { <$s>::inline() }
             fn inline_flattened() -> String { <$s>::inline_flattened() }
@@ -505,6 +515,7 @@ macro_rules! impl_shadow {
 }
 
 impl<T: TS> TS for Option<T> {
+    type Generics = Option<Dummy>;
     fn name() -> String {
         format!("{} | null", T::name())
     }
@@ -526,6 +537,7 @@ impl<T: TS> TS for Option<T> {
 }
 
 impl<T: TS, E: TS> TS for Result<T, E> {
+    type Generics = Result<Dummy, Dummy>;
     fn name() -> String {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::name(), E::name())
     }
@@ -544,6 +556,7 @@ impl<T: TS, E: TS> TS for Result<T, E> {
 }
 
 impl<T: TS> TS for Vec<T> {
+    type Generics = Vec<Dummy>;
     fn ident() -> String {
         "Array".to_owned()
     }
@@ -569,6 +582,7 @@ impl<T: TS> TS for Vec<T> {
 // Arrays longer than this limit will be emitted as Array<T>
 const ARRAY_TUPLE_LIMIT: usize = 64;
 impl<T: TS, const N: usize> TS for [T; N] {
+    type Generics = [Dummy; N];
     fn name() -> String {
         if N > ARRAY_TUPLE_LIMIT {
             return Vec::<T>::name();
@@ -576,10 +590,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
         format!(
             "[{}]",
-            (0..N)
-                .map(|_| T::name())
-                .collect::<Box<[_]>>()
-                .join(", ")
+            (0..N).map(|_| T::name()).collect::<Box<[_]>>().join(", ")
         )
     }
 
@@ -590,10 +601,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
         format!(
             "[{}]",
-            (0..N)
-                .map(|_| T::inline())
-                .collect::<Box<[_]>>()
-                .join(", ")
+            (0..N).map(|_| T::inline()).collect::<Box<[_]>>().join(", ")
         )
     }
 
@@ -610,6 +618,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
 }
 
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
+    type Generics = HashMap<Dummy, Dummy>;
     fn ident() -> String {
         "Record".to_owned()
     }
@@ -634,6 +643,7 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
 }
 
 impl<I: TS> TS for Range<I> {
+    type Generics = Range<Dummy>;
     fn name() -> String {
         format!("{{ start: {}, end: {}, }}", I::name(), I::name())
     }
@@ -651,6 +661,7 @@ impl<I: TS> TS for Range<I> {
 }
 
 impl<I: TS> TS for RangeInclusive<I> {
+    type Generics = RangeInclusive<Dummy>;
     fn name() -> String {
         format!("{{ start: {}, end: {}, }}", I::name(), I::name())
     }
@@ -738,7 +749,6 @@ impl_primitives! {
 #[rustfmt::skip]
 pub(crate) use impl_primitives;
 
-
 #[doc(hidden)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Dummy;
@@ -750,7 +760,11 @@ impl std::fmt::Display for Dummy {
 }
 
 impl TS for Dummy {
-    fn name() -> String { "Dummy".to_owned() }
-    fn transparent() -> bool { false }
+    type Generics = Self;
+    fn name() -> String {
+        "Dummy".to_owned()
+    }
+    fn transparent() -> bool {
+        false
+    }
 }
-

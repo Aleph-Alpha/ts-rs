@@ -131,7 +131,9 @@ pub mod __private {
     const EXPORT_DIR_ENV_VAR: &str = "TS_RS_EXPORT_DIR";
     fn provided_default_dir() -> Option<&'static str> {
         static EXPORT_TO: OnceLock<Option<String>> = OnceLock::new();
-        EXPORT_TO.get_or_init(|| std::env::var(EXPORT_DIR_ENV_VAR).ok()).as_deref()
+        EXPORT_TO
+            .get_or_init(|| std::env::var(EXPORT_DIR_ENV_VAR).ok())
+            .as_deref()
     }
 
     /// Returns the path to where `T` should be exported using the `TS_RS_EXPORT_DIR` environment variable.
@@ -150,7 +152,7 @@ pub mod __private {
 pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String, ExportError> {
     let mut buffer = String::with_capacity(1024);
     buffer.push_str(NOTE);
-    generate_imports::<T>(&mut buffer)?;
+    generate_imports::<T::Generics>(&mut buffer)?;
     generate_decl::<T>(&mut buffer);
     Ok(buffer)
 }
@@ -276,4 +278,3 @@ where
         Some(comps.iter().map(|c| c.as_os_str()).collect())
     }
 }
-
