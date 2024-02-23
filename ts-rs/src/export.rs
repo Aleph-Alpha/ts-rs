@@ -152,7 +152,7 @@ pub mod __private {
 pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String, ExportError> {
     let mut buffer = String::with_capacity(1024);
     buffer.push_str(NOTE);
-    generate_imports::<T::Generics>(&mut buffer)?;
+    generate_imports::<T::WithoutGenerics>(&mut buffer)?;
     generate_decl::<T>(&mut buffer);
     Ok(buffer)
 }
