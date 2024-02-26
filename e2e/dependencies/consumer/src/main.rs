@@ -12,4 +12,15 @@ struct ConsumerType {
     pub ty2_5: LibraryType2<LibraryType3>,
 }
 
+#[derive(TS)]
+#[ts(export)]
+struct T0;
+
+#[derive(TS)]
+#[ts(export)]
+struct T1 {
+    t0: Option<T0>
+}
+
+
 fn main() {}

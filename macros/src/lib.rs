@@ -143,7 +143,7 @@ impl DerivedTS {
                     }
                 }
                 impl TS for #generics {
-                    type Generics = #generics;
+                    type WithoutGenerics = #generics;
                     fn name() -> String { stringify!(#generics).to_owned() }
                     fn transparent() -> bool { false }
                 }
@@ -262,9 +262,9 @@ fn generate_assoc_type(rust_ty: &Ident, generics: &Generics) -> TokenStream {
         .collect::<Vec<_>>();
 
     if generics_params.is_empty() {
-        quote! { type Generics = #rust_ty; }
+        quote! { type WithoutGenerics = #rust_ty; }
     } else {
-        quote! { type Generics = #rust_ty<#(#generics_params),*>; }
+        quote! { type WithoutGenerics = #rust_ty<#(#generics_params),*>; }
     }
 }
 
