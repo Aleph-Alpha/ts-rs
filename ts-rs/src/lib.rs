@@ -164,8 +164,8 @@ use std::{
 
 pub use ts_rs_macros::TS;
 
-// Used in generated code. Not public API
 pub use crate::export::ExportError;
+// Used in generated code. Not public API
 #[doc(hidden)]
 pub use crate::export::__private;
 use crate::typelist::TypeList;

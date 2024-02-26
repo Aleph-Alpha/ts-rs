@@ -8,8 +8,7 @@ use syn::{
     TypeParam, WhereClause,
 };
 
-use crate::deps::Dependencies;
-use crate::utils::format_generics;
+use crate::{deps::Dependencies, utils::format_generics};
 
 #[macro_use]
 mod utils;

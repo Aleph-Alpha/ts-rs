@@ -348,14 +348,14 @@ fn inline_generic_enum() {
     #[derive(TS)]
     enum MyEnum<A, B> {
         VariantA(A),
-        VariantB(B)
+        VariantB(B),
     }
 
     #[derive(TS)]
     struct Parent {
         e: MyEnum<i32, i32>,
         #[ts(inline)]
-        e1: MyEnum<i32, SomeType>
+        e1: MyEnum<i32, SomeType>,
     }
 
     // This fails!

@@ -1,8 +1,11 @@
 use std::convert::TryFrom;
 
 use proc_macro2::{Ident, TokenStream};
-use syn::{Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result, spanned::Spanned};
 use quote::quote;
+use syn::{
+    spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result,
+};
+
 use crate::deps::Dependencies;
 
 macro_rules! syn_err {
@@ -65,7 +68,7 @@ pub fn raw_name_to_ts_field(value: String) -> String {
     let valid_chars = value
         .chars()
         .all(|c| c.is_alphanumeric() || c == '_' || c == '$');
-    
+
     let does_not_start_with_digit = value
         .chars()
         .next()
@@ -140,7 +143,7 @@ pub fn parse_docs(attrs: &[Attribute]) -> Result<String> {
         .map(|attr| {
             attr.map(|line| match line.trim() {
                 "" => " *".to_owned(),
-                _ => format!(" *{}", line.trim_end())
+                _ => format!(" *{}", line.trim_end()),
             })
         })
         .collect::<Result<Vec<_>>>()?;

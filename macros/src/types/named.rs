@@ -5,8 +5,8 @@ use syn::{Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, 
 use crate::{
     attr::{FieldAttr, Inflection, Optional, StructAttr},
     deps::Dependencies,
-    DerivedTS,
     utils::{raw_name_to_ts_field, to_ts_ident},
+    DerivedTS,
 };
 
 pub(crate) fn named(

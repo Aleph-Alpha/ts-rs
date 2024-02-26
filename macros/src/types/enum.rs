@@ -5,8 +5,7 @@ use syn::{Fields, Generics, ItemEnum, Type, Variant};
 use crate::{
     attr::{EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
     deps::Dependencies,
-    DerivedTS,
-    types,
+    types, DerivedTS,
 };
 
 pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
@@ -113,8 +112,6 @@ fn format_variant(
                     ..
                 } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
 
-
-
                 if skip {
                     quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                 } else {
@@ -128,7 +125,7 @@ fn format_variant(
                         (None, None) => {
                             let ty = &unnamed.unnamed[0].ty;
                             quote!(<#ty as ts_rs::TS>::name())
-                        },
+                        }
                     };
 
                     quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #ty))
@@ -178,7 +175,7 @@ fn format_variant(
                             (None, None) => {
                                 let ty = &unnamed.unnamed[0].ty;
                                 quote!(<#ty as ts_rs::TS>::name())
-                            },
+                            }
                         };
 
                         quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #ty))
