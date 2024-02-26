@@ -1,6 +1,7 @@
 #![allow(unused)]
 
 use std::collections::HashMap;
+
 use ts_rs::TS;
 
 #[derive(TS)]
@@ -29,7 +30,6 @@ struct Baz {
     #[ts(inline)]
     map: HashMap<usize, String>,
 }
-
 
 #[test]
 #[cfg(not(feature = "import-esm"))]

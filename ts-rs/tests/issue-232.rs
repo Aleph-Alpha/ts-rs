@@ -31,14 +31,14 @@ struct StateInlinedVec {
 #[ts(export)]
 struct EnumWithName {
     name: String,
-    inner: Enum
+    inner: Enum,
 }
 
 #[derive(TS)]
 #[ts(export)]
 enum Enum {
     A,
-    B
+    B,
 }
 
 #[test]
