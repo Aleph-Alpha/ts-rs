@@ -29,11 +29,16 @@ macro_rules! impl_parse {
             fn parse($input: syn::parse::ParseStream) -> syn::Result<Self> {
                 let mut $out = $i::default();
                 loop {
+                    let span = $input.span();
                     let key: Ident = $input.call(syn::ext::IdentExt::parse_any)?;
                     match &*key.to_string() {
                         $($k => $e,)*
                         #[allow(unreachable_patterns)]
-                        _ => syn_err!($input.span(); "unexpected attribute")
+                        x => syn_err!(
+                            span;
+                            "Unknown attribute \"{x}\". Allowed attributes are: {}",
+                            [$(stringify!($k),)*].join(", ")
+                        )
                     }
 
                     match $input.is_empty() {
