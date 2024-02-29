@@ -725,12 +725,12 @@ impl<I: TS> TS for RangeInclusive<I> {
     }
 }
 
-impl_shadow!(as T: impl<T: TS + ?Sized> TS for &T);
 impl_shadow!(as Vec<T>: impl<T: TS, H> TS for HashSet<T, H>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
 impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for [T]);
 
+impl_wrapper!(impl<T: TS + ?Sized> TS for &T);
 impl_wrapper!(impl<T: TS + ?Sized> TS for Box<T>);
 impl_wrapper!(impl<T: TS + ?Sized> TS for std::sync::Arc<T>);
 impl_wrapper!(impl<T: TS + ?Sized> TS for std::rc::Rc<T>);

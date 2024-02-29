@@ -172,7 +172,7 @@ impl DerivedTS {
         let generics = self
             .generics
             .type_params()
-            .map(|TypeParam { ident, .. }| quote![.push::<#ident>()]);
+            .map(|TypeParam { ident, .. }| quote![.push::<#ident>().extend(<#ident as ts_rs::TS>::generics())]);
         quote! {
             #[allow(clippy::unused_unit)]
             fn generics() -> impl ts_rs::typelist::TypeList
@@ -188,9 +188,9 @@ impl DerivedTS {
     fn generate_name_fn(&self) -> TokenStream {
         let name = self.name_with_generics();
         quote! {
-             fn name() -> String {
-                 #name
-             }
+            fn name() -> String {
+                #name
+            }
         }
     }
 
