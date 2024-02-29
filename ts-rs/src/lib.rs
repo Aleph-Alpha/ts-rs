@@ -540,7 +540,7 @@ impl<T: TS> TS for Option<T> {
     where
         Self: 'static,
     {
-        ((std::marker::PhantomData::<T>,), T::generics())
+        T::generics().push::<T>()
     }
 }
 
@@ -562,11 +562,10 @@ impl<T: TS, E: TS> TS for Result<T, E> {
     where
         Self: 'static,
     {
-        use std::marker::PhantomData;
-        (
-            ((PhantomData::<T>,), T::generics()),
-            ((PhantomData::<E>,), E::generics()),
-        )
+        T::generics()
+            .push::<T>()
+            .extend(E::generics())
+            .push::<E>()
     }
 }
 
@@ -591,7 +590,7 @@ impl<T: TS> TS for Vec<T> {
     where
         Self: 'static,
     {
-        ((std::marker::PhantomData::<T>,), T::generics())
+        T::generics().push::<T>()
     }
 }
 
@@ -632,7 +631,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
     where
         Self: 'static,
     {
-        ((std::marker::PhantomData::<T>,), T::generics())
+        T::generics().push::<T>()
     }
 }
 
@@ -659,11 +658,10 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     where
         Self: 'static,
     {
-        use std::marker::PhantomData;
-        (
-            ((PhantomData::<K>,), K::generics()),
-            ((PhantomData::<V>,), V::generics()),
-        )
+        K::generics()
+            .push::<K>()
+            .extend(V::generics())
+            .push::<V>()
     }
 }
 
