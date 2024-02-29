@@ -492,13 +492,13 @@ macro_rules! impl_wrapper {
             fn name() -> String { T::name() }
             fn inline() -> String { T::inline() }
             fn inline_flattened() -> String { T::inline_flattened() }
-            fn dependency_types() -> impl TypeList
+            fn dependency_types() -> impl $crate::typelist::TypeList
             where
                 Self: 'static
             {
                 T::dependency_types()
             }
-            fn generics() -> impl TypeList
+            fn generics() -> impl $crate::typelist::TypeList
             where
                 Self: 'static
             {
@@ -523,7 +523,7 @@ macro_rules! impl_shadow {
             {
                 <$s>::dependency_types()
             }
-            fn generics() -> impl TypeList
+            fn generics() -> impl $crate::typelist::TypeList
             where
                 Self: 'static
             {
