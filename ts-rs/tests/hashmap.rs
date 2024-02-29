@@ -41,7 +41,7 @@ fn hashmap_with_custom_hasher() {
 
 #[derive(TS, Eq, PartialEq, Hash)]
 #[ts(export, export_to = "tests-out/hashmap/")]
-struct CustomKey;
+struct CustomKey(String);
 
 #[derive(TS)]
 #[ts(export, export_to = "tests-out/hashmap/")]
