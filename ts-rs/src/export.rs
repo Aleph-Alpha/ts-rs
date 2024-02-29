@@ -6,6 +6,7 @@ use std::{
     sync::{Mutex, OnceLock},
 };
 
+use path_clean::PathClean;
 use thiserror::Error;
 use ExportError::*;
 
@@ -221,6 +222,14 @@ fn import_path(from: &Path, import: &Path) -> String {
     }
 }
 
+fn to_absolute_path(path: &Path) -> PathBuf {
+    let Ok(current_path) = std::env::current_dir() else {
+        return path.to_owned()
+    };
+
+    current_path.join(path).clean()
+}
+
 // Construct a relative path from a provided base directory path to the provided path.
 //
 // Copyright 2012-2015 The Rust Project Developers.
@@ -238,12 +247,12 @@ where
     P: AsRef<Path>,
     B: AsRef<Path>,
 {
-    let path = path.as_ref();
-    let base = base.as_ref();
+    let path = to_absolute_path(path.as_ref());
+    let base = to_absolute_path(base.as_ref());
 
     if path.is_absolute() != base.is_absolute() {
         if path.is_absolute() {
-            Some(PathBuf::from(path))
+            Some(path)
         } else {
             None
         }
