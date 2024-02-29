@@ -13,7 +13,6 @@ impl Dependencies {
     }
 
     /// Adds the given type.
-    /// If the type is transparent, then we'll get resolve the child dependencies during runtime.
     pub fn push(&mut self, ty: &Type) {
         self.0.push(quote![.push::<#ty>()]);
         self.0.push(quote![
