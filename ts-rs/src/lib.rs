@@ -502,6 +502,7 @@ macro_rules! impl_shadow {
     (as $s:ty: $($impl:tt)*) => {
         $($impl)* {
             type WithoutGenerics = <$s as TS>::WithoutGenerics;
+            fn ident() -> String { <$s>::ident() }
             fn name() -> String { <$s>::name() }
             fn inline() -> String { <$s>::inline() }
             fn inline_flattened() -> String { <$s>::inline_flattened() }
