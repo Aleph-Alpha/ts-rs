@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::{
     collections::BTreeSet,
     ops::{Range, RangeInclusive},
@@ -6,10 +8,11 @@ use std::{
 use ts_rs::{Dependency, TS};
 
 #[derive(TS)]
+#[ts(export, export_to = "tests-out/ranges/")]
 struct Inner(i32);
 
 #[derive(TS)]
-#[allow(dead_code)]
+#[ts(export, export_to = "tests-out/ranges/")]
 struct RangeTest {
     a: Range<u32>,
     b: Range<&'static str>,

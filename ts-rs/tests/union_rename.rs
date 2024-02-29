@@ -3,8 +3,8 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(rename_all = "lowercase")]
-#[ts(rename = "SimpleEnum")]
+#[ts(export, export_to = "tests-out/union_rename/")]
+#[ts(rename_all = "lowercase", rename = "SimpleEnum")]
 enum RenamedEnum {
     #[ts(rename = "ASDF")]
     A,

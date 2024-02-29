@@ -2,7 +2,7 @@ use serde::Serialize;
 use ts_rs::TS;
 
 #[derive(TS, Serialize)]
-#[ts(export)]
+#[ts(export, export_to = "tests-out/issue_80/")]
 pub enum SomeTypeList {
     Value1 {
         #[serde(skip)]

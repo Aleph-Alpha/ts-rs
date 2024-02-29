@@ -3,6 +3,7 @@
 use ts_rs::TS;
 
 #[derive(TS)]
+#[ts(export, export_to = "tests-out/union/")]
 enum SimpleEnum {
     #[ts(rename = "asdf")]
     A,

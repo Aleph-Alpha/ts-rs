@@ -2,30 +2,35 @@
 
 use std::{collections::HashMap, sync::Arc};
 
+#[cfg(feature = "serde-compat")]
+use serde::Serialize;
+
 use ts_rs::TS;
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/self_referential/")]
+struct HasT {
+    t: &'static T<'static>,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/self_referential/")]
+struct T<'a> {
+    t_box: Box<T<'a>>,
+    self_box: Box<Self>,
+
+    t_ref: &'a T<'a>,
+    self_ref: &'a Self,
+
+    t_arc: Arc<T<'a>>,
+    self_arc: Arc<Self>,
+
+    #[ts(inline)]
+    has_t: HasT,
+}
 
 #[test]
 fn named() {
-    #[derive(TS)]
-    struct HasT {
-        t: &'static T<'static>,
-    }
-
-    #[derive(TS)]
-    struct T<'a> {
-        t_box: Box<T<'a>>,
-        self_box: Box<Self>,
-
-        t_ref: &'a T<'a>,
-        self_ref: &'a Self,
-
-        t_arc: Arc<T<'a>>,
-        self_arc: Arc<Self>,
-
-        #[ts(inline)]
-        has_t: HasT,
-    }
-
     assert_eq!(
         T::decl(),
         "type T = { \
@@ -40,39 +45,39 @@ fn named() {
     );
 }
 
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/self_referential/", rename = "T")]
+enum ExternallyTagged {
+    A(Box<ExternallyTagged>),
+    B(&'static ExternallyTagged),
+    C(Box<Self>),
+    D(&'static Self),
+    E(
+        Box<ExternallyTagged>,
+        Box<Self>,
+        &'static ExternallyTagged,
+        &'static Self,
+    ),
+    F {
+        a: Box<Self>,
+        b: &'static ExternallyTagged,
+        c: HashMap<String, ExternallyTagged>,
+        d: Option<Arc<ExternallyTagged>>,
+        #[ts(optional = nullable)]
+        e: Option<Arc<ExternallyTagged>>,
+        #[ts(optional)]
+        f: Option<Arc<ExternallyTagged>>,
+    },
+
+    G(
+        Vec<ExternallyTagged>,
+        [&'static ExternallyTagged; 1024],
+        HashMap<String, ExternallyTagged>,
+    ),
+}
+
 #[test]
 fn enum_externally_tagged() {
-    #[derive(TS)]
-    #[ts(rename = "T")]
-    enum ExternallyTagged {
-        A(Box<ExternallyTagged>),
-        B(&'static ExternallyTagged),
-        C(Box<Self>),
-        D(&'static Self),
-        E(
-            Box<ExternallyTagged>,
-            Box<Self>,
-            &'static ExternallyTagged,
-            &'static Self,
-        ),
-        F {
-            a: Box<Self>,
-            b: &'static ExternallyTagged,
-            c: HashMap<String, ExternallyTagged>,
-            d: Option<Arc<ExternallyTagged>>,
-            #[ts(optional = nullable)]
-            e: Option<Arc<ExternallyTagged>>,
-            #[ts(optional)]
-            f: Option<Arc<ExternallyTagged>>,
-        },
-
-        G(
-            Vec<ExternallyTagged>,
-            [&'static ExternallyTagged; 1024],
-            HashMap<String, ExternallyTagged>,
-        ),
-    }
-
     assert_eq!(
         ExternallyTagged::decl(),
        "type T = { \"A\": T } | \
@@ -85,33 +90,33 @@ fn enum_externally_tagged() {
     );
 }
 
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[ts(export, export_to = "tests-out/self_referential/", rename = "T")]
+#[cfg_attr(feature = "serde-compat", serde(tag = "tag"))]
+#[cfg_attr(not(feature = "serde-compat"), ts(tag = "tag"))]
+enum InternallyTagged {
+    A(Box<InternallyTagged>),
+    B(&'static InternallyTagged),
+    C(Box<Self>),
+    D(&'static Self),
+    E(Vec<Self>),
+    F {
+        a: Box<Self>,
+        b: &'static InternallyTagged,
+        c: HashMap<InternallyTagged, InternallyTagged>,
+        d: Option<&'static InternallyTagged>,
+        #[ts(optional = nullable)]
+        e: Option<&'static InternallyTagged>,
+        #[ts(optional)]
+        f: Option<&'static InternallyTagged>,
+    },
+}
+
 // NOTE: The generated type is actually not valid TS here, since the indirections rust enforces for recursive types
 //       gets lost during the translation to TypeScript (e.g "Box<T>" => "T").
 #[test]
-#[cfg(feature = "serde-compat")]
 fn enum_internally_tagged() {
-    use serde::Serialize;
-    #[derive(Serialize, TS)]
-    #[ts(rename = "T")]
-    #[serde(tag = "tag")]
-    enum InternallyTagged {
-        A(Box<InternallyTagged>),
-        B(&'static InternallyTagged),
-        C(Box<Self>),
-        D(&'static Self),
-        E(Vec<Self>),
-        F {
-            a: Box<Self>,
-            b: &'static InternallyTagged,
-            c: HashMap<InternallyTagged, InternallyTagged>,
-            d: Option<&'static InternallyTagged>,
-            #[ts(optional = nullable)]
-            e: Option<&'static InternallyTagged>,
-            #[ts(optional)]
-            f: Option<&'static InternallyTagged>,
-        },
-    }
-
     assert_eq!(
         InternallyTagged::decl(),
         "type T = { \"tag\": \"A\" } & T | \
@@ -123,38 +128,38 @@ fn enum_internally_tagged() {
     );
 }
 
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[ts(export, export_to = "tests-out/self_referential/", rename = "T")]
+#[cfg_attr(feature = "serde-compat", serde(tag = "tag", content = "content"))]
+#[cfg_attr(not(feature = "serde-compat"), ts(tag = "tag", content = "content"))]
+enum AdjacentlyTagged {
+    A(Box<AdjacentlyTagged>),
+    B(&'static AdjacentlyTagged),
+    C(Box<Self>),
+    D(&'static Self),
+    E(Vec<Self>),
+    F {
+        a: Box<Self>,
+        b: &'static AdjacentlyTagged,
+        c: HashMap<String, AdjacentlyTagged>,
+        d: Option<&'static AdjacentlyTagged>,
+        #[ts(optional = nullable)]
+        e: Option<&'static AdjacentlyTagged>,
+        #[ts(optional)]
+        f: Option<&'static AdjacentlyTagged>,
+    },
+    G(
+        Vec<Self>,
+        [&'static AdjacentlyTagged; 4],
+        HashMap<String, AdjacentlyTagged>,
+    ),
+}
+
 // NOTE: The generated type is actually not valid TS here, since the indirections rust enforces for recursive types
 //       gets lost during the translation to TypeScript (e.g "Box<T>" => "T").
 #[test]
-#[cfg(feature = "serde-compat")]
 fn enum_adjacently_tagged() {
-    use serde::Serialize;
-    #[derive(Serialize, TS)]
-    #[ts(rename = "T")]
-    #[serde(tag = "tag", content = "content")]
-    enum AdjacentlyTagged {
-        A(Box<AdjacentlyTagged>),
-        B(&'static AdjacentlyTagged),
-        C(Box<Self>),
-        D(&'static Self),
-        E(Vec<Self>),
-        F {
-            a: Box<Self>,
-            b: &'static AdjacentlyTagged,
-            c: HashMap<String, AdjacentlyTagged>,
-            d: Option<&'static AdjacentlyTagged>,
-            #[ts(optional = nullable)]
-            e: Option<&'static AdjacentlyTagged>,
-            #[ts(optional)]
-            f: Option<&'static AdjacentlyTagged>,
-        },
-        G(
-            Vec<Self>,
-            [&'static AdjacentlyTagged; 4],
-            HashMap<String, AdjacentlyTagged>,
-        ),
-    }
-
     assert_eq!(
         AdjacentlyTagged::decl(),
         "type T = { \"tag\": \"A\", \"content\": T } | \

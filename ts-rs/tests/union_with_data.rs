@@ -1,18 +1,26 @@
 #![allow(dead_code)]
+
+#[cfg(feature = "serde-compat")]
 use serde::Serialize;
 use ts_rs::{Dependency, TS};
 
-#[derive(TS, Serialize)]
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[ts(export, export_to = "tests-out/union_with_data/")]
 struct Bar {
     field: i32,
 }
 
-#[derive(TS, Serialize)]
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[ts(export, export_to = "tests-out/union_with_data/")]
 struct Foo {
     bar: Bar,
 }
 
-#[derive(TS, Serialize)]
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[ts(export, export_to = "tests-out/union_with_data/")]
 enum SimpleEnum {
     A(String),
     B(i32),

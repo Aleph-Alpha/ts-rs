@@ -1,4 +1,4 @@
-#![allow(deprecated)]
+#![allow(deprecated, dead_code)]
 #![cfg(feature = "chrono-impl")]
 
 use chrono::{
@@ -7,24 +7,24 @@ use chrono::{
 };
 use ts_rs::TS;
 
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/chrono/")]
+struct Chrono {
+    date: (NaiveDate, Date<Utc>, Date<Local>, Date<FixedOffset>),
+    time: NaiveTime,
+    date_time: (
+    NaiveDateTime,
+    DateTime<Utc>,
+    DateTime<Local>,
+    DateTime<FixedOffset>,
+),
+    duration: Duration,
+    month: Month,
+    weekday: Weekday,
+}
+
 #[test]
 fn chrono() {
-    #[derive(TS)]
-    #[allow(dead_code)]
-    struct Chrono {
-        date: (NaiveDate, Date<Utc>, Date<Local>, Date<FixedOffset>),
-        time: NaiveTime,
-        date_time: (
-            NaiveDateTime,
-            DateTime<Utc>,
-            DateTime<Local>,
-            DateTime<FixedOffset>,
-        ),
-        duration: Duration,
-        month: Month,
-        weekday: Weekday,
-    }
-
     assert_eq!(
         Chrono::decl(),
         "type Chrono = { date: [string, string, string, string], time: string, date_time: [string, string, string, string], duration: string, month: string, weekday: string, };"

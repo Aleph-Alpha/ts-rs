@@ -1,17 +1,18 @@
+#![allow(dead_code)]
 #![cfg(feature = "indexmap-impl")]
 
 use indexmap::{IndexMap, IndexSet};
 use ts_rs::TS;
 
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/indexmap/")]
+struct Indexes {
+    map: IndexMap<String, String>,
+    set: IndexSet<String>,
+}
+
 #[test]
 fn indexmap() {
-    #[derive(TS)]
-    #[allow(dead_code)]
-    struct Indexes {
-        map: IndexMap<String, String>,
-        set: IndexSet<String>,
-    }
-
     assert_eq!(
         Indexes::decl(),
         "type Indexes = { map: Record<string, string>, set: Array<string>, };"

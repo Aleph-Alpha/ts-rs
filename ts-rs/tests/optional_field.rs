@@ -3,79 +3,85 @@
 use serde::Serialize;
 use ts_rs::TS;
 
+#[derive(Serialize, TS)]
+#[ts(export, export_to = "tests-out/optional_field/")]
+struct OptionalInStruct {
+    #[ts(optional)]
+    a: Option<i32>,
+    #[ts(optional = nullable)]
+    b: Option<i32>,
+    c: Option<i32>,
+}
+
 #[test]
 fn in_struct() {
-    #[derive(Serialize, TS)]
-    struct Optional {
-        #[ts(optional)]
-        a: Option<i32>,
-        #[ts(optional = nullable)]
-        b: Option<i32>,
-        c: Option<i32>,
-    }
-
     let a = "a?: number";
     let b = "b?: number | null";
     let c = "c: number | null";
-    assert_eq!(Optional::inline(), format!("{{ {a}, {b}, {c}, }}"));
+    assert_eq!(OptionalInStruct::inline(), format!("{{ {a}, {b}, {c}, }}"));
+}
+
+#[derive(Serialize, TS)]
+#[ts(export, export_to = "tests-out/optional_field/")]
+enum OptionalInEnum {
+    A {
+        #[ts(optional)]
+        a: Option<i32>,
+    },
+    B {
+        b: Option<String>,
+    },
 }
 
 #[test]
 fn in_enum() {
-    #[derive(Serialize, TS)]
-    enum Optional {
-        A {
-            #[ts(optional)]
-            a: Option<i32>,
-        },
-        B {
-            b: Option<String>,
-        },
-    }
-
     assert_eq!(
-        Optional::inline(),
+        OptionalInEnum::inline(),
         r#"{ "A": { a?: number, } } | { "B": { b: string | null, } }"#
     );
 }
 
+#[derive(Serialize, TS)]
+#[ts(export, export_to = "tests-out/optional_field/")]
+struct OptionalFlatten {
+    #[ts(optional)]
+    a: Option<i32>,
+    #[ts(optional = nullable)]
+    b: Option<i32>,
+    c: Option<i32>,
+}
+
+#[derive(Serialize, TS)]
+#[ts(export, export_to = "tests-out/optional_field/")]
+struct Flatten {
+    #[ts(flatten)]
+    x: OptionalFlatten,
+}
+
 #[test]
 fn flatten() {
-    #[derive(Serialize, TS)]
-    struct Optional {
-        #[ts(optional)]
-        a: Option<i32>,
-        #[ts(optional = nullable)]
-        b: Option<i32>,
-        c: Option<i32>,
-    }
+    assert_eq!(Flatten::inline(), OptionalFlatten::inline());
+}
 
-    #[derive(Serialize, TS)]
-    struct Flatten {
-        #[ts(flatten)]
-        x: Optional,
-    }
+#[derive(Serialize, TS)]
+#[ts(export, export_to = "tests-out/optional_field/")]
+struct OptionalInline {
+    #[ts(optional)]
+    a: Option<i32>,
+    #[ts(optional = nullable)]
+    b: Option<i32>,
+    c: Option<i32>,
+}
 
-    assert_eq!(Flatten::inline(), Optional::inline());
+#[derive(Serialize, TS)]
+#[ts(export, export_to = "tests-out/optional_field/")]
+struct Inline {
+    #[ts(inline)]
+    x: OptionalInline,
 }
 
 #[test]
 fn inline() {
-    #[derive(Serialize, TS)]
-    struct Optional {
-        #[ts(optional)]
-        a: Option<i32>,
-        #[ts(optional = nullable)]
-        b: Option<i32>,
-        c: Option<i32>,
-    }
-
-    #[derive(Serialize, TS)]
-    struct Inline {
-        #[ts(inline)]
-        x: Optional,
-    }
-
     let a = "a?: number";
     let b = "b?: number | null";
     let c = "c: number | null";

@@ -1,4 +1,12 @@
+#![allow(dead_code)]
+
 use ts_rs::TS;
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/arrays/")]
+struct Interface {
+    a: [i32; 4],
+}
 
 #[test]
 fn free() {
@@ -7,12 +15,6 @@ fn free() {
 
 #[test]
 fn interface() {
-    #[derive(TS)]
-    struct Interface {
-        #[allow(dead_code)]
-        a: [i32; 4],
-    }
-
     assert_eq!(
         Interface::inline(),
         "{ a: [number, number, number, number], }"

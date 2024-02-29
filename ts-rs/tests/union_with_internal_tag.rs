@@ -1,34 +1,45 @@
 #![allow(dead_code, clippy::disallowed_names)]
 
+#[cfg(feature = "serde-compat")]
 use serde::Serialize;
+
 use ts_rs::TS;
 
-#[derive(Serialize, TS)]
-#[serde(tag = "type")]
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[cfg_attr(feature = "serde-compat", serde(tag = "type"))]
+#[cfg_attr(not(feature = "serde-compat"), ts(tag = "type"))]
+#[ts(export, export_to = "tests-out/union_with_internal_tag/")]
 enum EnumWithInternalTag {
     A { foo: String },
     B { bar: i32 },
 }
 
-#[derive(Serialize, TS)]
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[ts(export, export_to = "tests-out/union_with_internal_tag/")]
 struct InnerA {
     foo: String,
 }
 
-#[derive(Serialize, TS)]
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[ts(export, export_to = "tests-out/union_with_internal_tag/")]
 struct InnerB {
     bar: i32,
 }
 
-#[derive(Serialize, TS)]
-#[serde(tag = "type")]
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[cfg_attr(feature = "serde-compat", serde(tag = "type"))]
+#[cfg_attr(not(feature = "serde-compat"), ts(tag = "type"))]
+#[ts(export, export_to = "tests-out/union_with_internal_tag/")]
 enum EnumWithInternalTag2 {
     A(InnerA),
     B(InnerB),
 }
 
 #[test]
-#[cfg(feature = "serde-compat")]
 fn test_enums_with_internal_tags() {
     assert_eq!(
         EnumWithInternalTag::decl(),

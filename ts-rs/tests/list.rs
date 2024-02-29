@@ -1,12 +1,13 @@
+#![allow(dead_code)]
 use ts_rs::TS;
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/list/")]
+struct List {
+    data: Option<Vec<u32>>,
+}
 
 #[test]
 fn list() {
-    #[derive(TS)]
-    struct List {
-        #[allow(dead_code)]
-        data: Option<Vec<u32>>,
-    }
-
     assert_eq!(List::decl(), "type List = { data: Array<number> | null, };");
 }

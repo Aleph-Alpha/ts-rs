@@ -1,15 +1,16 @@
+#![allow(dead_code)]
 #![cfg(feature = "semver-impl")]
 
 use semver::Version;
 use ts_rs::TS;
 
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/semver/")]
+struct Semver {
+    version: Version,
+}
+
 #[test]
 fn semver() {
-    #[derive(TS)]
-    struct Semver {
-        #[allow(dead_code)]
-        version: Version,
-    }
-
     assert_eq!(Semver::decl(), "type Semver = { version: string, };")
 }

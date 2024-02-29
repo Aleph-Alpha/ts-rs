@@ -5,6 +5,7 @@ use std::cell::RefCell;
 use ts_rs::TS;
 
 #[derive(TS)]
+#[ts(export, export_to = "tests-out/simple/")]
 struct Simple {
     a: i32,
     b: String,
