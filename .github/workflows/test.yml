@@ -81,8 +81,10 @@ jobs:
       - name: No features
         run: |
           cargo test --no-default-features
+          shopt -s globstar
           tsc ts-rs/tests-out/**/*.ts --noEmit --noUnusedLocals
       - name: All features
         run: |
           cargo test --all-features
+          shopt -s globstar
           tsc ts-rs/tests-out/**/*.ts --noEmit --noUnusedLocals
