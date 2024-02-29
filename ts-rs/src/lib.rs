@@ -164,10 +164,10 @@ use std::{
 
 pub use ts_rs_macros::TS;
 
+pub use crate::export::ExportError;
 // Used in generated code. Not public API
 #[doc(hidden)]
 pub use crate::export::__private;
-pub use crate::export::ExportError;
 use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
@@ -275,10 +275,26 @@ pub mod typelist;
 /// - `#[ts(skip)]`:  
 ///   Skip this variant  
 pub trait TS {
+    /// If this type does not have generic parameters, then `WithoutGenerics` should just be `Self`.
+    /// If the type does have generic parameters, then all generic parameters must be replaced with
+    /// a dummy type, e.g `ts_rs::Dummy` or `()`.
+    /// The only requirement for these dummy types is that `EXPORT_TO` must be `None`.
+    /// Example:
+    /// ```ignore
+    /// struct GenericType<A, B>(A, B);
+    /// impl<A, B> TS for GenericType<A, B> {
+    ///     type WithoutGenerics = GenericType<ts_rs::Dummy, ts_rs::Dummy>;
+    ///     // ...
+    /// }
+    /// ```
+    type WithoutGenerics: TS + ?Sized;
+
     const EXPORT_TO: Option<&'static str> = None;
     const DOCS: Option<&'static str> = None;
 
+    /// Identifier of this type, excluding generic parameters.
     fn ident() -> String {
+        // by default, fall back to `TS::name()`.
         let name = Self::name();
 
         if name.contains('<') {
@@ -310,7 +326,7 @@ pub trait TS {
         panic!("{} cannot be declared", Self::name());
     }
 
-    /// Name of this type in TypeScript.
+    /// Name of this type in TypeScript, including generic parameters
     fn name() -> String;
 
     /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
@@ -327,6 +343,14 @@ pub trait TS {
 
     /// Returns a `TypeList` of all types on which this type depends.
     fn dependency_types() -> impl TypeList
+    where
+        Self: 'static,
+    {
+    }
+
+    /// Returns a `TypeList` containing all generic parameters of this type.
+    /// If this type is not generic, this will return an empty `TypeList`.
+    fn generics() -> impl TypeList
     where
         Self: 'static,
     {
@@ -426,6 +450,7 @@ impl Dependency {
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
         impl TS for $ty {
+            type WithoutGenerics = Self;
             fn name() -> String { $l.to_owned() }
             fn inline() -> String { <Self as $crate::TS>::name() }
             fn transparent() -> bool { false }
@@ -436,6 +461,7 @@ macro_rules! impl_primitives {
 macro_rules! impl_tuples {
     ( impl $($i:ident),* ) => {
         impl<$($i: TS),*> TS for ($($i,)*) {
+            type WithoutGenerics = (Dummy, );
             fn name() -> String {
                 format!("[{}]", [$($i::name()),*].join(", "))
             }
@@ -462,14 +488,21 @@ macro_rules! impl_tuples {
 macro_rules! impl_wrapper {
     ($($t:tt)*) => {
         $($t)* {
+            type WithoutGenerics = Self;
             fn name() -> String { T::name() }
             fn inline() -> String { T::inline() }
             fn inline_flattened() -> String { T::inline_flattened() }
-            fn dependency_types() -> impl TypeList
+            fn dependency_types() -> impl $crate::typelist::TypeList
             where
                 Self: 'static
             {
                 T::dependency_types()
+            }
+            fn generics() -> impl $crate::typelist::TypeList
+            where
+                Self: 'static
+            {
+                ((std::marker::PhantomData::<T>,), T::generics())
             }
             fn transparent() -> bool { T::transparent() }
         }
@@ -480,6 +513,7 @@ macro_rules! impl_wrapper {
 macro_rules! impl_shadow {
     (as $s:ty: $($impl:tt)*) => {
         $($impl)* {
+            type WithoutGenerics = <$s as TS>::WithoutGenerics;
             fn name() -> String { <$s>::name() }
             fn inline() -> String { <$s>::inline() }
             fn inline_flattened() -> String { <$s>::inline_flattened() }
@@ -489,33 +523,44 @@ macro_rules! impl_shadow {
             {
                 <$s>::dependency_types()
             }
+            fn generics() -> impl $crate::typelist::TypeList
+            where
+                Self: 'static
+            {
+                <$s>::generics()
+            }
             fn transparent() -> bool { <$s>::transparent() }
         }
     };
 }
 
 impl<T: TS> TS for Option<T> {
+    type WithoutGenerics = Self;
     fn name() -> String {
         format!("{} | null", T::name())
     }
-
     fn inline() -> String {
         format!("{} | null", T::inline())
     }
-
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
-        ().push::<T>()
+        T::dependency_types()
     }
-
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+        ((std::marker::PhantomData::<T>,), T::generics())
+    }
     fn transparent() -> bool {
-        true
+        T::transparent()
     }
 }
 
 impl<T: TS, E: TS> TS for Result<T, E> {
+    type WithoutGenerics = Result<Dummy, Dummy>;
     fn name() -> String {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::name(), E::name())
     }
@@ -526,39 +571,55 @@ impl<T: TS, E: TS> TS for Result<T, E> {
     where
         Self: 'static,
     {
-        ().push::<T>().push::<E>()
+        T::dependency_types().extend(E::dependency_types())
+    }
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+        use std::marker::PhantomData;
+        (
+            ((PhantomData::<T>,), T::generics()),
+            ((PhantomData::<E>,), E::generics()),
+        )
     }
     fn transparent() -> bool {
-        true
+        false
     }
 }
 
 impl<T: TS> TS for Vec<T> {
+    type WithoutGenerics = Vec<Dummy>;
     fn ident() -> String {
         "Array".to_owned()
     }
     fn name() -> String {
         format!("Array<{}>", T::name())
     }
-
     fn inline() -> String {
         format!("Array<{}>", T::inline())
     }
-
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
-        ().push::<T>()
+        T::dependency_types()
+    }
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+        ((std::marker::PhantomData::<T>,), T::generics())
     }
     fn transparent() -> bool {
-        true
+        false
     }
 }
 
 // Arrays longer than this limit will be emitted as Array<T>
 const ARRAY_TUPLE_LIMIT: usize = 64;
 impl<T: TS, const N: usize> TS for [T; N] {
+    type WithoutGenerics = [Dummy; N];
     fn name() -> String {
         if N > ARRAY_TUPLE_LIMIT {
             return Vec::<T>::name();
@@ -566,10 +627,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
         format!(
             "[{}]",
-            (0..N)
-                .map(|_| T::name())
-                .collect::<Box<[_]>>()
-                .join(", ")
+            (0..N).map(|_| T::name()).collect::<Box<[_]>>().join(", ")
         )
     }
 
@@ -580,10 +638,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
         format!(
             "[{}]",
-            (0..N)
-                .map(|_| T::inline())
-                .collect::<Box<[_]>>()
-                .join(", ")
+            (0..N).map(|_| T::inline()).collect::<Box<[_]>>().join(", ")
         )
     }
 
@@ -591,15 +646,23 @@ impl<T: TS, const N: usize> TS for [T; N] {
     where
         Self: 'static,
     {
-        ().push::<T>()
+        T::dependency_types()
+    }
+
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+        ((std::marker::PhantomData::<T>,), T::generics())
     }
 
     fn transparent() -> bool {
-        true
+        false
     }
 }
 
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
+    type WithoutGenerics = HashMap<Dummy, Dummy>;
     fn ident() -> String {
         "Record".to_owned()
     }
@@ -615,15 +678,25 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     where
         Self: 'static,
     {
-        ().push::<K>().push::<V>()
+        K::dependency_types().extend(V::dependency_types())
     }
-
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+        use std::marker::PhantomData;
+        (
+            ((PhantomData::<K>,), K::generics()),
+            ((PhantomData::<V>,), V::generics()),
+        )
+    }
     fn transparent() -> bool {
-        true
+        false
     }
 }
 
 impl<I: TS> TS for Range<I> {
+    type WithoutGenerics = Range<Dummy>;
     fn name() -> String {
         format!("{{ start: {}, end: {}, }}", I::name(), I::name())
     }
@@ -641,6 +714,7 @@ impl<I: TS> TS for Range<I> {
 }
 
 impl<I: TS> TS for RangeInclusive<I> {
+    type WithoutGenerics = RangeInclusive<Dummy>;
     fn name() -> String {
         format!("{{ start: {}, end: {}, }}", I::name(), I::name())
     }
@@ -657,12 +731,12 @@ impl<I: TS> TS for RangeInclusive<I> {
     }
 }
 
-impl_shadow!(as T: impl<T: TS + ?Sized> TS for &T);
 impl_shadow!(as Vec<T>: impl<T: TS, H> TS for HashSet<T, H>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
 impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for [T]);
 
+impl_wrapper!(impl<T: TS + ?Sized> TS for &T);
 impl_wrapper!(impl<T: TS + ?Sized> TS for Box<T>);
 impl_wrapper!(impl<T: TS + ?Sized> TS for std::sync::Arc<T>);
 impl_wrapper!(impl<T: TS + ?Sized> TS for std::rc::Rc<T>);
@@ -728,7 +802,6 @@ impl_primitives! {
 #[rustfmt::skip]
 pub(crate) use impl_primitives;
 
-
 #[doc(hidden)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Dummy;
@@ -740,7 +813,11 @@ impl std::fmt::Display for Dummy {
 }
 
 impl TS for Dummy {
-    fn name() -> String { "Dummy".to_owned() }
-    fn transparent() -> bool { false }
+    type WithoutGenerics = Self;
+    fn name() -> String {
+        "Dummy".to_owned()
+    }
+    fn transparent() -> bool {
+        false
+    }
 }
-

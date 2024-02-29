@@ -11,6 +11,7 @@ use super::{impl_primitives, TS};
 macro_rules! impl_dummy {
     ($($t:ty),*) => {$(
         impl TS for $t {
+            type WithoutGenerics = $t;
             fn name() -> String { String::new() }
             fn inline() -> String { String::new() }
             fn transparent() -> bool { false }
@@ -22,6 +23,7 @@ impl_primitives!(NaiveDateTime, NaiveDate, NaiveTime, Month, Weekday, Duration =
 impl_dummy!(Utc, Local, FixedOffset);
 
 impl<T: TimeZone + 'static> TS for DateTime<T> {
+    type WithoutGenerics = Self;
     fn ident() -> String {
         "string".to_owned()
     }
@@ -37,6 +39,7 @@ impl<T: TimeZone + 'static> TS for DateTime<T> {
 }
 
 impl<T: TimeZone + 'static> TS for Date<T> {
+    type WithoutGenerics = Self;
     fn ident() -> String {
         "string".to_owned()
     }

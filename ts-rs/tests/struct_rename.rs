@@ -1,56 +1,76 @@
+#![allow(non_snake_case)]
 #![allow(dead_code)]
 
 use ts_rs::TS;
 
+#[derive(TS)]
+#[ts(
+    export,
+    export_to = "tests-out/struct_rename/",
+    rename_all = "UPPERCASE"
+)]
+struct RenameAllUpper {
+    a: i32,
+    b: i32,
+}
+
 #[test]
 fn rename_all() {
-    #[derive(TS)]
-    #[ts(rename_all = "UPPERCASE")]
-    struct Rename {
-        a: i32,
-        b: i32,
-    }
+    assert_eq!(RenameAllUpper::inline(), "{ A: number, B: number, }");
+}
 
-    assert_eq!(Rename::inline(), "{ A: number, B: number, }");
+#[derive(TS)]
+#[ts(
+    export,
+    export_to = "tests-out/struct_rename/",
+    rename_all = "camelCase"
+)]
+struct RenameAllCamel {
+    crc32c_hash: i32,
+    b: i32,
+    alreadyCamelCase: i32,
 }
 
 #[test]
 fn rename_all_camel_case() {
-    #[derive(TS)]
-    #[ts(rename_all = "camelCase")]
-    #[allow(non_snake_case)]
-    struct Rename {
-        crc32c_hash: i32,
-        b: i32,
-        alreadyCamelCase: i32,
-    }
-
     assert_eq!(
-        Rename::inline(),
+        RenameAllCamel::inline(),
         "{ crc32cHash: number, b: number, alreadyCamelCase: number, }"
     );
 }
 
+#[derive(TS)]
+#[ts(
+    export,
+    export_to = "tests-out/struct_rename/",
+    rename_all = "PascalCase"
+)]
+struct RenameAllPascal {
+    crc32c_hash: i32,
+    b: i32,
+}
+
 #[test]
 fn rename_all_pascal_case() {
-    #[derive(TS)]
-    #[ts(rename_all = "PascalCase")]
-    struct Rename {
-        crc32c_hash: i32,
-        b: i32,
-    }
+    assert_eq!(
+        RenameAllPascal::inline(),
+        "{ Crc32cHash: number, B: number, }"
+    );
+}
 
-    assert_eq!(Rename::inline(), "{ Crc32cHash: number, B: number, }");
+#[derive(serde::Serialize, TS)]
+#[ts(
+    export,
+    export_to = "tests-out/struct_rename/",
+    rename_all = "camelCase"
+)]
+struct RenameSerdeSpecialChar {
+    #[serde(rename = "a/b")]
+    b: i32,
 }
 
 #[cfg(feature = "serde-compat")]
 #[test]
 fn serde_rename_special_char() {
-    #[derive(serde::Serialize, TS)]
-    struct RenameSerdeSpecialChar {
-        #[serde(rename = "a/b")]
-        b: i32,
-    }
-
     assert_eq!(RenameSerdeSpecialChar::inline(), r#"{ "a/b": number, }"#);
 }

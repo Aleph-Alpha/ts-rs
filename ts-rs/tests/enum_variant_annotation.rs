@@ -4,11 +4,11 @@
 use serde::Serialize;
 use ts_rs::TS;
 
-#[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[derive(TS)]
+#[ts(export, export_to = "tests-out/enum_variant_anotation/")]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(rename_all = "SCREAMING_SNAKE_CASE"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "SCREAMING_SNAKE_CASE"))]
-#[ts(export)]
 enum A {
     MessageOne {
         sender_id: String,
@@ -30,9 +30,9 @@ fn test_enum_variant_rename_all() {
     );
 }
 
-#[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[derive(TS)]
-#[ts(export)]
+#[ts(export, export_to = "tests-out/enum_variant_anotation/")]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
 enum B {
     #[cfg_attr(feature = "serde-compat", serde(rename = "SnakeMessage"))]
     #[cfg_attr(not(feature = "serde-compat"), ts(rename = "SnakeMessage"))]
@@ -56,11 +56,11 @@ fn test_enum_variant_rename() {
     );
 }
 
-#[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[derive(TS)]
+#[ts(export, export_to = "tests-out/enum_variant_anotation/")]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(tag = "kind"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "kind"))]
-#[ts(export)]
 pub enum C {
     #[cfg_attr(feature = "serde-compat", serde(rename = "SQUARE_THING"))]
     #[cfg_attr(not(feature = "serde-compat"), ts(rename = "SQUARE_THING"))]

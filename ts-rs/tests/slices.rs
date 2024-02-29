@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use ts_rs::TS;
 
 #[test]
@@ -5,33 +7,36 @@ fn free() {
     assert_eq!(<[String]>::inline(), "Array<string>")
 }
 
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/slices/")]
+struct Interface {
+    #[allow(dead_code)]
+    a: [i32],
+}
+
 #[test]
 fn interface() {
-    #[derive(TS)]
-    struct Interface {
-        #[allow(dead_code)]
-        a: [i32],
-    }
-
     assert_eq!(Interface::inline(), "{ a: Array<number>, }")
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/slices/")]
+struct InterfaceRef<'a> {
+    #[allow(dead_code)]
+    a: &'a [&'a str],
 }
 
 #[test]
 fn slice_ref() {
-    #[derive(TS)]
-    struct Interface<'a> {
-        #[allow(dead_code)]
-        a: &'a [&'a str],
-    }
-
-    assert_eq!(Interface::inline(), "{ a: Array<string>, }")
+    assert_eq!(InterfaceRef::inline(), "{ a: Array<string>, }")
 }
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/slices/")]
+struct Newtype(#[allow(dead_code)] [i32]);
 
 #[test]
 fn newtype() {
-    #[derive(TS)]
-    struct Newtype(#[allow(dead_code)] [i32]);
-
     assert_eq!(Newtype::inline(), "Array<number>")
 }
 
@@ -43,21 +48,31 @@ fn boxed_free() {
     assert_eq!(<Box<[String]>>::inline(), "Array<string>")
 }
 
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/slices/")]
+struct InterfaceBoxed {
+    #[allow(dead_code)]
+    a: Box<[i32]>,
+}
+
 #[test]
 fn boxed_interface() {
-    #[derive(TS)]
-    struct Interface {
-        #[allow(dead_code)]
-        a: Box<[i32]>,
-    }
-
-    assert_eq!(Interface::inline(), "{ a: Array<number>, }")
+    assert_eq!(InterfaceBoxed::inline(), "{ a: Array<number>, }")
 }
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/slices/")]
+struct NewtypeBoxed(#[allow(dead_code)] Box<[i32]>);
 
 #[test]
 fn boxed_newtype() {
-    #[derive(TS)]
-    struct Newtype(#[allow(dead_code)] Box<[i32]>);
-
-    assert_eq!(Newtype::inline(), "Array<number>")
+    assert_eq!(NewtypeBoxed::inline(), "Array<number>")
 }
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/slices/nested/")]
+struct InnerMost;
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/slices/nested/")]
+struct Nested<'a>(&'a [InnerMost]);

@@ -5,12 +5,14 @@ use std::{cell::Cell, rc::Rc, sync::Arc};
 use ts_rs::TS;
 
 #[derive(TS)]
+#[ts(export, export_to = "tests-out/nested/")]
 struct A {
     x1: Arc<i32>,
     y1: Cell<i32>,
 }
 
 #[derive(TS)]
+#[ts(export, export_to = "tests-out/nested/")]
 struct B {
     a1: Box<A>,
     #[ts(inline)]
@@ -18,6 +20,7 @@ struct B {
 }
 
 #[derive(TS)]
+#[ts(export, export_to = "tests-out/nested/")]
 struct C {
     b1: Rc<B>,
     #[ts(inline)]

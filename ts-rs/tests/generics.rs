@@ -10,7 +10,7 @@ use std::{
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export)]
+#[ts(export, export_to = "tests-out/generics/")]
 struct Generic<T>
 where
     T: TS,
@@ -20,12 +20,14 @@ where
 }
 
 #[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
 struct GenericAutoBound<T> {
     value: T,
     values: Vec<T>,
 }
 
 #[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
 struct GenericAutoBound2<T>
 where
     T: PartialEq,
@@ -35,6 +37,7 @@ where
 }
 
 #[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
 struct Container {
     foo: Generic<u32>,
     bar: Box<HashSet<Generic<u32>>>,
@@ -52,6 +55,7 @@ macro_rules! declare {
 
 declare! {
     #[derive(TS)]
+    #[ts(export, export_to = "tests-out/generics/")]
     TypeGroup {
         foo: Vec<Container>,
     }
@@ -85,244 +89,294 @@ fn test() {
     );
 }
 
-#[test]
-fn generic_enum() {
-    #[derive(TS)]
-    enum Generic<A, B, C> {
-        A(A),
-        B(B, B, B),
-        C(Vec<C>),
-        D(Vec<Vec<Vec<A>>>),
-        E { a: A, b: B, c: C },
-        X(Vec<i32>),
-        Y(i32),
-        Z(Vec<Vec<i32>>),
-    }
-
-    assert_eq!(
-        Generic::<(), (), ()>::decl(),
-        r#"type Generic<A, B, C> = { "A": A } | { "B": [B, B, B] } | { "C": Array<C> } | { "D": Array<Array<Array<A>>> } | { "E": { a: A, b: B, c: C, } } | { "X": Array<number> } | { "Y": number } | { "Z": Array<Array<number>> };"#
-    )
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+enum GenericEnum<A, B, C> {
+    A(A),
+    B(B, B, B),
+    C(Vec<C>),
+    D(Vec<Vec<Vec<A>>>),
+    E { a: A, b: B, c: C },
+    X(Vec<i32>),
+    Y(i32),
+    Z(Vec<Vec<i32>>),
 }
 
 #[test]
-fn generic_newtype() {
-    #[derive(TS)]
-    struct NewType<T>(Vec<Vec<T>>);
+fn generic_enum() {
+    assert_eq!(
+        GenericEnum::<(), (), ()>::decl(),
+        r#"type GenericEnum<A, B, C> = { "A": A } | { "B": [B, B, B] } | { "C": Array<C> } | { "D": Array<Array<Array<A>>> } | { "E": { a: A, b: B, c: C, } } | { "X": Array<number> } | { "Y": number } | { "Z": Array<Array<number>> };"#
+    )
+}
 
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct NewType<T>(Vec<Vec<T>>);
+
+#[test]
+fn generic_newtype() {
     assert_eq!(
         NewType::<()>::decl(),
         r#"type NewType<T> = Array<Array<T>>;"#
     );
 }
 
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct Tuple<T>(T, Vec<T>, Vec<Vec<T>>);
+
 #[test]
 fn generic_tuple() {
-    #[derive(TS)]
-    struct Tuple<T>(T, Vec<T>, Vec<Vec<T>>);
-
     assert_eq!(
         Tuple::<()>::decl(),
         r#"type Tuple<T> = [T, Array<T>, Array<Array<T>>];"#
     );
 }
 
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct Struct<T> {
+    a: T,
+    b: (T, T),
+    c: (T, (T, T)),
+    d: [T; 3],
+    e: [(T, T); 3],
+    f: Vec<T>,
+    g: Vec<Vec<T>>,
+    h: Vec<[(T, T); 3]>,
+}
+
 #[test]
 fn generic_struct() {
-    #[derive(TS)]
-    struct Struct<T> {
-        a: T,
-        b: (T, T),
-        c: (T, (T, T)),
-        d: [T; 3],
-        e: [(T, T); 3],
-        f: Vec<T>,
-        g: Vec<Vec<T>>,
-        h: Vec<[(T, T); 3]>,
-    }
-
     assert_eq!(
         Struct::<()>::decl(),
         "type Struct<T> = { a: T, b: [T, T], c: [T, [T, T]], d: [T, T, T], e: [[T, T], [T, T], [T, T]], f: Array<T>, g: Array<Array<T>>, h: Array<[[T, T], [T, T], [T, T]]>, };"
     )
 }
 
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct GenericInline<T> {
+    t: T,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct ContainerInline {
+    g: GenericInline<String>,
+    #[ts(inline)]
+    gi: GenericInline<String>,
+    #[ts(flatten)]
+    t: GenericInline<Vec<String>>,
+}
+
 #[test]
 fn inline() {
-    #[derive(TS)]
-    struct Generic<T> {
-        t: T,
-    }
-
-    #[derive(TS)]
-    struct Container {
-        g: Generic<String>,
-        #[ts(inline)]
-        gi: Generic<String>,
-        #[ts(flatten)]
-        t: Generic<Vec<String>>,
-    }
-
-    assert_eq!(Generic::<()>::decl(), "type Generic<T> = { t: T, };");
     assert_eq!(
-        Container::decl(),
-        "type Container = { g: Generic<string>, gi: { t: string, }, t: Array<string>, };"
+        GenericInline::<()>::decl(),
+        "type GenericInline<T> = { t: T, };"
     );
+    assert_eq!(
+        ContainerInline::decl(),
+        "type ContainerInline = { g: GenericInline<string>, gi: { t: string, }, t: Array<string>, };"
+    );
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct GenericWithBounds<T: ToString> {
+    t: T,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct ContainerWithBounds {
+    g: GenericWithBounds<String>,
+
+    #[ts(inline)]
+    gi: GenericWithBounds<String>,
+
+    #[ts(flatten)]
+    t: GenericWithBounds<u32>,
 }
 
 #[test]
 fn inline_with_bounds() {
-    #[derive(TS)]
-    struct Generic<T: ToString> {
-        t: T,
-    }
-
-    #[derive(TS)]
-    struct Container {
-        g: Generic<String>,
-
-        #[ts(inline)]
-        gi: Generic<String>,
-
-        #[ts(flatten)]
-        t: Generic<u32>,
-    }
-
     assert_eq!(
-        Generic::<&'static str>::decl(),
-        "type Generic<T> = { t: T, };"
+        GenericWithBounds::<&'static str>::decl(),
+        "type GenericWithBounds<T> = { t: T, };"
     );
     assert_eq!(
-        Container::decl(),
-        "type Container = { g: Generic<string>, gi: { t: string, }, t: number, };"
+        ContainerWithBounds::decl(),
+        "type ContainerWithBounds = { g: GenericWithBounds<string>, gi: { t: string, }, t: number, };"
     );
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct GenericWithDefault<T = String> {
+    t: T,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct ContainerWithDefault {
+    g: GenericWithDefault<String>,
+
+    #[ts(inline)]
+    gi: GenericWithDefault<String>,
+
+    #[ts(flatten)]
+    t: GenericWithDefault<u32>,
 }
 
 #[test]
 fn inline_with_default() {
-    #[derive(TS)]
-    struct Generic<T = String> {
-        t: T,
-    }
-
-    #[derive(TS)]
-    struct Container {
-        g: Generic<String>,
-
-        #[ts(inline)]
-        gi: Generic<String>,
-
-        #[ts(flatten)]
-        t: Generic<u32>,
-    }
-
     assert_eq!(
-        Generic::<()>::decl(),
-        "type Generic<T = string> = { t: T, };"
+        GenericWithDefault::<()>::decl(),
+        "type GenericWithDefault<T = string> = { t: T, };"
     );
     assert_eq!(
-        Container::decl(),
-        "type Container = { g: Generic<string>, gi: { t: string, }, t: number, };"
+        ContainerWithDefault::decl(),
+        "type ContainerWithDefault = { g: GenericWithDefault<string>, gi: { t: string, }, t: number, };"
     );
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct ADefault<T = String> {
+    t: T,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct BDefault<U = Option<ADefault<i32>>> {
+    u: U,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct YDefault {
+    a1: ADefault,
+    a2: ADefault<i32>,
 }
 
 #[test]
 fn default() {
-    #[derive(TS)]
-    struct A<T = String> {
-        t: T,
-    }
-    assert_eq!(A::<()>::decl(), "type A<T = string> = { t: T, };");
+    assert_eq!(
+        ADefault::<()>::decl(),
+        "type ADefault<T = string> = { t: T, };"
+    );
 
-    #[derive(TS)]
-    struct B<U = Option<A<i32>>> {
-        u: U,
-    }
-    assert_eq!(B::<()>::decl(), "type B<U = A<number> | null> = { u: U, };");
-    assert!(B::<()>::dependencies().iter().any(|dep| dep.ts_name == "A"));
+    assert_eq!(
+        BDefault::<()>::decl(),
+        "type BDefault<U = ADefault<number> | null> = { u: U, };"
+    );
+    assert!(BDefault::<()>::dependencies()
+        .iter()
+        .any(|dep| dep.ts_name == "ADefault"));
 
-    #[derive(TS)]
-    struct Y {
-        a1: A,
-        a2: A<i32>,
-    }
-    assert_eq!(Y::decl(), "type Y = { a1: A<string>, a2: A<number>, };")
+    assert_eq!(
+        YDefault::decl(),
+        "type YDefault = { a1: ADefault<string>, a2: ADefault<number>, };"
+    )
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct ATraitBounds<T: ToString = i32> {
+    t: T,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct BTraitBounds<T: ToString + Debug + Clone + 'static>(T);
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+enum CTraitBounds<T: Copy + Clone + PartialEq, K: Copy + PartialOrd = i32> {
+    A { t: T },
+    B(T),
+    C,
+    D(T, K),
+}
+
+// Types with const generics can't be exported
+#[derive(TS)]
+struct DTraitBounds<T: ToString, const N: usize> {
+    t: [T; N],
 }
 
 #[test]
 fn trait_bounds() {
-    #[derive(TS)]
-    struct A<T: ToString = i32> {
-        t: T,
-    }
-    assert_eq!(A::<i32>::decl(), "type A<T = number> = { t: T, };");
-
-    #[derive(TS)]
-    struct B<T: ToString + Debug + Clone + 'static>(T);
-    assert_eq!(B::<&'static str>::decl(), "type B<T> = T;");
-
-    #[derive(TS)]
-    enum C<T: Copy + Clone + PartialEq, K: Copy + PartialOrd = i32> {
-        A { t: T },
-        B(T),
-        C,
-        D(T, K),
-    }
     assert_eq!(
-        C::<&'static str, i32>::decl(),
-        r#"type C<T, K = number> = { "A": { t: T, } } | { "B": T } | "C" | { "D": [T, K] };"#
+        ATraitBounds::<i32>::decl(),
+        "type ATraitBounds<T = number> = { t: T, };"
     );
 
-    #[derive(TS)]
-    struct D<T: ToString, const N: usize> {
-        t: [T; N],
-    }
+    assert_eq!(
+        BTraitBounds::<&'static str>::decl(),
+        "type BTraitBounds<T> = T;"
+    );
+
+    assert_eq!(
+        CTraitBounds::<&'static str, i32>::decl(),
+        r#"type CTraitBounds<T, K = number> = { "A": { t: T, } } | { "B": T } | "C" | { "D": [T, K] };"#
+    );
 
     let ty = format!(
-        "type D<T> = {{ t: [{}], }};",
+        "type DTraitBounds<T> = {{ t: [{}], }};",
         "T, ".repeat(41).trim_end_matches(", ")
     );
-    assert_eq!(D::<&str, 41>::decl(), ty)
+    assert_eq!(DTraitBounds::<&str, 41>::decl(), ty)
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct T0<T> {
+    t0: T,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct P0<T> {
+    p0: T,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct T1<T> {
+    t0: T,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct P1<T> {
+    p0: T,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct Parent {
+    a: T1<T0<u32>>,
+    b: T1<P1<T0<P0<u32>>>>,
+    c: T1<P1<()>>,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct GenericParent<T> {
+    a_t: T1<T0<T>>,
+    b_t: T1<P1<T0<P0<T>>>>,
+    c_t: T1<P1<T>>,
+    a_null: T1<T0<()>>,
+    b_null: T1<P1<T0<P0<()>>>>,
+    c_null: T1<P1<()>>,
 }
 
 #[test]
 fn deeply_nested() {
-    #[derive(TS)]
-    struct T0<T> {
-        t0: T,
-    }
-
-    #[derive(TS)]
-    struct P0<T> {
-        p0: T,
-    }
-
-    #[derive(TS)]
-    struct T1<T> {
-        t0: T,
-    }
-
-    #[derive(TS)]
-    struct P1<T> {
-        p0: T,
-    }
-
-    #[derive(TS)]
-    struct Parent {
-        a: T1<T0<u32>>,
-        b: T1<P1<T0<P0<u32>>>>,
-        c: T1<P1<()>>,
-    }
-    #[derive(TS)]
-    struct GenericParent<T> {
-        a_t: T1<T0<T>>,
-        b_t: T1<P1<T0<P0<T>>>>,
-        c_t: T1<P1<T>>,
-        a_null: T1<T0<()>>,
-        b_null: T1<P1<T0<P0<()>>>>,
-        c_null: T1<P1<()>>,
-    }
-
     assert_eq!(
         Parent::inline(),
         "{ a: T1<T0<number>>, b: T1<P1<T0<P0<number>>>>, c: T1<P1<null>>, }"
@@ -340,30 +394,33 @@ fn deeply_nested() {
     );
 }
 
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct SomeType(String);
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+enum MyEnum<A, B> {
+    VariantA(A),
+    VariantB(B),
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/generics/")]
+struct ParentEnum {
+    e: MyEnum<i32, i32>,
+    #[ts(inline)]
+    e1: MyEnum<i32, SomeType>,
+}
+
 #[test]
 fn inline_generic_enum() {
-    #[derive(TS)]
-    struct SomeType(String);
-
-    #[derive(TS)]
-    enum MyEnum<A, B> {
-        VariantA(A),
-        VariantB(B)
-    }
-
-    #[derive(TS)]
-    struct Parent {
-        e: MyEnum<i32, i32>,
-        #[ts(inline)]
-        e1: MyEnum<i32, SomeType>
-    }
-
     // This fails!
     // The #[ts(inline)] seems to inline recursively, so not only the definition of `MyEnum`, but
     // also the definition of `SomeType`.
     assert_eq!(
-        Parent::decl(),
-        "type Parent = { \
+        ParentEnum::decl(),
+        "type ParentEnum = { \
             e: MyEnum<number, number>, \
             e1: { \"VariantA\": number } | { \"VariantB\": SomeType }, \
         };"

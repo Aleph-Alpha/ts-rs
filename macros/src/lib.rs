@@ -8,8 +8,7 @@ use syn::{
     TypeParam, WhereClause,
 };
 
-use crate::deps::Dependencies;
-use crate::utils::format_generics;
+use crate::{deps::Dependencies, utils::format_generics};
 
 #[macro_use]
 mod utils;
@@ -47,9 +46,9 @@ impl DerivedTS {
             }
         };
 
-        let export = self.export.then(
-            || self.generate_export_test(&rust_ty, &generics)
-        );
+        let export = self
+            .export
+            .then(|| self.generate_export_test(&rust_ty, &generics));
 
         let docs = match &*self.docs {
             "" => None,
@@ -58,24 +57,28 @@ impl DerivedTS {
 
         let ident = self.ts_name.clone();
         let impl_start = generate_impl_block_header(&rust_ty, &generics);
+        let assoc_type = generate_assoc_type(&rust_ty, &generics);
         let name = self.generate_name_fn();
         let inline = self.generate_inline_fn();
         let decl = self.generate_decl_fn(&rust_ty);
         let dependencies = &self.dependencies;
+        let generics_fn = self.generate_generics_fn();
 
         quote! {
             #impl_start {
+                #assoc_type
                 const EXPORT_TO: Option<&'static str> = Some(#export_to);
 
                 fn ident() -> String {
                     #ident.to_owned()
                 }
-                
+
                 #get_export_to
                 #docs
                 #name
                 #decl
                 #inline
+                #generics_fn
 
                 #[allow(clippy::unused_unit)]
                 fn dependency_types() -> impl ts_rs::typelist::TypeList
@@ -140,6 +143,7 @@ impl DerivedTS {
                     }
                 }
                 impl TS for #generics {
+                    type WithoutGenerics = #generics;
                     fn name() -> String { stringify!(#generics).to_owned() }
                     fn transparent() -> bool { false }
                 }
@@ -148,10 +152,11 @@ impl DerivedTS {
     }
 
     fn generate_export_test(&self, rust_ty: &Ident, generics: &Generics) -> TokenStream {
-        let test_fn = format_ident!("export_bindings_{}", rust_ty.to_string().to_lowercase());
-        let generic_params = generics
-            .type_params()
-            .map(|_| quote! { ts_rs::Dummy });
+        let test_fn = format_ident!(
+            "export_bindings_{}",
+            rust_ty.to_string().to_lowercase().replace("r#", "")
+        );
+        let generic_params = generics.type_params().map(|_| quote! { ts_rs::Dummy });
         let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
 
         quote! {
@@ -163,12 +168,29 @@ impl DerivedTS {
         }
     }
 
+    fn generate_generics_fn(&self) -> TokenStream {
+        let generics = self
+            .generics
+            .type_params()
+            .map(|TypeParam { ident, .. }| quote![.push::<#ident>().extend(<#ident as ts_rs::TS>::generics())]);
+        quote! {
+            #[allow(clippy::unused_unit)]
+            fn generics() -> impl ts_rs::typelist::TypeList
+            where
+                Self: 'static,
+            {
+                use ts_rs::typelist::TypeList;
+                ()#(#generics)*
+            }
+        }
+    }
+
     fn generate_name_fn(&self) -> TokenStream {
         let name = self.name_with_generics();
         quote! {
-             fn name() -> String {
-                 #name
-             }
+            fn name() -> String {
+                #name
+            }
         }
     }
 
@@ -211,8 +233,9 @@ impl DerivedTS {
             //
             // We keep const parameters as they are, since there's no sensible default value we can
             // use instead. This might be something to change in the future.
-            G::Type(TypeParam { ident, .. }) |
-            G::Const(ConstParam { ident, .. }) => Some(quote!(#ident)),
+            G::Type(TypeParam { ident, .. }) | G::Const(ConstParam { ident, .. }) => {
+                Some(quote!(#ident))
+            }
         });
         quote! {
             fn decl_concrete() -> String {
@@ -225,6 +248,26 @@ impl DerivedTS {
                 format!("type {}{generics} = {inline};", #name)
             }
         }
+    }
+}
+
+fn generate_assoc_type(rust_ty: &Ident, generics: &Generics) -> TokenStream {
+    use GenericParam as G;
+
+    let generics_params = generics
+        .params
+        .iter()
+        .map(|x| match x {
+            G::Type(_) => quote! { ts_rs::Dummy },
+            G::Const(ConstParam { ident, .. }) => quote! { #ident },
+            G::Lifetime(LifetimeParam { lifetime, .. }) => quote! { #lifetime },
+        })
+        .collect::<Vec<_>>();
+
+    if generics_params.is_empty() {
+        quote! { type WithoutGenerics = #rust_ty; }
+    } else {
+        quote! { type WithoutGenerics = #rust_ty<#(#generics_params),*>; }
     }
 }
 

@@ -16,6 +16,9 @@ impl Dependencies {
     /// If the type is transparent, then we'll get resolve the child dependencies during runtime.
     pub fn push(&mut self, ty: &Type) {
         self.0.push(quote![.push::<#ty>()]);
+        self.0.push(quote![
+            .extend(<#ty as ts_rs::TS>::generics())
+        ]);
     }
 
     pub fn append(&mut self, other: Dependencies) {
