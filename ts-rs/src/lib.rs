@@ -523,6 +523,12 @@ macro_rules! impl_shadow {
             {
                 <$s>::dependency_types()
             }
+            fn generics() -> impl TypeList
+            where
+                Self: 'static
+            {
+                <$s>::generics()
+            }
             fn transparent() -> bool { <$s>::transparent() }
         }
     };
