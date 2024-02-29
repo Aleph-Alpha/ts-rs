@@ -82,9 +82,13 @@ jobs:
         run: |
           cargo test --no-default-features
           shopt -s globstar
+          tsc --version
+          cat ts-rs/tests-out/self_referential/T.ts
           tsc ts-rs/tests-out/**/*.ts --noEmit --noUnusedLocals
       - name: All features
         run: |
           cargo test --all-features
           shopt -s globstar
+          tsc --version
+          cat ts-rs/tests-out/self_referential/T.ts
           tsc ts-rs/tests-out/**/*.ts --noEmit --noUnusedLocals
