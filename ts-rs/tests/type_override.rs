@@ -1,10 +1,9 @@
 #![allow(dead_code)]
 
-#[cfg(feature = "serde-compat")]
-use serde::Serialize;
-
 use std::time::Instant;
 
+#[cfg(feature = "serde-compat")]
+use serde::Serialize;
 use ts_rs::TS;
 
 struct Unsupported<T>(T);

@@ -2,7 +2,6 @@
 
 #[cfg(feature = "serde-compat")]
 use serde::Serialize;
-
 use ts_rs::TS;
 
 #[derive(TS)]

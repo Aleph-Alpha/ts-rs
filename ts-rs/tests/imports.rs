@@ -64,7 +64,6 @@ fn test_def() {
         ),
     };
 
-
     assert_eq!(text, expected);
     std::fs::remove_file(TestEnum::EXPORT_TO.unwrap()).unwrap();
 }

@@ -173,7 +173,10 @@ struct ContainerInline {
 
 #[test]
 fn inline() {
-    assert_eq!(GenericInline::<()>::decl(), "type GenericInline<T> = { t: T, };");
+    assert_eq!(
+        GenericInline::<()>::decl(),
+        "type GenericInline<T> = { t: T, };"
+    );
     assert_eq!(
         ContainerInline::decl(),
         "type ContainerInline = { g: GenericInline<string>, gi: { t: string, }, t: Array<string>, };"
@@ -261,12 +264,23 @@ struct YDefault {
 
 #[test]
 fn default() {
-    assert_eq!(ADefault::<()>::decl(), "type ADefault<T = string> = { t: T, };");
+    assert_eq!(
+        ADefault::<()>::decl(),
+        "type ADefault<T = string> = { t: T, };"
+    );
 
-    assert_eq!(BDefault::<()>::decl(), "type BDefault<U = ADefault<number> | null> = { u: U, };");
-    assert!(BDefault::<()>::dependencies().iter().any(|dep| dep.ts_name == "ADefault"));
+    assert_eq!(
+        BDefault::<()>::decl(),
+        "type BDefault<U = ADefault<number> | null> = { u: U, };"
+    );
+    assert!(BDefault::<()>::dependencies()
+        .iter()
+        .any(|dep| dep.ts_name == "ADefault"));
 
-    assert_eq!(YDefault::decl(), "type YDefault = { a1: ADefault<string>, a2: ADefault<number>, };")
+    assert_eq!(
+        YDefault::decl(),
+        "type YDefault = { a1: ADefault<string>, a2: ADefault<number>, };"
+    )
 }
 
 #[derive(TS)]
@@ -296,9 +310,15 @@ struct DTraitBounds<T: ToString, const N: usize> {
 
 #[test]
 fn trait_bounds() {
-    assert_eq!(ATraitBounds::<i32>::decl(), "type ATraitBounds<T = number> = { t: T, };");
+    assert_eq!(
+        ATraitBounds::<i32>::decl(),
+        "type ATraitBounds<T = number> = { t: T, };"
+    );
 
-    assert_eq!(BTraitBounds::<&'static str>::decl(), "type BTraitBounds<T> = T;");
+    assert_eq!(
+        BTraitBounds::<&'static str>::decl(),
+        "type BTraitBounds<T> = T;"
+    );
 
     assert_eq!(
         CTraitBounds::<&'static str, i32>::decl(),

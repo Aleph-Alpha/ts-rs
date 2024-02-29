@@ -10,12 +10,12 @@ use ts_rs::TS;
 #[cfg_attr(not(feature = "serde-compat"), ts(untagged))]
 #[ts(export, export_to = "tests-out/union_unnamed_serde/")]
 enum TestUntagged {
-    A,                     // serde_json -> `null`
-    B(),                   // serde_json -> `[]`
+    A,   // serde_json -> `null`
+    B(), // serde_json -> `[]`
     C(
         #[cfg_attr(feature = "serde-compat", serde(skip))]
         #[cfg_attr(not(feature = "serde-compat"), ts(skip))]
-        i32
+        i32,
     ), // serde_json -> `null`
 }
 
@@ -23,12 +23,12 @@ enum TestUntagged {
 #[cfg_attr(feature = "serde-compat", derive(Deserialize))]
 #[ts(export, export_to = "tests-out/union_unnamed_serde/")]
 enum TestExternally {
-    A,                     // serde_json -> `"A"`
-    B(),                   // serde_json -> `{"B":[]}`
+    A,   // serde_json -> `"A"`
+    B(), // serde_json -> `{"B":[]}`
     C(
         #[cfg_attr(feature = "serde-compat", serde(skip))]
         #[cfg_attr(not(feature = "serde-compat"), ts(skip))]
-        i32
+        i32,
     ), // serde_json -> `"C"`
 }
 
@@ -38,12 +38,12 @@ enum TestExternally {
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "type", content = "content"))]
 #[ts(export, export_to = "tests-out/union_unnamed_serde/")]
 enum TestAdjacently {
-    A,                     // serde_json -> `{"type":"A"}`
-    B(),                   // serde_json -> `{"type":"B","content":[]}`
+    A,   // serde_json -> `{"type":"A"}`
+    B(), // serde_json -> `{"type":"B","content":[]}`
     C(
         #[cfg_attr(feature = "serde-compat", serde(skip))]
         #[cfg_attr(not(feature = "serde-compat"), ts(skip))]
-        i32
+        i32,
     ), // serde_json -> `{"type":"C"}`
 }
 
@@ -53,12 +53,13 @@ enum TestAdjacently {
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "type"))]
 #[ts(export, export_to = "tests-out/union_unnamed_serde/")]
 enum TestInternally {
-    A,                     // serde_json -> `{"type":"A"}`
-    B,                     // serde_json -> `{"type":"B"}`
+    A, // serde_json -> `{"type":"A"}`
+    B, // serde_json -> `{"type":"B"}`
     C(
         #[cfg_attr(feature = "serde-compat", serde(skip))]
         #[cfg_attr(not(feature = "serde-compat"), ts(skip))]
-        i32), // serde_json -> `{"type":"C"}`
+        i32,
+    ), // serde_json -> `{"type":"C"}`
 }
 
 #[test]
