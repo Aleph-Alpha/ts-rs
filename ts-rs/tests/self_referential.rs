@@ -45,7 +45,7 @@ fn named() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/self_referential/", rename = "T")]
+#[ts(export, export_to = "tests-out/self_referential/", rename = "E")]
 enum ExternallyTagged {
     A(Box<ExternallyTagged>),
     B(&'static ExternallyTagged),
@@ -79,19 +79,19 @@ enum ExternallyTagged {
 fn enum_externally_tagged() {
     assert_eq!(
         ExternallyTagged::decl(),
-       "type T = { \"A\": T } | \
-                 { \"B\": T } | \
-                 { \"C\": T } | \
-                 { \"D\": T } | \
-                 { \"E\": [T, T, T, T] } | \
-                 { \"F\": { a: T, b: T, c: Record<string, T>, d: T | null, e?: T | null, f?: T, } } | \
-                 { \"G\": [Array<T>, Array<T>, Record<string, T>] };"
+       "type E = { \"A\": E } | \
+                 { \"B\": E } | \
+                 { \"C\": E } | \
+                 { \"D\": E } | \
+                 { \"E\": [E, E, E, E] } | \
+                 { \"F\": { a: E, b: E, c: Record<string, E>, d: E | null, e?: E | null, f?: E, } } | \
+                 { \"G\": [Array<E>, Array<E>, Record<string, E>] };"
     );
 }
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
-#[ts(export, export_to = "tests-out/self_referential/", rename = "T")]
+#[ts(export, export_to = "tests-out/self_referential/", rename = "I")]
 #[cfg_attr(feature = "serde-compat", serde(tag = "tag"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "tag"))]
 enum InternallyTagged {
@@ -118,18 +118,18 @@ enum InternallyTagged {
 fn enum_internally_tagged() {
     assert_eq!(
         InternallyTagged::decl(),
-        "type T = { \"tag\": \"A\" } & T | \
-                  { \"tag\": \"B\" } & T | \
-                  { \"tag\": \"C\" } & T | \
-                  { \"tag\": \"D\" } & T | \
-                  { \"tag\": \"E\" } & Array<T> | \
-                  { \"tag\": \"F\", a: T, b: T, c: Record<T, T>, d: T | null, e?: T | null, f?: T, };"
+        "type I = { \"tag\": \"A\" } & I | \
+                  { \"tag\": \"B\" } & I | \
+                  { \"tag\": \"C\" } & I | \
+                  { \"tag\": \"D\" } & I | \
+                  { \"tag\": \"E\" } & Array<I> | \
+                  { \"tag\": \"F\", a: I, b: I, c: Record<I, I>, d: I | null, e?: I | null, f?: I, };"
     );
 }
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
-#[ts(export, export_to = "tests-out/self_referential/", rename = "T")]
+#[ts(export, export_to = "tests-out/self_referential/", rename = "A")]
 #[cfg_attr(feature = "serde-compat", serde(tag = "tag", content = "content"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "tag", content = "content"))]
 enum AdjacentlyTagged {
@@ -161,28 +161,28 @@ enum AdjacentlyTagged {
 fn enum_adjacently_tagged() {
     assert_eq!(
         AdjacentlyTagged::decl(),
-        "type T = { \"tag\": \"A\", \"content\": T } | \
-                  { \"tag\": \"B\", \"content\": T } | \
-                  { \"tag\": \"C\", \"content\": T } | \
-                  { \"tag\": \"D\", \"content\": T } | \
-                  { \"tag\": \"E\", \"content\": Array<T> } | \
+        "type A = { \"tag\": \"A\", \"content\": A } | \
+                  { \"tag\": \"B\", \"content\": A } | \
+                  { \"tag\": \"C\", \"content\": A } | \
+                  { \"tag\": \"D\", \"content\": A } | \
+                  { \"tag\": \"E\", \"content\": Array<A> } | \
                   { \
                      \"tag\": \"F\", \
                      \"content\": { \
-                         a: T, \
-                         b: T, \
-                         c: Record<string, T>, \
-                         d: T | null, \
-                         e?: T | null, \
-                         f?: T, \
+                         a: A, \
+                         b: A, \
+                         c: Record<string, A>, \
+                         d: A | null, \
+                         e?: A | null, \
+                         f?: A, \
                      } \
                   } | \
                   { \
                      \"tag\": \"G\", \
                      \"content\": [\
-                         Array<T>, \
-                         [T, T, T, T], \
-                         Record<string, T>\
+                         Array<A>, \
+                         [A, A, A, A], \
+                         Record<string, A>\
                      ] \
                   };"
     );
