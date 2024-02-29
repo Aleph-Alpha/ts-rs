@@ -1,5 +1,6 @@
 #![allow(dead_code)]
-use std::collections::{HashMap, HashSet};
+
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use ts_rs::TS;
 
@@ -36,4 +37,36 @@ fn hashmap_with_custom_hasher() {
         HashesHasher::decl(),
         "type HashesHasher = { map: Record<string, string>, set: Array<string>, };"
     )
+}
+
+#[derive(TS, Eq, PartialEq, Hash)]
+#[ts(export, export_to = "tests-out/hashmap/")]
+struct CustomKey;
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/hashmap/")]
+struct CustomValue;
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/hashmap/")]
+struct HashMapWithCustomTypes {
+    map: HashMap<CustomKey, CustomValue>,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/hashmap/")]
+struct BTreeMapWithCustomTypes {
+    map: BTreeMap<CustomKey, CustomValue>,
+}
+
+#[test]
+fn with_custom_types() {
+    assert_eq!(
+        HashMapWithCustomTypes::inline(),
+        BTreeMapWithCustomTypes::inline()
+    );
+    assert_eq!(
+        HashMapWithCustomTypes::decl(),
+        "type HashMapWithCustomTypes = { map: Record<CustomKey, CustomValue>, };"
+    );
 }

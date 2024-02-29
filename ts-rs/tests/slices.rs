@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use ts_rs::TS;
 
 #[test]
@@ -66,3 +68,11 @@ struct NewtypeBoxed(#[allow(dead_code)] Box<[i32]>);
 fn boxed_newtype() {
     assert_eq!(NewtypeBoxed::inline(), "Array<number>")
 }
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/slices/nested/")]
+struct InnerMost;
+
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/slices/nested/")]
+struct Nested<'a>(&'a [InnerMost]);
