@@ -11,6 +11,7 @@
 - Added `TS::generics()` ([#241](https://github.com/Aleph-Alpha/ts-rs/pull/241))
 - Added `TS::WithoutGenerics` ([#241](https://github.com/Aleph-Alpha/ts-rs/pull/241))
 - `Result`, `Option`, `HashMap` and `Vec` had their implementations of `TS` changed ([#241](https://github.com/Aleph-Alpha/ts-rs/pull/241))
+- Removed `TS::transparent()` ([#243](https://github.com/Aleph-Alpha/ts-rs/pull/243))
 
 ### Features
 
