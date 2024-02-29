@@ -13,7 +13,8 @@ enum TestUntagged {
     A,   // serde_json -> `null`
     B(), // serde_json -> `[]`
     C {
-        #[serde(skip)]
+        #[cfg_attr(feature = "serde-compat", serde(skip))]
+        #[cfg_attr(not(feature = "serde-compat"), serde(skip))]
         val: i32,
     }, // serde_json -> `{}`
 }
@@ -25,7 +26,8 @@ enum TestExternally {
     A,   // serde_json -> `"A"`
     B(), // serde_json -> `{"B":[]}`
     C {
-        #[serde(skip)]
+        #[cfg_attr(feature = "serde-compat", serde(skip))]
+        #[cfg_attr(not(feature = "serde-compat"), serde(skip))]
         val: i32,
     }, // serde_json -> `{"C":{}}`
 }
@@ -39,7 +41,8 @@ enum TestAdjacently {
     A,   // serde_json -> `{"type":"A"}`
     B(), // serde_json -> `{"type":"B","content":[]}`
     C {
-        #[serde(skip)]
+        #[cfg_attr(feature = "serde-compat", serde(skip))]
+        #[cfg_attr(not(feature = "serde-compat"), serde(skip))]
         val: i32,
     }, // serde_json -> `{"type":"C","content":{}}`
 }
@@ -53,7 +56,8 @@ enum TestInternally {
     A, // serde_json -> `{"type":"A"}`
     B, // serde_json -> `{"type":"B"}`
     C {
-        #[serde(skip)]
+        #[cfg_attr(feature = "serde-compat", serde(skip))]
+        #[cfg_attr(not(feature = "serde-compat"), serde(skip))]
         val: i32,
     }, // serde_json -> `{"type":"C"}`
 }

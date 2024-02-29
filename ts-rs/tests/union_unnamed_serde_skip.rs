@@ -12,7 +12,11 @@ use ts_rs::TS;
 enum TestUntagged {
     A,                     // serde_json -> `null`
     B(),                   // serde_json -> `[]`
-    C(#[serde(skip)] i32), // serde_json -> `null`
+    C(
+        #[cfg_attr(feature = "serde-compat", serde(skip))]
+        #[cfg_attr(not(feature = "serde-compat"), serde(skip))]
+        i32
+    ), // serde_json -> `null`
 }
 
 #[derive(TS)]
@@ -21,7 +25,11 @@ enum TestUntagged {
 enum TestExternally {
     A,                     // serde_json -> `"A"`
     B(),                   // serde_json -> `{"B":[]}`
-    C(#[serde(skip)] i32), // serde_json -> `"C"`
+    C(
+        #[cfg_attr(feature = "serde-compat", serde(skip))]
+        #[cfg_attr(not(feature = "serde-compat"), serde(skip))]
+        i32
+    ), // serde_json -> `"C"`
 }
 
 #[derive(TS)]
@@ -32,7 +40,11 @@ enum TestExternally {
 enum TestAdjacently {
     A,                     // serde_json -> `{"type":"A"}`
     B(),                   // serde_json -> `{"type":"B","content":[]}`
-    C(#[serde(skip)] i32), // serde_json -> `{"type":"C"}`
+    C(
+        #[cfg_attr(feature = "serde-compat", serde(skip))]
+        #[cfg_attr(not(feature = "serde-compat"), serde(skip))]
+        i32
+    ), // serde_json -> `{"type":"C"}`
 }
 
 #[derive(TS)]
@@ -43,7 +55,10 @@ enum TestAdjacently {
 enum TestInternally {
     A,                     // serde_json -> `{"type":"A"}`
     B,                     // serde_json -> `{"type":"B"}`
-    C(#[serde(skip)] i32), // serde_json -> `{"type":"C"}`
+    C(
+        #[cfg_attr(feature = "serde-compat", serde(skip))]
+        #[cfg_attr(not(feature = "serde-compat"), serde(skip))]
+        i32), // serde_json -> `{"type":"C"}`
 }
 
 #[test]
