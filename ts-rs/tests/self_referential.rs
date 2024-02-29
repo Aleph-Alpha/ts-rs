@@ -91,7 +91,7 @@ fn enum_externally_tagged() {
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
-#[ts(export, export_to = "tests-out/self_referential/", rename = "I")]
+#[ts(rename = "I")]
 #[cfg_attr(feature = "serde-compat", serde(tag = "tag"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "tag"))]
 enum InternallyTagged {
