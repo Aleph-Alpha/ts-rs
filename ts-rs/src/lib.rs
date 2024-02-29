@@ -683,33 +683,11 @@ impl<I: TS> TS for Range<I> {
     where
         Self: 'static,
     {
-        use std::marker::PhantomData;
-        ((PhantomData::<I>,), I::generics())
+        I::generics().push::<I>()
     }
 }
 
-impl<I: TS> TS for RangeInclusive<I> {
-    type WithoutGenerics = RangeInclusive<Dummy>;
-    fn name() -> String {
-        format!("{{ start: {}, end: {}, }}", I::name(), I::name())
-    }
-
-    fn dependency_types() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        I::dependency_types()
-    }
-
-    fn generics() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        use std::marker::PhantomData;
-        ((PhantomData::<I>,), I::generics())
-    }
-}
-
+impl_shadow!(as Range<I>: impl<I: TS> TS for RangeInclusive<I>);
 impl_shadow!(as Vec<T>: impl<T: TS, H> TS for HashSet<T, H>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
 impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);
