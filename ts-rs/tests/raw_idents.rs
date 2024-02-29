@@ -1,8 +1,10 @@
+#![allow(non_camel_case_types, dead_code)]
+
 use ts_rs::TS;
 
-#[allow(non_camel_case_types, dead_code)]
 #[derive(TS)]
-struct r#enum {
+#[ts(export, export_to = "tests-out/raw_idents/")]
+struct r#struct {
     r#type: i32,
     r#use: i32,
     r#struct: i32,
@@ -12,9 +14,9 @@ struct r#enum {
 
 #[test]
 fn raw_idents() {
-    let out = <r#enum as TS>::decl();
+    let out = <r#struct as TS>::decl();
     assert_eq!(
         out,
-        "type enum = { type: number, use: number, struct: number, let: number, enum: number, };"
+        "type struct = { type: number, use: number, struct: number, let: number, enum: number, };"
     );
 }

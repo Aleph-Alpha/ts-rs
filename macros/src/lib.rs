@@ -152,7 +152,10 @@ impl DerivedTS {
     }
 
     fn generate_export_test(&self, rust_ty: &Ident, generics: &Generics) -> TokenStream {
-        let test_fn = format_ident!("export_bindings_{}", rust_ty.to_string().to_lowercase());
+        let test_fn = format_ident!(
+            "export_bindings_{}",
+            rust_ty.to_string().to_lowercase().replace("r#", "")
+        );
         let generic_params = generics.type_params().map(|_| quote! { ts_rs::Dummy });
         let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
 
