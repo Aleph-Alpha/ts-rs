@@ -73,6 +73,7 @@ impl_parse! {
     StructAttr(input, out) {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
+        "tag" => out.tag = Some(parse_assign_str(input)?),
         "export" => out.export = true,
         "export_to" => out.export_to = Some(parse_assign_str(input)?)
     }

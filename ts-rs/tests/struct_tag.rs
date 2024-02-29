@@ -1,17 +1,19 @@
 #![allow(dead_code)]
 
+#[cfg(feature = "serde-compat")]
 use serde::Serialize;
 use ts_rs::TS;
 
-#[derive(TS, Serialize)]
-#[serde(tag = "type")]
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[cfg_attr(feature = "serde-compat", serde(tag = "type"))]
+#[cfg_attr(not(feature = "serde-compat"), ts(tag = "type"))]
 struct TaggedType {
     a: i32,
     b: i32,
 }
 
 #[test]
-#[cfg(feature = "serde-compat")]
 fn test() {
     assert_eq!(
         TaggedType::inline(),
@@ -19,8 +21,3 @@ fn test() {
     )
 }
 
-#[test]
-#[cfg(not(feature = "serde-compat"))]
-fn test() {
-    assert_eq!(TaggedType::inline(), "{ a: number, b: number, }")
-}
