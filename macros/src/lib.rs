@@ -87,10 +87,6 @@ impl DerivedTS {
                 {
                     #dependencies
                 }
-
-                fn transparent() -> bool {
-                    false
-                }
             }
 
             #export
@@ -145,7 +141,6 @@ impl DerivedTS {
                 impl TS for #generics {
                     type WithoutGenerics = #generics;
                     fn name() -> String { stringify!(#generics).to_owned() }
-                    fn transparent() -> bool { false }
                 }
             )*
         }

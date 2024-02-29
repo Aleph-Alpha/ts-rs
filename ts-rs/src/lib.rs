@@ -367,12 +367,7 @@ pub trait TS {
         struct Visit<'a>(&'a mut Vec<Dependency>);
         impl<'a> TypeVisitor for Visit<'a> {
             fn visit<T: TS + 'static + ?Sized>(&mut self) {
-                if T::transparent() {
-                    // the dependency `T` is "transparent", meaning that our original type depends
-                    // on the dependencies of `T` as well.
-                    T::dependency_types().for_each(self);
-                } else if let Some(dep) = Dependency::from_ty::<T>() {
-                    // the dependency `T` is not transparent, so we just add it to the output
+                if let Some(dep) = Dependency::from_ty::<T>() {
                     self.0.push(dep);
                 }
             }
@@ -381,10 +376,6 @@ pub trait TS {
 
         deps
     }
-
-    /// `true` if this is a transparent type, e.g tuples or a list.
-    /// This is used for resolving imports when using the `export!` macro.
-    fn transparent() -> bool;
 
     /// Manually export this type to a file.
     /// The output file can be specified by annotating the type with `#[ts(export_to = ".."]`.
@@ -453,7 +444,6 @@ macro_rules! impl_primitives {
             type WithoutGenerics = Self;
             fn name() -> String { $l.to_owned() }
             fn inline() -> String { <Self as $crate::TS>::name() }
-            fn transparent() -> bool { false }
         }
     )*)* };
 }
@@ -474,7 +464,6 @@ macro_rules! impl_tuples {
             {
                 ()$(.push::<$i>())*
             }
-            fn transparent() -> bool { true }
         }
     };
     ( $i2:ident $(, $i:ident)* ) => {
@@ -504,7 +493,6 @@ macro_rules! impl_wrapper {
             {
                 ((std::marker::PhantomData::<T>,), T::generics())
             }
-            fn transparent() -> bool { T::transparent() }
         }
     };
 }
@@ -529,7 +517,6 @@ macro_rules! impl_shadow {
             {
                 <$s>::generics()
             }
-            fn transparent() -> bool { <$s>::transparent() }
         }
     };
 }
@@ -553,9 +540,6 @@ impl<T: TS> TS for Option<T> {
         Self: 'static,
     {
         ((std::marker::PhantomData::<T>,), T::generics())
-    }
-    fn transparent() -> bool {
-        T::transparent()
     }
 }
 
@@ -583,9 +567,6 @@ impl<T: TS, E: TS> TS for Result<T, E> {
             ((PhantomData::<E>,), E::generics()),
         )
     }
-    fn transparent() -> bool {
-        false
-    }
 }
 
 impl<T: TS> TS for Vec<T> {
@@ -610,9 +591,6 @@ impl<T: TS> TS for Vec<T> {
         Self: 'static,
     {
         ((std::marker::PhantomData::<T>,), T::generics())
-    }
-    fn transparent() -> bool {
-        false
     }
 }
 
@@ -655,10 +633,6 @@ impl<T: TS, const N: usize> TS for [T; N] {
     {
         ((std::marker::PhantomData::<T>,), T::generics())
     }
-
-    fn transparent() -> bool {
-        false
-    }
 }
 
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
@@ -690,9 +664,6 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
             ((PhantomData::<V>,), V::generics()),
         )
     }
-    fn transparent() -> bool {
-        false
-    }
 }
 
 impl<I: TS> TS for Range<I> {
@@ -705,11 +676,15 @@ impl<I: TS> TS for Range<I> {
     where
         Self: 'static,
     {
-        ().push::<I>()
+        I::dependency_types()
     }
 
-    fn transparent() -> bool {
-        true
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+        use std::marker::PhantomData;
+        ((PhantomData::<I>,), I::generics())
     }
 }
 
@@ -723,11 +698,15 @@ impl<I: TS> TS for RangeInclusive<I> {
     where
         Self: 'static,
     {
-        ().push::<I>()
+        I::dependency_types()
     }
 
-    fn transparent() -> bool {
-        true
+    fn generics() -> impl TypeList
+    where
+        Self: 'static,
+    {
+        use std::marker::PhantomData;
+        ((PhantomData::<I>,), I::generics())
     }
 }
 
@@ -816,8 +795,5 @@ impl TS for Dummy {
     type WithoutGenerics = Self;
     fn name() -> String {
         "Dummy".to_owned()
-    }
-    fn transparent() -> bool {
-        false
     }
 }
