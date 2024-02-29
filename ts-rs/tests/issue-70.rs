@@ -32,7 +32,14 @@ fn issue_70() {
     );
 }
 
-type GenericAlias<A = String, B = String> = HashMap<(A, String), Vec<(B, i32)>>;
+#[derive(TS)]
+#[ts(export, export_to = "tests-out/issue_70/")]
+struct GenericType<T, U> {
+    foo: T,
+    bar: U,
+}
+
+type GenericAlias<A = String, B = String> = GenericType<(A, String), Vec<(B, i32)>>;
 
 #[derive(TS)]
 #[ts(export, export_to = "tests-out/issue_70/")]
@@ -54,17 +61,17 @@ fn generic() {
     assert_eq!(
         Container::decl(),
         "type Container = { \
-            a: Record<[Array<number>, string], Array<[Array<string>, number]>>, \
-            b: Record<[string, string], Array<[string, number]>>, \
+            a: GenericType<[Array<number>, string], Array<[Array<string>, number]>>, \
+            b: GenericType<[string, string], Array<[string, number]>>, \
         };"
     );
 
     assert_eq!(
         GenericContainer::<(), ()>::decl(),
         "type GenericContainer<A, B = number> = { \
-            a: Record<[string, string], Array<[string, number]>>, \
-            b: Record<[A, string], Array<[B, number]>>, \
-            c: Record<[A, string], Array<[Record<[A, string], Array<[B, number]>>, number]>>, \
+            a: GenericType<[string, string], Array<[string, number]>>, \
+            b: GenericType<[A, string], Array<[B, number]>>, \
+            c: GenericType<[A, string], Array<[GenericType<[A, string], Array<[B, number]>>, number]>>, \
         };"
     );
 }
