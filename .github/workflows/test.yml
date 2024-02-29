@@ -78,11 +78,11 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-default-features --manifest-path ts-rs/Cargo.toml
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features --manifest-path ts-rs/Cargo.toml
+      - name: No features
+        run: |
+          cargo test --no-default-features
+          tsc ts-rs/tests-out/**/*.ts --noEmit --noUnusedLocals
+      - name: All features
+        run: |
+          cargo test --all-features
+          tsc ts-rs/tests-out/**/*.ts --noEmit --noUnusedLocals
