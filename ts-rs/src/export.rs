@@ -110,7 +110,7 @@ pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
 
         let fmt_cfg = ConfigurationBuilder::new().deno().build();
         if let Some(formatted) =
-            format_text(path.as_ref(), &buffer, &fmt_cfg).map_err(|e| Formatting(e.to_string()))?
+            format_text(path.as_ref(), &buffer, &fmt_cfg).map_err(|e| ExportError::Formatting(e.to_string()))?
         {
             buffer = formatted;
         }
