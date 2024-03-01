@@ -7,7 +7,6 @@ use std::{
 };
 
 use thiserror::Error;
-use ExportError::*;
 
 use crate::TS;
 use path::absolute::PathAbsolute;
@@ -161,10 +160,13 @@ pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String
 
 /// Compute the output path to where `T` should be exported.
 fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
-    let manifest_dir = Path::new(std::env!("CARGO_MANIFEST_DIR"));
-    let path =
-        PathBuf::from(T::get_export_to().ok_or(CannotBeExported(std::any::type_name::<T>()))?);
-    Ok(manifest_dir.join(path))
+    Ok(
+        Path::new(
+            &T::get_export_to()
+                .ok_or_else(|| std::any::type_name::<T>())
+                .map_err(ExportError::CannotBeExported)?
+        ).absolute()
+    )
 }
 
 /// Push the declaration of `T`
@@ -182,7 +184,7 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
 
 /// Push an import statement for all dependencies of `T`
 fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), ExportError> {
-    let export_to = T::get_export_to().ok_or(CannotBeExported(std::any::type_name::<T>()))?;
+    let export_to = T::get_export_to().ok_or(ExportError::CannotBeExported(std::any::type_name::<T>()))?;
     let path = Path::new(&export_to);
 
     let deps = T::dependencies();
