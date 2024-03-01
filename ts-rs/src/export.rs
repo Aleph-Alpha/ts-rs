@@ -6,7 +6,6 @@ use std::{
     sync::{Mutex, OnceLock},
 };
 
-use path_clean::PathClean;
 use thiserror::Error;
 use ExportError::*;
 
@@ -284,5 +283,44 @@ where
             }
         }
         Some(comps.iter().map(|c| c.as_os_str()).collect())
+    }
+}
+
+trait PathClean: AsRef<Path> {
+    fn clean(&self) -> PathBuf {
+        clean(self)
+    }
+}
+
+impl PathClean for PathBuf {}
+impl PathClean for Path {}
+
+pub fn clean<P>(path: P) -> PathBuf
+where
+    P: AsRef<Path>,
+{
+    let mut out = Vec::new();
+
+    for comp in path.as_ref().components() {
+        match comp {
+            Component::CurDir => (),
+            Component::ParentDir => match out.last() {
+                Some(Component::RootDir) => (),
+                Some(Component::Normal(_)) => {
+                    out.pop();
+                }
+                None
+                | Some(Component::CurDir)
+                | Some(Component::ParentDir)
+                | Some(Component::Prefix(_)) => out.push(comp),
+            },
+            comp => out.push(comp),
+        }
+    }
+
+    if !out.is_empty() {
+        out.iter().collect()
+    } else {
+        PathBuf::from(".")
     }
 }
