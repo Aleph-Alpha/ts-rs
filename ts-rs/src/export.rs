@@ -221,12 +221,8 @@ fn import_path(from: &Path, import: &Path) -> String {
     }
 }
 
-fn to_absolute_path(path: &Path) -> PathBuf {
-    let Ok(current_path) = std::env::current_dir() else {
-        return path.to_owned()
-    };
-
-    current_path.join(path).clean()
+fn to_absolute_path(path: &Path) -> Result<PathBuf, ExportError> {
+    Ok(std::env::current_dir()?.join(path).clean())
 }
 
 // Construct a relative path from a provided base directory path to the provided path.
@@ -241,60 +237,90 @@ fn to_absolute_path(path: &Path) -> PathBuf {
 //
 // Adapted from rustc's path_relative_from
 // https://github.com/rust-lang/rust/blob/e1d0de82cc40b666b88d4a6d2c9dcbc81d7ed27f/src/librustc_back/rpath.rs#L116-L158
-fn diff_paths<P, B>(path: P, base: B) -> Option<PathBuf>
+fn diff_paths<P, B>(path: P, base: B) -> Result<PathBuf, ExportError>
 where
     P: AsRef<Path>,
     B: AsRef<Path>,
 {
-    let path = to_absolute_path(path.as_ref());
-    let base = to_absolute_path(base.as_ref());
+    let path = to_absolute_path(path.as_ref())?;
+    let base = to_absolute_path(base.as_ref())?;
 
-    if path.is_absolute() != base.is_absolute() {
-        if path.is_absolute() {
-            Some(path)
-        } else {
-            None
-        }
-    } else {
-        let mut ita = path.components();
-        let mut itb = base.components();
-        let mut comps: Vec<Component> = vec![];
-        loop {
-            match (ita.next(), itb.next()) {
-                (None, None) => break,
-                (Some(a), None) => {
-                    comps.push(a);
-                    comps.extend(ita.by_ref());
-                    break;
-                }
-                (None, _) => comps.push(Component::ParentDir),
-                (Some(a), Some(b)) if comps.is_empty() && a == b => (),
-                (Some(a), Some(Component::CurDir)) => comps.push(a),
-                (Some(_), Some(Component::ParentDir)) => return None,
-                (Some(a), Some(_)) => {
+    let mut ita = path.components();
+    let mut itb = base.components();
+    let mut comps: Vec<Component> = vec![];
+
+    loop {
+        match (ita.next(), itb.next()) {
+            (Some(Component::ParentDir), _) | (_, Some(Component::ParentDir)) => {
+                unreachable!("The paths have been cleaned, no parent dir components are present")
+            },
+            (None, None) => break,
+            (Some(a), None) => {
+                comps.push(a);
+                comps.extend(ita.by_ref());
+                break;
+            }
+            (None, _) => comps.push(Component::ParentDir),
+            (Some(a), Some(b)) if comps.is_empty() && a == b => (),
+            (Some(a), Some(Component::CurDir)) => comps.push(a),
+            (Some(a), Some(_)) => {
+                comps.push(Component::ParentDir);
+                for _ in itb {
                     comps.push(Component::ParentDir);
-                    for _ in itb {
-                        comps.push(Component::ParentDir);
-                    }
-                    comps.push(a);
-                    comps.extend(ita.by_ref());
-                    break;
                 }
+                comps.push(a);
+                comps.extend(ita.by_ref());
+                break;
             }
         }
-        Some(comps.iter().map(|c| c.as_os_str()).collect())
     }
+
+    Ok(comps.iter().map(|c| c.as_os_str()).collect())
 }
 
+// Copyright 2018 Dan Reeves
+// Adapted from the `path-clean` crate
+// https://github.com/danreeves/path-clean
 trait PathClean: AsRef<Path> {
     fn clean(&self) -> PathBuf {
         clean(self)
     }
 }
 
+// Copyright 2018 Dan Reeves
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+//
+// Adapted from the `path-clean` crate
+// https://github.com/danreeves/path-clean
 impl PathClean for PathBuf {}
+
+// Copyright 2018 Dan Reeves
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+//
+// Adapted from the `path-clean` crate
+// https://github.com/danreeves/path-clean
 impl PathClean for Path {}
 
+// Copyright 2018 Dan Reeves
+//
+// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
+// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
+//
+// Copied verbatim from the `path-clean` crate
+// https://github.com/danreeves/path-clean
 pub fn clean<P>(path: P) -> PathBuf
 where
     P: AsRef<Path>,
