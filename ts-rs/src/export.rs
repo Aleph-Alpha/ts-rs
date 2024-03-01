@@ -109,8 +109,8 @@ pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
         use dprint_plugin_typescript::{configuration::ConfigurationBuilder, format_text};
 
         let fmt_cfg = ConfigurationBuilder::new().deno().build();
-        if let Some(formatted) =
-            format_text(path.as_ref(), &buffer, &fmt_cfg).map_err(|e| ExportError::Formatting(e.to_string()))?
+        if let Some(formatted) = format_text(path.as_ref(), &buffer, &fmt_cfg)
+            .map_err(|e| ExportError::Formatting(e.to_string()))?
         {
             buffer = formatted;
         }

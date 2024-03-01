@@ -1,7 +1,7 @@
 use std::{
     env,
+    io::Result,
     path::{Path, PathBuf},
-    io::Result
 };
 
 use super::clean::PathClean;
