@@ -10,7 +10,7 @@ use thiserror::Error;
 use ExportError::*;
 
 use crate::TS;
-use path::{absolute::PathAbsolute, clean::PathClean};
+use path::absolute::PathAbsolute;
 
 mod path;
 
@@ -241,8 +241,8 @@ where
     B: AsRef<Path>,
 {
     use Component as C;
-    let path = path.as_ref().absolute().clean();
-    let base = base.as_ref().absolute().clean();
+    let path = path.as_ref().absolute();
+    let base = base.as_ref().absolute();
 
     let mut ita = path.components();
     let mut itb = base.components();
