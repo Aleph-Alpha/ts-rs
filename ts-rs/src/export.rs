@@ -250,7 +250,7 @@ where
 
     loop {
         match (ita.next(), itb.next()) {
-            (Some(C::CurDir), _) | (_, Some(C::CurDir)) | (Some(C::ParentDir), _) | (_, Some(C::ParentDir)) => {
+            (Some(C::CurDir | C::ParentDir), _) | (_, Some(C::CurDir | C::ParentDir)) => {
                 unreachable!(
                     "The paths are absolute and have been cleaned, no parent or current dir components are present"
                 )
