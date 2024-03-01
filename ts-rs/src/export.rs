@@ -165,7 +165,7 @@ fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
             .ok_or_else(|| std::any::type_name::<T>())
             .map_err(ExportError::CannotBeExported)?,
     )
-    .absolute())
+    .absolute()?)
 }
 
 /// Push the declaration of `T`
@@ -243,8 +243,8 @@ where
     B: AsRef<Path>,
 {
     use Component as C;
-    let path = path.as_ref().absolute();
-    let base = base.as_ref().absolute();
+    let path = path.as_ref().absolute()?;
+    let base = base.as_ref().absolute()?;
 
     let mut ita = path.components();
     let mut itb = base.components();

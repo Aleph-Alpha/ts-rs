@@ -1,6 +1,7 @@
 use std::{
     env,
     path::{Path, PathBuf},
+    io::Result
 };
 
 use super::clean::PathClean;
@@ -9,8 +10,8 @@ use super::clean::PathClean;
 /// into an absolute path
 pub trait PathAbsolute: AsRef<Path> + PathClean {
     /// Converts a relative path into an absolute path.
-    fn absolute(&self) -> PathBuf {
-        Path::new(env!("CARGO_MANIFEST_DIR")).join(self).clean()
+    fn absolute(&self) -> Result<PathBuf> {
+        Ok(Path::new(&env::current_dir()?).join(self).clean())
     }
 }
 
