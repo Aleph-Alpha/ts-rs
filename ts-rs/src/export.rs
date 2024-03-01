@@ -6,10 +6,10 @@ use std::{
     sync::{Mutex, OnceLock},
 };
 
+use path::absolute::PathAbsolute;
 use thiserror::Error;
 
 use crate::TS;
-use path::absolute::PathAbsolute;
 
 mod path;
 
@@ -160,13 +160,12 @@ pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String
 
 /// Compute the output path to where `T` should be exported.
 fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
-    Ok(
-        Path::new(
-            &T::get_export_to()
-                .ok_or_else(|| std::any::type_name::<T>())
-                .map_err(ExportError::CannotBeExported)?
-        ).absolute()
+    Ok(Path::new(
+        &T::get_export_to()
+            .ok_or_else(|| std::any::type_name::<T>())
+            .map_err(ExportError::CannotBeExported)?,
     )
+    .absolute())
 }
 
 /// Push the declaration of `T`
@@ -184,7 +183,8 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
 
 /// Push an import statement for all dependencies of `T`
 fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), ExportError> {
-    let export_to = T::get_export_to().ok_or(ExportError::CannotBeExported(std::any::type_name::<T>()))?;
+    let export_to =
+        T::get_export_to().ok_or(ExportError::CannotBeExported(std::any::type_name::<T>()))?;
     let path = Path::new(&export_to);
 
     let deps = T::dependencies();
@@ -256,7 +256,7 @@ where
                 unreachable!(
                     "The paths are absolute and have been cleaned, no parent or current dir components are present"
                 )
-            },
+            }
             (None, None) => break,
             (Some(a), None) => {
                 comps.push(a);
@@ -279,4 +279,3 @@ where
 
     Ok(comps.iter().map(|c| c.as_os_str()).collect())
 }
-

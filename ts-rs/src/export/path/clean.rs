@@ -1,4 +1,4 @@
-use std::path::{PathBuf, Path, Component};
+use std::path::{Component, Path, PathBuf};
 
 pub trait PathClean: AsRef<Path> {
     fn clean(&self) -> PathBuf {
@@ -30,4 +30,3 @@ pub trait PathClean: AsRef<Path> {
 }
 
 impl<T: AsRef<Path>> PathClean for T {}
-
