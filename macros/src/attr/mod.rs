@@ -8,11 +8,13 @@ use syn::{
     Error, Lit, Result, Token,
 };
 pub use variant::*;
+pub use r#fn::*;
 
 mod r#enum;
 mod field;
 mod r#struct;
 mod variant;
+mod r#fn;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Inflection {

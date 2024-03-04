@@ -7,7 +7,9 @@ mod named;
 mod newtype;
 mod tuple;
 mod unit;
+mod r#fn;
 
+pub(crate) use r#fn::fn_def;
 pub(crate) use r#enum::r#enum_def;
 
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
