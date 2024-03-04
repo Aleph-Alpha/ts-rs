@@ -8,7 +8,6 @@ use std::{
     sync::{Mutex, OnceLock},
 };
 
-use path::PathAbsolute;
 use thiserror::Error;
 
 use crate::TS;
@@ -160,12 +159,11 @@ pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String
 
 /// Compute the output path to where `T` should be exported.
 fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
-    Path::new(
+    path::absolute(Path::new(
         &T::get_export_to()
             .ok_or_else(|| std::any::type_name::<T>())
             .map_err(ExportError::CannotBeExported)?,
-    )
-    .absolute()
+    ))
 }
 
 /// Push the declaration of `T`
@@ -244,8 +242,8 @@ where
 {
     use Component as C;
 
-    let path = path.absolute()?;
-    let base = base.absolute()?;
+    let path = path::absolute(path)?;
+    let base = path::absolute(base)?;
 
     let mut ita = path.components();
     let mut itb = base.components();
