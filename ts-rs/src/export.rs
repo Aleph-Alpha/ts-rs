@@ -1,3 +1,5 @@
+mod path;
+
 use std::{
     any::TypeId,
     collections::BTreeMap,
@@ -6,8 +8,8 @@ use std::{
     sync::{Mutex, OnceLock},
 };
 
+use path::PathAbsolute;
 use thiserror::Error;
-use ExportError::*;
 
 use crate::TS;
 
@@ -107,8 +109,8 @@ pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
         use dprint_plugin_typescript::{configuration::ConfigurationBuilder, format_text};
 
         let fmt_cfg = ConfigurationBuilder::new().deno().build();
-        if let Some(formatted) =
-            format_text(path.as_ref(), &buffer, &fmt_cfg).map_err(|e| Formatting(e.to_string()))?
+        if let Some(formatted) = format_text(path.as_ref(), &buffer, &fmt_cfg)
+            .map_err(|e| ExportError::Formatting(e.to_string()))?
         {
             buffer = formatted;
         }
@@ -158,11 +160,12 @@ pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String
 
 /// Compute the output path to where `T` should be exported.
 fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").map_err(|_| ManifestDirNotSet)?;
-    let manifest_dir = Path::new(&manifest_dir);
-    let path =
-        PathBuf::from(T::get_export_to().ok_or(CannotBeExported(std::any::type_name::<T>()))?);
-    Ok(manifest_dir.join(path))
+    Path::new(
+        &T::get_export_to()
+            .ok_or_else(|| std::any::type_name::<T>())
+            .map_err(ExportError::CannotBeExported)?,
+    )
+    .absolute()
 }
 
 /// Push the declaration of `T`
@@ -180,7 +183,8 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
 
 /// Push an import statement for all dependencies of `T`
 fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), ExportError> {
-    let export_to = T::get_export_to().ok_or(CannotBeExported(std::any::type_name::<T>()))?;
+    let export_to =
+        T::get_export_to().ok_or(ExportError::CannotBeExported(std::any::type_name::<T>()))?;
     let path = Path::new(&export_to);
 
     let deps = T::dependencies();
@@ -221,10 +225,6 @@ fn import_path(from: &Path, import: &Path) -> String {
     }
 }
 
-fn to_absolute_path(path: &Path) -> Result<PathBuf, ExportError> {
-    Ok(std::env::current_dir()?.join(path).clean())
-}
-
 // Construct a relative path from a provided base directory path to the provided path.
 //
 // Copyright 2012-2015 The Rust Project Developers.
@@ -242,8 +242,10 @@ where
     P: AsRef<Path>,
     B: AsRef<Path>,
 {
-    let path = to_absolute_path(path.as_ref())?;
-    let base = to_absolute_path(base.as_ref())?;
+    use Component as C;
+
+    let path = path.absolute()?;
+    let base = base.absolute()?;
 
     let mut ita = path.components();
     let mut itb = base.components();
@@ -251,9 +253,11 @@ where
 
     loop {
         match (ita.next(), itb.next()) {
-            (Some(Component::ParentDir), _) | (_, Some(Component::ParentDir)) => {
-                unreachable!("The paths have been cleaned, no parent dir components are present")
-            },
+            (Some(C::ParentDir | C::CurDir), _) | (_, Some(C::ParentDir | C::CurDir)) => {
+                unreachable!(
+                    "The paths have been cleaned, no no '.' or '..' components are present"
+                )
+            }
             (None, None) => break,
             (Some(a), None) => {
                 comps.push(a);
@@ -262,7 +266,6 @@ where
             }
             (None, _) => comps.push(Component::ParentDir),
             (Some(a), Some(b)) if comps.is_empty() && a == b => (),
-            (Some(a), Some(Component::CurDir)) => comps.push(a),
             (Some(a), Some(_)) => {
                 comps.push(Component::ParentDir);
                 for _ in itb {
@@ -276,77 +279,4 @@ where
     }
 
     Ok(comps.iter().map(|c| c.as_os_str()).collect())
-}
-
-// Copyright 2018 Dan Reeves
-// Adapted from the `path-clean` crate
-// https://github.com/danreeves/path-clean
-trait PathClean: AsRef<Path> {
-    fn clean(&self) -> PathBuf {
-        clean(self)
-    }
-}
-
-// Copyright 2018 Dan Reeves
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-//
-// Adapted from the `path-clean` crate
-// https://github.com/danreeves/path-clean
-impl PathClean for PathBuf {}
-
-// Copyright 2018 Dan Reeves
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-//
-// Adapted from the `path-clean` crate
-// https://github.com/danreeves/path-clean
-impl PathClean for Path {}
-
-// Copyright 2018 Dan Reeves
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-//
-// Copied verbatim from the `path-clean` crate
-// https://github.com/danreeves/path-clean
-pub fn clean<P>(path: P) -> PathBuf
-where
-    P: AsRef<Path>,
-{
-    let mut out = Vec::new();
-
-    for comp in path.as_ref().components() {
-        match comp {
-            Component::CurDir => (),
-            Component::ParentDir => match out.last() {
-                Some(Component::RootDir) => (),
-                Some(Component::Normal(_)) => {
-                    out.pop();
-                }
-                None
-                | Some(Component::CurDir)
-                | Some(Component::ParentDir)
-                | Some(Component::Prefix(_)) => out.push(comp),
-            },
-            comp => out.push(comp),
-        }
-    }
-
-    if !out.is_empty() {
-        out.iter().collect()
-    } else {
-        PathBuf::from(".")
-    }
 }

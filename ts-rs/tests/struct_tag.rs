@@ -20,4 +20,3 @@ fn test() {
         "{ type: \"TaggedType\", a: number, b: number, }"
     )
 }
-
