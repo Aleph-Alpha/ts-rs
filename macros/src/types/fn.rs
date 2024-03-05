@@ -73,12 +73,18 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
 
     let docs = parse_docs(&input.attrs)?;
     let ts_name = rename.clone().unwrap_or_else(|| to_ts_ident(ident));
-    let return_ty = match input.sig.output {
-        syn::ReturnType::Default => quote!("void"),
-        syn::ReturnType::Type(_, ref ty) => {
+    let is_async = input.sig.asyncness.is_some();
+    let return_ty = match (is_async, input.sig.output.clone()) {
+        (false, syn::ReturnType::Default) => quote!("void"),
+        (true, syn::ReturnType::Default) => quote!("Promise<void>"),
+        (false, syn::ReturnType::Type(_, ref ty)) => {
             dependencies.push(ty);
             quote!(<#ty as ts_rs::TS>::name())
-        }
+        },
+        (true, syn::ReturnType::Type(_, ref ty)) => {
+            dependencies.push(ty);
+            quote!(format!("Promise<{}>", <#ty as ts_rs::TS>::name()))
+        },
     };
 
     let inline = match (&args_struct, args) {
