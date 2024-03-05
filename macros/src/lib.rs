@@ -2,12 +2,13 @@
 #![deny(unused)]
 
 use attr::FnAttr;
+use inflector::Inflector;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
-    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Result,
-    TypeParam, WhereClause, ItemFn,
+    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, ItemFn, LifetimeParam, Result, TypeParam, WhereClause
 };
+use types::ParsedFn;
 
 use crate::{deps::Dependencies, utils::format_generics};
 
@@ -341,21 +342,31 @@ fn entry(input: proc_macro::TokenStream) -> Result<TokenStream> {
 }
 
 #[proc_macro_attribute]
-pub fn ts_rs_fn(attr: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    entry_fn(attr.into(), input.into()).map_or_else(
-        |e| e.into_compile_error().into(),
-        Into::into
-    )
+pub fn ts_rs_fn(
+    attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    entry_fn(attr.into(), input.into()).map_or_else(|e| e.into_compile_error().into(), Into::into)
 }
-
-
 
 fn entry_fn(attr: TokenStream, input: TokenStream) -> Result<TokenStream> {
     let input = syn::parse2::<ItemFn>(input)?;
     let attr = syn::parse2::<FnAttr>(attr)?;
 
-    let _foo = types::fn_def(&input, attr)?;
+    let ident = format_ident!("{}Fn", input.sig.ident.to_string().to_pascal_case());
+
+    let ParsedFn {
+        args_struct,
+        derived_fn,
+    } = types::fn_def(&input, attr)?;
+
+    let struct_impl = derived_fn.into_impl(ident.clone(), input.sig.generics.clone());
     Ok(quote!(
         #input
+
+        struct #ident;
+        #struct_impl
+
+        #args_struct
     ))
 }

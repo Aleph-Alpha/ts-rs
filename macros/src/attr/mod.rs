@@ -2,19 +2,19 @@ use std::convert::TryFrom;
 
 pub use field::*;
 pub use r#enum::*;
+pub use r#fn::*;
 pub use r#struct::*;
 use syn::{
     parse::{Parse, ParseStream},
     Error, Lit, Result, Token,
 };
 pub use variant::*;
-pub use r#fn::*;
 
 mod r#enum;
 mod field;
+mod r#fn;
 mod r#struct;
 mod variant;
-mod r#fn;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Inflection {
@@ -59,6 +59,18 @@ impl Inflection {
             }
             Inflection::ScreamingSnake => string.to_screaming_snake_case(),
             Inflection::Kebab => string.to_kebab_case(),
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Lower => "lowercase",
+            Self::Upper => "UPPERCASE",
+            Self::Kebab => "kebab-case",
+            Self::Camel => "camelCase",
+            Self::Snake => "snake_case",
+            Self::Pascal => "PascalCase",
+            Self::ScreamingSnake => "SCREAMING_SNAKE_CASE",
         }
     }
 }

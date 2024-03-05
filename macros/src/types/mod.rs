@@ -3,14 +3,14 @@ use syn::{Fields, Generics, Ident, ItemStruct, Result};
 use crate::{attr::StructAttr, utils::to_ts_ident, DerivedTS};
 
 mod r#enum;
+mod r#fn;
 mod named;
 mod newtype;
 mod tuple;
 mod unit;
-mod r#fn;
 
-pub(crate) use r#fn::fn_def;
 pub(crate) use r#enum::r#enum_def;
+pub(crate) use r#fn::*;
 
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     let attr = StructAttr::from_attrs(&s.attrs)?;

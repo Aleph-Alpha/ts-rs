@@ -1,10 +1,11 @@
 use syn::{Ident, Result};
 
-use super::{parse_assign_str, Inflection, parse_assign_inflection};
+use super::{parse_assign_inflection, parse_assign_str, Inflection};
 
 #[derive(Default)]
 pub struct FnAttr {
     pub args: Args,
+    pub export_to: Option<String>,
     pub rename: Option<String>,
     pub rename_all: Option<Inflection>,
 }
@@ -12,8 +13,8 @@ pub struct FnAttr {
 #[derive(Default)]
 pub enum Args {
     #[default]
-    Positional,
-    Named,
+    Flattened,
+    Inlined,
 }
 
 impl TryFrom<String> for Args {
@@ -21,9 +22,9 @@ impl TryFrom<String> for Args {
 
     fn try_from(s: String) -> Result<Self> {
         match s.as_str() {
-            "named" => Ok(Self::Named),
-            "positional" => Ok(Self::Positional),
-            x => syn_err!(r#"Expected "named" or "positional", found "{}""#, x)
+            "inlined" => Ok(Self::Inlined),
+            "flattened" => Ok(Self::Flattened),
+            x => syn_err!(r#"Expected "inlined" or "flattened", found "{x}""#),
         }
     }
 }
@@ -31,6 +32,7 @@ impl TryFrom<String> for Args {
 impl_parse! {
     FnAttr(input, output) {
         "args" => output.args = parse_assign_str(input)?.try_into()?,
+        "export_to" => output.export_to = Some(parse_assign_str(input)?),
         "rename" => output.rename = Some(parse_assign_str(input)?),
         "rename_all" => output.rename_all = Some(parse_assign_inflection(input)?),
     }
