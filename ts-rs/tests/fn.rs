@@ -1,4 +1,4 @@
-#![allow(dead_code, unused)]
+#![allow(dead_code, unused, clippy::disallowed_names)]
 use ts_rs::{ts_rs_fn, TS};
 
 #[ts_rs_fn(args = "inlined", export_to = "tests-out/fn/")]

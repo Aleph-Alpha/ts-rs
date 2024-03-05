@@ -1,3 +1,5 @@
+use std::ops::Not;
+
 use inflector::Inflector;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens};
@@ -32,7 +34,7 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
         .map(|x| match x {
             FnArg::Receiver(_) => Err(Error::new(x.span(), "self parameter is not allowed")),
             FnArg::Typed(PatType { ty, attrs, pat, .. }) => {
-                dependencies.push(&ty);
+                dependencies.push(ty);
                 Ok(Field {
                     attrs: attrs.to_vec(),
                     vis: syn::Visibility::Inherited,
@@ -59,17 +61,15 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
         Some(quote!(#[ts(rename_all = #rename_all)]))
     });
 
-    let args_struct = if fields.is_empty() {
-        None
-    } else {
-        Some(quote!(
+    let args_struct = fields.is_empty().not().then_some(
+        quote!(
             #[derive(ts_rs::TS)]
             #struct_attr
             struct #struct_ident #ty_generics #where_clause {
                 #fields
             }
-        ))
-    };
+        )
+    );
 
     let docs = parse_docs(&input.attrs)?;
     let ts_name = rename.clone().unwrap_or_else(|| to_ts_ident(ident));
