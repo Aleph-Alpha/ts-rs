@@ -68,61 +68,76 @@
 //!
 //! ## cargo features
 //! - **serde-compat** (default)  
+//! 
 //!   Enable serde compatibility. See below for more info.
 //!   <br/><br/>
 //!
 //! - **format**  
-//!   When enabled, the generated typescript will be formatted.
-//!   Currently, this sadly adds quite a bit of dependencies.
+//! 
+//!   When enabled, the generated typescript will be formatted.  
+//!   Currently, this sadly adds quite a few dependencies.
 //!   <br/><br/>
 //!
 //! - **no-serde-warnings**  
+//! 
 //!   When `serde-compat` is enabled, warnings are printed during build if unsupported serde
-//!   attributes are encountered. Enabling this feature silences these warnings.
+//!   attributes are encountered.   
+//!   Enabling this feature silences these warnings.
 //!   <br/><br/>
 //!
 //! - **import-esm**  
+//! 
 //!   `import` statements in the generated file will have the `.js` extension in the end of
 //!   the path to conform to the ES Modules spec. (e.g.: `import { MyStruct } from "./my_struct.js"`)
 //!   <br/><br/>
 //!
 //! - **chrono-impl**  
+//! 
 //!   Implement `TS` for types from chrono
 //!   <br/><br/>
 //!
 //! - **bigdecimal-impl**  
+//! 
 //!   Implement `TS` for types from bigdecimal
 //!   <br/><br/>
 //!
 //! - **url-impl**  
+//! 
 //!   Implement `TS` for types from url
 //!   <br/><br/>
 //!
 //! - **uuid-impl**  
+//! 
 //!   Implement `TS` for types from uuid
 //!   <br/><br/>
 //!
 //! - **bson-uuid-impl**  
+//! 
 //!   Implement `TS` for types from bson
 //!   <br/><br/>
 //!
 //! - **bytes-impl**  
+//! 
 //!   Implement `TS` for types from bytes
 //!   <br/><br/>
 //!
 //! - **indexmap-impl**  
+//! 
 //!   Implement `TS` for `IndexMap` and `IndexSet` from indexmap
 //!   <br/><br/>
 //!
 //! - **ordered-float-impl**  
+//! 
 //!   Implement `TS` for `OrderedFloat` from ordered_float
 //!   <br/><br/>
 //!
 //! - **heapless-impl**  
+//! 
 //!   Implement `TS` for `Vec` from heapless
 //!   <br/><br/>
 //!
 //! - **semver-impl**  
+//! 
 //!   Implement `TS` for `Version` from semver
 //!   <br/><br/>
 //!
