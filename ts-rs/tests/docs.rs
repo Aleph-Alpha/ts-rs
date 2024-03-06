@@ -99,6 +99,7 @@ struct G {
 fn generate_path(path: &str) -> PathBuf {
     std::env::current_dir().unwrap()
         .join(std::env::var("TS_RS_EXPORT_DIR").unwrap_or_default())
+        .join("tests-out/docs/")
         .join(path)
 }
 
@@ -143,9 +144,9 @@ fn export_a() {
         )
     };
 
-    let actual_content = fs::read_to_string(
-        generate_path("tests-out/docs/A.ts")
-    ).unwrap();
+    let Ok(actual_content) = fs::read_to_string(generate_path("A.ts")) else {
+        panic!("failed to read path: {}", generate_path("A.ts").to_string_lossy())
+    };
 
     assert_eq!(actual_content, expected_content);
 }
@@ -191,7 +192,7 @@ fn export_b() {
         )
     };
 
-    let actual_content = fs::read_to_string(generate_path("tests-out/docs/B.ts")).unwrap();
+    let actual_content = fs::read_to_string(generate_path("B.ts")).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -224,7 +225,7 @@ fn export_c() {
         )
     };
 
-    let actual_content = fs::read_to_string(generate_path("tests-out/docs/C.ts")).unwrap();
+    let actual_content = fs::read_to_string(generate_path("C.ts")).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -256,7 +257,7 @@ fn export_d() {
             "export type D = null;"
         )
     };
-    let actual_content = fs::read_to_string(generate_path("tests-out/docs/D.ts")).unwrap();
+    let actual_content = fs::read_to_string(generate_path("D.ts")).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -289,7 +290,7 @@ fn export_e() {
         )
     };
 
-    let actual_content = fs::read_to_string(generate_path("tests-out/docs/E.ts")).unwrap();
+    let actual_content = fs::read_to_string(generate_path("E.ts")).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -337,7 +338,7 @@ fn export_f() {
         )
     };
 
-    let actual_content = fs::read_to_string(generate_path("tests-out/docs/F.ts")).unwrap();
+    let actual_content = fs::read_to_string(generate_path("F.ts")).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -385,7 +386,7 @@ fn export_g() {
         )
     };
 
-    let actual_content = fs::read_to_string(generate_path("tests-out/docs/G.ts")).unwrap();
+    let actual_content = fs::read_to_string(generate_path("G.ts")).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
