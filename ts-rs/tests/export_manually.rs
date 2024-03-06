@@ -36,7 +36,12 @@ fn export_manually() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/export_manually/UserFile.ts").unwrap();
+    let actual_content = fs::read_to_string(
+        match std::env::var("TS_RS_EXPORT_DIR") {
+            Ok(path) => format!("{}/tests-out/export_manually/UserFile.ts", path.trim_end_matches('/')),
+            Err(_) => "tests-out/export_manually/UserFile.ts".to_owned(),
+        }
+    ).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -57,7 +62,12 @@ fn export_manually_dir() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/export_manually/dir/UserDir.ts").unwrap();
+    let actual_content = fs::read_to_string(
+        match std::env::var("TS_RS_EXPORT_DIR") {
+            Ok(path) => format!("{}/tests-out/export_manually/dir/UserDir.ts", path.trim_end_matches('/')),
+            Err(_) => "tests-out/export_manually/dir/UserDir.ts".to_owned(),
+        }
+    ).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }

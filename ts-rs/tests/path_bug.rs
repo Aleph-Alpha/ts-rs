@@ -15,10 +15,11 @@ struct Bar {
 
 #[test]
 fn path_bug() {
-    Foo::export().unwrap();
-    Bar::export().unwrap();
+    export_bindings_foo();
 
-    let base = std::env::current_dir().unwrap();
-    assert!(base.join("./tests-out/path_bug/Foo.ts").is_file());
-    assert!(base.join("./tests-out/path_bug/aaa/Bar.ts").is_file());
+    let base = std::env::current_dir()
+        .unwrap()
+        .join(std::env::var("TS_RS_EXPORT_DIR").unwrap_or("".to_owned()));
+    assert!(base.join("../ts-rs/tests-out/path_bug/Foo.ts").is_file());
+    assert!(base.join("tests-out/path_bug/aaa/Bar.ts").is_file());
 }
