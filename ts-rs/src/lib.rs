@@ -562,10 +562,7 @@ impl<T: TS, E: TS> TS for Result<T, E> {
     where
         Self: 'static,
     {
-        T::generics()
-            .push::<T>()
-            .extend(E::generics())
-            .push::<E>()
+        T::generics().push::<T>().extend(E::generics()).push::<E>()
     }
 }
 
@@ -658,10 +655,7 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     where
         Self: 'static,
     {
-        K::generics()
-            .push::<K>()
-            .extend(V::generics())
-            .push::<V>()
+        K::generics().push::<K>().extend(V::generics()).push::<V>()
     }
 }
 

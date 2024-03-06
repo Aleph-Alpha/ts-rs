@@ -1,3 +1,5 @@
+mod path;
+
 use std::{
     any::TypeId,
     collections::BTreeMap,
@@ -7,7 +9,6 @@ use std::{
 };
 
 use thiserror::Error;
-use ExportError::*;
 
 use crate::TS;
 
@@ -107,8 +108,8 @@ pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
         use dprint_plugin_typescript::{configuration::ConfigurationBuilder, format_text};
 
         let fmt_cfg = ConfigurationBuilder::new().deno().build();
-        if let Some(formatted) =
-            format_text(path.as_ref(), &buffer, &fmt_cfg).map_err(|e| Formatting(e.to_string()))?
+        if let Some(formatted) = format_text(path.as_ref(), &buffer, &fmt_cfg)
+            .map_err(|e| ExportError::Formatting(e.to_string()))?
         {
             buffer = formatted;
         }
@@ -158,11 +159,11 @@ pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String
 
 /// Compute the output path to where `T` should be exported.
 fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").map_err(|_| ManifestDirNotSet)?;
-    let manifest_dir = Path::new(&manifest_dir);
-    let path =
-        PathBuf::from(T::get_export_to().ok_or(CannotBeExported(std::any::type_name::<T>()))?);
-    Ok(manifest_dir.join(path))
+    path::absolute(Path::new(
+        &T::get_export_to()
+            .ok_or_else(|| std::any::type_name::<T>())
+            .map_err(ExportError::CannotBeExported)?,
+    ))
 }
 
 /// Push the declaration of `T`
@@ -180,7 +181,8 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
 
 /// Push an import statement for all dependencies of `T`
 fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), ExportError> {
-    let export_to = T::get_export_to().ok_or(CannotBeExported(std::any::type_name::<T>()))?;
+    let export_to =
+        T::get_export_to().ok_or(ExportError::CannotBeExported(std::any::type_name::<T>()))?;
     let path = Path::new(&export_to);
 
     let deps = T::dependencies();
@@ -233,47 +235,46 @@ fn import_path(from: &Path, import: &Path) -> String {
 //
 // Adapted from rustc's path_relative_from
 // https://github.com/rust-lang/rust/blob/e1d0de82cc40b666b88d4a6d2c9dcbc81d7ed27f/src/librustc_back/rpath.rs#L116-L158
-fn diff_paths<P, B>(path: P, base: B) -> Option<PathBuf>
+fn diff_paths<P, B>(path: P, base: B) -> Result<PathBuf, ExportError>
 where
     P: AsRef<Path>,
     B: AsRef<Path>,
 {
-    let path = path.as_ref();
-    let base = base.as_ref();
+    use Component as C;
 
-    if path.is_absolute() != base.is_absolute() {
-        if path.is_absolute() {
-            Some(PathBuf::from(path))
-        } else {
-            None
-        }
-    } else {
-        let mut ita = path.components();
-        let mut itb = base.components();
-        let mut comps: Vec<Component> = vec![];
-        loop {
-            match (ita.next(), itb.next()) {
-                (None, None) => break,
-                (Some(a), None) => {
-                    comps.push(a);
-                    comps.extend(ita.by_ref());
-                    break;
-                }
-                (None, _) => comps.push(Component::ParentDir),
-                (Some(a), Some(b)) if comps.is_empty() && a == b => (),
-                (Some(a), Some(Component::CurDir)) => comps.push(a),
-                (Some(_), Some(Component::ParentDir)) => return None,
-                (Some(a), Some(_)) => {
+    let path = path::absolute(path)?;
+    let base = path::absolute(base)?;
+
+    let mut ita = path.components();
+    let mut itb = base.components();
+    let mut comps: Vec<Component> = vec![];
+
+    loop {
+        match (ita.next(), itb.next()) {
+            (Some(C::ParentDir | C::CurDir), _) | (_, Some(C::ParentDir | C::CurDir)) => {
+                unreachable!(
+                    "The paths have been cleaned, no no '.' or '..' components are present"
+                )
+            }
+            (None, None) => break,
+            (Some(a), None) => {
+                comps.push(a);
+                comps.extend(ita.by_ref());
+                break;
+            }
+            (None, _) => comps.push(Component::ParentDir),
+            (Some(a), Some(b)) if comps.is_empty() && a == b => (),
+            (Some(a), Some(_)) => {
+                comps.push(Component::ParentDir);
+                for _ in itb {
                     comps.push(Component::ParentDir);
-                    for _ in itb {
-                        comps.push(Component::ParentDir);
-                    }
-                    comps.push(a);
-                    comps.extend(ita.by_ref());
-                    break;
                 }
+                comps.push(a);
+                comps.extend(ita.by_ref());
+                break;
             }
         }
-        Some(comps.iter().map(|c| c.as_os_str()).collect())
     }
+
+    Ok(comps.iter().map(|c| c.as_os_str()).collect())
 }
