@@ -72,7 +72,7 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
     );
 
     let docs = parse_docs(&input.attrs)?;
-    let ts_name = rename.clone().unwrap_or_else(|| to_ts_ident(ident));
+    let ts_name = rename.clone().unwrap_or_else(|| to_ts_ident(ident)).to_pascal_case();
     let is_async = input.sig.asyncness.is_some();
     let return_ty = match (is_async, input.sig.output.clone()) {
         (false, syn::ReturnType::Default) => quote!("void"),
