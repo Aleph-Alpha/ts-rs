@@ -34,7 +34,7 @@ impl DerivedTS {
             .export
             .then(|| self.generate_export_test(&rust_ty, &generics));
 
-        let export_dir = std::env::var("TS_RS_EXPORT_DIR").ok();
+        let export_dir = std::option_env!("TS_RS_EXPORT_DIR");
         let export_to = {
             let path = match self.export_to.as_deref() {
                 Some(dirname) if dirname.ends_with('/') => {
