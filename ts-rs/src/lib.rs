@@ -165,9 +165,6 @@ use std::{
 pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
-// Used in generated code. Not public API
-#[doc(hidden)]
-pub use crate::export::__private;
 use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
@@ -304,10 +301,6 @@ pub trait TS {
         }
     }
 
-    fn get_export_to() -> Option<String> {
-        Self::EXPORT_TO.map(ToString::to_string)
-    }
-
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
     /// This function will panic if the type has no declaration.
     ///
@@ -428,7 +421,7 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
-        let exported_to = T::get_export_to()?;
+        let exported_to = T::EXPORT_TO.map(ToOwned::to_owned)?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
             ts_name: T::ident(),

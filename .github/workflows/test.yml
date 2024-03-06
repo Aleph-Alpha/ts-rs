@@ -18,7 +18,8 @@ jobs:
         working-directory: e2e/dependencies/consumer
         run: |
           TS_RS_EXPORT_DIR=custom-bindings cargo t 
-          tsc custom-bindings/* --noEmit --noUnusedLocals --strict
+          shopt -s globstar
+          tsc custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
   e2e-workspace:
     name: Run 'workspace' end-to-end test
     runs-on: ubuntu-latest
@@ -36,7 +37,8 @@ jobs:
         working-directory: e2e/workspace
         run: |
           TS_RS_EXPORT_DIR=custom-bindings cargo t 
-          tsc parent/custom-bindings/* --noEmit --noUnusedLocals --strict
+          shopt -s globstar
+          tsc parent/custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
   e2e-example:
     name: End-to-end test example
     runs-on: ubuntu-latest
@@ -54,7 +56,8 @@ jobs:
         working-directory: example
         run: |
           TS_RS_EXPORT_DIR=custom-bindings cargo t 
-          tsc custom-bindings/* --noEmit --noUnusedLocals --strict
+          shopt -s globstar
+          tsc custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
 
   readme-up-to-date:
     name: Check that README.md is up-to-date
@@ -88,3 +91,8 @@ jobs:
           cargo test --all-features
           shopt -s globstar
           tsc ts-rs/tests-out/**/*.ts --noEmit --noUnusedLocals --strict
+      - name: test with export env
+        run: |
+          TS_RS_EXPORT_DIR=output cargo test --no-default-features
+          shopt -s globstar
+          tsc ts-rs/output/tests-out/**/*.ts --noEmit --noUnusedLocals --strict

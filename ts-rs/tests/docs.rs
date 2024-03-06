@@ -4,6 +4,8 @@ use std::{concat, fs};
 
 use ts_rs::TS;
 
+const PATH: Option<&str> = std::option_env!("TS_RS_EXPORT_DIR");
+
 /* ============================================================================================== */
 
 /// Doc comment.
@@ -95,6 +97,16 @@ struct G {
 
 /* ============================================================================================== */
 
+fn generate_path(path: &str) -> String {
+    format!(
+        "{}{path}",
+        PATH
+            .map(|x| x.trim_end_matches('/'))
+            .map(|x| format!("{x}/"))
+            .unwrap_or_default()
+    )
+}
+
 #[test]
 fn export_a() {
     A::export().unwrap();
@@ -136,7 +148,9 @@ fn export_a() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/A.ts").unwrap();
+    let actual_content = fs::read_to_string(
+        generate_path("tests-out/docs/A.ts")
+    ).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
