@@ -145,7 +145,12 @@ fn export_a() {
     };
 
     let Ok(actual_content) = fs::read_to_string(generate_path("A.ts")) else {
-        panic!("failed to read path: {}", generate_path("A.ts").to_string_lossy())
+        panic!(
+            "failed to read path: {}\ncurrent dir: {}\nTS_RS_EXPORT_DIR: {}",
+            generate_path("A.ts").to_string_lossy(),
+            std::env::current_dir().unwrap().to_string_lossy(),
+            std::env::var("TS_RS_EXPORT_DIR").unwrap_or_default()
+        )
     };
 
     assert_eq!(actual_content, expected_content);
