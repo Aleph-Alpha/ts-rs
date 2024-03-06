@@ -69,80 +69,24 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - support for ESM imports
 
 ### cargo features
-- **serde-compat** (default)
+| **Feature**        | **Description**                                                                                                                                                                                           |
+|:-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| serde-compat       | **Enabled by default** <br/>See the *"serde compatibility"* section below for more information.                                                                                                           |
+| format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
+| no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
+| import-esm         | When enabled,`import` statements in the generated file will have the `.js` extension in the end of the path to conform to the ES Modules spec. <br/> Example: `import { MyStruct } from "./my_struct.js"` |
+| chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
+| bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
+| url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
+| uuid-impl          | Implement `TS` for types from *uuid*                                                                                                                                                                      |
+| bson-uuid-impl     | Implement `TS` for types from *bson*                                                                                                                                                                      |
+| bytes-impl         | Implement `TS` for types from *bytes*                                                                                                                                                                     |
+| indexmap-impl      | Implement `TS` for types from *indexmap*                                                                                                                                                                  |
+| ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
+| heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
+| semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
 
-  Enable serde compatibility. See below for more info.
-  <br/><br/>
-
-- **format**
-
-  When enabled, the generated typescript will be formatted.
-  Currently, this sadly adds quite a few dependencies.
-  <br/><br/>
-
-- **no-serde-warnings**
-
-  When `serde-compat` is enabled, warnings are printed during build if unsupported serde
-  attributes are encountered.
-  Enabling this feature silences these warnings.
-  <br/><br/>
-
-- **import-esm**
-
-  `import` statements in the generated file will have the `.js` extension in the end of
-  the path to conform to the ES Modules spec. (e.g.: `import { MyStruct } from "./my_struct.js"`)
-  <br/><br/>
-
-- **chrono-impl**
-
-  Implement `TS` for types from chrono
-  <br/><br/>
-
-- **bigdecimal-impl**
-
-  Implement `TS` for types from bigdecimal
-  <br/><br/>
-
-- **url-impl**
-
-  Implement `TS` for types from url
-  <br/><br/>
-
-- **uuid-impl**
-
-  Implement `TS` for types from uuid
-  <br/><br/>
-
-- **bson-uuid-impl**
-
-  Implement `TS` for types from bson
-  <br/><br/>
-
-- **bytes-impl**
-
-  Implement `TS` for types from bytes
-  <br/><br/>
-
-- **indexmap-impl**
-
-  Implement `TS` for `IndexMap` and `IndexSet` from indexmap
-  <br/><br/>
-
-- **ordered-float-impl**
-
-  Implement `TS` for `OrderedFloat` from ordered_float
-  <br/><br/>
-
-- **heapless-impl**
-
-  Implement `TS` for `Vec` from heapless
-  <br/><br/>
-
-- **semver-impl**
-
-  Implement `TS` for `Version` from semver
-  <br/><br/>
-
+<br/>
 
 If there's a type you're dealing with which doesn't implement `TS`, use either
 `#[ts(as = ".."`)] or `#[ts(type = "..")]`, or open a PR.
