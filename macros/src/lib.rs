@@ -351,7 +351,11 @@ pub fn ts_rs_fn(
 
 fn entry_fn(attr: TokenStream, input: TokenStream) -> Result<TokenStream> {
     let input = syn::parse2::<ItemFn>(input)?;
-    let attr = syn::parse2::<FnAttr>(attr)?;
+    let attr = if !attr.is_empty() {
+        syn::parse2::<FnAttr>(attr)?
+    } else {
+        FnAttr::default()
+    };
 
     let ident = format_ident!("{}Fn", input.sig.ident.to_string().to_pascal_case());
 
