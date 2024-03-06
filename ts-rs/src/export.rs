@@ -87,7 +87,7 @@ mod recursive_export {
 /// Export `T` to the file specified by the `#[ts(export_to = ..)]` attribute
 pub(crate) fn export_type<T: TS + ?Sized + 'static>() -> Result<(), ExportError> {
     let path = output_path::<T>()?;
-    export_type_to::<T, _>(&path)
+    export_type_to::<T, _>(path::absolute(path)?)
 }
 
 /// Export `T` to the file specified by the `path` argument.
@@ -134,7 +134,7 @@ pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String
 }
 
 /// Compute the output path to where `T` should be exported.
-fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
+pub fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
     let path = std::env::var("TS_RS_EXPORT_DIR")
         .ok()
         .as_deref()
@@ -142,12 +142,10 @@ fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
         .unwrap_or_else(|| Path::new("."))
         .to_owned();
 
-    path::absolute(Path::new(
-        &path.join(
-            T::EXPORT_TO
-                .ok_or_else(|| std::any::type_name::<T>())
-                .map_err(ExportError::CannotBeExported)?,
-        )
+    Ok(path.join(
+        T::EXPORT_TO
+            .ok_or_else(|| std::any::type_name::<T>())
+            .map_err(ExportError::CannotBeExported)?,
     ))
 }
 

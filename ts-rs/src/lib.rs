@@ -162,6 +162,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+pub use export::output_path;
 pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
@@ -289,19 +290,6 @@ pub trait TS {
     /// The path given to `#[ts(export_to = "...")]`
     const EXPORT_TO: Option<&'static str> = None;
     const DOCS: Option<&'static str> = None;
-
-    /// Returns the path to which the type will be exported, taking
-    /// `TS_RS_EXPORT_DIR` into account
-    fn export_path() -> Option<PathBuf> {
-        let base = std::env::var("TS_RS_EXPORT_DIR")
-            .ok()
-            .as_deref()
-            .map(Path::new)
-            .unwrap_or_else(|| Path::new("."))
-            .to_owned();
-
-        Some(base.join(Self::EXPORT_TO?))
-    }
 
     /// Identifier of this type, excluding generic parameters.
     fn ident() -> String {
@@ -435,7 +423,8 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
-        let exported_to = T::export_path()
+        let exported_to = output_path::<T>()
+            .ok()
             .as_deref()
             .and_then(Path::to_str)
             .map(ToOwned::to_owned)?;
