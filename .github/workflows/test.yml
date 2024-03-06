@@ -81,6 +81,12 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - name: Test with export env
+        run: |
+          ls
+          TS_RS_EXPORT_DIR=output cargo test --no-default-features
+          shopt -s globstar
+          tsc ts-rs/output/tests-out/**/*.ts --noEmit --noUnusedLocals --strict
       - name: No features
         run: |
           cargo test --no-default-features
@@ -91,8 +97,3 @@ jobs:
           cargo test --all-features
           shopt -s globstar
           tsc ts-rs/tests-out/**/*.ts --noEmit --noUnusedLocals --strict
-      - name: test with export env
-        run: |
-          TS_RS_EXPORT_DIR=output cargo test --no-default-features
-          shopt -s globstar
-          tsc ts-rs/output/tests-out/**/*.ts --noEmit --noUnusedLocals --strict
