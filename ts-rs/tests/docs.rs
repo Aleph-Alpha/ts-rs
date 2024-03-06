@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use std::{concat, fs};
+use std::{concat, fs, path::PathBuf};
 
 use ts_rs::TS;
 
@@ -96,12 +96,10 @@ struct G {
 
 /* ============================================================================================== */
 
-fn generate_path(path: &str) -> String {
-    let base = std::env::var("TS_RS_EXPORT_DIR").ok()
-        .map(|x| x.trim_end_matches('/').to_owned())
-        .map(|x| format!("{x}/"))
-        .unwrap_or_default();
-    format!("{base}{path}")
+fn generate_path(path: &str) -> PathBuf {
+    std::env::current_dir().unwrap()
+        .join(std::env::var("TS_RS_EXPORT_DIR").unwrap_or_default())
+        .join(path)
 }
 
 #[test]
