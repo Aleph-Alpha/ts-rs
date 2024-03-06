@@ -135,10 +135,19 @@ pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String
 
 /// Compute the output path to where `T` should be exported.
 fn output_path<T: TS + ?Sized>() -> Result<PathBuf, ExportError> {
+    let path = std::env::var("TS_RS_EXPORT_DIR")
+        .ok()
+        .as_deref()
+        .map(Path::new)
+        .unwrap_or_else(|| Path::new("."))
+        .to_owned();
+
     path::absolute(Path::new(
-        T::EXPORT_TO
-            .ok_or_else(|| std::any::type_name::<T>())
-            .map_err(ExportError::CannotBeExported)?,
+        &path.join(
+            T::EXPORT_TO
+                .ok_or_else(|| std::any::type_name::<T>())
+                .map_err(ExportError::CannotBeExported)?,
+        )
     ))
 }
 
@@ -157,9 +166,15 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
 
 /// Push an import statement for all dependencies of `T`
 fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), ExportError> {
+    let base = std::env::var("TS_RS_EXPORT_DIR")
+        .ok()
+        .as_deref()
+        .map(Path::new)
+        .unwrap_or_else(|| Path::new("."))
+        .to_owned();
     let export_to =
         T::EXPORT_TO.ok_or(ExportError::CannotBeExported(std::any::type_name::<T>()))?;
-    let path = Path::new(&export_to);
+    let path = base.join(export_to);
 
     let deps = T::dependencies();
     let deduplicated_deps = deps
@@ -169,7 +184,7 @@ fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), Ex
         .collect::<BTreeMap<_, _>>();
 
     for (_, dep) in deduplicated_deps {
-        let rel_path = import_path(path, Path::new(&dep.exported_to));
+        let rel_path = import_path(&path, Path::new(&dep.exported_to));
         writeln!(
             out,
             "import type {{ {} }} from {:?};",

@@ -34,43 +34,11 @@ impl DerivedTS {
             .export
             .then(|| self.generate_export_test(&rust_ty, &generics));
 
-        let export_dir = std::option_env!("TS_RS_EXPORT_DIR");
         let export_to = {
             let path = match self.export_to.as_deref() {
-                Some(dirname) if dirname.ends_with('/') => {
-                    export_dir
-                        .map_or_else(
-                            || format!("{}{}.ts", dirname, self.ts_name),
-                            |ts_rs_dir| format!(
-                                "{}/{}{}.ts",
-                                ts_rs_dir.trim_end_matches('/'),
-                                dirname,
-                                self.ts_name,
-                            )
-                        )
-                },
-                Some(filename) => {
-                    export_dir
-                        .map_or_else(
-                            || filename.to_owned(),
-                            |ts_rs_dir| format!(
-                                "{}/{}",
-                                ts_rs_dir.trim_end_matches('/'),
-                                filename,
-                            ),
-                        )
-                },
-                None => {
-                    export_dir
-                        .map_or_else(
-                            || format!("bindings/{}.ts", self.ts_name),
-                            |ts_rs_dir| format!(
-                                "{}/{}.ts",
-                                ts_rs_dir.trim_end_matches('/'),
-                                self.ts_name,
-                            ),
-                        )
-                },
+                Some(dirname) if dirname.ends_with('/') => format!("{}{}.ts", dirname, self.ts_name),
+                Some(filename) => filename.to_owned(),
+                None => format!("bindings/{}.ts", self.ts_name),
             };
 
             quote! {

@@ -83,7 +83,6 @@ jobs:
           toolchain: stable
       - name: Test with export env
         run: |
-          ls
           TS_RS_EXPORT_DIR=output cargo test --no-default-features
           shopt -s globstar
           tsc ts-rs/output/tests-out/**/*.ts --noEmit --noUnusedLocals --strict

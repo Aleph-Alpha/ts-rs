@@ -421,7 +421,17 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
-        let exported_to = T::EXPORT_TO.map(ToOwned::to_owned)?;
+        let base = std::env::var("TS_RS_EXPORT_DIR")
+            .ok()
+            .as_deref()
+            .map(Path::new)
+            .unwrap_or_else(|| Path::new("."))
+            .to_owned();
+
+        let exported_to = base
+            .join(T::EXPORT_TO.map(ToOwned::to_owned)?)
+            .to_string_lossy()
+            .to_string();
         Some(Dependency {
             type_id: TypeId::of::<T>(),
             ts_name: T::ident(),
