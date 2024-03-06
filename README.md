@@ -69,57 +69,68 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 - support for ESM imports
 
 ### cargo features
-- `serde-compat` (default)
-
+- **serde-compat** (default)
   Enable serde compatibility. See below for more info.
-- `format`
+  <br/><br/>
 
+- **format**
   When enabled, the generated typescript will be formatted.
   Currently, this sadly adds quite a bit of dependencies.
-- `chrono-impl`
+  <br/><br/>
 
-  Implement `TS` for types from chrono
-- `bigdecimal-impl`
-
-  Implement `TS` for types from bigdecimal
-- `url-impl`
-
-  Implement `TS` for types from url
-- `uuid-impl`
-
-  Implement `TS` for types from uuid
-- `bson-uuid-impl`
-
-  Implement `TS` for types from bson
-- `bytes-impl`
-
-  Implement `TS` for types from bytes
-- `indexmap-impl`
-
-  Implement `TS` for `IndexMap` and `IndexSet` from indexmap
-
-- `ordered-float-impl`
-
-  Implement `TS` for `OrderedFloat` from ordered_float
-
-- `heapless-impl`
-
-  Implement `TS` for `Vec` from heapless
-
-- `semver-impl`
-  Implement `TS` for `Version` from semver
-
-- `no-serde-warnings`
-
+- **no-serde-warnings**
   When `serde-compat` is enabled, warnings are printed during build if unsupported serde
   attributes are encountered. Enabling this feature silences these warnings.
+  <br/><br/>
 
-- `import-esm`
-
+- **import-esm**
   `import` statements in the generated file will have the `.js` extension in the end of
   the path to conform to the ES Modules spec. (e.g.: `import { MyStruct } from "./my_struct.js"`)
+  <br/><br/>
 
-If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
+- **chrono-impl**
+  Implement `TS` for types from chrono
+  <br/><br/>
+
+- **bigdecimal-impl**
+  Implement `TS` for types from bigdecimal
+  <br/><br/>
+
+- **url-impl**
+  Implement `TS` for types from url
+  <br/><br/>
+
+- **uuid-impl**
+  Implement `TS` for types from uuid
+  <br/><br/>
+
+- **bson-uuid-impl**
+  Implement `TS` for types from bson
+  <br/><br/>
+
+- **bytes-impl**
+  Implement `TS` for types from bytes
+  <br/><br/>
+
+- **indexmap-impl**
+  Implement `TS` for `IndexMap` and `IndexSet` from indexmap
+  <br/><br/>
+
+- **ordered-float-impl**
+  Implement `TS` for `OrderedFloat` from ordered_float
+  <br/><br/>
+
+- **heapless-impl**
+  Implement `TS` for `Vec` from heapless
+  <br/><br/>
+
+- **semver-impl**
+  Implement `TS` for `Version` from semver
+  <br/><br/>
+
+
+If there's a type you're dealing with which doesn't implement `TS`, use either
+`#[ts(as = ".."`)] or `#[ts(type = "..")]`, or open a PR.
 
 ### serde compatability
 With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
