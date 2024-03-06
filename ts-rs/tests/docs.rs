@@ -4,7 +4,6 @@ use std::{concat, fs};
 
 use ts_rs::TS;
 
-const PATH: Option<&str> = std::option_env!("TS_RS_EXPORT_DIR");
 
 /* ============================================================================================== */
 
@@ -98,13 +97,11 @@ struct G {
 /* ============================================================================================== */
 
 fn generate_path(path: &str) -> String {
-    format!(
-        "{}{path}",
-        PATH
-            .map(|x| x.trim_end_matches('/'))
-            .map(|x| format!("{x}/"))
-            .unwrap_or_default()
-    )
+    let base = std::env::var("TS_RS_EXPORT_DIR").ok()
+        .map(|x| x.trim_end_matches('/').to_owned())
+        .map(|x| format!("{x}/"))
+        .unwrap_or_default();
+    format!("{base}{path}")
 }
 
 #[test]
@@ -196,7 +193,7 @@ fn export_b() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/B.ts").unwrap();
+    let actual_content = fs::read_to_string(generate_path("tests-out/docs/B.ts")).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -229,7 +226,7 @@ fn export_c() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/C.ts").unwrap();
+    let actual_content = fs::read_to_string(generate_path("tests-out/docs/C.ts")).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -261,7 +258,7 @@ fn export_d() {
             "export type D = null;"
         )
     };
-    let actual_content = fs::read_to_string("tests-out/docs/D.ts").unwrap();
+    let actual_content = fs::read_to_string(generate_path("tests-out/docs/D.ts")).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -294,7 +291,7 @@ fn export_e() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/E.ts").unwrap();
+    let actual_content = fs::read_to_string(generate_path("tests-out/docs/E.ts")).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -342,7 +339,7 @@ fn export_f() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/F.ts").unwrap();
+    let actual_content = fs::read_to_string(generate_path("tests-out/docs/F.ts")).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -390,7 +387,7 @@ fn export_g() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/G.ts").unwrap();
+    let actual_content = fs::read_to_string(generate_path("tests-out/docs/G.ts")).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
