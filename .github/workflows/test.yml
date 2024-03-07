@@ -33,7 +33,7 @@ jobs:
         run: |
           cargo t 
           shopt -s globstar
-          tsc parent/bindings/**/* --noEmit --noUnusedLocals --strict
+          tsc parent/bindings/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf parent/bindings
       - name: workspace e2e with default export env
         working-directory: e2e/workspace

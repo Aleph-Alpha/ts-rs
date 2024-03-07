@@ -121,7 +121,6 @@ pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
         std::fs::create_dir_all(parent)?;
     }
     let lock = FILE_LOCK.lock().unwrap();
-    println!("writing {} to {:?}", std::any::type_name::<T>(), path.as_ref());
     std::fs::write(path.as_ref(), buffer)?;
     drop(lock);
     Ok(())
