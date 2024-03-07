@@ -89,7 +89,7 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 <br/>
 
 If there's a type you're dealing with which doesn't implement `TS`, use either
-`#[ts(as = ".."`)] or `#[ts(type = "..")]`, or open a PR.
+`#[ts(as = "..")]` or `#[ts(type = "..")]`, or open a PR.
 
 ### serde compatability
 With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
