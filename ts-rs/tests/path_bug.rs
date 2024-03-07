@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use ts_rs::{TS, output_path};
+use ts_rs::{output_path, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "../ts-rs/tests-out/path_bug/")]

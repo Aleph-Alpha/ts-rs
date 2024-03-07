@@ -36,7 +36,9 @@ impl DerivedTS {
 
         let export_to = {
             let path = match self.export_to.as_deref() {
-                Some(dirname) if dirname.ends_with('/') => format!("{}{}.ts", dirname, self.ts_name),
+                Some(dirname) if dirname.ends_with('/') => {
+                    format!("{}{}.ts", dirname, self.ts_name)
+                }
                 Some(filename) => filename.to_owned(),
                 None => format!("bindings/{}.ts", self.ts_name),
             };
@@ -136,6 +138,10 @@ impl DerivedTS {
                 impl TS for #generics {
                     type WithoutGenerics = #generics;
                     fn name() -> String { stringify!(#generics).to_owned() }
+                    fn inline() -> String { panic!("{} cannot be inlined", Self::name()) }
+                    fn inline_flattened() -> String { panic!("{} cannot be flattened", Self::name()) }
+                    fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
+                    fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
                 }
             )*
         }
@@ -187,13 +193,22 @@ impl DerivedTS {
     fn generate_inline_fn(&self) -> TokenStream {
         let inline = &self.inline;
 
-        let inline_flattened = self.inline_flattened.as_ref().map(|inline_flattened| {
-            quote! {
-                fn inline_flattened() -> String {
-                    #inline_flattened
+        let inline_flattened = self.inline_flattened.as_ref().map_or_else(
+            || {
+                quote! {
+                    fn inline_flattened() -> String {
+                        panic!("{} cannot be flattened", Self::name())
+                    }
                 }
-            }
-        });
+            },
+            |inline_flattened| {
+                quote! {
+                    fn inline_flattened() -> String {
+                        #inline_flattened
+                    }
+                }
+            },
+        );
         let inline = quote! {
             fn inline() -> String {
                 #inline
