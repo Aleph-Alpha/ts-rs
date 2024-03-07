@@ -1,11 +1,11 @@
-use syn::{spanned::Spanned, Attribute, Ident, Result};
+use syn::{Attribute, Ident, Result, Path};
 
-use super::parse_assign_str;
+use super::{parse_assign_str, parse_assign_from_str};
 use crate::utils::{parse_attrs, parse_docs};
 
 #[derive(Default)]
 pub struct FieldAttr {
-    pub type_as: Option<String>,
+    pub type_as: Option<Path>,
     pub type_override: Option<String>,
     pub rename: Option<String>,
     pub inline: bool,
@@ -70,18 +70,19 @@ impl FieldAttr {
 
 impl_parse! {
     FieldAttr(input, out) {
-        "as" => out.type_as = Some(parse_assign_str(input)?),
+        "as" => out.type_as = Some(parse_assign_from_str(input)?),
         "type" => out.type_override = Some(parse_assign_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "inline" => out.inline = true,
         "skip" => out.skip = true,
         "optional" => {
-          use syn::{Token, Error};
+            use syn::{Token, Error};
             let nullable = if input.peek(Token![=]) {
                 input.parse::<Token![=]>()?;
+                let span = input.span();
                 match Ident::parse(input)?.to_string().as_str() {
                     "nullable" => true,
-                    other => Err(Error::new(other.span(), "expected 'nullable'"))?
+                    _ => Err(Error::new(span, "expected 'nullable'"))?
                 }
             } else {
                 false

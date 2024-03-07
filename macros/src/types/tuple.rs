@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
-use quote::quote;
-use syn::{Field, FieldsUnnamed, Generics, Result, Type};
+use quote::{quote, ToTokens};
+use syn::{Field, FieldsUnnamed, Generics, Result, Type, spanned::Spanned};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -66,25 +66,25 @@ fn format_field(
     }
 
     let ty = if let Some(ref type_as) = type_as {
-        syn::parse_str::<Type>(type_as)?
+        syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
     } else {
         field.ty.clone()
     };
 
     if type_as.is_some() && type_override.is_some() {
-        syn_err!("`type` is not compatible with `as`")
+        syn_err!(field.ty.span(); "`type` is not compatible with `as`")
     }
 
     if rename.is_some() {
-        syn_err!("`rename` is not applicable to tuple structs")
+        syn_err!(field.ty.span(); "`rename` is not applicable to tuple structs")
     }
 
     if optional.optional {
-        syn_err!("`optional` is not applicable to tuple fields")
+        syn_err!(field.ty.span(); "`optional` is not applicable to tuple fields")
     }
 
     if flatten {
-        syn_err!("`flatten` is not applicable to tuple fields")
+        syn_err!(field.ty.span(); "`flatten` is not applicable to tuple fields")
     }
 
     formatted_fields.push(match type_override {

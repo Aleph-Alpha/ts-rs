@@ -1,4 +1,4 @@
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::{FieldsUnnamed, Generics, Result, Type};
 
 use crate::{
@@ -44,7 +44,7 @@ pub(crate) fn newtype(
     }
 
     let inner_ty = if let Some(ref type_as) = type_as {
-        syn::parse_str::<Type>(type_as)?
+        syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
     } else {
         inner.ty.clone()
     };
