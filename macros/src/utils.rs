@@ -17,6 +17,12 @@ macro_rules! syn_err {
     };
 }
 
+macro_rules! syn_err_spanned {
+    ($s:expr; $l:literal $(, $a:expr)*) => {
+        return Err(syn::Error::new_spanned($s, format!($l $(, $a)*)))
+    };
+}
+
 macro_rules! impl_parse {
     ($i:ident ($input:ident, $out:ident) { $($k:pat => $e:expr),* $(,)? }) => {
         impl std::convert::TryFrom<&syn::Attribute> for $i {

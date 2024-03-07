@@ -32,15 +32,15 @@ pub(crate) fn newtype(
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
     match (&rename_inner, skip, optional.optional, flatten) {
-        (Some(_), ..) => syn_err!("`rename` is not applicable to newtype fields"),
+        (Some(_), ..) => syn_err_spanned!(fields; "`rename` is not applicable to newtype fields"),
         (_, true, ..) => return super::unit::null(attr, name, generics.clone()),
-        (_, _, true, ..) => syn_err!("`optional` is not applicable to newtype fields"),
-        (_, _, _, true) => syn_err!("`flatten` is not applicable to newtype fields"),
+        (_, _, true, ..) => syn_err_spanned!(fields; "`optional` is not applicable to newtype fields"),
+        (_, _, _, true) => syn_err_spanned!(fields; "`flatten` is not applicable to newtype fields"),
         _ => {}
     };
 
     if type_as.is_some() && type_override.is_some() {
-        syn_err!("`type` is not compatible with `as`")
+        syn_err_spanned!(fields; "`type` is not compatible with `as`")
     }
 
     let inner_ty = if let Some(ref type_as) = type_as {

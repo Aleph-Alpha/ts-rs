@@ -93,7 +93,7 @@ fn format_field(
     }
 
     if type_as.is_some() && type_override.is_some() {
-        syn_err!(field.ident.span(); "`type` is not compatible with `as`")
+        syn_err_spanned!(field; "`type` is not compatible with `as`")
     }
 
     let parsed_ty = if let Some(ref type_as) = type_as {
@@ -120,10 +120,10 @@ fn format_field(
 
     if flatten {
         match (&type_as, &type_override, &rename, inline) {
-            (Some(_), _, _, _) => syn_err!(field.ident.span(); "`as` is not compatible with `flatten`"),
-            (_, Some(_), _, _) => syn_err!(field.ident.span(); "`type` is not compatible with `flatten`"),
-            (_, _, Some(_), _) => syn_err!(field.ident.span(); "`rename` is not compatible with `flatten`"),
-            (_, _, _, true) => syn_err!(field.ident.span(); "`inline` is not compatible with `flatten`"),
+            (Some(_), _, _, _) => syn_err_spanned!(field; "`as` is not compatible with `flatten`"),
+            (_, Some(_), _, _) => syn_err_spanned!(field; "`type` is not compatible with `flatten`"),
+            (_, _, Some(_), _) => syn_err_spanned!(field; "`rename` is not compatible with `flatten`"),
+            (_, _, _, true) => syn_err_spanned!(field; "`inline` is not compatible with `flatten`"),
             _ => {}
         }
 
