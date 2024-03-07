@@ -348,15 +348,15 @@ pub trait TS {
         panic!("{} cannot be flattened", Self::name())
     }
 
-    /// Returns a `TypeList` of all types on which this type depends.
+    /// Returns a [`TypeList`] of all types on which this type depends.
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
     }
 
-    /// Returns a `TypeList` containing all generic parameters of this type.
-    /// If this type is not generic, this will return an empty `TypeList`.
+    /// Returns a [`TypeList`] containing all generic parameters of this type.
+    /// If this type is not generic, this will return an empty [`TypeList`].
     fn generics() -> impl TypeList
     where
         Self: 'static,
