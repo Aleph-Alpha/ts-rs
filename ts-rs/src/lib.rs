@@ -278,7 +278,7 @@ pub trait TS {
     /// a dummy type, e.g `ts_rs::Dummy` or `()`.
     /// The only requirement for these dummy types is that `EXPORT_TO` must be `None`.
     /// Example:
-    /// ```ignore
+    /// ```no_run
     /// struct GenericType<A, B>(A, B);
     /// impl<A, B> TS for GenericType<A, B> {
     ///     type WithoutGenerics = GenericType<ts_rs::Dummy, ts_rs::Dummy>;

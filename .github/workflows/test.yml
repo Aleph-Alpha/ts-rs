@@ -12,12 +12,12 @@ jobs:
       - name: dependencies e2e test
         working-directory: e2e/dependencies/consumer
         run: |
-          cargo t 
+          cargo t -- --ignored
           tsc bindings/* --noEmit --noUnusedLocals --strict
       - name: dependencies e2e test with default export env
         working-directory: e2e/dependencies/consumer
         run: |
-          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          TS_RS_EXPORT_DIR=custom-bindings cargo t -- --ignored
           shopt -s globstar
           tsc custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
   e2e-workspace:
@@ -31,12 +31,12 @@ jobs:
       - name: workspace e2e test
         working-directory: e2e/workspace
         run: |
-          cargo t 
+          cargo t -- --ignored
           tsc parent/bindings/* --noEmit --noUnusedLocals --strict
       - name: workspace e2e with default export env
         working-directory: e2e/workspace
         run: |
-          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          TS_RS_EXPORT_DIR=custom-bindings cargo t -- --ignored
           shopt -s globstar
           tsc parent/custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
   e2e-example:
@@ -50,12 +50,12 @@ jobs:
       - name: example e2e test
         working-directory: example
         run: |
-          cargo t 
+          cargo t -- --ignored
           tsc bindings/* --noEmit
       - name: example e2e with default export env
         working-directory: example
         run: |
-          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          TS_RS_EXPORT_DIR=custom-bindings cargo t -- --ignored
           shopt -s globstar
           tsc custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
 
@@ -83,16 +83,16 @@ jobs:
           toolchain: stable
       - name: Test with export env
         run: |
-          TS_RS_EXPORT_DIR=output cargo test --no-default-features
+          TS_RS_EXPORT_DIR=output cargo test --no-default-features -- --ignored
           shopt -s globstar
           tsc ts-rs/output/tests-out/**/*.ts --noEmit --noUnusedLocals --strict
       - name: No features
         run: |
-          cargo test --no-default-features
+          cargo test --no-default-features -- --ignored
           shopt -s globstar
           tsc ts-rs/tests-out/**/*.ts --noEmit --noUnusedLocals
       - name: All features
         run: |
-          cargo test --all-features
+          cargo test --all-features -- --ignored
           shopt -s globstar
           tsc ts-rs/tests-out/**/*.ts --noEmit --noUnusedLocals --strict

@@ -110,11 +110,11 @@ impl DerivedTS {
 
     /// Generate a dummy unit struct for every generic type parameter of this type.
     /// Example:
-    /// ```ignore
+    /// ```no_run
     /// struct Generic<A, B, const C: usize> { /* ... */ }
     /// ```
     /// has two generic type parameters, `A` and `B`. This function will therefor generate
-    /// ```ignore
+    /// ```no_run
     /// struct A;
     /// impl ts_rs::TS for A { /* .. */ }
     ///
@@ -152,6 +152,7 @@ impl DerivedTS {
         quote! {
             #[cfg(test)]
             #[test]
+            #[ignore = "To export your ts-rs bindings, run `cargo test export_bindings_ -- --ignored`"]
             fn #test_fn() {
                 #ty::export().expect("could not export type");
             }
