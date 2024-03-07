@@ -301,6 +301,9 @@ pub trait TS {
 
     /// The path given to `#[ts(export_to = "...")]`
     const EXPORT_TO: Option<&'static str> = None;
+
+    /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
+    /// automatically read from your doc comments or `#[doc = ".."]` attrubutes
     const DOCS: Option<&'static str> = None;
 
     /// Identifier of this type, excluding generic parameters.
