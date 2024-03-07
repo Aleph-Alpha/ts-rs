@@ -435,9 +435,9 @@ macro_rules! impl_primitives {
             type WithoutGenerics = Self;
             fn name() -> String { $l.to_owned() }
             fn inline() -> String { <Self as $crate::TS>::name() }
-            fn inline_flattened() -> String { panic!("{} cannot be flattened", Self::name()) }
-            fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
-            fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
+            fn inline_flattened() -> String { panic!("{} cannot be flattened", <Self as $crate::TS>::name()) }
+            fn decl() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
+            fn decl_concrete() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
         }
     )*)* };
 }

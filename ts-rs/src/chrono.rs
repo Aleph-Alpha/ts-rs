@@ -14,6 +14,9 @@ macro_rules! impl_dummy {
             type WithoutGenerics = $t;
             fn name() -> String { String::new() }
             fn inline() -> String { String::new() }
+            fn inline_flattened() -> String { panic!("{} cannot be flattened", Self::name()) }
+            fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
+            fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
         }
     )*};
 }
@@ -32,6 +35,9 @@ impl<T: TimeZone + 'static> TS for DateTime<T> {
     fn inline() -> String {
         "string".to_owned()
     }
+    fn inline_flattened() -> String { panic!("{} cannot be flattened", Self::name()) }
+    fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
+    fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
 }
 
 impl<T: TimeZone + 'static> TS for Date<T> {
@@ -45,4 +51,7 @@ impl<T: TimeZone + 'static> TS for Date<T> {
     fn inline() -> String {
         "string".to_owned()
     }
+    fn inline_flattened() -> String { panic!("{} cannot be flattened", Self::name()) }
+    fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
+    fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
 }
