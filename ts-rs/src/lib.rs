@@ -83,9 +83,9 @@
 //! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
 //! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 //! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
-//! 
+//!
 //! <br/>
-//! 
+//!
 //! If there's a type you're dealing with which doesn't implement `TS`, use either
 //! `#[ts(as = "..")]` or `#[ts(type = "..")]`, or open a PR.
 //!
@@ -132,7 +132,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub use export::output_path;
 pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
@@ -154,9 +153,9 @@ pub mod typelist;
 /// Bindings can be exported within a test, which ts-rs generates for you by adding `#[ts(export)]`
 /// to a type you wish to export to a file.
 /// If, for some reason, you need to do this during runtime, you can call [`TS::export`] yourself.
-/// 
+///
 /// **Note:**
-/// Annotating a type with `#[ts(export)]` (or exporting it during runtime using 
+/// Annotating a type with `#[ts(export)]` (or exporting it during runtime using
 /// [`TS::export`]) will cause all of its dependencies to be exported as well.
 ///
 /// ### serde compatibility
@@ -179,12 +178,11 @@ pub mod typelist;
 ///   TS_RS_EXPORT_DIR = { value = "<OVERRIDE_DIR>", relative = true }
 ///   ```
 ///   <br/>
-/// 
+///
 /// - **`#[ts(export_to = "..")]`**  
-///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.  
+///   Specifies where the type should be exported to. Defaults to `<name>.ts`.  
 ///   The path given to the `export_to` attribute is relative to the `TS_RS_EXPORT_DIR` environment variable,
-///   or, if `TS_RS_EXPORT_DIR` is not set, to you project's root directory - more specifically,
-///   it'll be relative to the `Cargo.toml` file.  
+///   or, if `TS_RS_EXPORT_DIR` is not set, to `./bindings`  
 ///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
 ///   <br/><br/>
@@ -299,11 +297,8 @@ pub trait TS {
     /// ```
     type WithoutGenerics: TS + ?Sized;
 
-    /// The path given to `#[ts(export_to = "...")]`
-    const EXPORT_TO: Option<&'static str> = None;
-
     /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
-    /// automatically read from your doc comments or `#[doc = ".."]` attrubutes
+    /// automatically read from your doc comments or `#[doc = ".."]` attributes
     const DOCS: Option<&'static str> = None;
 
     /// Identifier of this type, excluding generic parameters.
@@ -409,6 +404,20 @@ pub trait TS {
     {
         export::export_type_to_string::<Self>()
     }
+
+    /// Returns the output path to where `T` should be exported.
+    ///
+    /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.  
+    /// See the documentation of [`TS`] for more details.
+    /// 
+    /// The output of this function depends on the environment variable `TS_RS_EXPORT_DIR`, which is
+    /// used as base directory. If it is not set, `./bindings` is used as default directory.
+    ///
+    /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
+    /// `None`.
+    fn output_path() -> Option<PathBuf> {
+        None
+    }
 }
 
 /// A typescript type which is depended upon by other types.
@@ -429,11 +438,7 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
-        let exported_to = output_path::<T>()
-            .ok()
-            .as_deref()
-            .and_then(Path::to_str)
-            .map(ToOwned::to_owned)?;
+        let exported_to = T::output_path()?.to_str()?.to_owned();
         Some(Dependency {
             type_id: TypeId::of::<T>(),
             ts_name: T::ident(),

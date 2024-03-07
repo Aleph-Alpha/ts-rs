@@ -2,7 +2,7 @@
 
 use std::{concat, fs};
 
-use ts_rs::{output_path, TS};
+use ts_rs::TS;
 
 #[derive(TS)]
 #[ts(export_to = "tests-out/export_manually/UserFile.ts")]
@@ -36,7 +36,7 @@ fn export_manually() {
         )
     };
 
-    let actual_content = fs::read_to_string(output_path::<User>().unwrap()).unwrap();
+    let actual_content = fs::read_to_string(User::output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -57,7 +57,7 @@ fn export_manually_dir() {
         )
     };
 
-    let actual_content = fs::read_to_string(output_path::<UserDir>().unwrap()).unwrap();
+    let actual_content = fs::read_to_string(UserDir::output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
