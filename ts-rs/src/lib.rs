@@ -311,10 +311,9 @@ pub trait TS {
         // by default, fall back to `TS::name()`.
         let name = Self::name();
 
-        if name.contains('<') {
-            panic!("generic types must implement ident")
-        } else {
-            name
+        match name.find('<') {
+            Some(i) => name[..i].to_owned(),
+            None => name,
         }
     }
 
