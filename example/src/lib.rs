@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 #[derive(Serialize, TS)]
 #[ts(rename_all = "lowercase")]
-#[ts(export, export_to = "bindings/UserRole.ts")]
+#[ts(export, export_to = "UserRole.ts")]
 enum Role {
     User,
     #[ts(rename = "administrator")]
