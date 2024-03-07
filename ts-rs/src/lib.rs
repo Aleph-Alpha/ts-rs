@@ -275,6 +275,11 @@ pub mod typelist;
 /// - **`#[ts(skip)]`**  
 ///   Skip this variant, omitting it from the generated *TypeScript* type.
 ///   <br/><br/>
+///
+/// - **`#[ts(untagged)]`**  
+///   Changes this variant to be treated as if the enum was untagged, regardless of the enum's tag
+///   and content attributes
+///   <br/><br/>
 pub trait TS {
     /// If this type does not have generic parameters, then `WithoutGenerics` should just be `Self`.
     /// If the type does have generic parameters, then all generic parameters must be replaced with
