@@ -261,7 +261,7 @@ pub mod typelist;
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
 ///   <br/><br/>
 ///
-/// - **`#[ts(rename_all_fieds = "..")]`**
+/// - **`#[ts(rename_all_fieds = "..")]`**  
 ///   Renames the fields of all the struct variants of this enum. This is equivalent to using
 ///   `#[ts(rename_all = "..")]` on all of the enum's variants.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
