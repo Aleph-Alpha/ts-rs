@@ -262,7 +262,8 @@ pub mod typelist;
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename_all_fieds = "..")]`**
-///   Renames the fields of all the struct variants of this enum.
+///   Renames the fields of all the struct variants of this enum. This is equivalent to using
+///   `#[ts(rename_all = "..")]` on all of the enum's variants.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
 ///   <br/><br/>
 ///  
@@ -279,6 +280,11 @@ pub mod typelist;
 /// - **`#[ts(untagged)]`**  
 ///   Changes this variant to be treated as if the enum was untagged, regardless of the enum's tag
 ///   and content attributes
+///   <br/><br/>
+///
+/// - **`#[ts(rename_all = "..")]`**  
+///   Renames all the fields of a struct variant.
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
 ///   <br/><br/>
 pub trait TS {
     /// If this type does not have generic parameters, then `WithoutGenerics` should just be `Self`.
