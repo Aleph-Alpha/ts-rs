@@ -324,31 +324,23 @@ pub trait TS {
     /// placeholders, resulting in a generic typescript definition.
     /// Both `SomeType::<i32>::decl()` and `SomeType::<String>::decl()` will therefore result in
     /// the same TypeScript declaration `type SomeType<A> = ...`.
-    fn decl() -> String {
-        panic!("{} cannot be declared", Self::name());
-    }
+    fn decl() -> String;
 
     /// Declaration of this type using the supplied generic arguments.
     /// The resulting TypeScript definition will not be generic. For that, see `TS::decl()`.
     /// If this type is not generic, then this function is equivalent to `TS::decl()`.
-    fn decl_concrete() -> String {
-        panic!("{} cannot be declared", Self::name());
-    }
+    fn decl_concrete() -> String;
 
     /// Name of this type in TypeScript, including generic parameters
     fn name() -> String;
 
     /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
     /// This function will panic if the type cannot be inlined.
-    fn inline() -> String {
-        panic!("{} cannot be inlined", Self::name());
-    }
+    fn inline() -> String;
 
     /// Flatten an type declaration.  
     /// This function will panic if the type cannot be flattened.
-    fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", Self::name())
-    }
+    fn inline_flattened() -> String;
 
     /// Returns a [`TypeList`] of all types on which this type depends.
     fn dependency_types() -> impl TypeList
@@ -457,6 +449,9 @@ macro_rules! impl_primitives {
             type WithoutGenerics = Self;
             fn name() -> String { $l.to_owned() }
             fn inline() -> String { <Self as $crate::TS>::name() }
+            fn inline_flattened() -> String { panic!("{} cannot be flattened", <Self as $crate::TS>::name()) }
+            fn decl() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
+            fn decl_concrete() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
         }
     )*)* };
 }
@@ -477,6 +472,9 @@ macro_rules! impl_tuples {
             {
                 ()$(.push::<$i>())*
             }
+            fn inline_flattened() -> String { panic!("tuple cannot be flattened") }
+            fn decl() -> String { panic!("tuple cannot be declared") }
+            fn decl_concrete() -> String { panic!("tuple cannot be declared") }
         }
     };
     ( $i2:ident $(, $i:ident)* ) => {
@@ -506,6 +504,8 @@ macro_rules! impl_wrapper {
             {
                 ((std::marker::PhantomData::<T>,), T::generics())
             }
+            fn decl() -> String { panic!("wrapper type cannot be declared") }
+            fn decl_concrete() -> String { panic!("wrapper type cannot be declared") }
         }
     };
 }
@@ -531,76 +531,127 @@ macro_rules! impl_shadow {
             {
                 <$s>::generics()
             }
+            fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
+            fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
         }
     };
 }
 
 impl<T: TS> TS for Option<T> {
     type WithoutGenerics = Self;
+
     fn name() -> String {
         format!("{} | null", T::name())
     }
+
     fn inline() -> String {
         format!("{} | null", T::inline())
     }
+
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
         T::dependency_types()
     }
+
     fn generics() -> impl TypeList
     where
         Self: 'static,
     {
         T::generics().push::<T>()
     }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
+    }
 }
 
 impl<T: TS, E: TS> TS for Result<T, E> {
     type WithoutGenerics = Result<Dummy, Dummy>;
+
     fn name() -> String {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::name(), E::name())
     }
+
     fn inline() -> String {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
     }
+
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
         T::dependency_types().extend(E::dependency_types())
     }
+
     fn generics() -> impl TypeList
     where
         Self: 'static,
     {
         T::generics().push::<T>().extend(E::generics()).push::<E>()
     }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
+    }
 }
 
 impl<T: TS> TS for Vec<T> {
     type WithoutGenerics = Vec<Dummy>;
+
     fn ident() -> String {
         "Array".to_owned()
     }
+
     fn name() -> String {
         format!("Array<{}>", T::name())
     }
+
     fn inline() -> String {
         format!("Array<{}>", T::inline())
     }
+
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
         T::dependency_types()
     }
+
     fn generics() -> impl TypeList
     where
         Self: 'static,
     {
         T::generics().push::<T>()
+    }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
     }
 }
 
@@ -643,13 +694,27 @@ impl<T: TS, const N: usize> TS for [T; N] {
     {
         T::generics().push::<T>()
     }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
+    }
 }
 
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     type WithoutGenerics = HashMap<Dummy, Dummy>;
+
     fn ident() -> String {
         "Record".to_owned()
     }
+
     fn name() -> String {
         format!("Record<{}, {}>", K::name(), V::name())
     }
@@ -664,11 +729,24 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     {
         K::dependency_types().extend(V::dependency_types())
     }
+
     fn generics() -> impl TypeList
     where
         Self: 'static,
     {
         K::generics().push::<K>().extend(V::generics()).push::<V>()
+    }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
     }
 }
 
@@ -690,6 +768,22 @@ impl<I: TS> TS for Range<I> {
         Self: 'static,
     {
         I::generics().push::<I>()
+    }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline() -> String {
+        panic!("{} cannot be inlined", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
     }
 }
 
@@ -779,5 +873,21 @@ impl TS for Dummy {
     type WithoutGenerics = Self;
     fn name() -> String {
         "Dummy".to_owned()
+    }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline() -> String {
+        panic!("{} cannot be inlined", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
     }
 }
