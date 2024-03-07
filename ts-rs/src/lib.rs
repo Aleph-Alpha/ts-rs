@@ -4,7 +4,7 @@
 //! ts-rs
 //! </h1>
 //! <p align="center">
-//! generate typescript interface/type declarations from rust types
+//! generate typescript type declarations from rust types
 //! </p>
 //!
 //! <div align="center">
@@ -57,10 +57,10 @@
 //! When running `cargo test`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
 //!
 //! ## features
-//! - generate interface declarations from rust structs
+//! - generate type declarations from rust structs
 //! - generate union declarations from rust enums
 //! - inline types
-//! - flatten structs/interfaces
+//! - flatten structs/types
 //! - generate necessary imports when exporting to multiple files
 //! - serde compatibility
 //! - generic types
@@ -315,7 +315,7 @@ pub trait TS {
         }
     }
 
-    /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
+    /// Declaration of this type, e.g. `type User = { user_id: number, ... }`.
     /// This function will panic if the type has no declaration.
     ///
     /// If this type is generic, then all provided generic parameters will be swapped for
