@@ -184,7 +184,9 @@ pub mod typelist;
 /// 
 /// - **`#[ts(export_to = "..")]`**  
 ///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.  
-///   The `export_to` attribute will also override the `TS_RS_EXPORT_DIR` environment variable.  
+///   The path given to the `export_to` attribute is relative to the `TS_RS_EXPORT_DIR` environment variable,
+///   or, if `TS_RS_EXPORT_DIR` is not set, to you project's root directory - more specifically,
+///   it'll be relative to the `Cargo.toml` file.  
 ///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
 ///   <br/><br/>
