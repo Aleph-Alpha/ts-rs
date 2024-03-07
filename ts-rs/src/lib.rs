@@ -212,7 +212,7 @@ pub mod typelist;
 ///   This is useful when there's a type for which you cannot derive `TS`.
 ///   <br/><br/>
 ///
-/// - **`#[ts(as = "..")]`**
+/// - **`#[ts(as = "..")]`**  
 ///   Overrides the type of the annotated field, using the provided Rust type instead.
 ///   This is useful when there's a type for which you cannot derive `TS`.
 ///   <br/><br/>
