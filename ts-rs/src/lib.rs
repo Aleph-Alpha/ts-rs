@@ -236,7 +236,7 @@ pub mod typelist;
 ///   <br/><br/>
 ///
 /// - **`#[ts(flatten)]`**  
-///   Flatten this field
+///   Flatten this field, inlining all the keys of the field's type into its parent.
 ///   <br/><br/>
 ///   
 /// ### enum attributes
