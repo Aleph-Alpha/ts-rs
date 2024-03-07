@@ -4,7 +4,7 @@
 //! ts-rs
 //! </h1>
 //! <p align="center">
-//! generate typescript interface/type declarations from rust types
+//! generate typescript type declarations from rust types
 //! </p>
 //!
 //! <div align="center">
@@ -57,67 +57,37 @@
 //! When running `cargo test`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
 //!
 //! ## features
-//! - generate interface declarations from rust structs
+//! - generate type declarations from rust structs
 //! - generate union declarations from rust enums
 //! - inline types
-//! - flatten structs/interfaces
+//! - flatten structs/types
 //! - generate necessary imports when exporting to multiple files
 //! - serde compatibility
 //! - generic types
 //! - support for ESM imports
 //!
 //! ## cargo features
-//! - `serde-compat` (default)  
-//!
-//!   Enable serde compatibility. See below for more info.  
-//! - `format`
-//!
-//!   When enabled, the generated typescript will be formatted.
-//!   Currently, this sadly adds quite a bit of dependencies.
-//! - `chrono-impl`  
-//!
-//!   Implement `TS` for types from chrono  
-//! - `bigdecimal-impl`  
-//!
-//!   Implement `TS` for types from bigdecimal  
-//! - `url-impl`  
-//!
-//!   Implement `TS` for types from url
-//! - `uuid-impl`  
-//!
-//!   Implement `TS` for types from uuid
-//! - `bson-uuid-impl`
-//!
-//!   Implement `TS` for types from bson
-//! - `bytes-impl`
-//!
-//!   Implement `TS` for types from bytes    
-//! - `indexmap-impl`  
-//!
-//!   Implement `TS` for `IndexMap` and `IndexSet` from indexmap  
-//!
-//! - `ordered-float-impl`  
-//!
-//!   Implement `TS` for `OrderedFloat` from ordered_float
-//!
-//! - `heapless-impl`  
-//!
-//!   Implement `TS` for `Vec` from heapless
-//!
-//! - `semver-impl`  
-//!   Implement `TS` for `Version` from semver
-//!
-//! - `no-serde-warnings`
-//!
-//!   When `serde-compat` is enabled, warnings are printed during build if unsupported serde
-//!   attributes are encountered. Enabling this feature silences these warnings.
-//!
-//! - `import-esm`
-//!
-//!   `import` statements in the generated file will have the `.js` extension in the end of
-//!   the path to conform to the ES Modules spec. (e.g.: `import { MyStruct } from "./my_struct.js"`)
-//!
-//! If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
+//! | **Feature**        | **Description**                                                                                                                                                                                           |
+//! |:-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+//! | serde-compat       | **Enabled by default** <br/>See the *"serde compatibility"* section below for more information.                                                                                                           |
+//! | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
+//! | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
+//! | import-esm         | When enabled,`import` statements in the generated file will have the `.js` extension in the end of the path to conform to the ES Modules spec. <br/> Example: `import { MyStruct } from "./my_struct.js"` |
+//! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
+//! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
+//! | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
+//! | uuid-impl          | Implement `TS` for types from *uuid*                                                                                                                                                                      |
+//! | bson-uuid-impl     | Implement `TS` for types from *bson*                                                                                                                                                                      |
+//! | bytes-impl         | Implement `TS` for types from *bytes*                                                                                                                                                                     |
+//! | indexmap-impl      | Implement `TS` for types from *indexmap*                                                                                                                                                                  |
+//! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
+//! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
+//! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
+//! 
+//! <br/>
+//! 
+//! If there's a type you're dealing with which doesn't implement `TS`, use either
+//! `#[ts(as = "..")]` or `#[ts(type = "..")]`, or open a PR.
 //!
 //! ## serde compatability
 //! With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
@@ -184,6 +154,10 @@ pub mod typelist;
 /// Bindings can be exported within a test, which ts-rs generates for you by adding `#[ts(export)]`
 /// to a type you wish to export to a file.
 /// If, for some reason, you need to do this during runtime, you can call [`TS::export`] yourself.
+/// 
+/// **Note:**
+/// Annotating a type with `#[ts(export)]` (or exporting it during runtime using 
+/// [`TS::export`]) will cause all of its dependencies to be exported as well.
 ///
 /// ### serde compatibility
 /// By default, the feature `serde-compat` is enabled.
@@ -194,84 +168,122 @@ pub mod typelist;
 /// ### container attributes
 /// attributes applicable for both structs and enums
 ///
-/// - `#[ts(export)]`:  
+/// - **`#[ts(export)]`**  
 ///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
 ///   `cargo test`. The default base directory can be overridden with the `TS_RS_EXPORT_DIR` environment variable.
 ///   Adding the variable to a project's [config.toml](https://doc.rust-lang.org/cargo/reference/config.html#env) can
 ///   make it easier to manage.
-/// ```toml
-/// # <project-root>/.cargo/config.toml
-/// [env]
-/// TS_RS_EXPORT_DIR = { value = "<OVERRIDE_DIR>", relative = true }
-/// ```
-///
-/// - `#[ts(export_to = "..")]`:  
+///   ```toml
+///   # <project-root>/.cargo/config.toml
+///   [env]
+///   TS_RS_EXPORT_DIR = { value = "<OVERRIDE_DIR>", relative = true }
+///   ```
+///   <br/>
+/// 
+/// - **`#[ts(export_to = "..")]`**  
 ///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.  
-///   The `export_to` attribute will also override the `TS_RS_EXPORT_DIR` environment variable.  
+///   The path given to the `export_to` attribute is relative to the `TS_RS_EXPORT_DIR` environment variable,
+///   or, if `TS_RS_EXPORT_DIR` is not set, to you project's root directory - more specifically,
+///   it'll be relative to the `Cargo.toml` file.  
 ///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
+///   <br/><br/>
 ///
-/// - `#[ts(rename = "..")]`:  
+/// - **`#[ts(rename = "..")]`**  
 ///   Sets the typescript name of the generated type
+///   <br/><br/>
 ///
-/// - `#[ts(rename_all = "..")]`:  
+/// - **`#[ts(rename_all = "..")]`**  
 ///   Rename all fields/variants of the type.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   <br/><br/>
 ///
+/// ### struct attributes
+/// - **`#[ts(tag = "..")]`**  
+///   Include the structs name (or value of `#[ts(rename = "..")]`) as a field with the given key.
+///   <br/><br/>
 ///
 /// ### struct field attributes
 ///
-/// - `#[ts(type = "..")]`:  
+/// - **`#[ts(type = "..")]`**  
 ///   Overrides the type used in TypeScript.  
-///   This is useful when there's a type for which you cannot derive `TS`.  
+///   This is useful when there's a type for which you cannot derive `TS`.
+///   <br/><br/>
 ///
-/// - `#[ts(rename = "..")]`:  
-///   Renames this field  
+/// - **`#[ts(as = "..")]`**  
+///   Overrides the type of the annotated field, using the provided Rust type instead.
+///   This is useful when there's a type for which you cannot derive `TS`.
+///   <br/><br/>
 ///
-/// - `#[ts(inline)]`:  
-///   Inlines the type of this field  
+/// - **`#[ts(rename = "..")]`**  
+///   Renames this field. To rename all fields of a struct, see the container attribute `#[ts(rename_all = "..")]`.
+///   <br/><br/>
 ///
-/// - `#[ts(skip)]`:  
-///   Skip this field  
+/// - **`#[ts(inline)]`**  
+///   Inlines the type of this field, replacing its name with its definition.
+///   <br/><br/>
 ///
-/// - `#[ts(optional)]`:  
-///   May be applied on a struct field of type `Option<T>`.
-///   By default, such a field would turn into `t: T | null`.
-///   If `#[ts(optional)]` is present, `t?: T` is generated instead.
+/// - **`#[ts(skip)]`**  
+///   Skips this field, omitting it from the generated *TypeScript* type.
+///   <br/><br/>
+///
+/// - **`#[ts(optional)]`**  
+///   May be applied on a struct field of type `Option<T>`. By default, such a field would turn into `t: T | null`.  
+///   If `#[ts(optional)]` is present, `t?: T` is generated instead.  
 ///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.
+///   <br/><br/>
 ///
-/// - `#[ts(flatten)]`:  
-///   Flatten this field
+/// - **`#[ts(flatten)]`**  
+///   Flatten this field, inlining all the keys of the field's type into its parent.
+///   <br/><br/>
 ///   
 /// ### enum attributes
 ///
-/// - `#[ts(tag = "..")]`:  
-///   Changes the representation of the enum to store its tag in a separate field.
-///   See [the serde docs](https://serde.rs/enum-representations.html).
+/// - **`#[ts(tag = "..")]`**  
+///   Changes the representation of the enum to store its tag in a separate field.  
+///   See [the serde docs](https://serde.rs/enum-representations.html) for more information.
+///   <br/><br/>
 ///
-/// - `#[ts(content = "..")]`:  
-///   Changes the representation of the enum to store its content in a separate field.
-///   See [the serde docs](https://serde.rs/enum-representations.html).
+/// - **`#[ts(content = "..")]`**  
+///   Changes the representation of the enum to store its content in a separate field.  
+///   See [the serde docs](https://serde.rs/enum-representations.html) for more information.
+///   <br/><br/>
 ///
-/// - `#[ts(untagged)]`:  
-///   Changes the representation of the enum to not include its tag.
-///   See [the serde docs](https://serde.rs/enum-representations.html).
+/// - **`#[ts(untagged)]`**  
+///   Changes the representation of the enum to not include its tag.  
+///   See [the serde docs](https://serde.rs/enum-representations.html) for more information.
+///   <br/><br/>
 ///
-/// - `#[ts(rename_all = "..")]`:  
+/// - **`#[ts(rename_all = "..")]`**  
 ///   Rename all variants of this enum.  
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   <br/><br/>
 ///
-/// - `#[ts(rename_all_fieds = "..")]`
-///   Renames the fields of all the struct variants of this enum.
+/// - **`#[ts(rename_all_fieds = "..")]`**  
+///   Renames the fields of all the struct variants of this enum. This is equivalent to using
+///   `#[ts(rename_all = "..")]` on all of the enum's variants.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   <br/><br/>
 ///  
 /// ### enum variant attributes
 ///
-/// - `#[ts(rename = "..")]`:  
-///   Renames this variant  
+/// - **`#[ts(rename = "..")]`**  
+///   Renames this variant. To rename all variants of an enum, see the container attribute `#[ts(rename_all = "..")]`.
+///   <br/><br/>
 ///
-/// - `#[ts(skip)]`:  
-///   Skip this variant  
+/// - **`#[ts(skip)]`**  
+///   Skip this variant, omitting it from the generated *TypeScript* type.
+///   <br/><br/>
+///
+/// - **`#[ts(untagged)]`**  
+///   Changes this variant to be treated as if the enum was untagged, regardless of the enum's tag
+///   and content attributes
+///   <br/><br/>
+///
+/// - **`#[ts(rename_all = "..")]`**  
+///   Renames all the fields of a struct variant.
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   <br/><br/>
 pub trait TS {
     /// If this type does not have generic parameters, then `WithoutGenerics` should just be `Self`.
     /// If the type does have generic parameters, then all generic parameters must be replaced with
@@ -289,6 +301,9 @@ pub trait TS {
 
     /// The path given to `#[ts(export_to = "...")]`
     const EXPORT_TO: Option<&'static str> = None;
+
+    /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
+    /// automatically read from your doc comments or `#[doc = ".."]` attrubutes
     const DOCS: Option<&'static str> = None;
 
     /// Identifier of this type, excluding generic parameters.
@@ -296,14 +311,13 @@ pub trait TS {
         // by default, fall back to `TS::name()`.
         let name = Self::name();
 
-        if name.contains('<') {
-            panic!("generic types must implement ident")
-        } else {
-            name
+        match name.find('<') {
+            Some(i) => name[..i].to_owned(),
+            None => name,
         }
     }
 
-    /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
+    /// Declaration of this type, e.g. `type User = { user_id: number, ... }`.
     /// This function will panic if the type has no declaration.
     ///
     /// If this type is generic, then all provided generic parameters will be swapped for
@@ -336,15 +350,15 @@ pub trait TS {
         panic!("{} cannot be flattened", Self::name())
     }
 
-    /// Returns a `TypeList` of all types on which this type depends.
+    /// Returns a [`TypeList`] of all types on which this type depends.
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
     }
 
-    /// Returns a `TypeList` containing all generic parameters of this type.
-    /// If this type is not generic, this will return an empty `TypeList`.
+    /// Returns a [`TypeList`] containing all generic parameters of this type.
+    /// If this type is not generic, this will return an empty [`TypeList`].
     fn generics() -> impl TypeList
     where
         Self: 'static,
