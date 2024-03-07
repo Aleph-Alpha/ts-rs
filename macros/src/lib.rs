@@ -30,25 +30,21 @@ struct DerivedTS {
 
 impl DerivedTS {
     fn into_impl(mut self, rust_ty: Ident, generics: Generics) -> TokenStream {
-        let mut get_export_to = quote! {};
-        let export_to = match &self.export_to {
-            Some(dirname) if dirname.ends_with('/') => {
-                format!("{}{}.ts", dirname, self.ts_name)
-            }
-            Some(filename) => filename.clone(),
-            None => {
-                get_export_to = quote! {
-                    fn get_export_to() -> Option<String> {
-                        ts_rs::__private::get_export_to_path::<Self>()
-                    }
-                };
-                format!("bindings/{}.ts", self.ts_name)
-            }
-        };
-
         let export = self
             .export
             .then(|| self.generate_export_test(&rust_ty, &generics));
+
+        let export_to = {
+            let path = match self.export_to.as_deref() {
+                Some(dirname) if dirname.ends_with('/') => format!("{}{}.ts", dirname, self.ts_name),
+                Some(filename) => filename.to_owned(),
+                None => format!("bindings/{}.ts", self.ts_name),
+            };
+
+            quote! {
+                const EXPORT_TO: Option<&'static str> = Some(#path);
+            }
+        };
 
         let docs = match &*self.docs {
             "" => None,
@@ -67,13 +63,12 @@ impl DerivedTS {
         quote! {
             #impl_start {
                 #assoc_type
-                const EXPORT_TO: Option<&'static str> = Some(#export_to);
+                #export_to
 
                 fn ident() -> String {
                     #ident.to_owned()
                 }
 
-                #get_export_to
                 #docs
                 #name
                 #decl

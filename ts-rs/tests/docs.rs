@@ -2,7 +2,8 @@
 
 use std::{concat, fs};
 
-use ts_rs::TS;
+use ts_rs::{TS, output_path};
+
 
 /* ============================================================================================== */
 
@@ -136,7 +137,7 @@ fn export_a() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/A.ts").unwrap();
+    let actual_content = fs::read_to_string(output_path::<A>().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -182,7 +183,7 @@ fn export_b() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/B.ts").unwrap();
+    let actual_content = fs::read_to_string(output_path::<B>().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -215,7 +216,7 @@ fn export_c() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/C.ts").unwrap();
+    let actual_content = fs::read_to_string(output_path::<C>().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -247,7 +248,7 @@ fn export_d() {
             "export type D = null;"
         )
     };
-    let actual_content = fs::read_to_string("tests-out/docs/D.ts").unwrap();
+    let actual_content = fs::read_to_string(output_path::<D>().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -280,7 +281,7 @@ fn export_e() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/E.ts").unwrap();
+    let actual_content = fs::read_to_string(output_path::<E>().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -328,7 +329,7 @@ fn export_f() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/F.ts").unwrap();
+    let actual_content = fs::read_to_string(output_path::<F>().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -376,7 +377,7 @@ fn export_g() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/G.ts").unwrap();
+    let actual_content = fs::read_to_string(output_path::<G>().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }

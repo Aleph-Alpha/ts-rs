@@ -132,12 +132,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
+pub use export::output_path;
 pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
-// Used in generated code. Not public API
-#[doc(hidden)]
-pub use crate::export::__private;
 use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
@@ -301,6 +299,7 @@ pub trait TS {
     /// ```
     type WithoutGenerics: TS + ?Sized;
 
+    /// The path given to `#[ts(export_to = "...")]`
     const EXPORT_TO: Option<&'static str> = None;
     const DOCS: Option<&'static str> = None;
 
@@ -314,10 +313,6 @@ pub trait TS {
         } else {
             name
         }
-    }
-
-    fn get_export_to() -> Option<String> {
-        Self::EXPORT_TO.map(ToString::to_string)
     }
 
     /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
@@ -440,7 +435,11 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
-        let exported_to = T::get_export_to()?;
+        let exported_to = output_path::<T>()
+            .ok()
+            .as_deref()
+            .and_then(Path::to_str)
+            .map(ToOwned::to_owned)?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
             ts_name: T::ident(),

@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use ts_rs::TS;
+use ts_rs::{TS, output_path};
 
 #[derive(TS)]
 #[ts(export, export_to = "../ts-rs/tests-out/path_bug/")]
@@ -15,10 +15,8 @@ struct Bar {
 
 #[test]
 fn path_bug() {
-    Foo::export().unwrap();
-    Bar::export().unwrap();
+    export_bindings_foo();
 
-    let base = std::env::current_dir().unwrap();
-    assert!(base.join("./tests-out/path_bug/Foo.ts").is_file());
-    assert!(base.join("./tests-out/path_bug/aaa/Bar.ts").is_file());
+    assert!(output_path::<Foo>().unwrap().is_file());
+    assert!(output_path::<Bar>().unwrap().is_file());
 }
