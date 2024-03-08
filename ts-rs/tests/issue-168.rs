@@ -5,27 +5,27 @@ use std::collections::HashMap;
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/issue_168/")]
+#[ts(export, export_to = "issue_168/")]
 pub struct Foo {
     map: HashMap<usize, Bar>,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/issue_168/")]
+#[ts(export, export_to = "issue_168/")]
 pub struct FooInlined {
     #[ts(inline)]
     map: HashMap<usize, Bar>,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/issue_168/")]
+#[ts(export, export_to = "issue_168/")]
 struct Bar {
     #[ts(inline)]
     map: HashMap<usize, Baz>,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/issue_168/")]
+#[ts(export, export_to = "issue_168/")]
 struct Baz {
     #[ts(inline)]
     map: HashMap<usize, String>,

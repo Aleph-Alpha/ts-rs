@@ -5,7 +5,7 @@ use indexmap::{IndexMap, IndexSet};
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/indexmap/")]
+#[ts(export, export_to = "indexmap/")]
 struct Indexes {
     map: IndexMap<String, String>,
     set: IndexSet<String>,

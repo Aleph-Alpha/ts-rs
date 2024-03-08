@@ -5,7 +5,7 @@ use semver::Version;
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/semver/")]
+#[ts(export, export_to = "semver/")]
 struct Semver {
     version: Version,
 }

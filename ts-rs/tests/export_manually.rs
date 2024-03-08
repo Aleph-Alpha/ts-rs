@@ -5,7 +5,7 @@ use std::{concat, fs};
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/export_manually/UserFile.ts")]
+#[ts(export_to = "export_manually/UserFile.ts")]
 struct User {
     name: String,
     age: i32,
@@ -13,7 +13,7 @@ struct User {
 }
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/export_manually/dir/")]
+#[ts(export_to = "export_manually/dir/")]
 struct UserDir {
     name: String,
     age: i32,

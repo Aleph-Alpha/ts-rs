@@ -8,7 +8,7 @@ use ts_rs::TS;
 struct Unsupported;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/skip/")]
+#[ts(export, export_to = "skip/")]
 struct Skip {
     a: i32,
     b: i32,
@@ -25,7 +25,7 @@ fn simple() {
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
-#[ts(export, export_to = "tests-out/skip/")]
+#[ts(export, export_to = "skip/")]
 enum Externally {
     A(
         #[cfg_attr(feature = "serde-compat", serde(skip))]
@@ -64,7 +64,7 @@ fn externally_tagged() {
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(tag = "t"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "t"))]
-#[ts(export, export_to = "tests-out/skip/")]
+#[ts(export, export_to = "skip/")]
 enum Internally {
     A(
         #[cfg_attr(feature = "serde-compat", serde(skip))]
@@ -96,7 +96,7 @@ fn internally_tagged() {
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(tag = "t", content = "c"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "t", content = "c"))]
-#[ts(export, export_to = "tests-out/skip/")]
+#[ts(export, export_to = "skip/")]
 enum Adjacently {
     A(
         #[cfg_attr(feature = "serde-compat", serde(skip))]

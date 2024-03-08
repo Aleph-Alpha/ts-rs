@@ -6,7 +6,7 @@ use ts_rs::TS;
 #[derive(TS)]
 #[ts(
     export,
-    export_to = "tests-out/struct_rename/",
+    export_to = "struct_rename/",
     rename_all = "UPPERCASE"
 )]
 struct RenameAllUpper {
@@ -22,7 +22,7 @@ fn rename_all() {
 #[derive(TS)]
 #[ts(
     export,
-    export_to = "tests-out/struct_rename/",
+    export_to = "struct_rename/",
     rename_all = "camelCase"
 )]
 struct RenameAllCamel {
@@ -42,7 +42,7 @@ fn rename_all_camel_case() {
 #[derive(TS)]
 #[ts(
     export,
-    export_to = "tests-out/struct_rename/",
+    export_to = "struct_rename/",
     rename_all = "PascalCase"
 )]
 struct RenameAllPascal {
@@ -61,7 +61,7 @@ fn rename_all_pascal_case() {
 #[derive(serde::Serialize, TS)]
 #[ts(
     export,
-    export_to = "tests-out/struct_rename/",
+    export_to = "struct_rename/",
     rename_all = "camelCase"
 )]
 struct RenameSerdeSpecialChar {

@@ -8,7 +8,7 @@ use chrono::{
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/chrono/")]
+#[ts(export, export_to = "chrono/")]
 struct Chrono {
     date: (NaiveDate, Date<Utc>, Date<Local>, Date<FixedOffset>),
     time: NaiveTime,
