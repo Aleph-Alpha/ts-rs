@@ -3,14 +3,14 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/issue_232/")]
+#[ts(export, export_to = "issue_232/")]
 struct State {
     a: Result<EnumWithName, String>,
     b: Result<EnumWithName, String>,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/issue_232/")]
+#[ts(export, export_to = "issue_232/")]
 struct StateInlined {
     #[ts(inline)]
     a: Result<EnumWithName, String>,
@@ -19,7 +19,7 @@ struct StateInlined {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/issue_232/")]
+#[ts(export, export_to = "issue_232/")]
 struct StateInlinedVec {
     #[ts(inline)]
     a: Vec<Result<EnumWithName, String>>,
@@ -28,14 +28,14 @@ struct StateInlinedVec {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/issue_232/")]
+#[ts(export, export_to = "issue_232/")]
 struct EnumWithName {
     name: String,
     inner: Enum,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/issue_232/")]
+#[ts(export, export_to = "issue_232/")]
 enum Enum {
     A,
     B,

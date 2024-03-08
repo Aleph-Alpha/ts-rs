@@ -3,19 +3,19 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/lifetimes/")]
+#[ts(export, export_to = "lifetimes/")]
 struct S<'a> {
     s: &'a str,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/lifetimes/")]
+#[ts(export, export_to = "lifetimes/")]
 struct B<'a, T: 'a> {
     a: &'a T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/lifetimes/")]
+#[ts(export, export_to = "lifetimes/")]
 struct A<'a> {
     a: &'a &'a &'a Vec<u32>,                        //Multiple References
     b: &'a Vec<B<'a, u32>>,                         //Nesting

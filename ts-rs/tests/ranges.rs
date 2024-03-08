@@ -8,11 +8,11 @@ use std::{
 use ts_rs::{Dependency, TS};
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/ranges/")]
+#[ts(export, export_to = "ranges/")]
 struct Inner(i32);
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/ranges/")]
+#[ts(export, export_to = "ranges/")]
 struct RangeTest {
     a: Range<u32>,
     b: Range<&'static str>,

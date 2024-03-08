@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/hashmap/")]
+#[ts(export, export_to = "hashmap/")]
 struct Hashes {
     map: HashMap<String, String>,
     set: HashSet<String>,
@@ -25,7 +25,7 @@ type CustomHashMap<K, V> = HashMap<K, V, CustomHasher>;
 type CustomHashSet<K> = HashSet<K, CustomHasher>;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/hashmap/")]
+#[ts(export, export_to = "hashmap/")]
 struct HashesHasher {
     map: CustomHashMap<String, String>,
     set: CustomHashSet<String>,
@@ -40,21 +40,21 @@ fn hashmap_with_custom_hasher() {
 }
 
 #[derive(TS, Eq, PartialEq, Hash)]
-#[ts(export, export_to = "tests-out/hashmap/")]
+#[ts(export, export_to = "hashmap/")]
 struct CustomKey(String);
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/hashmap/")]
+#[ts(export, export_to = "hashmap/")]
 struct CustomValue;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/hashmap/")]
+#[ts(export, export_to = "hashmap/")]
 struct HashMapWithCustomTypes {
     map: HashMap<CustomKey, CustomValue>,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/hashmap/")]
+#[ts(export, export_to = "hashmap/")]
 struct BTreeMapWithCustomTypes {
     map: BTreeMap<CustomKey, CustomValue>,
 }

@@ -8,7 +8,7 @@ use ts_rs::TS;
 #[cfg_attr(feature = "serde-compat", derive(Deserialize))]
 #[cfg_attr(feature = "serde-compat", serde(untagged))]
 #[cfg_attr(not(feature = "serde-compat"), ts(untagged))]
-#[ts(export, export_to = "tests-out/union_unnamed_serde/")]
+#[ts(export, export_to = "union_unnamed_serde/")]
 enum TestUntagged {
     A,   // serde_json -> `null`
     B(), // serde_json -> `[]`
@@ -21,7 +21,7 @@ enum TestUntagged {
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Deserialize))]
-#[ts(export, export_to = "tests-out/union_unnamed_serde/")]
+#[ts(export, export_to = "union_unnamed_serde/")]
 enum TestExternally {
     A,   // serde_json -> `"A"`
     B(), // serde_json -> `{"B":[]}`
@@ -36,7 +36,7 @@ enum TestExternally {
 #[cfg_attr(feature = "serde-compat", derive(Deserialize))]
 #[cfg_attr(feature = "serde-compat", serde(tag = "type", content = "content"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "type", content = "content"))]
-#[ts(export, export_to = "tests-out/union_unnamed_serde/")]
+#[ts(export, export_to = "union_unnamed_serde/")]
 enum TestAdjacently {
     A,   // serde_json -> `{"type":"A"}`
     B(), // serde_json -> `{"type":"B","content":[]}`
@@ -51,7 +51,7 @@ enum TestAdjacently {
 #[cfg_attr(feature = "serde-compat", derive(Deserialize))]
 #[cfg_attr(feature = "serde-compat", serde(tag = "type"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "type"))]
-#[ts(export, export_to = "tests-out/union_unnamed_serde/")]
+#[ts(export, export_to = "union_unnamed_serde/")]
 enum TestInternally {
     A, // serde_json -> `{"type":"A"}`
     B, // serde_json -> `{"type":"B"}`

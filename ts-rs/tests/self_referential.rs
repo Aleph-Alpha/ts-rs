@@ -7,13 +7,13 @@ use serde::Serialize;
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/self_referential/")]
+#[ts(export, export_to = "self_referential/")]
 struct HasT {
     t: &'static T<'static>,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/self_referential/")]
+#[ts(export, export_to = "self_referential/")]
 struct T<'a> {
     t_box: Box<T<'a>>,
     self_box: Box<Self>,
@@ -45,7 +45,7 @@ fn named() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/self_referential/", rename = "E")]
+#[ts(export, export_to = "self_referential/", rename = "E")]
 enum ExternallyTagged {
     A(Box<ExternallyTagged>),
     B(&'static ExternallyTagged),
@@ -129,7 +129,7 @@ fn enum_internally_tagged() {
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
-#[ts(export, export_to = "tests-out/self_referential/", rename = "A")]
+#[ts(export, export_to = "self_referential/", rename = "A")]
 #[cfg_attr(feature = "serde-compat", serde(tag = "tag", content = "content"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "tag", content = "content"))]
 enum AdjacentlyTagged {

@@ -5,17 +5,17 @@ use std::collections::{BTreeSet, HashSet};
 use ts_rs::TS;
 
 #[derive(TS, Eq, PartialEq, Hash)]
-#[ts(export, export_to = "tests-out/hashset/")]
+#[ts(export, export_to = "hashset/")]
 struct CustomValue;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/hashset/")]
+#[ts(export, export_to = "hashset/")]
 struct HashSetWithCustomType {
     set: HashSet<CustomValue>,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/hashset/")]
+#[ts(export, export_to = "hashset/")]
 struct BTreeSetWithCustomType {
     set: BTreeSet<CustomValue>,
 }

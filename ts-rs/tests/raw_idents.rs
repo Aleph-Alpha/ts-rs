@@ -3,7 +3,7 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/raw_idents/")]
+#[ts(export, export_to = "raw_idents/")]
 struct r#struct {
     r#type: i32,
     r#use: i32,

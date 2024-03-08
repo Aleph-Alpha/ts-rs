@@ -3,14 +3,14 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/flatten/")]
+#[ts(export, export_to = "flatten/")]
 struct A {
     a: i32,
     b: i32,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/flatten/")]
+#[ts(export, export_to = "flatten/")]
 struct B {
     #[ts(flatten)]
     a: A,
@@ -18,7 +18,7 @@ struct B {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/flatten/")]
+#[ts(export, export_to = "flatten/")]
 struct C {
     #[ts(inline)]
     b: B,
