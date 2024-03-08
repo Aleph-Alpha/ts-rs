@@ -137,6 +137,7 @@ jobs:
           rm -rf ts-rs/bindings
 
   test-export-env:
+    needs: test-all-features
     name: Test ts-rs with TS_RS_EXPORT_DIR
     runs-on: ubuntu-latest
     steps:
@@ -161,6 +162,7 @@ jobs:
           rm -rf ts-rs/output
 
   test-no-features:
+    needs: test-export-env
     name: Test ts-rs with --no-default-features
     runs-on: ubuntu-latest
     steps:
