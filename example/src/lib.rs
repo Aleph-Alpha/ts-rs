@@ -38,7 +38,7 @@ struct User {
     gender: Gender,
     token: Uuid,
     #[ts(type = "string")]
-    created_at: NaiveDateTime
+    created_at: NaiveDateTime,
 }
 
 #[derive(Serialize, TS)]
