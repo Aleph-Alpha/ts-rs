@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Fields, Generics, ItemEnum, Type, Variant};
+use syn::{Fields, Generics, ItemEnum, Variant};
 
 use crate::{
     attr::{EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
@@ -116,11 +116,10 @@ fn format_variant(
                     quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                 } else {
                     let ty = match (type_override, type_as) {
-                        (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
+                        (Some(_), Some(_)) => syn_err_spanned!(variant; "`type` is not compatible with `as`"),
                         (Some(type_override), None) => quote! { #type_override },
                         (None, Some(type_as)) => {
-                            let ty = syn::parse_str::<Type>(&type_as)?;
-                            quote!(<#ty as ts_rs::TS>::name())
+                            quote!(<#type_as as ts_rs::TS>::name())
                         }
                         (None, None) => {
                             let ty = &unnamed.unnamed[0].ty;
@@ -166,11 +165,10 @@ fn format_variant(
                         quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                     } else {
                         let ty = match (type_override, type_as) {
-                            (Some(_), Some(_)) => syn_err!("`type` is not compatible with `as`"),
+                            (Some(_), Some(_)) => syn_err_spanned!(variant; "`type` is not compatible with `as`"),
                             (Some(type_override), None) => quote! { #type_override },
                             (None, Some(type_as)) => {
-                                let ty = syn::parse_str::<Type>(&type_as)?;
-                                quote!(<#ty as ts_rs::TS>::name())
+                                quote!(<#type_as as ts_rs::TS>::name())
                             }
                             (None, None) => {
                                 let ty = &unnamed.unnamed[0].ty;
