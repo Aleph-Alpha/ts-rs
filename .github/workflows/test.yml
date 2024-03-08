@@ -10,15 +10,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            e2e/dependencies/consumer/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('e2e/dependencies/consumer/Cargo.lock') }}
+      - uses: Swatinem/rust-cache@v2
       - name: dependencies e2e test
         working-directory: e2e/dependencies/consumer
         run: |
@@ -39,15 +31,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            e2e/workspace/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('e2e/workspace/Cargo.lock') }}
+      - uses: Swatinem/rust-cache@v2
       - name: workspace e2e test
         working-directory: e2e/workspace
         run: |
@@ -71,15 +55,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            example/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('example/Cargo.lock') }}
+      - uses: Swatinem/rust-cache@v2
       - name: example e2e test
         working-directory: example
         run: |
@@ -101,6 +77,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - uses: Swatinem/rust-cache@v2
       - name: Check that README.md is up-to-date
         working-directory: ts-rs
         run: |
@@ -116,15 +93,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+      - uses: Swatinem/rust-cache@v2
       - name: Test
         run: |
           cargo test --all-features
@@ -141,15 +110,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+      - uses: Swatinem/rust-cache@v2
       - name: Test
         run: |
           TS_RS_EXPORT_DIR=output cargo test --no-default-features
@@ -166,15 +127,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+      - uses: Swatinem/rust-cache@v2
       - name: Test
         run: |
           cargo test --no-default-features
