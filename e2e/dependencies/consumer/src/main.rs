@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use ts_rs::TS;
 use dependency1::*;
 
