@@ -11,15 +11,14 @@ jobs:
         with:
           toolchain: stable
       - uses: actions/cache@v3
-        working-directory: e2e/dependencies/consumer
         with:
           path: |
             ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            e2e/dependencies/consumer/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('e2e/dependencies/consumer/**/Cargo.lock') }}
       - name: dependencies e2e test
         working-directory: e2e/dependencies/consumer
         run: |
@@ -41,15 +40,14 @@ jobs:
         with:
           toolchain: stable
       - uses: actions/cache@v3
-        working-directory: e2e/workspace
         with:
           path: |
             ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            e2e/workspace/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('e2e/workspace/**/Cargo.lock') }}
       - name: workspace e2e test
         working-directory: e2e/workspace
         run: |
@@ -74,15 +72,14 @@ jobs:
         with:
           toolchain: stable
       - uses: actions/cache@v3
-        working-directory: example
         with:
           path: |
             ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            example/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('example/**/Cargo.lock') }}
       - name: example e2e test
         working-directory: example
         run: |
@@ -104,15 +101,6 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Check that README.md is up-to-date
         working-directory: ts-rs
         run: |
@@ -136,7 +124,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('ts-rs/**/Cargo.lock') }}
       - name: Test
         run: |
           cargo test --all-features
@@ -161,7 +149,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('ts-rs/**/Cargo.lock') }}
       - name: Test
         run: |
           TS_RS_EXPORT_DIR=output cargo test --no-default-features
@@ -186,7 +174,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('ts-rs/**/Cargo.lock') }}
       - name: Test
         run: |
           cargo test --no-default-features
