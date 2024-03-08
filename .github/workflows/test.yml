@@ -18,7 +18,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             e2e/dependencies/consumer/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('e2e/dependencies/consumer/**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('e2e/dependencies/consumer/Cargo.lock') }}
       - name: dependencies e2e test
         working-directory: e2e/dependencies/consumer
         run: |
@@ -47,7 +47,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             e2e/workspace/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('e2e/workspace/**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('e2e/workspace/Cargo.lock') }}
       - name: workspace e2e test
         working-directory: e2e/workspace
         run: |
@@ -79,7 +79,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             example/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('example/**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('example/Cargo.lock') }}
       - name: example e2e test
         working-directory: example
         run: |
@@ -124,7 +124,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('ts-rs/**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
       - name: Test
         run: |
           cargo test --all-features
@@ -149,7 +149,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('ts-rs/**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
       - name: Test
         run: |
           TS_RS_EXPORT_DIR=output cargo test --no-default-features
@@ -174,7 +174,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('ts-rs/**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
       - name: Test
         run: |
           cargo test --no-default-features
