@@ -98,7 +98,7 @@ jobs:
         run: |
           cargo test --all-features
           shopt -s globstar
-          tsc ts-rs/bindings/tests-out/**/*.ts --noEmit --noUnusedLocals --strict
+          tsc ts-rs/bindings/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf ts-rs/bindings
 
   test-export-env:
