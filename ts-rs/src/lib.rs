@@ -287,12 +287,19 @@ pub trait TS {
     /// If the type does have generic parameters, then all generic parameters must be replaced with
     /// a dummy type, e.g `ts_rs::Dummy` or `()`.
     /// The only requirement for these dummy types is that `EXPORT_TO` must be `None`.
-    /// Example:
-    /// ```ignore
+    ///
+    /// # Example:
+    /// ```
+    /// use ts_rs::TS;
     /// struct GenericType<A, B>(A, B);
     /// impl<A, B> TS for GenericType<A, B> {
     ///     type WithoutGenerics = GenericType<ts_rs::Dummy, ts_rs::Dummy>;
     ///     // ...
+    ///     # fn decl() -> String { todo!() }
+    ///     # fn decl_concrete() -> String { todo!() }
+    ///     # fn name() -> String { todo!() }
+    ///     # fn inline() -> String { todo!() }
+    ///     # fn inline_flattened() -> String { todo!() }
     /// }
     /// ```
     type WithoutGenerics: TS + ?Sized;
