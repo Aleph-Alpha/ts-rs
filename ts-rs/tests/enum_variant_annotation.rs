@@ -5,7 +5,7 @@ use serde::Serialize;
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/enum_variant_anotation/")]
+#[ts(export, export_to = "enum_variant_anotation/")]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(rename_all = "SCREAMING_SNAKE_CASE"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "SCREAMING_SNAKE_CASE"))]
@@ -31,7 +31,7 @@ fn test_enum_variant_rename_all() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/enum_variant_anotation/")]
+#[ts(export, export_to = "enum_variant_anotation/")]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 enum B {
     #[cfg_attr(feature = "serde-compat", serde(rename = "SnakeMessage"))]
@@ -57,7 +57,7 @@ fn test_enum_variant_rename() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/enum_variant_anotation/")]
+#[ts(export, export_to = "enum_variant_anotation/")]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(tag = "kind"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "kind"))]

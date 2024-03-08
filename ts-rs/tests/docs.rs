@@ -11,7 +11,7 @@ use ts_rs::TS;
 ///
 /// Testing
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 struct A {
     /// Doc of field
     ///
@@ -20,7 +20,7 @@ struct A {
 }
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 /// Doc comment.
 /// Supports new lines.
 ///
@@ -33,7 +33,7 @@ struct B {
 }
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 /// Doc comment.
 /// Supports new lines.
 ///
@@ -41,7 +41,7 @@ struct B {
 struct C {}
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 /// Doc comment.
 /// Supports new lines.
 ///
@@ -49,7 +49,7 @@ struct C {}
 struct D;
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 /// Doc comment.
 /// Supports new lines.
 ///
@@ -57,7 +57,7 @@ struct D;
 enum E {}
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 /// Doc comment.
 /// Supports new lines.
 ///
@@ -83,7 +83,7 @@ enum F {
 }
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 struct G {
     /// Docs
     some_other_field: i32,
