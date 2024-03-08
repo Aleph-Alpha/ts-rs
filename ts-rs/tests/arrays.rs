@@ -3,7 +3,7 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/arrays/")]
+#[ts(export, export_to = "arrays/")]
 struct Interface {
     a: [i32; 4],
 }

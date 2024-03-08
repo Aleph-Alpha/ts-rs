@@ -3,7 +3,7 @@ use serde::Serialize;
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/enum_struct_rename_all/")]
+#[ts(export, export_to = "enum_struct_rename_all/")]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(rename_all = "camelCase"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "camelCase"))]
@@ -30,7 +30,7 @@ pub fn enum_struct_rename_all() {
 }
 
 #[derive(TS, Clone)]
-#[ts(export, export_to = "tests-out/enum_struct_rename_all/")]
+#[ts(export, export_to = "enum_struct_rename_all/")]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(rename_all_fields = "kebab-case"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(rename_all_fields = "kebab-case"))]

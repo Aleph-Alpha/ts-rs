@@ -4,7 +4,7 @@ use serde::Serialize;
 use ts_rs::TS;
 
 #[derive(Serialize, TS)]
-#[ts(export, export_to = "tests-out/optional_field/")]
+#[ts(export, export_to = "optional_field/")]
 struct OptionalInStruct {
     #[ts(optional)]
     a: Option<i32>,
@@ -22,7 +22,7 @@ fn in_struct() {
 }
 
 #[derive(Serialize, TS)]
-#[ts(export, export_to = "tests-out/optional_field/")]
+#[ts(export, export_to = "optional_field/")]
 enum OptionalInEnum {
     A {
         #[ts(optional)]
@@ -42,7 +42,7 @@ fn in_enum() {
 }
 
 #[derive(Serialize, TS)]
-#[ts(export, export_to = "tests-out/optional_field/")]
+#[ts(export, export_to = "optional_field/")]
 struct OptionalFlatten {
     #[ts(optional)]
     a: Option<i32>,
@@ -52,7 +52,7 @@ struct OptionalFlatten {
 }
 
 #[derive(Serialize, TS)]
-#[ts(export, export_to = "tests-out/optional_field/")]
+#[ts(export, export_to = "optional_field/")]
 struct Flatten {
     #[ts(flatten)]
     x: OptionalFlatten,
@@ -64,7 +64,7 @@ fn flatten() {
 }
 
 #[derive(Serialize, TS)]
-#[ts(export, export_to = "tests-out/optional_field/")]
+#[ts(export, export_to = "optional_field/")]
 struct OptionalInline {
     #[ts(optional)]
     a: Option<i32>,
@@ -74,7 +74,7 @@ struct OptionalInline {
 }
 
 #[derive(Serialize, TS)]
-#[ts(export, export_to = "tests-out/optional_field/")]
+#[ts(export, export_to = "optional_field/")]
 struct Inline {
     #[ts(inline)]
     x: OptionalInline,

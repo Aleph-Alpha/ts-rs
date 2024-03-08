@@ -10,7 +10,7 @@ fn default_http_version() -> String {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, TS)]
-#[ts(export, export_to = "tests-out/serde_skip_with_default/")]
+#[ts(export, export_to = "serde_skip_with_default/")]
 pub struct Foobar {
     #[ts(skip)]
     #[serde(skip, default = "default_http_version")]

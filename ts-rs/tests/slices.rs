@@ -8,7 +8,7 @@ fn free() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/slices/")]
+#[ts(export, export_to = "slices/")]
 struct Interface {
     #[allow(dead_code)]
     a: [i32],
@@ -20,7 +20,7 @@ fn interface() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/slices/")]
+#[ts(export, export_to = "slices/")]
 struct InterfaceRef<'a> {
     #[allow(dead_code)]
     a: &'a [&'a str],
@@ -32,7 +32,7 @@ fn slice_ref() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/slices/")]
+#[ts(export, export_to = "slices/")]
 struct Newtype(#[allow(dead_code)] [i32]);
 
 #[test]
@@ -49,7 +49,7 @@ fn boxed_free() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/slices/")]
+#[ts(export, export_to = "slices/")]
 struct InterfaceBoxed {
     #[allow(dead_code)]
     a: Box<[i32]>,
@@ -61,7 +61,7 @@ fn boxed_interface() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/slices/")]
+#[ts(export, export_to = "slices/")]
 struct NewtypeBoxed(#[allow(dead_code)] Box<[i32]>);
 
 #[test]
@@ -70,9 +70,9 @@ fn boxed_newtype() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/slices/nested/")]
+#[ts(export, export_to = "slices/nested/")]
 struct InnerMost;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/slices/nested/")]
+#[ts(export, export_to = "slices/nested/")]
 struct Nested<'a>(&'a [InnerMost]);

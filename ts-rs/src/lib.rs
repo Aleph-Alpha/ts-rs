@@ -4,7 +4,7 @@
 //! ts-rs
 //! </h1>
 //! <p align="center">
-//! generate typescript interface/type declarations from rust types
+//! generate typescript type declarations from rust types
 //! </p>
 //!
 //! <div align="center">
@@ -57,67 +57,37 @@
 //! When running `cargo test`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
 //!
 //! ## features
-//! - generate interface declarations from rust structs
+//! - generate type declarations from rust structs
 //! - generate union declarations from rust enums
 //! - inline types
-//! - flatten structs/interfaces
+//! - flatten structs/types
 //! - generate necessary imports when exporting to multiple files
 //! - serde compatibility
 //! - generic types
 //! - support for ESM imports
 //!
 //! ## cargo features
-//! - `serde-compat` (default)  
+//! | **Feature**        | **Description**                                                                                                                                                                                           |
+//! |:-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+//! | serde-compat       | **Enabled by default** <br/>See the *"serde compatibility"* section below for more information.                                                                                                           |
+//! | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
+//! | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
+//! | import-esm         | When enabled,`import` statements in the generated file will have the `.js` extension in the end of the path to conform to the ES Modules spec. <br/> Example: `import { MyStruct } from "./my_struct.js"` |
+//! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
+//! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
+//! | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
+//! | uuid-impl          | Implement `TS` for types from *uuid*                                                                                                                                                                      |
+//! | bson-uuid-impl     | Implement `TS` for types from *bson*                                                                                                                                                                      |
+//! | bytes-impl         | Implement `TS` for types from *bytes*                                                                                                                                                                     |
+//! | indexmap-impl      | Implement `TS` for types from *indexmap*                                                                                                                                                                  |
+//! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
+//! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
+//! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
 //!
-//!   Enable serde compatibility. See below for more info.  
-//! - `format`
+//! <br/>
 //!
-//!   When enabled, the generated typescript will be formatted.
-//!   Currently, this sadly adds quite a bit of dependencies.
-//! - `chrono-impl`  
-//!
-//!   Implement `TS` for types from chrono  
-//! - `bigdecimal-impl`  
-//!
-//!   Implement `TS` for types from bigdecimal  
-//! - `url-impl`  
-//!
-//!   Implement `TS` for types from url
-//! - `uuid-impl`  
-//!
-//!   Implement `TS` for types from uuid
-//! - `bson-uuid-impl`
-//!
-//!   Implement `TS` for types from bson
-//! - `bytes-impl`
-//!
-//!   Implement `TS` for types from bytes    
-//! - `indexmap-impl`  
-//!
-//!   Implement `TS` for `IndexMap` and `IndexSet` from indexmap  
-//!
-//! - `ordered-float-impl`  
-//!
-//!   Implement `TS` for `OrderedFloat` from ordered_float
-//!
-//! - `heapless-impl`  
-//!
-//!   Implement `TS` for `Vec` from heapless
-//!
-//! - `semver-impl`  
-//!   Implement `TS` for `Version` from semver
-//!
-//! - `no-serde-warnings`
-//!
-//!   When `serde-compat` is enabled, warnings are printed during build if unsupported serde
-//!   attributes are encountered. Enabling this feature silences these warnings.
-//!
-//! - `import-esm`
-//!
-//!   `import` statements in the generated file will have the `.js` extension in the end of
-//!   the path to conform to the ES Modules spec. (e.g.: `import { MyStruct } from "./my_struct.js"`)
-//!
-//! If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
+//! If there's a type you're dealing with which doesn't implement `TS`, use either
+//! `#[ts(as = "..")]` or `#[ts(type = "..")]`, or open a PR.
 //!
 //! ## serde compatability
 //! With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
@@ -166,9 +136,6 @@ pub use ts_rs_macros::ts_rs_fn;
 pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
-// Used in generated code. Not public API
-#[doc(hidden)]
-pub use crate::export::__private;
 use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
@@ -188,6 +155,10 @@ pub mod typelist;
 /// to a type you wish to export to a file.
 /// If, for some reason, you need to do this during runtime, you can call [`TS::export`] yourself.
 ///
+/// **Note:**
+/// Annotating a type with `#[ts(export)]` (or exporting it during runtime using
+/// [`TS::export`]) will cause all of its dependencies to be exported as well.
+///
 /// ### serde compatibility
 /// By default, the feature `serde-compat` is enabled.
 /// ts-rs then parses serde attributes and adjusts the generated typescript bindings accordingly.
@@ -197,100 +168,145 @@ pub mod typelist;
 /// ### container attributes
 /// attributes applicable for both structs and enums
 ///
-/// - `#[ts(export)]`:  
+/// - **`#[ts(export)]`**  
 ///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
 ///   `cargo test`. The default base directory can be overridden with the `TS_RS_EXPORT_DIR` environment variable.
 ///   Adding the variable to a project's [config.toml](https://doc.rust-lang.org/cargo/reference/config.html#env) can
 ///   make it easier to manage.
-/// ```toml
-/// # <project-root>/.cargo/config.toml
-/// [env]
-/// TS_RS_EXPORT_DIR = { value = "<OVERRIDE_DIR>", relative = true }
-/// ```
+///   ```toml
+///   # <project-root>/.cargo/config.toml
+///   [env]
+///   TS_RS_EXPORT_DIR = { value = "<OVERRIDE_DIR>", relative = true }
+///   ```
+///   <br/>
 ///
-/// - `#[ts(export_to = "..")]`:  
-///   Specifies where the type should be exported to. Defaults to `bindings/<name>.ts`.  
-///   The `export_to` attribute will also override the `TS_RS_EXPORT_DIR` environment variable.  
+/// - **`#[ts(export_to = "..")]`**  
+///   Specifies where the type should be exported to. Defaults to `<name>.ts`.  
+///   The path given to the `export_to` attribute is relative to the `TS_RS_EXPORT_DIR` environment variable,
+///   or, if `TS_RS_EXPORT_DIR` is not set, to `./bindings`  
 ///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
+///   <br/><br/>
 ///
-/// - `#[ts(rename = "..")]`:  
+/// - **`#[ts(rename = "..")]`**  
 ///   Sets the typescript name of the generated type
+///   <br/><br/>
 ///
-/// - `#[ts(rename_all = "..")]`:  
+/// - **`#[ts(rename_all = "..")]`**  
 ///   Rename all fields/variants of the type.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   <br/><br/>
 ///
+/// ### struct attributes
+/// - **`#[ts(tag = "..")]`**  
+///   Include the structs name (or value of `#[ts(rename = "..")]`) as a field with the given key.
+///   <br/><br/>
 ///
 /// ### struct field attributes
 ///
-/// - `#[ts(type = "..")]`:  
+/// - **`#[ts(type = "..")]`**  
 ///   Overrides the type used in TypeScript.  
-///   This is useful when there's a type for which you cannot derive `TS`.  
+///   This is useful when there's a type for which you cannot derive `TS`.
+///   <br/><br/>
 ///
-/// - `#[ts(rename = "..")]`:  
-///   Renames this field  
+/// - **`#[ts(as = "..")]`**  
+///   Overrides the type of the annotated field, using the provided Rust type instead.
+///   This is useful when there's a type for which you cannot derive `TS`.
+///   <br/><br/>
 ///
-/// - `#[ts(inline)]`:  
-///   Inlines the type of this field  
+/// - **`#[ts(rename = "..")]`**  
+///   Renames this field. To rename all fields of a struct, see the container attribute `#[ts(rename_all = "..")]`.
+///   <br/><br/>
 ///
-/// - `#[ts(skip)]`:  
-///   Skip this field  
+/// - **`#[ts(inline)]`**  
+///   Inlines the type of this field, replacing its name with its definition.
+///   <br/><br/>
 ///
-/// - `#[ts(optional)]`:  
-///   May be applied on a struct field of type `Option<T>`.
-///   By default, such a field would turn into `t: T | null`.
-///   If `#[ts(optional)]` is present, `t?: T` is generated instead.
+/// - **`#[ts(skip)]`**  
+///   Skips this field, omitting it from the generated *TypeScript* type.
+///   <br/><br/>
+///
+/// - **`#[ts(optional)]`**  
+///   May be applied on a struct field of type `Option<T>`. By default, such a field would turn into `t: T | null`.  
+///   If `#[ts(optional)]` is present, `t?: T` is generated instead.  
 ///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.
+///   <br/><br/>
 ///
-/// - `#[ts(flatten)]`:  
-///   Flatten this field
+/// - **`#[ts(flatten)]`**  
+///   Flatten this field, inlining all the keys of the field's type into its parent.
+///   <br/><br/>
 ///   
 /// ### enum attributes
 ///
-/// - `#[ts(tag = "..")]`:  
-///   Changes the representation of the enum to store its tag in a separate field.
-///   See [the serde docs](https://serde.rs/enum-representations.html).
+/// - **`#[ts(tag = "..")]`**  
+///   Changes the representation of the enum to store its tag in a separate field.  
+///   See [the serde docs](https://serde.rs/enum-representations.html) for more information.
+///   <br/><br/>
 ///
-/// - `#[ts(content = "..")]`:  
-///   Changes the representation of the enum to store its content in a separate field.
-///   See [the serde docs](https://serde.rs/enum-representations.html).
+/// - **`#[ts(content = "..")]`**  
+///   Changes the representation of the enum to store its content in a separate field.  
+///   See [the serde docs](https://serde.rs/enum-representations.html) for more information.
+///   <br/><br/>
 ///
-/// - `#[ts(untagged)]`:  
-///   Changes the representation of the enum to not include its tag.
-///   See [the serde docs](https://serde.rs/enum-representations.html).
+/// - **`#[ts(untagged)]`**  
+///   Changes the representation of the enum to not include its tag.  
+///   See [the serde docs](https://serde.rs/enum-representations.html) for more information.
+///   <br/><br/>
 ///
-/// - `#[ts(rename_all = "..")]`:  
+/// - **`#[ts(rename_all = "..")]`**  
 ///   Rename all variants of this enum.  
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   <br/><br/>
 ///
-/// - `#[ts(rename_all_fieds = "..")]`
-///   Renames the fields of all the struct variants of this enum.
+/// - **`#[ts(rename_all_fieds = "..")]`**  
+///   Renames the fields of all the struct variants of this enum. This is equivalent to using
+///   `#[ts(rename_all = "..")]` on all of the enum's variants.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   <br/><br/>
 ///  
 /// ### enum variant attributes
 ///
-/// - `#[ts(rename = "..")]`:  
-///   Renames this variant  
+/// - **`#[ts(rename = "..")]`**  
+///   Renames this variant. To rename all variants of an enum, see the container attribute `#[ts(rename_all = "..")]`.
+///   <br/><br/>
 ///
-/// - `#[ts(skip)]`:  
-///   Skip this variant  
+/// - **`#[ts(skip)]`**  
+///   Skip this variant, omitting it from the generated *TypeScript* type.
+///   <br/><br/>
+///
+/// - **`#[ts(untagged)]`**  
+///   Changes this variant to be treated as if the enum was untagged, regardless of the enum's tag
+///   and content attributes
+///   <br/><br/>
+///
+/// - **`#[ts(rename_all = "..")]`**  
+///   Renames all the fields of a struct variant.
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   <br/><br/>
 pub trait TS {
     /// If this type does not have generic parameters, then `WithoutGenerics` should just be `Self`.
     /// If the type does have generic parameters, then all generic parameters must be replaced with
     /// a dummy type, e.g `ts_rs::Dummy` or `()`.
     /// The only requirement for these dummy types is that `EXPORT_TO` must be `None`.
-    /// Example:
-    /// ```ignore
+    ///
+    /// # Example:
+    /// ```
+    /// use ts_rs::TS;
     /// struct GenericType<A, B>(A, B);
     /// impl<A, B> TS for GenericType<A, B> {
     ///     type WithoutGenerics = GenericType<ts_rs::Dummy, ts_rs::Dummy>;
     ///     // ...
+    ///     # fn decl() -> String { todo!() }
+    ///     # fn decl_concrete() -> String { todo!() }
+    ///     # fn name() -> String { todo!() }
+    ///     # fn inline() -> String { todo!() }
+    ///     # fn inline_flattened() -> String { todo!() }
     /// }
     /// ```
     type WithoutGenerics: TS + ?Sized;
 
-    const EXPORT_TO: Option<&'static str> = None;
+    /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
+    /// automatically read from your doc comments or `#[doc = ".."]` attributes
     const DOCS: Option<&'static str> = None;
 
     /// Identifier of this type, excluding generic parameters.
@@ -298,59 +314,46 @@ pub trait TS {
         // by default, fall back to `TS::name()`.
         let name = Self::name();
 
-        if name.contains('<') {
-            panic!("generic types must implement ident")
-        } else {
-            name
+        match name.find('<') {
+            Some(i) => name[..i].to_owned(),
+            None => name,
         }
     }
 
-    fn get_export_to() -> Option<String> {
-        Self::EXPORT_TO.map(ToString::to_string)
-    }
-
-    /// Declaration of this type, e.g. `interface User { user_id: number, ... }`.
+    /// Declaration of this type, e.g. `type User = { user_id: number, ... }`.
     /// This function will panic if the type has no declaration.
     ///
     /// If this type is generic, then all provided generic parameters will be swapped for
     /// placeholders, resulting in a generic typescript definition.
     /// Both `SomeType::<i32>::decl()` and `SomeType::<String>::decl()` will therefore result in
     /// the same TypeScript declaration `type SomeType<A> = ...`.
-    fn decl() -> String {
-        panic!("{} cannot be declared", Self::name());
-    }
+    fn decl() -> String;
 
     /// Declaration of this type using the supplied generic arguments.
     /// The resulting TypeScript definition will not be generic. For that, see `TS::decl()`.
     /// If this type is not generic, then this function is equivalent to `TS::decl()`.
-    fn decl_concrete() -> String {
-        panic!("{} cannot be declared", Self::name());
-    }
+    fn decl_concrete() -> String;
 
     /// Name of this type in TypeScript, including generic parameters
     fn name() -> String;
 
     /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
     /// This function will panic if the type cannot be inlined.
-    fn inline() -> String {
-        panic!("{} cannot be inlined", Self::name());
-    }
+    fn inline() -> String;
 
     /// Flatten an type declaration.  
     /// This function will panic if the type cannot be flattened.
-    fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", Self::name())
-    }
+    fn inline_flattened() -> String;
 
-    /// Returns a `TypeList` of all types on which this type depends.
+    /// Returns a [`TypeList`] of all types on which this type depends.
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
     }
 
-    /// Returns a `TypeList` containing all generic parameters of this type.
-    /// If this type is not generic, this will return an empty `TypeList`.
+    /// Returns a [`TypeList`] containing all generic parameters of this type.
+    /// If this type is not generic, this will return an empty [`TypeList`].
     fn generics() -> impl TypeList
     where
         Self: 'static,
@@ -409,6 +412,20 @@ pub trait TS {
     {
         export::export_type_to_string::<Self>()
     }
+
+    /// Returns the output path to where `T` should be exported.
+    ///
+    /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.  
+    /// See the documentation of [`TS`] for more details.
+    /// 
+    /// The output of this function depends on the environment variable `TS_RS_EXPORT_DIR`, which is
+    /// used as base directory. If it is not set, `./bindings` is used as default directory.
+    ///
+    /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
+    /// `None`.
+    fn output_path() -> Option<PathBuf> {
+        None
+    }
 }
 
 /// A typescript type which is depended upon by other types.
@@ -429,7 +446,7 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
-        let exported_to = T::get_export_to()?;
+        let exported_to = T::output_path()?.to_str()?.to_owned();
         Some(Dependency {
             type_id: TypeId::of::<T>(),
             ts_name: T::ident(),
@@ -445,6 +462,9 @@ macro_rules! impl_primitives {
             type WithoutGenerics = Self;
             fn name() -> String { $l.to_owned() }
             fn inline() -> String { <Self as $crate::TS>::name() }
+            fn inline_flattened() -> String { panic!("{} cannot be flattened", <Self as $crate::TS>::name()) }
+            fn decl() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
+            fn decl_concrete() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
         }
     )*)* };
 }
@@ -465,6 +485,9 @@ macro_rules! impl_tuples {
             {
                 ()$(.push::<$i>())*
             }
+            fn inline_flattened() -> String { panic!("tuple cannot be flattened") }
+            fn decl() -> String { panic!("tuple cannot be declared") }
+            fn decl_concrete() -> String { panic!("tuple cannot be declared") }
         }
     };
     ( $i2:ident $(, $i:ident)* ) => {
@@ -494,6 +517,8 @@ macro_rules! impl_wrapper {
             {
                 ((std::marker::PhantomData::<T>,), T::generics())
             }
+            fn decl() -> String { panic!("wrapper type cannot be declared") }
+            fn decl_concrete() -> String { panic!("wrapper type cannot be declared") }
         }
     };
 }
@@ -519,76 +544,127 @@ macro_rules! impl_shadow {
             {
                 <$s>::generics()
             }
+            fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
+            fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
         }
     };
 }
 
 impl<T: TS> TS for Option<T> {
     type WithoutGenerics = Self;
+
     fn name() -> String {
         format!("{} | null", T::name())
     }
+
     fn inline() -> String {
         format!("{} | null", T::inline())
     }
+
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
         T::dependency_types()
     }
+
     fn generics() -> impl TypeList
     where
         Self: 'static,
     {
         T::generics().push::<T>()
     }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
+    }
 }
 
 impl<T: TS, E: TS> TS for Result<T, E> {
     type WithoutGenerics = Result<Dummy, Dummy>;
+
     fn name() -> String {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::name(), E::name())
     }
+
     fn inline() -> String {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
     }
+
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
         T::dependency_types().extend(E::dependency_types())
     }
+
     fn generics() -> impl TypeList
     where
         Self: 'static,
     {
         T::generics().push::<T>().extend(E::generics()).push::<E>()
     }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
+    }
 }
 
 impl<T: TS> TS for Vec<T> {
     type WithoutGenerics = Vec<Dummy>;
+
     fn ident() -> String {
         "Array".to_owned()
     }
+
     fn name() -> String {
         format!("Array<{}>", T::name())
     }
+
     fn inline() -> String {
         format!("Array<{}>", T::inline())
     }
+
     fn dependency_types() -> impl TypeList
     where
         Self: 'static,
     {
         T::dependency_types()
     }
+
     fn generics() -> impl TypeList
     where
         Self: 'static,
     {
         T::generics().push::<T>()
+    }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
     }
 }
 
@@ -631,13 +707,27 @@ impl<T: TS, const N: usize> TS for [T; N] {
     {
         T::generics().push::<T>()
     }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
+    }
 }
 
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     type WithoutGenerics = HashMap<Dummy, Dummy>;
+
     fn ident() -> String {
         "Record".to_owned()
     }
+
     fn name() -> String {
         format!("Record<{}, {}>", K::name(), V::name())
     }
@@ -652,11 +742,24 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     {
         K::dependency_types().extend(V::dependency_types())
     }
+
     fn generics() -> impl TypeList
     where
         Self: 'static,
     {
         K::generics().push::<K>().extend(V::generics()).push::<V>()
+    }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
     }
 }
 
@@ -678,6 +781,22 @@ impl<I: TS> TS for Range<I> {
         Self: 'static,
     {
         I::generics().push::<I>()
+    }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline() -> String {
+        panic!("{} cannot be inlined", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
     }
 }
 
@@ -767,5 +886,21 @@ impl TS for Dummy {
     type WithoutGenerics = Self;
     fn name() -> String {
         "Dummy".to_owned()
+    }
+
+    fn decl() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn decl_concrete() -> String {
+        panic!("{} cannot be declared", Self::name())
+    }
+
+    fn inline() -> String {
+        panic!("{} cannot be inlined", Self::name())
+    }
+
+    fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", Self::name())
     }
 }

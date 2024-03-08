@@ -11,7 +11,7 @@ use ts_rs::TS;
 ///
 /// Testing
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 struct A {
     /// Doc of field
     ///
@@ -20,7 +20,7 @@ struct A {
 }
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 /// Doc comment.
 /// Supports new lines.
 ///
@@ -33,7 +33,7 @@ struct B {
 }
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 /// Doc comment.
 /// Supports new lines.
 ///
@@ -41,7 +41,7 @@ struct B {
 struct C {}
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 /// Doc comment.
 /// Supports new lines.
 ///
@@ -49,7 +49,7 @@ struct C {}
 struct D;
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 /// Doc comment.
 /// Supports new lines.
 ///
@@ -57,7 +57,7 @@ struct D;
 enum E {}
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 /// Doc comment.
 /// Supports new lines.
 ///
@@ -83,7 +83,7 @@ enum F {
 }
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/docs/")]
+#[ts(export_to = "docs/")]
 struct G {
     /// Docs
     some_other_field: i32,
@@ -136,7 +136,7 @@ fn export_a() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/A.ts").unwrap();
+    let actual_content = fs::read_to_string(A::output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -182,7 +182,7 @@ fn export_b() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/B.ts").unwrap();
+    let actual_content = fs::read_to_string(B::output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -215,7 +215,7 @@ fn export_c() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/C.ts").unwrap();
+    let actual_content = fs::read_to_string(C::output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -247,7 +247,7 @@ fn export_d() {
             "export type D = null;"
         )
     };
-    let actual_content = fs::read_to_string("tests-out/docs/D.ts").unwrap();
+    let actual_content = fs::read_to_string(D::output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -280,7 +280,7 @@ fn export_e() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/E.ts").unwrap();
+    let actual_content = fs::read_to_string(E::output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -328,7 +328,7 @@ fn export_f() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/F.ts").unwrap();
+    let actual_content = fs::read_to_string(F::output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -376,7 +376,7 @@ fn export_g() {
         )
     };
 
-    let actual_content = fs::read_to_string("tests-out/docs/G.ts").unwrap();
+    let actual_content = fs::read_to_string(G::output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }

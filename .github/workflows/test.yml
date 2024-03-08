@@ -4,11 +4,13 @@ jobs:
   e2e-dependencies:
     name: Run 'dependencies' end-to-end test
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - uses: Swatinem/rust-cache@v2
       - name: dependencies e2e test
         working-directory: e2e/dependencies/consumer
         run: |
@@ -18,33 +20,42 @@ jobs:
         working-directory: e2e/dependencies/consumer
         run: |
           TS_RS_EXPORT_DIR=custom-bindings cargo t 
-          tsc custom-bindings/* --noEmit --noUnusedLocals --strict
+          shopt -s globstar
+          tsc custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
   e2e-workspace:
     name: Run 'workspace' end-to-end test
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - uses: Swatinem/rust-cache@v2
       - name: workspace e2e test
         working-directory: e2e/workspace
         run: |
           cargo t 
-          tsc parent/bindings/* --noEmit --noUnusedLocals --strict
+          shopt -s globstar
+          tsc parent/bindings/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf parent/bindings
       - name: workspace e2e with default export env
         working-directory: e2e/workspace
         run: |
           TS_RS_EXPORT_DIR=custom-bindings cargo t 
-          tsc parent/custom-bindings/* --noEmit --noUnusedLocals --strict
+          shopt -s globstar
+          tsc parent/custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf parent/custom-bindings
   e2e-example:
     name: End-to-end test example
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - uses: Swatinem/rust-cache@v2
       - name: example e2e test
         working-directory: example
         run: |
@@ -54,37 +65,72 @@ jobs:
         working-directory: example
         run: |
           TS_RS_EXPORT_DIR=custom-bindings cargo t 
-          tsc custom-bindings/* --noEmit --noUnusedLocals --strict
+          shopt -s globstar
+          tsc custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
 
   readme-up-to-date:
     name: Check that README.md is up-to-date
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - uses: Swatinem/rust-cache@v2
       - name: Check that README.md is up-to-date
         working-directory: ts-rs
         run: |
           cargo install cargo-readme 
           diff -u ../README.md <(cargo readme)
 
-  test:
-    name: Test ts-rs
+  test-all-features:
+    name: Test ts-rs with --all-features
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - name: No features
-        run: |
-          cargo test --no-default-features
-          shopt -s globstar
-          tsc ts-rs/tests-out/**/*.ts --noEmit --noUnusedLocals
-      - name: All features
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
         run: |
           cargo test --all-features
           shopt -s globstar
-          tsc ts-rs/tests-out/**/*.ts --noEmit --noUnusedLocals --strict
+          tsc ts-rs/bindings/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf ts-rs/bindings
+
+  test-export-env:
+    name: Test ts-rs with TS_RS_EXPORT_DIR
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        run: |
+          TS_RS_EXPORT_DIR=output cargo test --no-default-features
+          shopt -s globstar
+          tsc ts-rs/output/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf ts-rs/output
+
+  test-no-features:
+    name: Test ts-rs with --no-default-features
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        run: |
+          cargo test --no-default-features
+          shopt -s globstar
+          tsc ts-rs/bindings/**/*.ts --noEmit --noUnusedLocals
+          rm -rf ts-rs/bindings

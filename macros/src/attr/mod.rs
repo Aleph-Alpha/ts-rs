@@ -103,3 +103,11 @@ fn parse_assign_str(input: ParseStream) -> Result<String> {
 fn parse_assign_inflection(input: ParseStream) -> Result<Inflection> {
     parse_assign_str(input).and_then(Inflection::try_from)
 }
+
+fn parse_assign_from_str<T>(input: ParseStream) -> Result<T> where T: Parse {
+    input.parse::<Token![=]>()?;
+    match Lit::parse(input)? {
+        Lit::Str(string) => string.parse(),
+        other => Err(Error::new(other.span(), "expected string")),
+    }
+}
