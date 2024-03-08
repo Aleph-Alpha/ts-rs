@@ -6,21 +6,21 @@ use ts_rs::{Dependency, TS};
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
-#[ts(export, export_to = "tests-out/union_with_data/")]
+#[ts(export, export_to = "union_with_data/")]
 struct Bar {
     field: i32,
 }
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
-#[ts(export, export_to = "tests-out/union_with_data/")]
+#[ts(export, export_to = "union_with_data/")]
 struct Foo {
     bar: Bar,
 }
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
-#[ts(export, export_to = "tests-out/union_with_data/")]
+#[ts(export, export_to = "union_with_data/")]
 enum SimpleEnum {
     A(String),
     B(i32),

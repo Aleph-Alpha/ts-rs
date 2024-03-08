@@ -3,7 +3,7 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/references/")]
+#[ts(export, export_to = "references/")]
 struct FullOfRefs<'a> {
     str_slice: &'a str,
     ref_slice: &'a [&'a str],

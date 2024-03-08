@@ -115,7 +115,7 @@ jobs:
         run: |
           TS_RS_EXPORT_DIR=output cargo test --no-default-features
           shopt -s globstar
-          tsc ts-rs/output/tests-out/**/*.ts --noEmit --noUnusedLocals --strict
+          tsc ts-rs/output/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf ts-rs/output
 
   test-no-features:
@@ -132,5 +132,5 @@ jobs:
         run: |
           cargo test --no-default-features
           shopt -s globstar
-          tsc ts-rs/bindings/tests-out/**/*.ts --noEmit --noUnusedLocals
+          tsc ts-rs/bindings/**/*.ts --noEmit --noUnusedLocals
           rm -rf ts-rs/bindings

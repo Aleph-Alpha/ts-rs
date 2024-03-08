@@ -2,13 +2,13 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "../ts-rs/tests-out/path_bug/")]
+#[ts(export, export_to = "../ts-rs/path_bug/")]
 struct Foo {
     bar: Bar,
 }
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/path_bug/aaa/")]
+#[ts(export_to = "path_bug/aaa/")]
 struct Bar {
     i: i32,
 }

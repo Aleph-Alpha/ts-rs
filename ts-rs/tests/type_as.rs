@@ -9,7 +9,7 @@ use ts_rs::TS;
 type Unsupported = UnsafeCell<MaybeUninit<NonNull<AtomicPtr<i32>>>>;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/type_as/")]
+#[ts(export, export_to = "type_as/")]
 struct ExternalTypeDef {
     a: i32,
     b: i32,
@@ -17,7 +17,7 @@ struct ExternalTypeDef {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/type_as/")]
+#[ts(export, export_to = "type_as/")]
 struct Override {
     a: i32,
     #[ts(as = "ExternalTypeDef")]
@@ -40,7 +40,7 @@ fn struct_properties() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/type_as/")]
+#[ts(export, export_to = "type_as/")]
 enum OverrideEnum {
     A(#[ts(as = "ExternalTypeDef")] Instant),
     B {
@@ -60,7 +60,7 @@ fn enum_variants() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/type_as/")]
+#[ts(export, export_to = "type_as/")]
 struct Outer {
     #[ts(as = "Option<ExternalTypeDef>")]
     #[ts(optional = nullable, inline)]
