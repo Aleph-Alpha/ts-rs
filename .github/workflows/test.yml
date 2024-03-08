@@ -4,7 +4,7 @@ jobs:
   e2e-dependencies:
     name: Run 'dependencies' end-to-end test
     runs-on: ubuntu-latest
-    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -33,7 +33,7 @@ jobs:
   e2e-workspace:
     name: Run 'workspace' end-to-end test
     runs-on: ubuntu-latest
-    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -65,7 +65,7 @@ jobs:
   e2e-example:
     name: End-to-end test example
     runs-on: ubuntu-latest
-    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -95,7 +95,7 @@ jobs:
   readme-up-to-date:
     name: Check that README.md is up-to-date
     runs-on: ubuntu-latest
-    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -119,7 +119,7 @@ jobs:
   test-all-features:
     name: Test ts-rs with --all-features
     runs-on: ubuntu-latest
-    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -144,7 +144,7 @@ jobs:
   test-export-env:
     name: Test ts-rs with TS_RS_EXPORT_DIR
     runs-on: ubuntu-latest
-    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -169,7 +169,7 @@ jobs:
   test-no-features:
     name: Test ts-rs with --no-default-features
     runs-on: ubuntu-latest
-    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    if: github.event_name != "pull_request" || github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
