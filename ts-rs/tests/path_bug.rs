@@ -1,14 +1,14 @@
 #![allow(dead_code)]
-use ts_rs::{TS, output_path};
+use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "../ts-rs/tests-out/path_bug/")]
+#[ts(export, export_to = "../ts-rs/path_bug/")]
 struct Foo {
     bar: Bar,
 }
 
 #[derive(TS)]
-#[ts(export_to = "tests-out/path_bug/aaa/")]
+#[ts(export_to = "path_bug/aaa/")]
 struct Bar {
     i: i32,
 }
@@ -17,6 +17,6 @@ struct Bar {
 fn path_bug() {
     export_bindings_foo();
 
-    assert!(output_path::<Foo>().unwrap().is_file());
-    assert!(output_path::<Bar>().unwrap().is_file());
+    assert!(Foo::output_path().unwrap().is_file());
+    assert!(Bar::output_path().unwrap().is_file());
 }

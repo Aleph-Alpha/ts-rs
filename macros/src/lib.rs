@@ -34,15 +34,22 @@ impl DerivedTS {
             .export
             .then(|| self.generate_export_test(&rust_ty, &generics));
 
-        let export_to = {
+        let output_path_fn = {
             let path = match self.export_to.as_deref() {
-                Some(dirname) if dirname.ends_with('/') => format!("{}{}.ts", dirname, self.ts_name),
+                Some(dirname) if dirname.ends_with('/') => {
+                    format!("{}{}.ts", dirname, self.ts_name)
+                }
                 Some(filename) => filename.to_owned(),
-                None => format!("bindings/{}.ts", self.ts_name),
+                None => format!("{}.ts", self.ts_name),
             };
 
             quote! {
-                const EXPORT_TO: Option<&'static str> = Some(#path);
+                fn output_path() -> Option<std::path::PathBuf> {
+                    let path = std::env::var("TS_RS_EXPORT_DIR");
+                    let path = path.as_deref().unwrap_or("./bindings");
+
+                    Some(std::path::Path::new(path).join(#path))
+                }
             }
         };
 
@@ -63,7 +70,6 @@ impl DerivedTS {
         quote! {
             #impl_start {
                 #assoc_type
-                #export_to
 
                 fn ident() -> String {
                     #ident.to_owned()
@@ -74,6 +80,7 @@ impl DerivedTS {
                 #decl
                 #inline
                 #generics_fn
+                #output_path_fn
 
                 #[allow(clippy::unused_unit)]
                 fn dependency_types() -> impl ts_rs::typelist::TypeList
@@ -109,12 +116,12 @@ impl DerivedTS {
     }
 
     /// Generate a dummy unit struct for every generic type parameter of this type.
-    /// Example:
-    /// ```no_run
+    /// # Example:
+    /// ```compile_fail
     /// struct Generic<A, B, const C: usize> { /* ... */ }
     /// ```
-    /// has two generic type parameters, `A` and `B`. This function will therefor generate
-    /// ```no_run
+    /// has two generic type parameters, `A` and `B`. This function will therefore generate
+    /// ```compile_fail
     /// struct A;
     /// impl ts_rs::TS for A { /* .. */ }
     ///
@@ -136,6 +143,10 @@ impl DerivedTS {
                 impl TS for #generics {
                     type WithoutGenerics = #generics;
                     fn name() -> String { stringify!(#generics).to_owned() }
+                    fn inline() -> String { panic!("{} cannot be inlined", Self::name()) }
+                    fn inline_flattened() -> String { panic!("{} cannot be flattened", Self::name()) }
+                    fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
+                    fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
                 }
             )*
         }
@@ -188,13 +199,22 @@ impl DerivedTS {
     fn generate_inline_fn(&self) -> TokenStream {
         let inline = &self.inline;
 
-        let inline_flattened = self.inline_flattened.as_ref().map(|inline_flattened| {
-            quote! {
-                fn inline_flattened() -> String {
-                    #inline_flattened
+        let inline_flattened = self.inline_flattened.as_ref().map_or_else(
+            || {
+                quote! {
+                    fn inline_flattened() -> String {
+                        panic!("{} cannot be flattened", Self::name())
+                    }
                 }
-            }
-        });
+            },
+            |inline_flattened| {
+                quote! {
+                    fn inline_flattened() -> String {
+                        #inline_flattened
+                    }
+                }
+            },
+        );
         let inline = quote! {
             fn inline() -> String {
                 #inline

@@ -5,7 +5,7 @@ use std::borrow::Cow;
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generic_fields/")]
+#[ts(export, export_to = "generic_fields/")]
 struct Newtype(Vec<Cow<'static, i32>>);
 
 #[test]
@@ -14,7 +14,7 @@ fn newtype() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generic_fields/")]
+#[ts(export, export_to = "generic_fields/")]
 struct NewtypeNested(Vec<Vec<i32>>);
 
 #[test]
@@ -35,7 +35,7 @@ fn alias_nested() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generic_fields/")]
+#[ts(export, export_to = "generic_fields/")]
 struct Struct {
     a: Box<Vec<String>>,
     b: (Vec<String>, Vec<String>),
@@ -51,7 +51,7 @@ fn named() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generic_fields/")]
+#[ts(export, export_to = "generic_fields/")]
 struct StructNested {
     a: Vec<Vec<String>>,
     b: (Vec<Vec<String>>, Vec<Vec<String>>),
@@ -64,7 +64,7 @@ fn named_nested() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generic_fields/")]
+#[ts(export, export_to = "generic_fields/")]
 struct Tuple(Vec<i32>, (Vec<i32>, Vec<i32>), [Vec<i32>; 3]);
 
 #[test]
@@ -76,7 +76,7 @@ fn tuple() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generic_fields/")]
+#[ts(export, export_to = "generic_fields/")]
 struct TupleNested(
     Vec<Vec<i32>>,
     (Vec<Vec<i32>>, Vec<Vec<i32>>),

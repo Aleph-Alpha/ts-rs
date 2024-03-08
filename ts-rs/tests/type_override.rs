@@ -10,7 +10,7 @@ struct Unsupported<T>(T);
 struct Unsupported2;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/type_override/")]
+#[ts(export, export_to = "type_override/")]
 struct Override {
     a: i32,
     #[ts(type = "0 | 1 | 2")]
@@ -32,11 +32,11 @@ fn simple() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/type_override/")]
+#[ts(export, export_to = "type_override/")]
 struct New1(#[ts(type = "string")] Unsupported2);
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/type_override/")]
+#[ts(export, export_to = "type_override/")]
 struct New2(#[ts(type = "string | null")] Unsupported<Unsupported2>);
 
 #[test]
@@ -52,7 +52,7 @@ struct S;
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(tag = "t"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "t"))]
-#[ts(export, export_to = "tests-out/type_override/")]
+#[ts(export, export_to = "type_override/")]
 enum Internal {
     Newtype(#[ts(type = "unknown")] S),
 }
@@ -61,7 +61,7 @@ enum Internal {
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(tag = "t", content = "c"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "t", content = "c"))]
-#[ts(export, export_to = "tests-out/type_override/")]
+#[ts(export, export_to = "type_override/")]
 enum Adjacent {
     Newtype(#[ts(type = "unknown")] S),
 }

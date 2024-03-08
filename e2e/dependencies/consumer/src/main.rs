@@ -1,5 +1,7 @@
-use ts_rs::TS;
+#![allow(dead_code)]
+
 use dependency1::*;
+use ts_rs::TS;
 
 #[derive(TS)]
 #[ts(export)]
@@ -19,8 +21,7 @@ struct T0;
 #[derive(TS)]
 #[ts(export)]
 struct T1 {
-    t0: Option<T0>
+    t0: Option<T0>,
 }
-
 
 fn main() {}

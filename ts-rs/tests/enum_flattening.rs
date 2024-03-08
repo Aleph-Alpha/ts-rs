@@ -6,7 +6,7 @@ use ts_rs::TS;
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
-#[ts(export, export_to = "tests-out/enum_flattening/externally_tagged/")]
+#[ts(export, export_to = "enum_flattening/externally_tagged/")]
 struct FooExternally {
     qux: i32,
     #[cfg_attr(feature = "serde-compat", serde(flatten))]
@@ -17,7 +17,7 @@ struct FooExternally {
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
-#[ts(export, export_to = "tests-out/enum_flattening/externally_tagged/")]
+#[ts(export, export_to = "enum_flattening/externally_tagged/")]
 enum BarExternally {
     Baz { a: i32, a2: String },
     Biz { b: bool },
@@ -33,7 +33,7 @@ fn externally_tagged() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/enum_flattening/adjacently_tagged/")]
+#[ts(export, export_to = "enum_flattening/adjacently_tagged/")]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 struct FooAdjecently {
     one: i32,
@@ -44,7 +44,7 @@ struct FooAdjecently {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/enum_flattening/adjacently_tagged/")]
+#[ts(export, export_to = "enum_flattening/adjacently_tagged/")]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(tag = "type", content = "stuff"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "type", content = "stuff"))]
@@ -74,7 +74,7 @@ fn adjacently_tagged() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/enum_flattening/internally_tagged/")]
+#[ts(export, export_to = "enum_flattening/internally_tagged/")]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 struct FooInternally {
     qux: Option<String>,
@@ -85,7 +85,7 @@ struct FooInternally {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/enum_flattening/internally_tagged/")]
+#[ts(export, export_to = "enum_flattening/internally_tagged/")]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(tag = "type"))]
 #[cfg_attr(not(feature = "serde-compat"), ts(tag = "type"))]
@@ -104,7 +104,7 @@ fn internally_tagged() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/enum_flattening/untagged/")]
+#[ts(export, export_to = "enum_flattening/untagged/")]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 struct FooUntagged {
     #[cfg_attr(feature = "serde-compat", serde(flatten))]
@@ -113,7 +113,7 @@ struct FooUntagged {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/enum_flattening/untagged/")]
+#[ts(export, export_to = "enum_flattening/untagged/")]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(untagged))]
 #[cfg_attr(not(feature = "serde-compat"), ts(untagged))]

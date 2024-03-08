@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
-use quote::quote;
-use syn::{Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, Type};
+use quote::{quote, ToTokens};
+use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, Type};
 
 use crate::{
     attr::{FieldAttr, Inflection, Optional, StructAttr},
@@ -93,11 +93,11 @@ fn format_field(
     }
 
     if type_as.is_some() && type_override.is_some() {
-        syn_err!("`type` is not compatible with `as`")
+        syn_err_spanned!(field; "`type` is not compatible with `as`")
     }
 
     let parsed_ty = if let Some(ref type_as) = type_as {
-        syn::parse_str::<Type>(type_as)?
+        syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
     } else {
         field.ty.clone()
     };
@@ -120,10 +120,10 @@ fn format_field(
 
     if flatten {
         match (&type_as, &type_override, &rename, inline) {
-            (Some(_), _, _, _) => syn_err!("`as` is not compatible with `flatten`"),
-            (_, Some(_), _, _) => syn_err!("`type` is not compatible with `flatten`"),
-            (_, _, Some(_), _) => syn_err!("`rename` is not compatible with `flatten`"),
-            (_, _, _, true) => syn_err!("`inline` is not compatible with `flatten`"),
+            (Some(_), _, _, _) => syn_err_spanned!(field; "`as` is not compatible with `flatten`"),
+            (_, Some(_), _, _) => syn_err_spanned!(field; "`type` is not compatible with `flatten`"),
+            (_, _, Some(_), _) => syn_err_spanned!(field; "`rename` is not compatible with `flatten`"),
+            (_, _, _, true) => syn_err_spanned!(field; "`inline` is not compatible with `flatten`"),
             _ => {}
         }
 
@@ -175,12 +175,12 @@ fn extract_option_argument(ty: &Type) -> Result<&Type> {
                 PathArguments::AngleBracketed(args) if args.args.len() == 1 => {
                     match &args.args[0] {
                         GenericArgument::Type(inner_ty) => Ok(inner_ty),
-                        _ => syn_err!("`Option` argument must be a type"),
+                        other => syn_err!(other.span(); "`Option` argument must be a type"),
                     }
                 }
-                _ => syn_err!("`Option` type must have a single generic argument"),
+                other => syn_err!(other.span(); "`Option` type must have a single generic argument"),
             }
         }
-        _ => syn_err!("`optional` can only be used on an Option<T> type"),
+        other => syn_err!(other.span(); "`optional` can only be used on an Option<T> type"),
     }
 }

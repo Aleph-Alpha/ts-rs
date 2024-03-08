@@ -5,7 +5,7 @@ use std::{borrow::Cow, rc::Rc, sync::Arc};
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/unsized/")]
+#[ts(export, export_to = "unsized/")]
 struct S<'a> {
     b: Box<str>,
     c: Cow<'a, str>,

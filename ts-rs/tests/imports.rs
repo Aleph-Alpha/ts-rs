@@ -1,22 +1,21 @@
 #![allow(dead_code)]
-use std::path::Path;
 
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/imports/ts_rs_test_type_a.ts")]
+#[ts(export, export_to = "imports/ts_rs_test_type_a.ts")]
 pub struct TestTypeA<T> {
     value: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/imports/ts_rs_test_type_b.ts")]
+#[ts(export, export_to = "imports/ts_rs_test_type_b.ts")]
 pub struct TestTypeB<T> {
     value: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/imports/")]
+#[ts(export, export_to = "imports/")]
 pub enum TestEnum {
     C { value: TestTypeB<i8> },
     A1 { value: TestTypeA<i32> },
@@ -27,14 +26,7 @@ pub enum TestEnum {
 fn test_def() {
     // The only way to get access to how the imports look is to export the type and load the exported file
     TestEnum::export().unwrap();
-    let path = std::env::var("TS_RS_EXPORT_DIR")
-        .ok()
-        .as_deref()
-        .map(Path::new)
-        .unwrap_or_else(|| Path::new("."))
-        .to_owned()
-        .join(TestEnum::EXPORT_TO.unwrap());
-    let text = std::fs::read_to_string(&path).unwrap();
+    let text = std::fs::read_to_string(TestEnum::output_path().unwrap()).unwrap();
 
     let expected = match (cfg!(feature = "format"), cfg!(feature = "import-esm")) {
         (true, true) => concat!(
@@ -74,5 +66,4 @@ fn test_def() {
     };
 
     assert_eq!(text, expected);
-    std::fs::remove_file(path).unwrap();
 }

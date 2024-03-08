@@ -6,7 +6,7 @@
 ts-rs
 </h1>
 <p align="center">
-generate typescript interface/type declarations from rust types
+generate typescript type declarations from rust types
 </p>
 
 <div align="center">
@@ -59,67 +59,37 @@ struct User {
 When running `cargo test`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
 
 ### features
-- generate interface declarations from rust structs
+- generate type declarations from rust structs
 - generate union declarations from rust enums
 - inline types
-- flatten structs/interfaces
+- flatten structs/types
 - generate necessary imports when exporting to multiple files
 - serde compatibility
 - generic types
 - support for ESM imports
 
 ### cargo features
-- `serde-compat` (default)
+| **Feature**        | **Description**                                                                                                                                                                                           |
+|:-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| serde-compat       | **Enabled by default** <br/>See the *"serde compatibility"* section below for more information.                                                                                                           |
+| format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
+| no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
+| import-esm         | When enabled,`import` statements in the generated file will have the `.js` extension in the end of the path to conform to the ES Modules spec. <br/> Example: `import { MyStruct } from "./my_struct.js"` |
+| chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
+| bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
+| url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
+| uuid-impl          | Implement `TS` for types from *uuid*                                                                                                                                                                      |
+| bson-uuid-impl     | Implement `TS` for types from *bson*                                                                                                                                                                      |
+| bytes-impl         | Implement `TS` for types from *bytes*                                                                                                                                                                     |
+| indexmap-impl      | Implement `TS` for types from *indexmap*                                                                                                                                                                  |
+| ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
+| heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
+| semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
 
-  Enable serde compatibility. See below for more info.
-- `format`
+<br/>
 
-  When enabled, the generated typescript will be formatted.
-  Currently, this sadly adds quite a bit of dependencies.
-- `chrono-impl`
-
-  Implement `TS` for types from chrono
-- `bigdecimal-impl`
-
-  Implement `TS` for types from bigdecimal
-- `url-impl`
-
-  Implement `TS` for types from url
-- `uuid-impl`
-
-  Implement `TS` for types from uuid
-- `bson-uuid-impl`
-
-  Implement `TS` for types from bson
-- `bytes-impl`
-
-  Implement `TS` for types from bytes
-- `indexmap-impl`
-
-  Implement `TS` for `IndexMap` and `IndexSet` from indexmap
-
-- `ordered-float-impl`
-
-  Implement `TS` for `OrderedFloat` from ordered_float
-
-- `heapless-impl`
-
-  Implement `TS` for `Vec` from heapless
-
-- `semver-impl`
-  Implement `TS` for `Version` from semver
-
-- `no-serde-warnings`
-
-  When `serde-compat` is enabled, warnings are printed during build if unsupported serde
-  attributes are encountered. Enabling this feature silences these warnings.
-
-- `import-esm`
-
-  `import` statements in the generated file will have the `.js` extension in the end of
-  the path to conform to the ES Modules spec. (e.g.: `import { MyStruct } from "./my_struct.js"`)
-
-If there's a type you're dealing with which doesn't implement `TS`, use `#[ts(type = "..")]` or open a PR.
+If there's a type you're dealing with which doesn't implement `TS`, use either
+`#[ts(as = "..")]` or `#[ts(type = "..")]`, or open a PR.
 
 ### serde compatability
 With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.

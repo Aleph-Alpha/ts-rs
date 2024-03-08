@@ -10,7 +10,7 @@ use std::{
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct Generic<T>
 where
     T: TS,
@@ -20,14 +20,14 @@ where
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct GenericAutoBound<T> {
     value: T,
     values: Vec<T>,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct GenericAutoBound2<T>
 where
     T: PartialEq,
@@ -37,7 +37,7 @@ where
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct Container {
     foo: Generic<u32>,
     bar: Box<HashSet<Generic<u32>>>,
@@ -55,7 +55,7 @@ macro_rules! declare {
 
 declare! {
     #[derive(TS)]
-    #[ts(export, export_to = "tests-out/generics/")]
+    #[ts(export, export_to = "generics/")]
     TypeGroup {
         foo: Vec<Container>,
     }
@@ -90,7 +90,7 @@ fn test() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 enum GenericEnum<A, B, C> {
     A(A),
     B(B, B, B),
@@ -111,7 +111,7 @@ fn generic_enum() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct NewType<T>(Vec<Vec<T>>);
 
 #[test]
@@ -123,7 +123,7 @@ fn generic_newtype() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct Tuple<T>(T, Vec<T>, Vec<Vec<T>>);
 
 #[test]
@@ -135,7 +135,7 @@ fn generic_tuple() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct Struct<T> {
     a: T,
     b: (T, T),
@@ -156,13 +156,13 @@ fn generic_struct() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct GenericInline<T> {
     t: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct ContainerInline {
     g: GenericInline<String>,
     #[ts(inline)]
@@ -184,13 +184,13 @@ fn inline() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct GenericWithBounds<T: ToString> {
     t: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct ContainerWithBounds {
     g: GenericWithBounds<String>,
 
@@ -214,13 +214,13 @@ fn inline_with_bounds() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct GenericWithDefault<T = String> {
     t: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct ContainerWithDefault {
     g: GenericWithDefault<String>,
 
@@ -244,19 +244,19 @@ fn inline_with_default() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct ADefault<T = String> {
     t: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct BDefault<U = Option<ADefault<i32>>> {
     u: U,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct YDefault {
     a1: ADefault,
     a2: ADefault<i32>,
@@ -284,17 +284,17 @@ fn default() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct ATraitBounds<T: ToString = i32> {
     t: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct BTraitBounds<T: ToString + Debug + Clone + 'static>(T);
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 enum CTraitBounds<T: Copy + Clone + PartialEq, K: Copy + PartialOrd = i32> {
     A { t: T },
     B(T),
@@ -333,31 +333,31 @@ fn trait_bounds() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct T0<T> {
     t0: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct P0<T> {
     p0: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct T1<T> {
     t0: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct P1<T> {
     p0: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct Parent {
     a: T1<T0<u32>>,
     b: T1<P1<T0<P0<u32>>>>,
@@ -365,7 +365,7 @@ struct Parent {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct GenericParent<T> {
     a_t: T1<T0<T>>,
     b_t: T1<P1<T0<P0<T>>>>,
@@ -395,18 +395,18 @@ fn deeply_nested() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct SomeType(String);
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 enum MyEnum<A, B> {
     VariantA(A),
     VariantB(B),
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tests-out/generics/")]
+#[ts(export, export_to = "generics/")]
 struct ParentEnum {
     e: MyEnum<i32, i32>,
     #[ts(inline)]
