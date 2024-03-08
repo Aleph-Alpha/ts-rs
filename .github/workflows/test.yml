@@ -170,7 +170,7 @@ jobs:
     name: Test ts-rs with --no-default-features
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
-      steps:
+    steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
