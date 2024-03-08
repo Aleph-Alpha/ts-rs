@@ -129,6 +129,12 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: All features
+        run: |
+          cargo test --all-features
+          shopt -s globstar
+          tsc ts-rs/bindings/tests-out/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf ts-rs/bindings
       - name: Test with export env
         run: |
           TS_RS_EXPORT_DIR=output cargo test --no-default-features
@@ -140,10 +146,4 @@ jobs:
           cargo test --no-default-features
           shopt -s globstar
           tsc ts-rs/bindings/tests-out/**/*.ts --noEmit --noUnusedLocals
-          rm -rf ts-rs/bindings
-      - name: All features
-        run: |
-          cargo test --all-features
-          shopt -s globstar
-          tsc ts-rs/bindings/tests-out/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf ts-rs/bindings
