@@ -112,8 +112,8 @@ jobs:
           cargo install cargo-readme 
           diff -u ../README.md <(cargo readme)
 
-  test:
-    name: Test ts-rs
+  test-all-features:
+    name: Test ts-rs with --all-features
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -129,19 +129,55 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: All features
+      - name: Test
         run: |
           cargo test --all-features
           shopt -s globstar
           tsc ts-rs/bindings/tests-out/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf ts-rs/bindings
-      - name: Test with export env
+
+  test-export-env:
+    name: Test ts-rs with TS_RS_EXPORT_DIR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Test
         run: |
           TS_RS_EXPORT_DIR=output cargo test --no-default-features
           shopt -s globstar
           tsc ts-rs/output/tests-out/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf ts-rs/output
-      - name: No features
+
+  test-no-features:
+    name: Test ts-rs with --no-default-features
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Test
         run: |
           cargo test --no-default-features
           shopt -s globstar
