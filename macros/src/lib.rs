@@ -116,12 +116,12 @@ impl DerivedTS {
     }
 
     /// Generate a dummy unit struct for every generic type parameter of this type.
-    /// Example:
-    /// ```ignore
+    /// # Example:
+    /// ```compile_fail
     /// struct Generic<A, B, const C: usize> { /* ... */ }
     /// ```
-    /// has two generic type parameters, `A` and `B`. This function will therefor generate
-    /// ```ignore
+    /// has two generic type parameters, `A` and `B`. This function will therefore generate
+    /// ```compile_fail
     /// struct A;
     /// impl ts_rs::TS for A { /* .. */ }
     ///
