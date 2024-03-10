@@ -44,11 +44,8 @@ impl DerivedTS {
             };
 
             quote! {
-                fn output_path() -> Option<std::path::PathBuf> {
-                    let path = std::env::var("TS_RS_EXPORT_DIR");
-                    let path = path.as_deref().unwrap_or("./bindings");
-
-                    Some(std::path::Path::new(path).join(#path))
+                fn output_path() -> Option<&'static std::path::Path> {
+                    Some(std::path::Path::new(#path))
                 }
             }
         };
@@ -164,7 +161,7 @@ impl DerivedTS {
             #[cfg(test)]
             #[test]
             fn #test_fn() {
-                #ty::export().expect("could not export type");
+                #ty::export_all().expect("could not export type");
             }
         }
     }

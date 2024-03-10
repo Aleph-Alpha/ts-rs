@@ -26,7 +26,7 @@ pub enum TestEnum {
 fn test_def() {
     // The only way to get access to how the imports look is to export the type and load the exported file
     TestEnum::export().unwrap();
-    let text = std::fs::read_to_string(TestEnum::output_path().unwrap()).unwrap();
+    let text = std::fs::read_to_string(TestEnum::default_output_path().unwrap()).unwrap();
 
     let expected = match (cfg!(feature = "format"), cfg!(feature = "import-esm")) {
         (true, true) => concat!(

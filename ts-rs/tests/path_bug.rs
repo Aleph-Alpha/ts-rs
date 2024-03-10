@@ -17,6 +17,6 @@ struct Bar {
 fn path_bug() {
     export_bindings_foo();
 
-    assert!(Foo::output_path().unwrap().is_file());
-    assert!(Bar::output_path().unwrap().is_file());
+    assert!(Foo::default_output_path().unwrap().is_file());
+    assert!(Bar::default_output_path().unwrap().is_file());
 }

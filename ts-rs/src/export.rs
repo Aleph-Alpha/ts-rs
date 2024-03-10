@@ -1,12 +1,13 @@
 use std::{
     any::TypeId,
+    borrow::Cow,
     collections::BTreeMap,
     fmt::Write,
     path::{Component, Path, PathBuf},
     sync::Mutex,
 };
 
-pub(crate) use recursive_export::export_type_with_dependencies;
+pub(crate) use recursive_export::export_all_into;
 use thiserror::Error;
 
 use crate::TS;
@@ -30,16 +31,27 @@ pub enum ExportError {
 }
 
 mod recursive_export {
-    use std::{any::TypeId, collections::HashSet};
+    use std::{any::TypeId, collections::HashSet, path::Path};
 
-    use super::export_type;
+    use super::export_into;
     use crate::{
         typelist::{TypeList, TypeVisitor},
         ExportError, TS,
     };
 
+    /// Exports `T` to the file specified by the `#[ts(export_to = ..)]` attribute within the given
+    /// base directory.  
+    /// Additionally, all dependencies of `T` will be exported as well.
+    pub(crate) fn export_all_into<T: TS + ?Sized + 'static>(
+        out_dir: impl AsRef<Path>,
+    ) -> Result<(), ExportError> {
+        let mut seen = HashSet::new();
+        export_recursive::<T>(&mut seen, out_dir)
+    }
+
     struct Visit<'a> {
         seen: &'a mut HashSet<TypeId>,
+        out_dir: &'a Path,
         error: Option<ExportError>,
     }
 
@@ -51,29 +63,27 @@ mod recursive_export {
                 return;
             }
 
-            self.error = export_recursive::<T>(self.seen).err();
+            self.error = export_recursive::<T>(self.seen, self.out_dir).err();
         }
-    }
-
-    /// Exports `T` to the file specified by the `#[ts(export_to = ..)]` attribute.
-    /// Additionally, all dependencies of `T` will be exported as well.
-    pub(crate) fn export_type_with_dependencies<T: TS + ?Sized + 'static>(
-    ) -> Result<(), ExportError> {
-        let mut seen = HashSet::new();
-        export_recursive::<T>(&mut seen)
     }
 
     // exports T, then recursively calls itself with all of its dependencies
     fn export_recursive<T: TS + ?Sized + 'static>(
         seen: &mut HashSet<TypeId>,
+        out_dir: impl AsRef<Path>,
     ) -> Result<(), ExportError> {
         if !seen.insert(TypeId::of::<T>()) {
             return Ok(());
         }
+        let out_dir = out_dir.as_ref();
 
-        export_type::<T>()?;
+        export_into::<T>(out_dir)?;
 
-        let mut visitor = Visit { seen, error: None };
+        let mut visitor = Visit {
+            seen,
+            out_dir,
+            error: None,
+        };
         T::dependency_types().for_each(&mut visitor);
 
         if let Some(e) = visitor.error {
@@ -85,15 +95,19 @@ mod recursive_export {
 }
 
 /// Export `T` to the file specified by the `#[ts(export_to = ..)]` attribute
-pub(crate) fn export_type<T: TS + ?Sized + 'static>() -> Result<(), ExportError> {
+pub(crate) fn export_into<T: TS + ?Sized + 'static>(
+    out_dir: impl AsRef<Path>,
+) -> Result<(), ExportError> {
     let path = T::output_path()
         .ok_or_else(std::any::type_name::<T>)
         .map_err(ExportError::CannotBeExported)?;
-    export_type_to::<T, _>(path::absolute(path)?)
+    let path = out_dir.as_ref().join(path);
+
+    export_to::<T, _>(path::absolute(path)?)
 }
 
 /// Export `T` to the file specified by the `path` argument.
-pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
+pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     path: P,
 ) -> Result<(), ExportError> {
     // Lock to make sure only one file will be written at a time.
@@ -102,7 +116,13 @@ pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     static FILE_LOCK: Mutex<()> = Mutex::new(());
 
     #[allow(unused_mut)]
-    let mut buffer = export_type_to_string::<T>()?;
+    // TODO: this generates imports, but disregards 'path'!
+    //       In general, imports won't work anymore if users call `TS::export_to`, and manually 
+    //       specify each file instead of using `#[ts(export_to = "..")]`. 
+    //       However, if users only do that with types that no other type depends on, then imports
+    //       should still work! To do that, we'd need to pass `path` down until we get it into 
+    //       `generate_imports`.
+    let mut buffer = export_to_string::<T>()?;
 
     // format output
     #[cfg(feature = "format")]
@@ -126,13 +146,20 @@ pub(crate) fn export_type_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     Ok(())
 }
 
-/// Returns the generated defintion for `T`.
-pub(crate) fn export_type_to_string<T: TS + ?Sized + 'static>() -> Result<String, ExportError> {
+/// Returns the generated definition for `T`.
+pub(crate) fn export_to_string<T: TS + ?Sized + 'static>() -> Result<String, ExportError> {
     let mut buffer = String::with_capacity(1024);
     buffer.push_str(NOTE);
-    generate_imports::<T::WithoutGenerics>(&mut buffer)?;
+    generate_imports::<T::WithoutGenerics>(&mut buffer, &*default_out_dir())?;
     generate_decl::<T>(&mut buffer);
     Ok(buffer)
+}
+
+pub(crate) fn default_out_dir() -> Cow<'static, Path> {
+    match std::env::var("TS_RS_EXPORT_DIR") {
+        Err(..) => Cow::Borrowed(Path::new("./bindings")),
+        Ok(dir) => Cow::Owned(PathBuf::from(dir)),
+    }
 }
 
 /// Push the declaration of `T`
@@ -148,11 +175,17 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
     out.push_str(&T::decl());
 }
 
-/// Push an import statement for all dependencies of `T`
-fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), ExportError> {
+/// Push an import statement for all dependencies of `T`.
+/// TODO: Do we need `out_dir` here? As far as I can tell, it shouldn't matter, and we could use
+///       just T::output_path().
+fn generate_imports<T: TS + ?Sized + 'static>(
+    out: &mut String,
+    out_dir: impl AsRef<Path>,
+) -> Result<(), ExportError> {
     let path = T::output_path()
         .ok_or_else(std::any::type_name::<T>)
         .map_err(ExportError::CannotBeExported)?;
+    let path = out_dir.as_ref().join(path);
 
     let deps = T::dependencies();
     let deduplicated_deps = deps
@@ -162,7 +195,8 @@ fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), Ex
         .collect::<BTreeMap<_, _>>();
 
     for (_, dep) in deduplicated_deps {
-        let rel_path = import_path(&path, Path::new(&dep.exported_to));
+        let dep_path = out_dir.as_ref().join(dep.output_path);
+        let rel_path = import_path(&path, &dep_path);
         writeln!(
             out,
             "import type {{ {} }} from {:?};",
