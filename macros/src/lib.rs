@@ -9,6 +9,7 @@ use syn::{
 };
 
 use crate::{deps::Dependencies, utils::format_generics};
+use crate::attr::GenericAttr;
 
 #[macro_use]
 mod utils;
@@ -102,6 +103,7 @@ impl DerivedTS {
         let mut generics_ts_names = self
             .generics
             .type_params()
+            .filter(|ty| GenericAttr::from_attrs(&ty.attrs).unwrap().concrete.is_none())
             .map(|ty| &ty.ident)
             .map(|generic| quote!(<#generic as ts_rs::TS>::name()))
             .peekable();
@@ -129,7 +131,9 @@ impl DerivedTS {
     /// impl ts_rs::TS for B { /* .. */ }
     /// ```
     fn generate_generic_types(&self) -> TokenStream {
-        let generics = self.generics.type_params().map(|ty| ty.ident.clone());
+        let generics = self.generics.type_params()
+            .filter(|p| GenericAttr::from_attrs(&p.attrs).unwrap().concrete.is_none())
+            .map(|ty| ty.ident.clone());
 
         quote! {
             #(
@@ -173,6 +177,7 @@ impl DerivedTS {
         let generics = self
             .generics
             .type_params()
+            .filter(|p| GenericAttr::from_attrs(&p.attrs).unwrap().concrete.is_none())
             .map(|TypeParam { ident, .. }| quote![.push::<#ident>().extend(<#ident as ts_rs::TS>::generics())]);
         quote! {
             #[allow(clippy::unused_unit)]
@@ -268,7 +273,10 @@ fn generate_assoc_type(rust_ty: &Ident, generics: &Generics) -> TokenStream {
         .params
         .iter()
         .map(|x| match x {
-            G::Type(_) => quote! { ts_rs::Dummy },
+            G::Type(ty) => match GenericAttr::from_attrs(&ty.attrs).unwrap().concrete {
+                None => quote! { ts_rs::Dummy },
+                Some(ty) => ty.parse().unwrap(),
+            },
             G::Const(ConstParam { ident, .. }) => quote! { #ident },
             G::Lifetime(LifetimeParam { lifetime, .. }) => quote! { #lifetime },
         })
@@ -318,6 +326,7 @@ fn generate_impl_block_header(ty: &Ident, generics: &Generics) -> TokenStream {
 fn add_ts_to_where_clause(generics: &Generics) -> Option<WhereClause> {
     let generic_types = generics
         .type_params()
+        .filter(|ty| GenericAttr::from_attrs(&ty.attrs).unwrap().concrete.is_none())
         .map(|ty| ty.ident.clone())
         .collect::<Vec<_>>();
     if generic_types.is_empty() {

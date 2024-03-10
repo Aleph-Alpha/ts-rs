@@ -2,9 +2,8 @@ use std::convert::TryFrom;
 
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
-use syn::{
-    spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result,
-};
+use syn::{spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result};
+use crate::attr::GenericAttr;
 
 use crate::deps::Dependencies;
 
@@ -228,15 +227,18 @@ pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStr
         .params
         .iter()
         .filter_map(|param| match param {
-            GenericParam::Type(type_param) => Some({
+            GenericParam::Type(type_param) => {
+                if GenericAttr::from_attrs(&type_param.attrs).unwrap().concrete.is_some() {
+                    return None;
+                }
                 let ty = type_param.ident.to_string();
                 if let Some(default) = &type_param.default {
                     deps.push(default);
-                    quote!(format!("{} = {}", #ty, <#default as ts_rs::TS>::name()))
+                    Some(quote!(format!("{} = {}", #ty, <#default as ts_rs::TS>::name())))
                 } else {
-                    quote!(#ty.to_owned())
+                    Some(quote!(#ty.to_owned()))
                 }
-            }),
+            },
             _ => None,
         })
         .peekable();
