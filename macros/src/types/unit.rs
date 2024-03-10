@@ -15,6 +15,7 @@ pub(crate) fn empty_object(attr: &StructAttr, name: &str, generics: Generics) ->
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
+        concrete: attr.concrete.clone(),
     })
 }
 
@@ -30,6 +31,7 @@ pub(crate) fn empty_array(attr: &StructAttr, name: &str, generics: Generics) -> 
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
+        concrete: attr.concrete.clone(),
     })
 }
 
@@ -45,6 +47,7 @@ pub(crate) fn null(attr: &StructAttr, name: &str, generics: Generics) -> Result<
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
+        concrete: attr.concrete.clone(),
     })
 }
 

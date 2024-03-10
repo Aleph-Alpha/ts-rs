@@ -1,9 +1,8 @@
-use std::convert::TryFrom;
+use std::{collections::HashMap, convert::TryFrom};
 
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
-use syn::{spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result};
-use crate::attr::GenericAttr;
+use syn::{spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result, Type};
 
 use crate::deps::Dependencies;
 
@@ -222,13 +221,17 @@ mod warning {
 /// this expands to an expression which evaluates to a `String`.
 ///
 /// If a default type arg is encountered, it will be added to the dependencies.
-pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStream {
+pub fn format_generics(
+    deps: &mut Dependencies,
+    generics: &Generics,
+    concrete: &HashMap<Ident, Type>,
+) -> TokenStream {
     let mut expanded_params = generics
         .params
         .iter()
         .filter_map(|param| match param {
             GenericParam::Type(type_param) => {
-                if GenericAttr::from_attrs(&type_param.attrs).unwrap().concrete.is_some() {
+                if concrete.contains_key(&type_param.ident) {
                     return None;
                 }
                 let ty = type_param.ident.to_string();
