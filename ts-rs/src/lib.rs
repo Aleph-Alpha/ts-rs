@@ -149,14 +149,25 @@ pub mod typelist;
 ///
 /// ### exporting
 /// Because Rusts procedural macros are evaluated before other compilation steps, TypeScript
-/// bindings cannot be exported during compile time.
+/// bindings __cannot__ be exported during compile time.
+/// 
 /// Bindings can be exported within a test, which ts-rs generates for you by adding `#[ts(export)]`
-/// to a type you wish to export to a file.
-/// If, for some reason, you need to do this during runtime, you can call [`TS::export`] yourself.
-///
-/// **Note:**
-/// Annotating a type with `#[ts(export)]` (or exporting it during runtime using
-/// [`TS::export`]) will cause all of its dependencies to be exported as well.
+/// to a type you wish to export to a file.  
+/// When `cargo test` is run, all types annotated with `#[ts(export)]` and all of their 
+/// dependencies will be written to `TS_RS_EXPORT_DIR`, or `./bindings` by default.
+/// 
+/// For each individual type, path and filename within the output directory can be changed using 
+/// `#[ts(export_to = "...")]`. By default, the filename will be derived from the name of the type.
+/// 
+/// If, for some reason, you need to do this during runtime or cannot use `#[ts(export)]`, bindings
+/// can be exported manually:
+/// 
+/// | Function              | Includes Dependencies | To                 |
+/// |-----------------------|-----------------------|--------------------|
+/// | [`TS::export`]        | ❌                    | `TS_RS_EXPORT_DIR` |
+/// | [`TS::export_to`]     | ❌                    | _custom_           |
+/// | [`TS::export_all`]    | ✔️                    | `TS_RS_EXPORT_DIR` |
+/// | [`TS::export_all_to`] | ✔️                    | _custom_           |
 ///
 /// ### serde compatibility
 /// By default, the feature `serde-compat` is enabled.
