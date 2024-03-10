@@ -161,7 +161,10 @@ impl DerivedTS {
             "export_bindings_{}",
             rust_ty.to_string().to_lowercase().replace("r#", "")
         );
-        let generic_params = generics.type_params().map(|_| quote! { ts_rs::Dummy });
+        let generic_params = generics.type_params().map(|ty| match GenericAttr::from_attrs(&ty.attrs).unwrap().concrete {
+            None => quote! { ts_rs::Dummy },
+            Some(ty) => ty.parse().unwrap()
+        });
         let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
 
         quote! {

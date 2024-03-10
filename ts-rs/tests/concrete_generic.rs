@@ -17,6 +17,7 @@ impl Driver for OtherDriver {
 }
 
 #[derive(TS)]
+#[ts(export)]
 struct MyStruct<#[ts(concrete = "TsDriver")] T: Driver> {
     u: T::Info,
 }
