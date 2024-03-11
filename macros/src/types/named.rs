@@ -18,6 +18,7 @@ pub(crate) fn named(
     let mut formatted_fields = Vec::new();
     let mut flattened_fields = Vec::new();
     let mut dependencies = Dependencies::default();
+
     if let Some(tag) = &attr.tag {
         let formatted = format!("{}: \"{}\",", tag, name);
         formatted_fields.push(quote! {
