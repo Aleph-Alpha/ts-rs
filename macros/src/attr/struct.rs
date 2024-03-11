@@ -1,9 +1,9 @@
-use std::convert::TryFrom;
+use std::{collections::HashMap, convert::TryFrom};
 
-use syn::{Attribute, Ident, Result};
+use syn::{Attribute, Ident, Result, Type};
 
 use crate::{
-    attr::{parse_assign_str, Inflection, VariantAttr},
+    attr::{parse_assign_str, parse_concrete, Inflection, VariantAttr},
     utils::{parse_attrs, parse_docs},
 };
 
@@ -15,6 +15,7 @@ pub struct StructAttr {
     pub export: bool,
     pub tag: Option<String>,
     pub docs: String,
+    pub concrete: HashMap<Ident, Type>,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -43,6 +44,7 @@ impl StructAttr {
             export_to,
             tag,
             docs,
+            concrete,
         }: StructAttr,
     ) {
         self.rename = self.rename.take().or(rename);
@@ -51,6 +53,7 @@ impl StructAttr {
         self.export = self.export || export;
         self.tag = self.tag.take().or(tag);
         self.docs = docs;
+        self.concrete.extend(concrete);
     }
 }
 
@@ -75,7 +78,8 @@ impl_parse! {
         "rename_all" => out.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
         "tag" => out.tag = Some(parse_assign_str(input)?),
         "export" => out.export = true,
-        "export_to" => out.export_to = Some(parse_assign_str(input)?)
+        "export_to" => out.export_to = Some(parse_assign_str(input)?),
+        "concrete" => out.concrete = parse_concrete(input)?,
     }
 }
 

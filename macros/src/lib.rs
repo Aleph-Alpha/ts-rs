@@ -4,12 +4,11 @@
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
-    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Result,
-    TypeParam, WhereClause,
+    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Result, Type, TypeParam, WhereClause
 };
 
 use crate::{deps::Dependencies, utils::format_generics};
-use crate::attr::GenericAttr;
+use std::collections::HashMap;
 
 #[macro_use]
 mod utils;
@@ -24,6 +23,7 @@ struct DerivedTS {
     inline: TokenStream,
     inline_flattened: Option<TokenStream>,
     dependencies: Dependencies,
+    concrete: HashMap<Ident, Type>,
 
     export: bool,
     export_to: Option<String>,
@@ -60,8 +60,8 @@ impl DerivedTS {
         };
 
         let ident = self.ts_name.clone();
-        let impl_start = generate_impl_block_header(&rust_ty, &generics);
-        let assoc_type = generate_assoc_type(&rust_ty, &generics);
+        let impl_start = generate_impl_block_header(&rust_ty, &generics, &self.concrete);
+        let assoc_type = generate_assoc_type(&rust_ty, &generics, &self.concrete);
         let name = self.generate_name_fn();
         let inline = self.generate_inline_fn();
         let decl = self.generate_decl_fn(&rust_ty);
@@ -103,7 +103,7 @@ impl DerivedTS {
         let mut generics_ts_names = self
             .generics
             .type_params()
-            .filter(|ty| GenericAttr::from_attrs(&ty.attrs).unwrap().concrete.is_none())
+            .filter(|ty| !self.concrete.contains_key(&ty.ident))
             .map(|ty| &ty.ident)
             .map(|generic| quote!(<#generic as ts_rs::TS>::name()))
             .peekable();
@@ -132,7 +132,7 @@ impl DerivedTS {
     /// ```
     fn generate_generic_types(&self) -> TokenStream {
         let generics = self.generics.type_params()
-            .filter(|p| GenericAttr::from_attrs(&p.attrs).unwrap().concrete.is_none())
+            .filter(|ty| !self.concrete.contains_key(&ty.ident))
             .map(|ty| ty.ident.clone());
 
         quote! {
@@ -161,9 +161,9 @@ impl DerivedTS {
             "export_bindings_{}",
             rust_ty.to_string().to_lowercase().replace("r#", "")
         );
-        let generic_params = generics.type_params().map(|ty| match GenericAttr::from_attrs(&ty.attrs).unwrap().concrete {
+        let generic_params = generics.type_params().map(|ty| match self.concrete.get(&ty.ident) {
             None => quote! { ts_rs::Dummy },
-            Some(ty) => ty.parse().unwrap()
+            Some(ty) => quote! { #ty },
         });
         let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
 
@@ -180,7 +180,7 @@ impl DerivedTS {
         let generics = self
             .generics
             .type_params()
-            .filter(|p| GenericAttr::from_attrs(&p.attrs).unwrap().concrete.is_none())
+            .filter(|ty| !self.concrete.contains_key(&ty.ident))
             .map(|TypeParam { ident, .. }| quote![.push::<#ident>().extend(<#ident as ts_rs::TS>::generics())]);
         quote! {
             #[allow(clippy::unused_unit)]
@@ -240,7 +240,7 @@ impl DerivedTS {
     fn generate_decl_fn(&mut self, rust_ty: &Ident) -> TokenStream {
         let name = &self.ts_name;
         let generic_types = self.generate_generic_types();
-        let ts_generics = format_generics(&mut self.dependencies, &self.generics);
+        let ts_generics = format_generics(&mut self.dependencies, &self.generics, &self.concrete);
 
         use GenericParam as G;
         // These are the generic parameters we'll be using.
@@ -269,16 +269,20 @@ impl DerivedTS {
     }
 }
 
-fn generate_assoc_type(rust_ty: &Ident, generics: &Generics) -> TokenStream {
+fn generate_assoc_type(
+    rust_ty: &Ident,
+    generics: &Generics,
+    concrete: &HashMap<Ident, Type>,
+) -> TokenStream {
     use GenericParam as G;
 
     let generics_params = generics
         .params
         .iter()
         .map(|x| match x {
-            G::Type(ty) => match GenericAttr::from_attrs(&ty.attrs).unwrap().concrete {
+            G::Type(ty) => match concrete.get(&ty.ident) {
                 None => quote! { ts_rs::Dummy },
-                Some(ty) => ty.parse().unwrap(),
+                Some(ty) => quote! { #ty },
             },
             G::Const(ConstParam { ident, .. }) => quote! { #ident },
             G::Lifetime(LifetimeParam { lifetime, .. }) => quote! { #lifetime },
@@ -293,7 +297,11 @@ fn generate_assoc_type(rust_ty: &Ident, generics: &Generics) -> TokenStream {
 }
 
 // generate start of the `impl TS for #ty` block, up to (excluding) the open brace
-fn generate_impl_block_header(ty: &Ident, generics: &Generics) -> TokenStream {
+fn generate_impl_block_header(
+    ty: &Ident,
+    generics: &Generics,
+    concrete: &HashMap<Ident, Type>,
+) -> TokenStream {
     use GenericParam as G;
 
     let bounds = generics.params.iter().map(|param| match param {
@@ -322,14 +330,17 @@ fn generate_impl_block_header(ty: &Ident, generics: &Generics) -> TokenStream {
         G::Lifetime(LifetimeParam { lifetime, .. }) => quote!(#lifetime),
     });
 
-    let where_bound = add_ts_to_where_clause(generics);
+    let where_bound = add_ts_to_where_clause(generics, concrete);
     quote!(impl <#(#bounds),*> ts_rs::TS for #ty <#(#type_args),*> #where_bound)
 }
 
-fn add_ts_to_where_clause(generics: &Generics) -> Option<WhereClause> {
+fn add_ts_to_where_clause(
+    generics: &Generics,
+    concrete: &HashMap<Ident, Type>,
+) -> Option<WhereClause> {
     let generic_types = generics
         .type_params()
-        .filter(|ty| GenericAttr::from_attrs(&ty.attrs).unwrap().concrete.is_none())
+        .filter(|ty| !concrete.contains_key(&ty.ident))
         .map(|ty| ty.ident.clone())
         .collect::<Vec<_>>();
     if generic_types.is_empty() {

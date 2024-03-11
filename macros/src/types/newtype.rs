@@ -72,5 +72,6 @@ pub(crate) fn newtype(
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
+        concrete: attr.concrete.clone(),
     })
 }
