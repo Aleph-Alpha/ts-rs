@@ -17,6 +17,8 @@ impl Driver for TsDriver {
     type Info = String;
 }
 
+#[derive(TS)]
+#[ts(export, export_to = "concrete_generic/")]
 struct OtherDriver;
 impl Driver for OtherDriver {
     type Info = Foo;
@@ -30,8 +32,9 @@ struct MyStruct<T: Driver> {
 
 #[derive(TS)]
 #[ts(export, export_to = "concrete_generic/", concrete(T = OtherDriver))]
-struct OtherStruct<T: Driver> {
+struct OtherStruct<T: Driver + TS> {
     u: T::Info,
+    x: T,
 }
 
 
@@ -43,6 +46,6 @@ fn concrete_generic_param() {
     );
     assert_eq!(
         OtherStruct::<OtherDriver>::decl_concrete(),
-        "type OtherStruct = { u: Foo, };"
+        "type OtherStruct = { u: Foo, x: OtherDriver, };"
     );
 }
