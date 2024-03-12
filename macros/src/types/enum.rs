@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Fields, Generics, ItemEnum, Variant, Ident};
+use syn::{Fields, ItemEnum, Variant, Ident};
 
 use crate::{
     attr::{EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
@@ -19,12 +19,11 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     };
 
     if s.variants.is_empty() {
-        return Ok(empty_enum(name, enum_attr, s.generics.clone()));
+        return Ok(empty_enum(name, enum_attr));
     }
 
     if s.variants.is_empty() {
         return Ok(DerivedTS {
-            generics: s.generics.clone(),
             ts_name: name,
             docs: enum_attr.docs,
             inline: quote!("never".to_owned()),
@@ -47,12 +46,10 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
             &mut extra_ts_bounds,
             &enum_attr,
             variant,
-            &s.generics,
         )?;
     }
 
     Ok(DerivedTS {
-        generics: s.generics.clone(),
         inline: quote!([#(#formatted_variants),*].join(" | ")),
         inline_flattened: Some(quote!(
             format!("({})", [#(#formatted_variants),*].join(" | "))
@@ -73,7 +70,6 @@ fn format_variant(
     extra_ts_bounds: &mut HashSet<Ident>,
     enum_attr: &EnumAttr,
     variant: &Variant,
-    generics: &Generics,
 ) -> syn::Result<()> {
     let variant_attr = VariantAttr::new(&variant.attrs, enum_attr)?;
 
@@ -95,7 +91,6 @@ fn format_variant(
         // since we are generating the variant as a struct, it doesn't have a name
         &format_ident!("_"),
         &variant.fields,
-        generics,
     )?;
     let variant_dependencies = variant_type.dependencies;
     let inline_type = variant_type.inline;
@@ -206,10 +201,9 @@ fn format_variant(
 }
 
 // bindings for an empty enum (`never` in TS)
-fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr, generics: Generics) -> DerivedTS {
+fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
     let name = name.into();
     DerivedTS {
-        generics,
         inline: quote!("never".to_owned()),
         docs: enum_attr.docs,
         inline_flattened: None,

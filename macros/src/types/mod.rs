@@ -1,4 +1,4 @@
-use syn::{Fields, Generics, Ident, ItemStruct, Result};
+use syn::{Fields, Ident, ItemStruct, Result};
 
 use crate::{attr::StructAttr, utils::to_ts_ident, DerivedTS};
 
@@ -13,26 +13,25 @@ pub(crate) use r#enum::r#enum_def;
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     let attr = StructAttr::from_attrs(&s.attrs)?;
 
-    type_def(&attr, &s.ident, &s.fields, &s.generics)
+    type_def(&attr, &s.ident, &s.fields)
 }
 
 fn type_def(
     attr: &StructAttr,
     ident: &Ident,
     fields: &Fields,
-    generics: &Generics,
 ) -> Result<DerivedTS> {
     let name = attr.rename.clone().unwrap_or_else(|| to_ts_ident(ident));
     match fields {
         Fields::Named(named) => match named.named.len() {
-            0 => unit::empty_object(attr, &name, generics.clone()),
-            _ => named::named(attr, &name, named, generics),
+            0 => unit::empty_object(attr, &name),
+            _ => named::named(attr, &name, named),
         },
         Fields::Unnamed(unnamed) => match unnamed.unnamed.len() {
-            0 => unit::empty_array(attr, &name, generics.clone()),
-            1 => newtype::newtype(attr, &name, unnamed, generics),
-            _ => tuple::tuple(attr, &name, unnamed, generics),
+            0 => unit::empty_array(attr, &name),
+            1 => newtype::newtype(attr, &name, unnamed),
+            _ => tuple::tuple(attr, &name, unnamed),
         },
-        Fields::Unit => unit::null(attr, &name, generics.clone()),
+        Fields::Unit => unit::null(attr, &name),
     }
 }

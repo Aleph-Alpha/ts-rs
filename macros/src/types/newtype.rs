@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use quote::{quote, ToTokens};
-use syn::{FieldsUnnamed, Generics, Result, Type, TypePath};
+use syn::{FieldsUnnamed, Result, Type, TypePath};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -13,7 +13,6 @@ pub(crate) fn newtype(
     attr: &StructAttr,
     name: &str,
     fields: &FieldsUnnamed,
-    generics: &Generics,
 ) -> Result<DerivedTS> {
     if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to newtype structs");
@@ -35,7 +34,7 @@ pub(crate) fn newtype(
 
     match (&rename_inner, skip, optional.optional, flatten) {
         (Some(_), ..) => syn_err_spanned!(fields; "`rename` is not applicable to newtype fields"),
-        (_, true, ..) => return super::unit::null(attr, name, generics.clone()),
+        (_, true, ..) => return super::unit::null(attr, name),
         (_, _, true, ..) => syn_err_spanned!(fields; "`optional` is not applicable to newtype fields"),
         (_, _, _, true) => syn_err_spanned!(fields; "`flatten` is not applicable to newtype fields"),
         _ => {}
@@ -76,7 +75,6 @@ pub(crate) fn newtype(
     };
 
     Ok(DerivedTS {
-        generics: generics.clone(),
         inline: inline_def,
         inline_flattened: None,
         docs: attr.docs.clone(),

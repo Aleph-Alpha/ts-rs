@@ -2,7 +2,7 @@ use std::collections::{HashSet, HashMap};
 
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{Field, FieldsUnnamed, Generics, Result, Type, Ident, TypePath};
+use syn::{Field, FieldsUnnamed, Result, Type, Ident, TypePath};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -14,7 +14,6 @@ pub(crate) fn tuple(
     attr: &StructAttr,
     name: &str,
     fields: &FieldsUnnamed,
-    generics: &Generics,
 ) -> Result<DerivedTS> {
     if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to tuple structs");
@@ -33,12 +32,10 @@ pub(crate) fn tuple(
             &mut extra_ts_bounds,
             &attr.concrete,
             field,
-            generics
         )?;
     }
 
     Ok(DerivedTS {
-        generics: generics.clone(),
         inline: quote! {
             format!(
                 "[{}]",
@@ -62,7 +59,6 @@ fn format_field(
     extra_ts_bounds: &mut HashSet<Ident>,
     concrete: &HashMap<Ident, Type>,
     field: &Field,
-    _generics: &Generics,
 ) -> Result<()> {
     let FieldAttr {
         type_as,

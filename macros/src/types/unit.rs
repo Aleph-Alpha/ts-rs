@@ -1,15 +1,14 @@
 use std::collections::HashSet;
 
 use quote::quote;
-use syn::{Generics, Result};
+use syn::Result;
 
 use crate::{attr::StructAttr, deps::Dependencies, DerivedTS};
 
-pub(crate) fn empty_object(attr: &StructAttr, name: &str, generics: Generics) -> Result<DerivedTS> {
+pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
-        generics: generics.clone(),
         inline: quote!("Record<string, never>".to_owned()),
         inline_flattened: None,
         docs: attr.docs.clone(),
@@ -22,11 +21,10 @@ pub(crate) fn empty_object(attr: &StructAttr, name: &str, generics: Generics) ->
     })
 }
 
-pub(crate) fn empty_array(attr: &StructAttr, name: &str, generics: Generics) -> Result<DerivedTS> {
+pub(crate) fn empty_array(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
-        generics: generics.clone(),
         inline: quote!("never[]".to_owned()),
         inline_flattened: None,
         docs: attr.docs.clone(),
@@ -39,11 +37,10 @@ pub(crate) fn empty_array(attr: &StructAttr, name: &str, generics: Generics) -> 
     })
 }
 
-pub(crate) fn null(attr: &StructAttr, name: &str, generics: Generics) -> Result<DerivedTS> {
+pub(crate) fn null(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
-        generics,
         inline: quote!("null".to_owned()),
         inline_flattened: None,
         docs: attr.docs.clone(),

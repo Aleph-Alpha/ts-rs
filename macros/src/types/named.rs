@@ -2,7 +2,7 @@ use std::collections::{HashSet, HashMap};
 
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, Type, Ident, TypePath};
+use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, PathArguments, Result, Type, Ident, TypePath};
 
 use crate::{
     attr::{FieldAttr, Inflection, Optional, StructAttr},
@@ -15,7 +15,6 @@ pub(crate) fn named(
     attr: &StructAttr,
     name: &str,
     fields: &FieldsNamed,
-    generics: &Generics,
 ) -> Result<DerivedTS> {
     let mut formatted_fields = Vec::new();
     let mut flattened_fields = Vec::new();
@@ -53,7 +52,6 @@ pub(crate) fn named(
     };
 
     Ok(DerivedTS {
-        generics: generics.clone(),
         inline: quote!(#inline.replace(" } & { ", " ")),
         inline_flattened: Some(quote!(format!("{{ {} }}", #fields))),
         docs: attr.docs.clone(),
