@@ -394,7 +394,7 @@ fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> Option<Vec<Type>> {
                 .last()
                 .expect("All paths have at least one segment");
 
-            return match last_segment.arguments {
+            match last_segment.arguments {
                 P::AngleBracketed(AngleBracketedGenericArguments {
                     ref args, ..
                 }) => {
