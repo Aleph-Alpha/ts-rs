@@ -1,6 +1,8 @@
+use std::collections::HashSet;
+
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Fields, Generics, ItemEnum, Variant};
+use syn::{Fields, Generics, ItemEnum, Variant, Ident};
 
 use crate::{
     attr::{EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
@@ -31,15 +33,18 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
             export: enum_attr.export,
             export_to: enum_attr.export_to,
             concrete: enum_attr.concrete,
+            extra_ts_bounds: HashSet::default(),
         });
     }
 
+    let mut extra_ts_bounds = HashSet::new();
     let mut formatted_variants = Vec::new();
     let mut dependencies = Dependencies::default();
     for variant in &s.variants {
         format_variant(
             &mut formatted_variants,
             &mut dependencies,
+            &mut extra_ts_bounds,
             &enum_attr,
             variant,
             &s.generics,
@@ -58,12 +63,14 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         export_to: enum_attr.export_to,
         ts_name: name,
         concrete: enum_attr.concrete,
+        extra_ts_bounds,
     })
 }
 
 fn format_variant(
     formatted_variants: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
+    extra_ts_bounds: &mut HashSet<Ident>,
     enum_attr: &EnumAttr,
     variant: &Variant,
     generics: &Generics,
@@ -81,8 +88,10 @@ fn format_variant(
         (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
     };
 
+    let mut attr = StructAttr::from(variant_attr);
+    attr.concrete = enum_attr.concrete.clone();
     let variant_type = types::type_def(
-        &StructAttr::from(variant_attr),
+        &attr,
         // since we are generating the variant as a struct, it doesn't have a name
         &format_ident!("_"),
         &variant.fields,
@@ -90,6 +99,8 @@ fn format_variant(
     )?;
     let variant_dependencies = variant_type.dependencies;
     let inline_type = variant_type.inline;
+
+    extra_ts_bounds.extend(variant_type.extra_ts_bounds);
 
     let formatted = match (untagged_variant, enum_attr.tagged()?) {
         (true, _) | (_, Tagged::Untagged) => quote!(#inline_type),
@@ -207,5 +218,6 @@ fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr, generics: Generics) 
         export_to: enum_attr.export_to,
         ts_name: name,
         concrete: enum_attr.concrete,
+        extra_ts_bounds: HashSet::default(),
     }
 }

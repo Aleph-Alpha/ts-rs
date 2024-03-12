@@ -1,6 +1,8 @@
+use std::collections::{HashSet, HashMap};
+
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, Type};
+use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, Type, Ident, TypePath};
 
 use crate::{
     attr::{FieldAttr, Inflection, Optional, StructAttr},
@@ -18,6 +20,7 @@ pub(crate) fn named(
     let mut formatted_fields = Vec::new();
     let mut flattened_fields = Vec::new();
     let mut dependencies = Dependencies::default();
+    let mut extra_ts_bounds = HashSet::new();
 
     if let Some(tag) = &attr.tag {
         let formatted = format!("{}: \"{}\",", tag, name);
@@ -31,6 +34,8 @@ pub(crate) fn named(
             &mut formatted_fields,
             &mut flattened_fields,
             &mut dependencies,
+            &mut extra_ts_bounds,
+            &attr.concrete,
             field,
             &attr.rename_all,
             generics,
@@ -58,6 +63,7 @@ pub(crate) fn named(
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
         concrete: attr.concrete.clone(),
+        extra_ts_bounds,
     })
 }
 
@@ -75,6 +81,8 @@ fn format_field(
     formatted_fields: &mut Vec<TokenStream>,
     flattened_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
+    extra_ts_bounds: &mut HashSet<Ident>,
+    concrete: &HashMap<Ident, Type>,
     field: &Field,
     rename_all: &Option<Inflection>,
     _generics: &Generics,
@@ -101,6 +109,15 @@ fn format_field(
     let parsed_ty = if let Some(ref type_as) = type_as {
         syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
     } else {
+        if let Type::Path(TypePath { qself: None, ref path }) = field.ty {
+            if path.segments.len() == 1 {
+                let ident = &path.segments[0].ident;
+                if concrete.contains_key(ident) {
+                    extra_ts_bounds.insert(ident.clone());
+                }
+            }
+        }
+
         field.ty.clone()
     };
 

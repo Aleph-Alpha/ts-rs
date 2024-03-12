@@ -32,7 +32,7 @@ struct MyStruct<T: Driver> {
 
 #[derive(TS)]
 #[ts(export, export_to = "concrete_generic/", concrete(T = OtherDriver))]
-struct OtherStruct<T: Driver + TS> {
+struct OtherStruct<T: Driver> {
     u: T::Info,
     x: T,
 }

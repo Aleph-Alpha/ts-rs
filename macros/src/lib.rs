@@ -8,7 +8,7 @@ use syn::{
 };
 
 use crate::{deps::Dependencies, utils::format_generics};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[macro_use]
 mod utils;
@@ -24,6 +24,7 @@ struct DerivedTS {
     inline_flattened: Option<TokenStream>,
     dependencies: Dependencies,
     concrete: HashMap<Ident, Type>,
+    extra_ts_bounds: HashSet<Ident>,
 
     export: bool,
     export_to: Option<String>,
@@ -60,7 +61,7 @@ impl DerivedTS {
         };
 
         let ident = self.ts_name.clone();
-        let impl_start = generate_impl_block_header(&rust_ty, &generics, &self.concrete);
+        let impl_start = generate_impl_block_header(&rust_ty, &generics, &self.concrete, &self.extra_ts_bounds);
         let assoc_type = generate_assoc_type(&rust_ty, &generics, &self.concrete);
         let name = self.generate_name_fn();
         let inline = self.generate_inline_fn();
@@ -301,6 +302,7 @@ fn generate_impl_block_header(
     ty: &Ident,
     generics: &Generics,
     concrete: &HashMap<Ident, Type>,
+    extra_ts_bounds: &HashSet<Ident>,
 ) -> TokenStream {
     use GenericParam as G;
 
@@ -330,18 +332,20 @@ fn generate_impl_block_header(
         G::Lifetime(LifetimeParam { lifetime, .. }) => quote!(#lifetime),
     });
 
-    let where_bound = add_ts_to_where_clause(generics, concrete);
+    let where_bound = add_ts_to_where_clause(generics, concrete, extra_ts_bounds);
     quote!(impl <#(#bounds),*> ts_rs::TS for #ty <#(#type_args),*> #where_bound)
 }
 
 fn add_ts_to_where_clause(
     generics: &Generics,
     concrete: &HashMap<Ident, Type>,
+    extra_ts_bounds: &HashSet<Ident>,
 ) -> Option<WhereClause> {
     let generic_types = generics
         .type_params()
         .filter(|ty| !concrete.contains_key(&ty.ident))
         .map(|ty| ty.ident.clone())
+        .chain(extra_ts_bounds.iter().cloned())
         .collect::<Vec<_>>();
     if generic_types.is_empty() {
         return generics.where_clause.clone();

@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use quote::quote;
 use syn::{Generics, Result};
 
@@ -16,6 +18,7 @@ pub(crate) fn empty_object(attr: &StructAttr, name: &str, generics: Generics) ->
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
         concrete: attr.concrete.clone(),
+        extra_ts_bounds: HashSet::default(),
     })
 }
 
@@ -32,6 +35,7 @@ pub(crate) fn empty_array(attr: &StructAttr, name: &str, generics: Generics) -> 
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
         concrete: attr.concrete.clone(),
+        extra_ts_bounds: HashSet::default(),
     })
 }
 
@@ -48,6 +52,7 @@ pub(crate) fn null(attr: &StructAttr, name: &str, generics: Generics) -> Result<
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
         concrete: attr.concrete.clone(),
+        extra_ts_bounds: HashSet::default(),
     })
 }
 
