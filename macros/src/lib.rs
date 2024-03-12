@@ -59,7 +59,7 @@ impl DerivedTS {
         };
 
         let ident = self.ts_name.clone();
-        let impl_start = generate_impl_block_header(&rust_ty, &generics, &self.concrete);
+        let impl_start = generate_impl_block_header(&rust_ty, &generics, &self.concrete, &self.dependencies);
         let assoc_type = generate_assoc_type(&rust_ty, &generics, &self.concrete);
         let name = self.generate_name_fn(&generics);
         let inline = self.generate_inline_fn();
@@ -303,6 +303,7 @@ fn generate_impl_block_header(
     ty: &Ident,
     generics: &Generics,
     concrete: &HashMap<Ident, Type>,
+    dependencies: &Dependencies,
 ) -> TokenStream {
     use GenericParam as G;
 
@@ -332,27 +333,28 @@ fn generate_impl_block_header(
         G::Lifetime(LifetimeParam { lifetime, .. }) => quote!(#lifetime),
     });
 
-    let where_bound = add_ts_to_where_clause(generics, concrete);
+    let where_bound = add_ts_to_where_clause(generics, concrete, dependencies);
     quote!(impl <#(#bounds),*> ts_rs::TS for #ty <#(#type_args),*> #where_bound)
 }
 
 fn add_ts_to_where_clause(
     generics: &Generics,
     concrete: &HashMap<Ident, Type>,
+    dependencies: &Dependencies
 ) -> Option<WhereClause> {
-    let generic_types = generics
+    let used_types = dependencies.types
+        .iter();
+    
+    let type_params = generics
         .type_params()
         .filter(|ty| !concrete.contains_key(&ty.ident))
-        .map(|ty| ty.ident.clone())
-        .collect::<Vec<_>>();
-    if generic_types.is_empty() {
-        return generics.where_clause.clone();
-    }
+        .map(|ty| ty.ident.clone());
+
     match generics.where_clause {
-        None => Some(parse_quote! { where #( #generic_types : ts_rs::TS ),* }),
+        None => Some(parse_quote! { where #(#used_types: ts_rs::TS,)* #(#type_params: ts_rs::TS,)* }),
         Some(ref w) => {
             let bounds = w.predicates.iter();
-            Some(parse_quote! { where #(#bounds,)* #( #generic_types : ts_rs::TS ),* })
+            Some(parse_quote! { where #(#bounds,)* #(#used_types: ts_rs::TS,)* #(#type_params: ts_rs::TS,)* })
         }
     }
 }
