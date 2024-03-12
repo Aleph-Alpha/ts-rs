@@ -385,7 +385,6 @@ fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> bool {
                 .expect("All paths have at least one segment");
 
             return match last_segment.arguments {
-                P::None => false,
                 P::AngleBracketed(AngleBracketedGenericArguments {
                     ref args, ..
                 }) => args
@@ -395,7 +394,7 @@ fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> bool {
                             _ => None,
                         })
                         .any(std::convert::identity),
-                P::Parenthesized(_) => todo!(),
+                _ => false,
             }
         },
         _ => false,

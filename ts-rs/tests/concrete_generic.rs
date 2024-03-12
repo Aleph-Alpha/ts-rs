@@ -69,14 +69,23 @@ mod simple {
 
     #[derive(TS)]
     #[ts(export, export_to = "concrete_generic/simple/")]
+    struct Tuple<T> {
+        f: Option<T>,
+    }
+
+    #[derive(TS)]
+    #[ts(export, export_to = "concrete_generic/simple/")]
     #[ts(concrete(T = i32))]
     struct WithOption<T> {
         opt: Option<T>,
     }
-    
+
     #[test]
     fn simple() {
         assert_eq!(Simple::<String>::decl(), "type Simple = { t: number, };");
-        assert_eq!(WithOption::<String>::decl(), "type WithOption = { opt: number | null, };");
+        assert_eq!(
+            WithOption::<String>::decl(),
+            "type WithOption = { opt: number | null, };"
+        );
     }
 }
