@@ -33,7 +33,7 @@ mod issue_261 {
 
     #[derive(TS)]
     #[ts(export, export_to = "concrete_generic/issue_261/", concrete(T = OtherDriver))]
-    struct Consumer2<T: Driver + TS> {
+    struct Consumer2<T: Driver> {
         info: T::Info,
         driver: T,
     }
@@ -63,14 +63,14 @@ mod simple {
     #[derive(TS)]
     #[ts(export, export_to = "concrete_generic/simple/")]
     #[ts(concrete(T = i32))]
-    struct Simple<T: TS> {
+    struct Simple<T> {
         t: T,
     }
 
     #[derive(TS)]
     #[ts(export, export_to = "concrete_generic/simple/")]
     #[ts(concrete(T = i32))]
-    struct WithOption<T: TS> {
+    struct WithOption<T> {
         opt: Option<T>,
     }
     
