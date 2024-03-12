@@ -61,14 +61,14 @@ mod simple {
     use ts_rs::TS;
 
     #[derive(TS)]
-    #[ts(export, export_to = "concrete_generic/simple")]
+    #[ts(export, export_to = "concrete_generic/simple/")]
     #[ts(concrete(T = i32))]
     struct Simple<T> {
         t: T,
     }
 
     #[derive(TS)]
-    #[ts(export, export_to = "concrete_generic/simple")]
+    #[ts(export, export_to = "concrete_generic/simple/")]
     #[ts(concrete(T = i32))]
     struct WithOption<T> {
         opt: Option<T>,
