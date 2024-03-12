@@ -76,7 +76,7 @@ mod simple {
     
     #[test]
     fn simple() {
-        assert_eq!(Simple::<String>::decl(), "type Simple = { t: number, }");
-        assert_eq!(WithOption::<String>::decl(), "type Simple = { opt: number | null, }");
+        assert_eq!(Simple::<String>::decl(), "type Simple = { t: number, };");
+        assert_eq!(WithOption::<String>::decl(), "type Simple = { opt: number | null, };");
     }
 }
