@@ -8,7 +8,7 @@ use syn::{
 };
 
 use crate::{deps::Dependencies, utils::format_generics};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[macro_use]
 mod utils;
@@ -59,7 +59,7 @@ impl DerivedTS {
         };
 
         let ident = self.ts_name.clone();
-        let impl_start = generate_impl_block_header(&rust_ty, &generics, &self.concrete, &self.dependencies);
+        let impl_start = generate_impl_block_header(&rust_ty, &generics, &self.dependencies);
         let assoc_type = generate_assoc_type(&rust_ty, &generics, &self.concrete);
         let name = self.generate_name_fn(&generics);
         let inline = self.generate_inline_fn();
@@ -302,7 +302,6 @@ fn generate_assoc_type(
 fn generate_impl_block_header(
     ty: &Ident,
     generics: &Generics,
-    concrete: &HashMap<Ident, Type>,
     dependencies: &Dependencies,
 ) -> TokenStream {
     use GenericParam as G;
@@ -333,42 +332,53 @@ fn generate_impl_block_header(
         G::Lifetime(LifetimeParam { lifetime, .. }) => quote!(#lifetime),
     });
 
-    let where_bound = add_ts_to_where_clause(generics, concrete, dependencies);
+    let where_bound = add_ts_to_where_clause(generics, dependencies);
     quote!(impl <#(#bounds),*> ts_rs::TS for #ty <#(#type_args),*> #where_bound)
 }
 
 fn add_ts_to_where_clause(
     generics: &Generics,
-    concrete: &HashMap<Ident, Type>,
     dependencies: &Dependencies
 ) -> Option<WhereClause> {
     let generic_idents = generics.type_params().map(|x| x.ident.clone()).collect::<Vec<_>>();
     let used_types = dependencies.types
         .iter()
-        .filter(|x| filter_ty(x, &generic_idents));
-    
-    let type_params = generics
-        .type_params()
-        .filter(|ty| !concrete.contains_key(&ty.ident))
-        .map(|ty| ty.ident.clone());
+        .filter_map(|x| filter_ty(x, &generic_idents))
+        .flatten()
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
 
     match generics.where_clause {
-        None => Some(parse_quote! { where #(#used_types: ts_rs::TS,)* #(#type_params: ts_rs::TS,)* }),
+        None => Some(parse_quote! { where #(#used_types: ts_rs::TS,)* }),
         Some(ref w) => {
             let bounds = w.predicates.iter();
-            Some(parse_quote! { where #(#bounds,)* #(#used_types: ts_rs::TS,)* #(#type_params: ts_rs::TS,)* })
+            Some(parse_quote! { where #(#bounds,)* #(#used_types: ts_rs::TS,)* })
         }
     }
 }
 
-fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> bool {
+fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> Option<Vec<Type>> {
     use syn::{PathArguments as P, GenericArgument as G};
     match ty {
         Type::Array(TypeArray { elem, .. }) |
         Type::Paren(TypeParen { elem, .. }) |
         Type::Reference(TypeReference { elem, .. }) |
         Type::Slice(TypeSlice { elem, .. }) => filter_ty(elem, generic_idents),
-        Type::Tuple(TypeTuple { elems, .. }) => elems.iter().any(|x| filter_ty(x, generic_idents)),
+        Type::Tuple(TypeTuple { elems, .. }) => {
+            let types = elems
+                .iter()
+                .filter_map(|x| filter_ty(x, generic_idents))
+                .flatten()
+                .collect::<Vec<_>>();
+
+            if types.is_empty() {
+                None
+            } else {
+                Some(types)
+            }
+
+        },
         Type::Path(TypePath { qself: None, path }) => {
             let first_segment = path
                 .segments
@@ -376,7 +386,7 @@ fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> bool {
                 .expect("All paths have at least one segment");
 
             if generic_idents.contains(&first_segment.ident) {
-                return true;
+                return Some(vec![ty.clone()]);
             }
 
             let last_segment = path
@@ -387,17 +397,26 @@ fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> bool {
             return match last_segment.arguments {
                 P::AngleBracketed(AngleBracketedGenericArguments {
                     ref args, ..
-                }) => args
+                }) => {
+                    let types = args
                         .iter()
                         .filter_map(|x| match x {
-                            G::Type(ty) => Some(filter_ty(ty, generic_idents)),
+                            G::Type(ty) => filter_ty(ty, generic_idents),
                             _ => None,
                         })
-                        .any(std::convert::identity),
-                _ => false,
+                        .flatten()
+                        .collect::<Vec<_>>();
+
+                    if types.is_empty() {
+                        None
+                    } else {
+                        Some(types)
+                    }
+                },
+                _ => None,
             }
         },
-        _ => false,
+        _ => None,
     }
 }
 
