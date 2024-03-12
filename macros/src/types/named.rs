@@ -38,7 +38,6 @@ pub(crate) fn named(
             &attr.concrete,
             field,
             &attr.rename_all,
-            generics,
         )?;
     }
 
@@ -85,7 +84,6 @@ fn format_field(
     concrete: &HashMap<Ident, Type>,
     field: &Field,
     rename_all: &Option<Inflection>,
-    _generics: &Generics,
 ) -> Result<()> {
     let FieldAttr {
         type_as,
