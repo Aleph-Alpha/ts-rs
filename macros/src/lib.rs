@@ -292,14 +292,9 @@ fn generate_assoc_type(
             },
             G::Const(ConstParam { ident, .. }) => quote! { #ident },
             G::Lifetime(LifetimeParam { lifetime, .. }) => quote! { #lifetime },
-        })
-        .collect::<Vec<_>>();
+        });
 
-    if generics_params.is_empty() {
-        quote! { type WithoutGenerics = #rust_ty; }
-    } else {
-        quote! { type WithoutGenerics = #rust_ty<#(#generics_params),*>; }
-    }
+    quote! { type WithoutGenerics = #rust_ty<#(#generics_params),*>; }
 }
 
 // generate start of the `impl TS for #ty` block, up to (excluding) the open brace
@@ -363,7 +358,7 @@ fn generate_where_clause(generics: &Generics, dependencies: &Dependencies) -> Wh
 fn used_type_params<'ty, 'out>(
     out: &'out mut HashSet<&'ty Type>,
     ty: &'ty Type,
-    is_type_param: impl Fn(&Ident) -> bool + Copy + 'out,
+    is_type_param: impl Fn(&'ty Ident) -> bool + Copy + 'out,
 ) {
     use syn::{
         AngleBracketedGenericArguments as GenericArgs, GenericArgument as G, PathArguments as P,
