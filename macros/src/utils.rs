@@ -2,7 +2,10 @@ use std::{collections::HashMap, convert::TryFrom};
 
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
-use syn::{spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result, Type};
+use syn::{
+    spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result,
+    Type,
+};
 
 use crate::deps::Dependencies;
 
@@ -237,11 +240,13 @@ pub fn format_generics(
                 let ty = type_param.ident.to_string();
                 if let Some(default) = &type_param.default {
                     deps.push(default);
-                    Some(quote!(format!("{} = {}", #ty, <#default as ts_rs::TS>::name())))
+                    Some(quote!(
+                        format!("{} = {}", #ty, <#default as ts_rs::TS>::name())
+                    ))
                 } else {
                     Some(quote!(#ty.to_owned()))
                 }
-            },
+            }
             _ => None,
         })
         .peekable();

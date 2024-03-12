@@ -16,11 +16,7 @@ pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     type_def(&attr, &s.ident, &s.fields)
 }
 
-fn type_def(
-    attr: &StructAttr,
-    ident: &Ident,
-    fields: &Fields,
-) -> Result<DerivedTS> {
+fn type_def(attr: &StructAttr, ident: &Ident, fields: &Fields) -> Result<DerivedTS> {
     let name = attr.rename.clone().unwrap_or_else(|| to_ts_ident(ident));
     match fields {
         Fields::Named(named) => match named.named.len() {

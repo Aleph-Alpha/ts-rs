@@ -7,11 +7,7 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn newtype(
-    attr: &StructAttr,
-    name: &str,
-    fields: &FieldsUnnamed,
-) -> Result<DerivedTS> {
+pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Result<DerivedTS> {
     if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to newtype structs");
     }
@@ -33,8 +29,12 @@ pub(crate) fn newtype(
     match (&rename_inner, skip, optional.optional, flatten) {
         (Some(_), ..) => syn_err_spanned!(fields; "`rename` is not applicable to newtype fields"),
         (_, true, ..) => return super::unit::null(attr, name),
-        (_, _, true, ..) => syn_err_spanned!(fields; "`optional` is not applicable to newtype fields"),
-        (_, _, _, true) => syn_err_spanned!(fields; "`flatten` is not applicable to newtype fields"),
+        (_, _, true, ..) => {
+            syn_err_spanned!(fields; "`optional` is not applicable to newtype fields")
+        }
+        (_, _, _, true) => {
+            syn_err_spanned!(fields; "`flatten` is not applicable to newtype fields")
+        }
         _ => {}
     };
 

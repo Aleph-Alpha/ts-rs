@@ -9,11 +9,7 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn named(
-    attr: &StructAttr,
-    name: &str,
-    fields: &FieldsNamed,
-) -> Result<DerivedTS> {
+pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Result<DerivedTS> {
     let mut formatted_fields = Vec::new();
     let mut flattened_fields = Vec::new();
     let mut dependencies = Dependencies::default();
@@ -119,8 +115,12 @@ fn format_field(
     if flatten {
         match (&type_as, &type_override, &rename, inline) {
             (Some(_), _, _, _) => syn_err_spanned!(field; "`as` is not compatible with `flatten`"),
-            (_, Some(_), _, _) => syn_err_spanned!(field; "`type` is not compatible with `flatten`"),
-            (_, _, Some(_), _) => syn_err_spanned!(field; "`rename` is not compatible with `flatten`"),
+            (_, Some(_), _, _) => {
+                syn_err_spanned!(field; "`type` is not compatible with `flatten`")
+            }
+            (_, _, Some(_), _) => {
+                syn_err_spanned!(field; "`rename` is not compatible with `flatten`")
+            }
             (_, _, _, true) => syn_err_spanned!(field; "`inline` is not compatible with `flatten`"),
             _ => {}
         }
@@ -176,7 +176,9 @@ fn extract_option_argument(ty: &Type) -> Result<&Type> {
                         other => syn_err!(other.span(); "`Option` argument must be a type"),
                     }
                 }
-                other => syn_err!(other.span(); "`Option` type must have a single generic argument"),
+                other => {
+                    syn_err!(other.span(); "`Option` type must have a single generic argument")
+                }
             }
         }
         other => syn_err!(other.span(); "`optional` can only be used on an Option<T> type"),

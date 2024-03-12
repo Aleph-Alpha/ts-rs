@@ -1,14 +1,17 @@
 #![macro_use]
 #![deny(unused)]
 
+use std::collections::{HashMap, HashSet};
+
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
-    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Result, Type, TypeParam, WhereClause, TypeArray, TypeParen, TypeReference, TypeSlice, TypeTuple, TypePath, AngleBracketedGenericArguments
+    parse_quote, spanned::Spanned, AngleBracketedGenericArguments, ConstParam, GenericParam,
+    Generics, Item, LifetimeParam, Result, Type, TypeArray, TypeParam, TypeParen, TypePath,
+    TypeReference, TypeSlice, TypeTuple, WhereClause,
 };
 
 use crate::{deps::Dependencies, utils::format_generics};
-use std::collections::{HashMap, HashSet};
 
 #[macro_use]
 mod utils;
@@ -129,7 +132,8 @@ impl DerivedTS {
     /// impl ts_rs::TS for B { /* .. */ }
     /// ```
     fn generate_generic_types(&self, generics: &Generics) -> TokenStream {
-        let generics = generics.type_params()
+        let generics = generics
+            .type_params()
             .filter(|ty| !self.concrete.contains_key(&ty.ident))
             .map(|ty| ty.ident.clone());
 
@@ -159,10 +163,12 @@ impl DerivedTS {
             "export_bindings_{}",
             rust_ty.to_string().to_lowercase().replace("r#", "")
         );
-        let generic_params = generics.type_params().map(|ty| match self.concrete.get(&ty.ident) {
-            None => quote! { ts_rs::Dummy },
-            Some(ty) => quote! { #ty },
-        });
+        let generic_params = generics
+            .type_params()
+            .map(|ty| match self.concrete.get(&ty.ident) {
+                None => quote! { ts_rs::Dummy },
+                Some(ty) => quote! { #ty },
+            });
         let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
 
         quote! {
@@ -247,15 +253,13 @@ impl DerivedTS {
                 // Since we named our dummy types the same as the generic parameters, we can just keep
                 // the identifier of the generic parameter - its name is shadowed by the dummy struct.
                 None => Some(quote!(#ident)),
-                // If the type parameter is concrete, we use the type the user provided using 
+                // If the type parameter is concrete, we use the type the user provided using
                 // `#[ts(concrete)]`
                 Some(concrete) => Some(quote!(#concrete)),
-            }
+            },
             // We keep const parameters as they are, since there's no sensible default value we can
             // use instead. This might be something to change in the future.
-            G::Const(ConstParam { ident, .. }) => {
-                Some(quote!(#ident))
-            }
+            G::Const(ConstParam { ident, .. }) => Some(quote!(#ident)),
         });
         quote! {
             fn decl_concrete() -> String {
@@ -336,12 +340,13 @@ fn generate_impl_block_header(
     quote!(impl <#(#bounds),*> ts_rs::TS for #ty <#(#type_args),*> #where_bound)
 }
 
-fn add_ts_to_where_clause(
-    generics: &Generics,
-    dependencies: &Dependencies
-) -> Option<WhereClause> {
-    let generic_idents = generics.type_params().map(|x| x.ident.clone()).collect::<Vec<_>>();
-    let used_types = dependencies.types
+fn add_ts_to_where_clause(generics: &Generics, dependencies: &Dependencies) -> Option<WhereClause> {
+    let generic_idents = generics
+        .type_params()
+        .map(|x| x.ident.clone())
+        .collect::<Vec<_>>();
+    let used_types = dependencies
+        .types
         .iter()
         .filter_map(|x| filter_ty(x, &generic_idents))
         .flatten()
@@ -359,12 +364,12 @@ fn add_ts_to_where_clause(
 }
 
 fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> Option<Vec<Type>> {
-    use syn::{PathArguments as P, GenericArgument as G};
+    use syn::{GenericArgument as G, PathArguments as P};
     match ty {
-        Type::Array(TypeArray { elem, .. }) |
-        Type::Paren(TypeParen { elem, .. }) |
-        Type::Reference(TypeReference { elem, .. }) |
-        Type::Slice(TypeSlice { elem, .. }) => filter_ty(elem, generic_idents),
+        Type::Array(TypeArray { elem, .. })
+        | Type::Paren(TypeParen { elem, .. })
+        | Type::Reference(TypeReference { elem, .. })
+        | Type::Slice(TypeSlice { elem, .. }) => filter_ty(elem, generic_idents),
         Type::Tuple(TypeTuple { elems, .. }) => {
             let types = elems
                 .iter()
@@ -377,8 +382,7 @@ fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> Option<Vec<Type>> {
             } else {
                 Some(types)
             }
-
-        },
+        }
         Type::Path(TypePath { qself: None, path }) => {
             let first_segment = path
                 .segments
@@ -395,9 +399,7 @@ fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> Option<Vec<Type>> {
                 .expect("All paths have at least one segment");
 
             match last_segment.arguments {
-                P::AngleBracketed(AngleBracketedGenericArguments {
-                    ref args, ..
-                }) => {
+                P::AngleBracketed(AngleBracketedGenericArguments { ref args, .. }) => {
                     let types = args
                         .iter()
                         .filter_map(|x| match x {
@@ -412,10 +414,10 @@ fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> Option<Vec<Type>> {
                     } else {
                         Some(types)
                     }
-                },
+                }
                 _ => None,
             }
-        },
+        }
         _ => None,
     }
 }

@@ -416,7 +416,7 @@ pub trait TS {
     ///
     /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.  
     /// See the documentation of [`TS`] for more details.
-    /// 
+    ///
     /// The output of this function depends on the environment variable `TS_RS_EXPORT_DIR`, which is
     /// used as base directory. If it is not set, `./bindings` is used as default directory.
     ///

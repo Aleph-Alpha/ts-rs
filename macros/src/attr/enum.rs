@@ -1,10 +1,11 @@
+use std::collections::HashMap;
+
 use syn::{Attribute, Ident, Result, Type};
 
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
     utils::{parse_attrs, parse_docs},
 };
-use std::collections::HashMap;
 
 #[derive(Default)]
 pub struct EnumAttr {

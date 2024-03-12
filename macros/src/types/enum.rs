@@ -113,7 +113,9 @@ fn format_variant(
                     quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                 } else {
                     let ty = match (type_override, type_as) {
-                        (Some(_), Some(_)) => syn_err_spanned!(variant; "`type` is not compatible with `as`"),
+                        (Some(_), Some(_)) => {
+                            syn_err_spanned!(variant; "`type` is not compatible with `as`")
+                        }
                         (Some(type_override), None) => quote! { #type_override },
                         (None, Some(type_as)) => {
                             quote!(<#type_as as ts_rs::TS>::name())
@@ -162,7 +164,9 @@ fn format_variant(
                         quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                     } else {
                         let ty = match (type_override, type_as) {
-                            (Some(_), Some(_)) => syn_err_spanned!(variant; "`type` is not compatible with `as`"),
+                            (Some(_), Some(_)) => {
+                                syn_err_spanned!(variant; "`type` is not compatible with `as`")
+                            }
                             (Some(type_override), None) => quote! { #type_override },
                             (None, Some(type_as)) => {
                                 quote!(<#type_as as ts_rs::TS>::name())
