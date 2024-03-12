@@ -4,7 +4,7 @@
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
-    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Result, Type, TypeParam, WhereClause
+    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Result, Type, TypeParam, WhereClause, TypeArray, TypeParen, TypeReference, TypeSlice, TypeTuple, TypePath, AngleBracketedGenericArguments
 };
 
 use crate::{deps::Dependencies, utils::format_generics};
@@ -342,8 +342,10 @@ fn add_ts_to_where_clause(
     concrete: &HashMap<Ident, Type>,
     dependencies: &Dependencies
 ) -> Option<WhereClause> {
+    let generic_idents = generics.type_params().map(|x| x.ident.clone()).collect::<Vec<_>>();
     let used_types = dependencies.types
-        .iter();
+        .iter()
+        .filter(|x| filter_ty(x, &generic_idents));
     
     let type_params = generics
         .type_params()
@@ -356,6 +358,47 @@ fn add_ts_to_where_clause(
             let bounds = w.predicates.iter();
             Some(parse_quote! { where #(#bounds,)* #(#used_types: ts_rs::TS,)* #(#type_params: ts_rs::TS,)* })
         }
+    }
+}
+
+fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> bool {
+    use syn::{PathArguments as P, GenericArgument as G};
+    match ty {
+        Type::Array(TypeArray { elem, .. }) |
+        Type::Paren(TypeParen { elem, .. }) |
+        Type::Reference(TypeReference { elem, .. }) |
+        Type::Slice(TypeSlice { elem, .. }) => filter_ty(elem, generic_idents),
+        Type::Tuple(TypeTuple { elems, .. }) => elems.iter().any(|x| filter_ty(x, generic_idents)),
+        Type::Path(TypePath { qself: None, path }) => {
+            let first_segment = path
+                .segments
+                .first()
+                .expect("All paths have at least one segment");
+
+            if generic_idents.contains(&first_segment.ident) {
+                return true;
+            }
+
+            let last_segment = path
+                .segments
+                .last()
+                .expect("All paths have at least one segment");
+
+            return match last_segment.arguments {
+                P::None => false,
+                P::AngleBracketed(AngleBracketedGenericArguments {
+                    ref args, ..
+                }) => args
+                        .iter()
+                        .filter_map(|x| match x {
+                            G::Type(ty) => Some(filter_ty(ty, generic_idents)),
+                            _ => None,
+                        })
+                        .any(std::convert::identity),
+                P::Parenthesized(_) => todo!(),
+            }
+        },
+        _ => false,
     }
 }
 
