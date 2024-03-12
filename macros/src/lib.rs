@@ -247,12 +247,17 @@ impl DerivedTS {
         // These are the generic parameters we'll be using.
         let generic_idents = self.generics.params.iter().filter_map(|p| match p {
             G::Lifetime(_) => None,
-            // Since we named our dummy types the same as the generic parameters, we can just keep
-            // the identifier of the generic parameter - its name is shadowed by the dummy struct.
-            //
+            G::Type(TypeParam {ident, ..}) => match self.concrete.get(ident) {
+                // Since we named our dummy types the same as the generic parameters, we can just keep
+                // the identifier of the generic parameter - its name is shadowed by the dummy struct.
+                None => Some(quote!(#ident)),
+                // If the type parameter is concrete, we use the type the user provided using 
+                // `#[ts(concrete)]`
+                Some(concrete) => Some(quote!(#concrete)),
+            }
             // We keep const parameters as they are, since there's no sensible default value we can
             // use instead. This might be something to change in the future.
-            G::Type(TypeParam { ident, .. }) | G::Const(ConstParam { ident, .. }) => {
+            G::Const(ConstParam { ident, .. }) => {
                 Some(quote!(#ident))
             }
         });
