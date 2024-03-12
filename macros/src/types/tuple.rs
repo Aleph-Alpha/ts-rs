@@ -1,8 +1,6 @@
-use std::collections::{HashSet, HashMap};
-
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{Field, FieldsUnnamed, Result, Type, Ident, TypePath};
+use syn::{Field, FieldsUnnamed, Result, Type};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -22,17 +20,10 @@ pub(crate) fn tuple(
         syn_err!("`tag` is not applicable to tuple structs");
     }
 
-    let mut extra_ts_bounds = HashSet::new();
     let mut formatted_fields = Vec::new();
     let mut dependencies = Dependencies::default();
     for field in &fields.unnamed {
-        format_field(
-            &mut formatted_fields,
-            &mut dependencies,
-            &mut extra_ts_bounds,
-            &attr.concrete,
-            field,
-        )?;
+        format_field(&mut formatted_fields, &mut dependencies, field)?;
     }
 
     Ok(DerivedTS {
@@ -49,15 +40,12 @@ pub(crate) fn tuple(
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
         concrete: attr.concrete.clone(),
-        extra_ts_bounds,
     })
 }
 
 fn format_field(
     formatted_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
-    extra_ts_bounds: &mut HashSet<Ident>,
-    concrete: &HashMap<Ident, Type>,
     field: &Field,
 ) -> Result<()> {
     let FieldAttr {
@@ -78,15 +66,6 @@ fn format_field(
     let ty = if let Some(ref type_as) = type_as {
         syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
     } else {
-        if let Type::Path(TypePath { qself: None, ref path }) = field.ty {
-            if path.segments.len() == 1 {
-                let ident = &path.segments[0].ident;
-                if concrete.contains_key(ident) {
-                    extra_ts_bounds.insert(ident.clone());
-                }
-            }
-        }
-        
         field.ty.clone()
     };
 

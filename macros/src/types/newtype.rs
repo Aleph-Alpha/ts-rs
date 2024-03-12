@@ -1,7 +1,5 @@
-use std::collections::HashSet;
-
 use quote::{quote, ToTokens};
-use syn::{FieldsUnnamed, Result, Type, TypePath};
+use syn::{FieldsUnnamed, Result, Type};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -44,19 +42,9 @@ pub(crate) fn newtype(
         syn_err_spanned!(fields; "`type` is not compatible with `as`")
     }
 
-    let mut extra_ts_bounds = HashSet::new();
     let inner_ty = if let Some(ref type_as) = type_as {
         syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
     } else {
-        if let Type::Path(TypePath { qself: None, ref path }) = inner.ty {
-            if path.segments.len() == 1 {
-                let ident = &path.segments[0].ident;
-                if attr.concrete.contains_key(ident) {
-                    extra_ts_bounds.insert(ident.clone());
-                }
-            }
-        }
-
         inner.ty.clone()
     };
 
@@ -83,6 +71,5 @@ pub(crate) fn newtype(
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
         concrete: attr.concrete.clone(),
-        extra_ts_bounds,
     })
 }
