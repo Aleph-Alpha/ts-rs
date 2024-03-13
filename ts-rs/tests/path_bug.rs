@@ -2,7 +2,7 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "../ts-rs/path_bug/")]
+#[ts(export, export_to = "../bindings/path_bug/")]
 struct Foo {
     bar: Bar,
 }
