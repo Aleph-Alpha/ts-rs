@@ -6,6 +6,7 @@ use std::{
     path::{Component, Path, PathBuf},
     sync::Mutex,
 };
+use std::fs::File;
 
 pub(crate) use recursive_export::export_all_into;
 use thiserror::Error;
@@ -135,7 +136,15 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
         std::fs::create_dir_all(parent)?;
     }
     let lock = FILE_LOCK.lock().unwrap();
-    std::fs::write(path.as_ref(), buffer)?;
+    {
+        // Manually write to file & call `sync_data`. Otherwise, calling `fs::read(path)` 
+        // immediately after `T::export()` might result in an empty file.
+        use std::io::Write;
+        let mut file = File::create(path)?;
+        file.write_all(buffer.as_bytes())?;
+        file.sync_data()?;
+    }
+    
     drop(lock);
     Ok(())
 }
