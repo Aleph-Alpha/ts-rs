@@ -136,7 +136,7 @@ fn export_a() {
         )
     };
 
-    let actual_content = fs::read_to_string(A::output_path().unwrap()).unwrap();
+    let actual_content = fs::read_to_string(A::default_output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -182,7 +182,7 @@ fn export_b() {
         )
     };
 
-    let actual_content = fs::read_to_string(B::output_path().unwrap()).unwrap();
+    let actual_content = fs::read_to_string(B::default_output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -215,7 +215,7 @@ fn export_c() {
         )
     };
 
-    let actual_content = fs::read_to_string(C::output_path().unwrap()).unwrap();
+    let actual_content = fs::read_to_string(C::default_output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -247,7 +247,7 @@ fn export_d() {
             "export type D = null;"
         )
     };
-    let actual_content = fs::read_to_string(D::output_path().unwrap()).unwrap();
+    let actual_content = fs::read_to_string(D::default_output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -280,7 +280,7 @@ fn export_e() {
         )
     };
 
-    let actual_content = fs::read_to_string(E::output_path().unwrap()).unwrap();
+    let actual_content = fs::read_to_string(E::default_output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -328,7 +328,7 @@ fn export_f() {
         )
     };
 
-    let actual_content = fs::read_to_string(F::output_path().unwrap()).unwrap();
+    let actual_content = fs::read_to_string(F::default_output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -376,7 +376,7 @@ fn export_g() {
         )
     };
 
-    let actual_content = fs::read_to_string(G::output_path().unwrap()).unwrap();
+    let actual_content = fs::read_to_string(G::default_output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }

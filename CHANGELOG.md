@@ -10,8 +10,10 @@
 - Added `TS::dependency_types()` ([#221](https://github.com/Aleph-Alpha/ts-rs/pull/221))
 - Added `TS::generics()` ([#241](https://github.com/Aleph-Alpha/ts-rs/pull/241))
 - Added `TS::WithoutGenerics` ([#241](https://github.com/Aleph-Alpha/ts-rs/pull/241))
-- `Result`, `Option`, `HashMap` and `Vec` had their implementations of `TS` changed ([#241](https://github.com/Aleph-Alpha/ts-rs/pull/241))
 - Removed `TS::transparent()` ([#243](https://github.com/Aleph-Alpha/ts-rs/pull/243))
+- Handling of output paths ([#247](https://github.com/Aleph-Alpha/ts-rs/pull/247), [#250](https://github.com/Aleph-Alpha/ts-rs/pull/250), [#256](https://github.com/Aleph-Alpha/ts-rs/pull/256))
+  - All paths specified using `#[ts(export_to = "...")]` are now relative to `TS_RS_EXPORT_DIR`, which defaults to `./bindings/`
+- Replace `TS::export` with `TS::export`, `TS::export_all` and `TS::export_to_all` ([#263](https://github.com/Aleph-Alpha/ts-rs/pull/263))
 
 ### Features
 
@@ -27,11 +29,14 @@
 - Support `#[serde(untagged)]` on individual enum variants ([#226](https://github.com/Aleph-Alpha/ts-rs/pull/226))
 - Support for `#[serde(rename_all_fields = "...")]` ([#225](https://github.com/Aleph-Alpha/ts-rs/pull/225))
 - Export Rust doc comments/attributes on structs/enums as TSDoc strings ([#187](https://github.com/Aleph-Alpha/ts-rs/pull/187))
+- `Result`, `Option`, `HashMap` and `Vec` had their implementations of `TS` changed ([#241](https://github.com/Aleph-Alpha/ts-rs/pull/241))
 - Implement `#[ts(...)]` equivalent for `#[serde(tag = "...")]` being used on a struct with named fields ([#244](https://github.com/Aleph-Alpha/ts-rs/pull/244))
 
 ### Fixes
 
-- fix `#[ts(skip)]` and `#[serde(skip)]` in variants of adjacently or internally tagged enums ([#231](https://github.com/Aleph-Alpha/ts-rs/pull/231))
+- Fix `#[ts(skip)]` and `#[serde(skip)]` in variants of adjacently or internally tagged enums ([#231](https://github.com/Aleph-Alpha/ts-rs/pull/231))
 - `rename_all` with `camelCase` produces wrong names if fields were already in camelCase ([#198](https://github.com/Aleph-Alpha/ts-rs/pull/198))
 - Improve support for references ([#199](https://github.com/Aleph-Alpha/ts-rs/pull/199))
 - Generic type aliases generate correctly ([#233](https://github.com/Aleph-Alpha/ts-rs/pull/233))
+- Improve compiler errors ([#257](https://github.com/Aleph-Alpha/ts-rs/pull/257))
+- Update dependencies ([#255](https://github.com/Aleph-Alpha/ts-rs/pull/255))
