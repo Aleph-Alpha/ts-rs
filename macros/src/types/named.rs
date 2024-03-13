@@ -125,7 +125,7 @@ fn format_field(
             _ => {}
         }
 
-        flattened_fields.push(quote!(<#ty as ts_rs::TS>::inline_flattened()));
+        flattened_fields.push(quote!(<#ty as ::ts_rs::TS>::inline_flattened()));
         dependencies.append_from(ty);
         return Ok(());
     }
@@ -133,10 +133,10 @@ fn format_field(
     let formatted_ty = type_override.map(|t| quote!(#t)).unwrap_or_else(|| {
         if inline {
             dependencies.append_from(ty);
-            quote!(<#ty as ts_rs::TS>::inline())
+            quote!(<#ty as ::ts_rs::TS>::inline())
         } else {
             dependencies.push(ty);
-            quote!(<#ty as ts_rs::TS>::name())
+            quote!(<#ty as ::ts_rs::TS>::name())
         }
     });
     let field_name = to_ts_ident(field.ident.as_ref().unwrap());

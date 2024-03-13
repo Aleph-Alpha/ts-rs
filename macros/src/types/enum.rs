@@ -118,11 +118,11 @@ fn format_variant(
                         }
                         (Some(type_override), None) => quote! { #type_override },
                         (None, Some(type_as)) => {
-                            quote!(<#type_as as ts_rs::TS>::name())
+                            quote!(<#type_as as ::ts_rs::TS>::name())
                         }
                         (None, None) => {
                             let ty = &unnamed.unnamed[0].ty;
-                            quote!(<#ty as ts_rs::TS>::name())
+                            quote!(<#ty as ::ts_rs::TS>::name())
                         }
                     };
 
@@ -169,11 +169,11 @@ fn format_variant(
                             }
                             (Some(type_override), None) => quote! { #type_override },
                             (None, Some(type_as)) => {
-                                quote!(<#type_as as ts_rs::TS>::name())
+                                quote!(<#type_as as ::ts_rs::TS>::name())
                             }
                             (None, None) => {
                                 let ty = &unnamed.unnamed[0].ty;
-                                quote!(<#ty as ts_rs::TS>::name())
+                                quote!(<#ty as ::ts_rs::TS>::name())
                             }
                         };
 

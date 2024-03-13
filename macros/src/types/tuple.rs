@@ -83,8 +83,8 @@ fn format_field(
 
     formatted_fields.push(match type_override {
         Some(ref o) => quote!(#o.to_owned()),
-        None if inline => quote!(<#ty as ts_rs::TS>::inline()),
-        None => quote!(<#ty as ts_rs::TS>::name()),
+        None if inline => quote!(<#ty as ::ts_rs::TS>::inline()),
+        None => quote!(<#ty as ::ts_rs::TS>::name()),
     });
 
     match (inline, type_override) {

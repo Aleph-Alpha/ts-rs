@@ -241,7 +241,7 @@ pub fn format_generics(
                 if let Some(default) = &type_param.default {
                     deps.push(default);
                     Some(quote!(
-                        format!("{} = {}", #ty, <#default as ts_rs::TS>::name())
+                        format!("{} = {}", #ty, <#default as ::ts_rs::TS>::name())
                     ))
                 } else {
                     Some(quote!(#ty.to_owned()))
