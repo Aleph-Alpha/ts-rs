@@ -1,7 +1,9 @@
-use syn::{Attribute, Ident, Result};
+use std::collections::HashMap;
+
+use syn::{Attribute, Ident, Result, Type};
 
 use crate::{
-    attr::{parse_assign_inflection, parse_assign_str, Inflection},
+    attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
     utils::{parse_attrs, parse_docs},
 };
 
@@ -13,6 +15,7 @@ pub struct EnumAttr {
     pub export_to: Option<String>,
     pub export: bool,
     pub docs: String,
+    pub concrete: HashMap<Ident, Type>,
     tag: Option<String>,
     untagged: bool,
     content: Option<String>,
@@ -67,6 +70,7 @@ impl EnumAttr {
             export_to,
             export,
             docs,
+            concrete,
         }: EnumAttr,
     ) {
         self.rename = self.rename.take().or(rename);
@@ -78,6 +82,7 @@ impl EnumAttr {
         self.export = self.export || export;
         self.export_to = self.export_to.take().or(export_to);
         self.docs = docs;
+        self.concrete.extend(concrete);
     }
 }
 
@@ -90,7 +95,8 @@ impl_parse! {
         "export" => out.export = true,
         "tag" => out.tag = Some(parse_assign_str(input)?),
         "content" => out.content = Some(parse_assign_str(input)?),
-        "untagged" => out.untagged = true
+        "untagged" => out.untagged = true,
+        "concrete" => out.concrete = parse_concrete(input)?,
     }
 }
 

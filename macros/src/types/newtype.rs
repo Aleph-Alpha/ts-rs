@@ -1,5 +1,5 @@
 use quote::{quote, ToTokens};
-use syn::{FieldsUnnamed, Generics, Result, Type};
+use syn::{FieldsUnnamed, Result, Type};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -7,12 +7,7 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn newtype(
-    attr: &StructAttr,
-    name: &str,
-    fields: &FieldsUnnamed,
-    generics: &Generics,
-) -> Result<DerivedTS> {
+pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Result<DerivedTS> {
     if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to newtype structs");
     }
@@ -33,9 +28,13 @@ pub(crate) fn newtype(
 
     match (&rename_inner, skip, optional.optional, flatten) {
         (Some(_), ..) => syn_err_spanned!(fields; "`rename` is not applicable to newtype fields"),
-        (_, true, ..) => return super::unit::null(attr, name, generics.clone()),
-        (_, _, true, ..) => syn_err_spanned!(fields; "`optional` is not applicable to newtype fields"),
-        (_, _, _, true) => syn_err_spanned!(fields; "`flatten` is not applicable to newtype fields"),
+        (_, true, ..) => return super::unit::null(attr, name),
+        (_, _, true, ..) => {
+            syn_err_spanned!(fields; "`optional` is not applicable to newtype fields")
+        }
+        (_, _, _, true) => {
+            syn_err_spanned!(fields; "`flatten` is not applicable to newtype fields")
+        }
         _ => {}
     };
 
@@ -64,7 +63,6 @@ pub(crate) fn newtype(
     };
 
     Ok(DerivedTS {
-        generics: generics.clone(),
         inline: inline_def,
         inline_flattened: None,
         docs: attr.docs.clone(),
@@ -72,5 +70,6 @@ pub(crate) fn newtype(
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
+        concrete: attr.concrete.clone(),
     })
 }

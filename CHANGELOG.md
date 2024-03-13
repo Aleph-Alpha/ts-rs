@@ -31,6 +31,7 @@
 - Export Rust doc comments/attributes on structs/enums as TSDoc strings ([#187](https://github.com/Aleph-Alpha/ts-rs/pull/187))
 - `Result`, `Option`, `HashMap` and `Vec` had their implementations of `TS` changed ([#241](https://github.com/Aleph-Alpha/ts-rs/pull/241))
 - Implement `#[ts(...)]` equivalent for `#[serde(tag = "...")]` being used on a struct with named fields ([#244](https://github.com/Aleph-Alpha/ts-rs/pull/244))
+- Implement `#[ts(concrete(..))]` to specify a concrete type for a generic parameter ([#264](https://github.com/Aleph-Alpha/ts-rs/pull/264))
 
 ### Fixes
 

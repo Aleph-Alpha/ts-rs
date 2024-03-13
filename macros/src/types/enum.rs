@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Fields, Generics, ItemEnum, Variant};
+use syn::{Fields, ItemEnum, Variant};
 
 use crate::{
     attr::{EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
@@ -17,12 +17,11 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     };
 
     if s.variants.is_empty() {
-        return Ok(empty_enum(name, enum_attr, s.generics.clone()));
+        return Ok(empty_enum(name, enum_attr));
     }
 
     if s.variants.is_empty() {
         return Ok(DerivedTS {
-            generics: s.generics.clone(),
             ts_name: name,
             docs: enum_attr.docs,
             inline: quote!("never".to_owned()),
@@ -30,6 +29,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
             dependencies: Dependencies::default(),
             export: enum_attr.export,
             export_to: enum_attr.export_to,
+            concrete: enum_attr.concrete,
         });
     }
 
@@ -41,12 +41,10 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
             &mut dependencies,
             &enum_attr,
             variant,
-            &s.generics,
         )?;
     }
 
     Ok(DerivedTS {
-        generics: s.generics.clone(),
         inline: quote!([#(#formatted_variants),*].join(" | ")),
         inline_flattened: Some(quote!(
             format!("({})", [#(#formatted_variants),*].join(" | "))
@@ -56,6 +54,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         export: enum_attr.export,
         export_to: enum_attr.export_to,
         ts_name: name,
+        concrete: enum_attr.concrete,
     })
 }
 
@@ -64,7 +63,6 @@ fn format_variant(
     dependencies: &mut Dependencies,
     enum_attr: &EnumAttr,
     variant: &Variant,
-    generics: &Generics,
 ) -> syn::Result<()> {
     let variant_attr = VariantAttr::new(&variant.attrs, enum_attr)?;
 
@@ -84,7 +82,6 @@ fn format_variant(
         // since we are generating the variant as a struct, it doesn't have a name
         &format_ident!("_"),
         &variant.fields,
-        generics,
     )?;
     let variant_dependencies = variant_type.dependencies;
     let inline_type = variant_type.inline;
@@ -116,7 +113,9 @@ fn format_variant(
                     quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                 } else {
                     let ty = match (type_override, type_as) {
-                        (Some(_), Some(_)) => syn_err_spanned!(variant; "`type` is not compatible with `as`"),
+                        (Some(_), Some(_)) => {
+                            syn_err_spanned!(variant; "`type` is not compatible with `as`")
+                        }
                         (Some(type_override), None) => quote! { #type_override },
                         (None, Some(type_as)) => {
                             quote!(<#type_as as ts_rs::TS>::name())
@@ -165,7 +164,9 @@ fn format_variant(
                         quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                     } else {
                         let ty = match (type_override, type_as) {
-                            (Some(_), Some(_)) => syn_err_spanned!(variant; "`type` is not compatible with `as`"),
+                            (Some(_), Some(_)) => {
+                                syn_err_spanned!(variant; "`type` is not compatible with `as`")
+                            }
                             (Some(type_override), None) => quote! { #type_override },
                             (None, Some(type_as)) => {
                                 quote!(<#type_as as ts_rs::TS>::name())
@@ -193,10 +194,9 @@ fn format_variant(
 }
 
 // bindings for an empty enum (`never` in TS)
-fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr, generics: Generics) -> DerivedTS {
+fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
     let name = name.into();
     DerivedTS {
-        generics,
         inline: quote!("never".to_owned()),
         docs: enum_attr.docs,
         inline_flattened: None,
@@ -204,5 +204,6 @@ fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr, generics: Generics) 
         export: enum_attr.export,
         export_to: enum_attr.export_to,
         ts_name: name,
+        concrete: enum_attr.concrete,
     }
 }

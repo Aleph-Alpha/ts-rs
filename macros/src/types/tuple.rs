@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{Field, FieldsUnnamed, Generics, Result, Type};
+use syn::{Field, FieldsUnnamed, Result, Type};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -8,12 +8,7 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn tuple(
-    attr: &StructAttr,
-    name: &str,
-    fields: &FieldsUnnamed,
-    generics: &Generics,
-) -> Result<DerivedTS> {
+pub(crate) fn tuple(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Result<DerivedTS> {
     if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to tuple structs");
     }
@@ -24,11 +19,10 @@ pub(crate) fn tuple(
     let mut formatted_fields = Vec::new();
     let mut dependencies = Dependencies::default();
     for field in &fields.unnamed {
-        format_field(&mut formatted_fields, &mut dependencies, field, generics)?;
+        format_field(&mut formatted_fields, &mut dependencies, field)?;
     }
 
     Ok(DerivedTS {
-        generics: generics.clone(),
         inline: quote! {
             format!(
                 "[{}]",
@@ -41,6 +35,7 @@ pub(crate) fn tuple(
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
+        concrete: attr.concrete.clone(),
     })
 }
 
@@ -48,7 +43,6 @@ fn format_field(
     formatted_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     field: &Field,
-    _generics: &Generics,
 ) -> Result<()> {
     let FieldAttr {
         type_as,

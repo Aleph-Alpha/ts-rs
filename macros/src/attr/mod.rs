@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use std::{collections::HashMap, convert::TryFrom};
 
 pub use field::*;
 pub use r#enum::*;
@@ -86,11 +86,42 @@ fn parse_assign_str(input: ParseStream) -> Result<String> {
     }
 }
 
+fn parse_concrete(input: ParseStream) -> Result<HashMap<syn::Ident, syn::Type>> {
+    struct Concrete {
+        ident: syn::Ident,
+        _equal_token: Token![=],
+        ty: syn::Type,
+    }
+
+    impl Parse for Concrete {
+        fn parse(input: ParseStream) -> Result<Self> {
+            Ok(Self {
+                ident: input.parse()?,
+                _equal_token: input.parse()?,
+                ty: input.parse()?,
+            })
+        }
+    }
+
+    let content;
+    syn::parenthesized!(content in input);
+
+    Ok(
+        syn::punctuated::Punctuated::<Concrete, Token![,]>::parse_terminated(&content)?
+            .into_iter()
+            .map(|concrete| (concrete.ident, concrete.ty))
+            .collect(),
+    )
+}
+
 fn parse_assign_inflection(input: ParseStream) -> Result<Inflection> {
     parse_assign_str(input).and_then(Inflection::try_from)
 }
 
-fn parse_assign_from_str<T>(input: ParseStream) -> Result<T> where T: Parse {
+fn parse_assign_from_str<T>(input: ParseStream) -> Result<T>
+where
+    T: Parse,
+{
     input.parse::<Token![=]>()?;
     match Lit::parse(input)? {
         Lit::Str(string) => string.parse(),

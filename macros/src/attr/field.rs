@@ -1,6 +1,6 @@
-use syn::{Attribute, Ident, Result, Path};
+use syn::{Attribute, Ident, Path, Result};
 
-use super::{parse_assign_str, parse_assign_from_str};
+use super::{parse_assign_from_str, parse_assign_str};
 use crate::utils::{parse_attrs, parse_docs};
 
 #[derive(Default)]
