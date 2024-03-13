@@ -83,7 +83,7 @@ impl DerivedTS {
                 #output_path_fn
 
                 #[allow(clippy::unused_unit)]
-                fn dependency_types() -> impl ts_rs::typelist::TypeList
+                fn dependency_types() -> impl ::ts_rs::typelist::TypeList
                 where
                     Self: 'static,
                 {
@@ -103,7 +103,7 @@ impl DerivedTS {
             .type_params()
             .filter(|ty| !self.concrete.contains_key(&ty.ident))
             .map(|ty| &ty.ident)
-            .map(|generic| quote!(<#generic as ts_rs::TS>::name()))
+            .map(|generic| quote!(<#generic as ::ts_rs::TS>::name()))
             .peekable();
 
         if generics_ts_names.peek().is_some() {
@@ -163,10 +163,10 @@ impl DerivedTS {
         let generic_params = generics
             .type_params()
             .map(|ty| match self.concrete.get(&ty.ident) {
-                None => quote! { ts_rs::Dummy },
+                None => quote! { ::ts_rs::Dummy },
                 Some(ty) => quote! { #ty },
             });
-        let ty = quote!(<#rust_ty<#(#generic_params),*> as ts_rs::TS>);
+        let ty = quote!(<#rust_ty<#(#generic_params),*> as ::ts_rs::TS>);
 
         quote! {
             #[cfg(test)]
@@ -181,14 +181,14 @@ impl DerivedTS {
         let generics = generics
             .type_params()
             .filter(|ty| !self.concrete.contains_key(&ty.ident))
-            .map(|TypeParam { ident, .. }| quote![.push::<#ident>().extend(<#ident as ts_rs::TS>::generics())]);
+            .map(|TypeParam { ident, .. }| quote![.push::<#ident>().extend(<#ident as ::ts_rs::TS>::generics())]);
         quote! {
             #[allow(clippy::unused_unit)]
-            fn generics() -> impl ts_rs::typelist::TypeList
+            fn generics() -> impl ::ts_rs::typelist::TypeList
             where
                 Self: 'static,
             {
-                use ts_rs::typelist::TypeList;
+                use ::ts_rs::typelist::TypeList;
                 ()#(#generics)*
             }
         }
@@ -264,7 +264,7 @@ impl DerivedTS {
             }
             fn decl() -> String {
                 #generic_types
-                let inline = <#rust_ty<#(#generic_idents,)*> as ts_rs::TS>::inline();
+                let inline = <#rust_ty<#(#generic_idents,)*> as ::ts_rs::TS>::inline();
                 let generics = #ts_generics;
                 format!("type {}{generics} = {inline};", #name)
             }
@@ -281,7 +281,7 @@ fn generate_assoc_type(
 
     let generics_params = generics.params.iter().map(|x| match x {
         G::Type(ty) => match concrete.get(&ty.ident) {
-            None => quote! { ts_rs::Dummy },
+            None => quote! { ::ts_rs::Dummy },
             Some(ty) => quote! { #ty },
         },
         G::Const(ConstParam { ident, .. }) => quote! { #ident },
@@ -326,7 +326,7 @@ fn generate_impl_block_header(
     });
 
     let where_bound = generate_where_clause(generics, dependencies);
-    quote!(impl <#(#bounds),*> ts_rs::TS for #ty <#(#type_args),*> #where_bound)
+    quote!(impl <#(#bounds),*> ::ts_rs::TS for #ty <#(#type_args),*> #where_bound)
 }
 
 fn generate_where_clause(generics: &Generics, dependencies: &Dependencies) -> WhereClause {
@@ -342,7 +342,7 @@ fn generate_where_clause(generics: &Generics, dependencies: &Dependencies) -> Wh
 
     let existing = generics.where_clause.iter().flat_map(|w| &w.predicates);
     parse_quote! {
-        where #(#existing,)* #(#used_types: ts_rs::TS),*
+        where #(#existing,)* #(#used_types: ::ts_rs::TS),*
     }
 }
 
