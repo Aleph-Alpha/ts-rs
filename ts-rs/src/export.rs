@@ -3,10 +3,10 @@ use std::{
     borrow::Cow,
     collections::BTreeMap,
     fmt::Write,
+    fs::File,
     path::{Component, Path, PathBuf},
     sync::Mutex,
 };
-use std::fs::File;
 
 pub(crate) use recursive_export::export_all_into;
 use thiserror::Error;
@@ -137,14 +137,14 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     }
     let lock = FILE_LOCK.lock().unwrap();
     {
-        // Manually write to file & call `sync_data`. Otherwise, calling `fs::read(path)` 
+        // Manually write to file & call `sync_data`. Otherwise, calling `fs::read(path)`
         // immediately after `T::export()` might result in an empty file.
         use std::io::Write;
         let mut file = File::create(path)?;
         file.write_all(buffer.as_bytes())?;
         file.sync_data()?;
     }
-    
+
     drop(lock);
     Ok(())
 }
@@ -153,7 +153,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
 pub(crate) fn export_to_string<T: TS + ?Sized + 'static>() -> Result<String, ExportError> {
     let mut buffer = String::with_capacity(1024);
     buffer.push_str(NOTE);
-    generate_imports::<T::WithoutGenerics>(&mut buffer)?;
+    generate_imports::<T::WithoutGenerics>(&mut buffer, default_out_dir())?;
     generate_decl::<T>(&mut buffer);
     Ok(buffer)
 }
@@ -179,10 +179,14 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
 }
 
 /// Push an import statement for all dependencies of `T`.
-fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), ExportError> {
+fn generate_imports<T: TS + ?Sized + 'static>(
+    out: &mut String,
+    out_dir: impl AsRef<Path>,
+) -> Result<(), ExportError> {
     let path = T::output_path()
         .ok_or_else(std::any::type_name::<T>)
         .map_err(ExportError::CannotBeExported)?;
+    let path = out_dir.as_ref().join(path);
 
     let deps = T::dependencies();
     let deduplicated_deps = deps
@@ -192,7 +196,8 @@ fn generate_imports<T: TS + ?Sized + 'static>(out: &mut String) -> Result<(), Ex
         .collect::<BTreeMap<_, _>>();
 
     for (_, dep) in deduplicated_deps {
-        let rel_path = import_path(&path, &dep.output_path);
+        let dep_path = out_dir.as_ref().join(dep.output_path);
+        let rel_path = import_path(&path, &dep_path);
         writeln!(
             out,
             "import type {{ {} }} from {:?};",
