@@ -6,9 +6,9 @@ use std::collections::{HashMap, HashSet};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
-    parse_quote, spanned::Spanned, AngleBracketedGenericArguments, ConstParam, GenericParam,
-    Generics, Item, LifetimeParam, Result, Type, TypeArray, TypeParam, TypeParen, TypePath,
-    TypeReference, TypeSlice, TypeTuple, WhereClause,
+    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Result,
+    Type, TypeArray, TypeParam, TypeParen, TypePath, TypeReference, TypeSlice, TypeTuple,
+    WhereClause,
 };
 
 use crate::{deps::Dependencies, utils::format_generics};
@@ -292,14 +292,9 @@ fn generate_assoc_type(
             },
             G::Const(ConstParam { ident, .. }) => quote! { #ident },
             G::Lifetime(LifetimeParam { lifetime, .. }) => quote! { #lifetime },
-        })
-        .collect::<Vec<_>>();
+        });
 
-    if generics_params.is_empty() {
-        quote! { type WithoutGenerics = #rust_ty; }
-    } else {
-        quote! { type WithoutGenerics = #rust_ty<#(#generics_params),*>; }
-    }
+    quote! { type WithoutGenerics = #rust_ty<#(#generics_params),*>; }
 }
 
 // generate start of the `impl TS for #ty` block, up to (excluding) the open brace
@@ -336,89 +331,66 @@ fn generate_impl_block_header(
         G::Lifetime(LifetimeParam { lifetime, .. }) => quote!(#lifetime),
     });
 
-    let where_bound = add_ts_to_where_clause(generics, dependencies);
+    let where_bound = generate_where_clause(generics, dependencies);
     quote!(impl <#(#bounds),*> ts_rs::TS for #ty <#(#type_args),*> #where_bound)
 }
 
-fn add_ts_to_where_clause(generics: &Generics, dependencies: &Dependencies) -> Option<WhereClause> {
-    let generic_idents = generics
-        .type_params()
-        .map(|x| x.ident.clone())
-        .collect::<Vec<_>>();
-    let used_types = dependencies
-        .types
-        .iter()
-        .filter_map(|x| filter_ty(x, &generic_idents))
-        .flatten()
-        .collect::<HashSet<_>>()
-        .into_iter()
-        .collect::<Vec<_>>();
+fn generate_where_clause(generics: &Generics, dependencies: &Dependencies) -> WhereClause {
+    let used_types = {
+        let is_type_param = |id: &Ident| generics.type_params().any(|p| &p.ident == id);
 
-    match generics.where_clause {
-        None => Some(parse_quote! { where #(#used_types: ts_rs::TS,)* }),
-        Some(ref w) => {
-            let bounds = w.predicates.iter();
-            Some(parse_quote! { where #(#bounds,)* #(#used_types: ts_rs::TS,)* })
+        let mut used_types = HashSet::new();
+        for ty in &dependencies.types {
+            used_type_params(&mut used_types, ty, is_type_param);
         }
+        used_types.into_iter()
+    };
+
+    let existing = generics.where_clause.iter().flat_map(|w| &w.predicates);
+    parse_quote! {
+        where #(#existing,)* #(#used_types: ts_rs::TS),*
     }
 }
 
-fn filter_ty(ty: &Type, generic_idents: &[Ident]) -> Option<Vec<Type>> {
-    use syn::{GenericArgument as G, PathArguments as P};
+// Extracts all type parameters which are used within the given type.
+// Associated types of a type parameter are extracted as well.
+// Note: This will not extract `I` from `I::Item`, but just `I::Item`!
+fn used_type_params<'ty, 'out>(
+    out: &'out mut HashSet<&'ty Type>,
+    ty: &'ty Type,
+    is_type_param: impl Fn(&'ty Ident) -> bool + Copy + 'out,
+) {
+    use syn::{
+        AngleBracketedGenericArguments as GenericArgs, GenericArgument as G, PathArguments as P,
+    };
+
     match ty {
         Type::Array(TypeArray { elem, .. })
         | Type::Paren(TypeParen { elem, .. })
         | Type::Reference(TypeReference { elem, .. })
-        | Type::Slice(TypeSlice { elem, .. }) => filter_ty(elem, generic_idents),
-        Type::Tuple(TypeTuple { elems, .. }) => {
-            let types = elems
-                .iter()
-                .filter_map(|x| filter_ty(x, generic_idents))
-                .flatten()
-                .collect::<Vec<_>>();
-
-            if types.is_empty() {
-                None
-            } else {
-                Some(types)
-            }
-        }
+        | Type::Slice(TypeSlice { elem, .. }) => used_type_params(out, elem, is_type_param),
+        Type::Tuple(TypeTuple { elems, .. }) => elems
+            .iter()
+            .for_each(|elem| used_type_params(out, elem, is_type_param)),
         Type::Path(TypePath { qself: None, path }) => {
-            let first_segment = path
-                .segments
-                .first()
-                .expect("All paths have at least one segment");
-
-            if generic_idents.contains(&first_segment.ident) {
-                return Some(vec![ty.clone()]);
+            let first = path.segments.first().unwrap();
+            if is_type_param(&first.ident) {
+                // The type is either a generic parameter (e.g `T`), or an associated type of that
+                // generic parameter (e.g `I::Item`). Either way, we return it.
+                out.insert(ty);
+                return;
             }
 
-            let last_segment = path
-                .segments
-                .last()
-                .expect("All paths have at least one segment");
-
-            match last_segment.arguments {
-                P::AngleBracketed(AngleBracketedGenericArguments { ref args, .. }) => {
-                    let types = args
-                        .iter()
-                        .filter_map(|x| match x {
-                            G::Type(ty) => filter_ty(ty, generic_idents),
-                            _ => None,
-                        })
-                        .flatten()
-                        .collect::<Vec<_>>();
-
-                    if types.is_empty() {
-                        None
-                    } else {
-                        Some(types)
+            let last = path.segments.last().unwrap();
+            if let P::AngleBracketed(GenericArgs { ref args, .. }) = last.arguments {
+                for generic in args {
+                    if let G::Type(ty) = generic {
+                        used_type_params(out, ty, is_type_param);
                     }
                 }
-                _ => None,
             }
         }
-        _ => None,
+        _ => (),
     }
 }
 
