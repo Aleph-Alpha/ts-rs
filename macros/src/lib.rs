@@ -279,17 +279,14 @@ fn generate_assoc_type(
 ) -> TokenStream {
     use GenericParam as G;
 
-    let generics_params = generics
-        .params
-        .iter()
-        .map(|x| match x {
-            G::Type(ty) => match concrete.get(&ty.ident) {
-                None => quote! { ts_rs::Dummy },
-                Some(ty) => quote! { #ty },
-            },
-            G::Const(ConstParam { ident, .. }) => quote! { #ident },
-            G::Lifetime(LifetimeParam { lifetime, .. }) => quote! { #lifetime },
-        });
+    let generics_params = generics.params.iter().map(|x| match x {
+        G::Type(ty) => match concrete.get(&ty.ident) {
+            None => quote! { ts_rs::Dummy },
+            Some(ty) => quote! { #ty },
+        },
+        G::Const(ConstParam { ident, .. }) => quote! { #ident },
+        G::Lifetime(LifetimeParam { lifetime, .. }) => quote! { #lifetime },
+    });
 
     quote! { type WithoutGenerics = #rust_ty<#(#generics_params),*>; }
 }
