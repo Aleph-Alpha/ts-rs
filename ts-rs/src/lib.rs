@@ -165,7 +165,6 @@ pub mod typelist;
 /// | Function              | Includes Dependencies | To                 |
 /// |-----------------------|-----------------------|--------------------|
 /// | [`TS::export`]        | ❌                    | `TS_RS_EXPORT_DIR` |
-/// | [`TS::export_to`]     | ❌                    | _custom_           |
 /// | [`TS::export_all`]    | ✔️                    | `TS_RS_EXPORT_DIR` |
 /// | [`TS::export_all_to`] | ✔️                    | _custom_           |
 ///
@@ -403,7 +402,8 @@ pub trait TS {
     /// The target directory to which the type will be exported may be changed by setting the
     /// `TS_RS_EXPORT_DIR` environment variable. By default, `./bindings` will be used.
     /// 
-    /// To specify a target directory manually, use [`TS::export_to`].
+    /// To specify a target directory manually, use [`TS::export_all_to`], which also exports all
+    /// dependencies.
     ///
     /// To alter the filename or path of the type within the target directory, 
     /// use `#[ts(export_to = "...")]`.
@@ -415,26 +415,6 @@ pub trait TS {
             .ok_or_else(std::any::type_name::<Self>)
             .map_err(ExportError::CannotBeExported)?;
         
-        export::export_to::<Self, _>(path)
-    }
-    
-    /// Manually export this type to the given path. 
-    /// To export this type together with all of its dependencies, use [`TS::export_all`].
-    /// 
-    /// Unlike [`TS::export`], this function disregards `TS_RS_EXPORT_DIR` and 
-    /// `#[ts(export_to = "...")]`.
-    ///
-    /// # Automatic Exporting
-    /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be 
-    /// exported automatically whenever `cargo test` is run.  
-    /// In that case, there is no need to manually call this function.
-    ///
-    /// To alter the filename or path of the type within the target directory, 
-    /// use `#[ts(export_to = "...")]`.
-    fn export_to(path: impl AsRef<Path>) -> Result<(), ExportError>
-        where
-            Self: 'static,
-    {
         export::export_to::<Self, _>(path)
     }
     

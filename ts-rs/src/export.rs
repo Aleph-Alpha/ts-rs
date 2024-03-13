@@ -116,12 +116,6 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     static FILE_LOCK: Mutex<()> = Mutex::new(());
 
     #[allow(unused_mut)]
-    // TODO: this generates imports, but disregards 'path'!
-    //       In general, imports won't work anymore if users call `TS::export_to`, and manually 
-    //       specify each file instead of using `#[ts(export_to = "..")]`. 
-    //       However, if users only do that with types that no other type depends on, then imports
-    //       should still work! To do that, we'd need to pass `path` down until we get it into 
-    //       `generate_imports`.
     let mut buffer = export_to_string::<T>()?;
 
     // format output
