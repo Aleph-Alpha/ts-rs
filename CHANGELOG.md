@@ -13,6 +13,7 @@
 - Removed `TS::transparent()` ([#243](https://github.com/Aleph-Alpha/ts-rs/pull/243))
 - Handling of output paths ([#247](https://github.com/Aleph-Alpha/ts-rs/pull/247), [#250](https://github.com/Aleph-Alpha/ts-rs/pull/250), [#256](https://github.com/Aleph-Alpha/ts-rs/pull/256))
   - All paths specified using `#[ts(export_to = "...")]` are now relative to `TS_RS_EXPORT_DIR`, which defaults to `./bindings/`
+- Replace `TS::export` with `TS::export`, `TS::export_all` and `TS::export_to_all` ([#263](https://github.com/Aleph-Alpha/ts-rs/pull/263))
 
 ### Features
 
