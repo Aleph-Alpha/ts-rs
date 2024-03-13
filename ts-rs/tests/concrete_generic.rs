@@ -4,7 +4,7 @@ mod issue_261 {
     use ts_rs::TS;
 
     trait Driver {
-        type Info: TS;
+        type Info;
     }
 
     struct TsDriver;
