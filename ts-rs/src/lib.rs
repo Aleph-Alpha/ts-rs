@@ -192,8 +192,25 @@ pub mod typelist;
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename_all = "..")]`**  
-///   Rename all fields/variants of the type.
+///   Rename all fields/variants of the type.  
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   <br/><br/>
+///
+/// - **`#[ts(concrete(..)]`**  
+///   Disables one ore more generic type parameters by specifying a concrete type for them.  
+///   The resulting TypeScript definition will not be generic over these parameters and will use the
+///   provided type instead.  
+///   This is especially useful for generic types containing associated types. Since TypeScript does
+///   not have an equivalent construct to associated types, we cannot generate a generic definition
+///   for them. Using `#[ts(concrete(..)]`, we can however generate a non-generic definition.
+///   Example:
+///   ```
+///   # use ts_rs::TS;
+///   ##[derive(TS)]
+///   ##[ts(concrete(I = std::vec::IntoIter<String>))]
+///   struct SearchResult<I: Iterator>(Vec<I::Item>);
+///   // will always generate `type SearchResult = Array<String>`.
+///   ```
 ///   <br/><br/>
 ///
 /// ### struct attributes
