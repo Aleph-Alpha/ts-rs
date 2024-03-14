@@ -26,6 +26,7 @@ struct DerivedTS {
     inline_flattened: Option<TokenStream>,
     dependencies: Dependencies,
     concrete: HashMap<Ident, Type>,
+    bound: Option<String>,
 
     export: bool,
     export_to: Option<String>,
@@ -59,7 +60,12 @@ impl DerivedTS {
         };
 
         let ident = self.ts_name.clone();
-        let impl_start = generate_impl_block_header(&rust_ty, &generics, &self.dependencies);
+        let impl_start = generate_impl_block_header(
+            &rust_ty,
+            &generics,
+            self.bound.as_deref(),
+            &self.dependencies,
+        );
         let assoc_type = generate_assoc_type(&rust_ty, &generics, &self.concrete);
         let name = self.generate_name_fn(&generics);
         let inline = self.generate_inline_fn();
@@ -295,11 +301,12 @@ fn generate_assoc_type(
 fn generate_impl_block_header(
     ty: &Ident,
     generics: &Generics,
+    bounds: Option<&str>,
     dependencies: &Dependencies,
 ) -> TokenStream {
     use GenericParam as G;
 
-    let bounds = generics.params.iter().map(|param| match param {
+    let params = generics.params.iter().map(|param| match param {
         G::Type(TypeParam {
             ident,
             colon_token,
@@ -325,8 +332,18 @@ fn generate_impl_block_header(
         G::Lifetime(LifetimeParam { lifetime, .. }) => quote!(#lifetime),
     });
 
-    let where_bound = generate_where_clause(generics, dependencies);
-    quote!(impl <#(#bounds),*> ::ts_rs::TS for #ty <#(#type_args),*> #where_bound)
+    let where_bound = bounds.map_or_else(
+        || {
+            let bounds = generate_where_clause(generics, dependencies);
+            quote! { #bounds }
+        },
+        |bounds| {
+            let bounds = syn::parse_str::<TokenStream>(bounds).expect("malformed `bounds`");
+            quote! { where #bounds }
+        },
+    );
+
+    quote!(impl <#(#params),*> ::ts_rs::TS for #ty <#(#type_args),*> #where_bound)
 }
 
 fn generate_where_clause(generics: &Generics, dependencies: &Dependencies) -> WhereClause {

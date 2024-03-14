@@ -16,6 +16,7 @@ pub struct EnumAttr {
     pub export: bool,
     pub docs: String,
     pub concrete: HashMap<Ident, Type>,
+    pub bound: Option<String>,
     tag: Option<String>,
     untagged: bool,
     content: Option<String>,
@@ -71,6 +72,7 @@ impl EnumAttr {
             export,
             docs,
             concrete,
+            bound,
         }: EnumAttr,
     ) {
         self.rename = self.rename.take().or(rename);
@@ -83,6 +85,7 @@ impl EnumAttr {
         self.export_to = self.export_to.take().or(export_to);
         self.docs = docs;
         self.concrete.extend(concrete);
+        self.bound = self.bound.take().or(bound);
     }
 }
 
@@ -97,6 +100,7 @@ impl_parse! {
         "content" => out.content = Some(parse_assign_str(input)?),
         "untagged" => out.untagged = true,
         "concrete" => out.concrete = parse_concrete(input)?,
+        "bound" => out.bound = Some(parse_assign_str(input)?),
     }
 }
 

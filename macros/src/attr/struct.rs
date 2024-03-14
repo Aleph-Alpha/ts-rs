@@ -16,6 +16,7 @@ pub struct StructAttr {
     pub tag: Option<String>,
     pub docs: String,
     pub concrete: HashMap<Ident, Type>,
+    pub bound: Option<String>,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -45,6 +46,7 @@ impl StructAttr {
             tag,
             docs,
             concrete,
+            bound,
         }: StructAttr,
     ) {
         self.rename = self.rename.take().or(rename);
@@ -54,6 +56,7 @@ impl StructAttr {
         self.tag = self.tag.take().or(tag);
         self.docs = docs;
         self.concrete.extend(concrete);
+        self.bound = self.bound.take().or(bound);
     }
 }
 
@@ -80,6 +83,7 @@ impl_parse! {
         "export" => out.export = true,
         "export_to" => out.export_to = Some(parse_assign_str(input)?),
         "concrete" => out.concrete = parse_concrete(input)?,
+        "bound" => out.bound = Some(parse_assign_str(input)?),
     }
 }
 
