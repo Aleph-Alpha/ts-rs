@@ -338,11 +338,7 @@ fn generate_impl_block_header(
             quote! { #bounds }
         },
         |bounds| {
-            if !bounds.is_empty() {
-                quote! { where #(#bounds),* }
-            } else {
-                quote!()
-            }
+            quote! { where #(#bounds),* }
         },
     );
 
