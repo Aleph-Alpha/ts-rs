@@ -4,7 +4,7 @@ pub use field::*;
 pub use r#enum::*;
 pub use r#struct::*;
 use syn::{
-    parse::{Parse, ParseStream, Parser},
+    parse::{Parse, ParseStream},
     Error, Lit, Result, Token, WherePredicate, punctuated::Punctuated,
 };
 pub use variant::*;
@@ -135,12 +135,7 @@ fn parse_bound(input: ParseStream) -> Result<Vec<WherePredicate>> {
         Lit::Str(string) => {
             let parser = Punctuated::<WherePredicate, Token![,]>::parse_terminated;
 
-            Ok(
-                parser.parse_str(&string.value())
-                    .map_err(|e| Error::new(string.span(), e.to_string()))?
-                    .into_iter()
-                    .collect()
-            )
+            Ok(string.parse_with(parser)?.into_iter().collect())
         },
         other => Err(Error::new(other.span(), "expected string")),
     }
