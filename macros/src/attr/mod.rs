@@ -4,8 +4,8 @@ pub use field::*;
 pub use r#enum::*;
 pub use r#struct::*;
 use syn::{
-    parse::{Parse, ParseStream},
-    Error, Lit, Result, Token,
+    parse::{Parse, ParseStream, Parser},
+    Error, Lit, Result, Token, WherePredicate, punctuated::Punctuated,
 };
 pub use variant::*;
 
@@ -107,7 +107,7 @@ fn parse_concrete(input: ParseStream) -> Result<HashMap<syn::Ident, syn::Type>> 
     syn::parenthesized!(content in input);
 
     Ok(
-        syn::punctuated::Punctuated::<Concrete, Token![,]>::parse_terminated(&content)?
+        Punctuated::<Concrete, Token![,]>::parse_terminated(&content)?
             .into_iter()
             .map(|concrete| (concrete.ident, concrete.ty))
             .collect(),
@@ -125,6 +125,23 @@ where
     input.parse::<Token![=]>()?;
     match Lit::parse(input)? {
         Lit::Str(string) => string.parse(),
+        other => Err(Error::new(other.span(), "expected string")),
+    }
+}
+
+fn parse_bound(input: ParseStream) -> Result<Vec<WherePredicate>> {
+    input.parse::<Token![=]>()?;
+    match Lit::parse(input)? {
+        Lit::Str(string) => {
+            let parser = Punctuated::<WherePredicate, Token![,]>::parse_terminated;
+
+            Ok(
+                parser.parse_str(&string.value())
+                    .map_err(|e| Error::new(string.span(), e.to_string()))?
+                    .into_iter()
+                    .collect()
+            )
+        },
         other => Err(Error::new(other.span(), "expected string")),
     }
 }
