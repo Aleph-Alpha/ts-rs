@@ -6,5 +6,5 @@ mod ts_rs {}
 
 #[derive(TS)]
 struct Foo {
-    x: u32
+    x: u32,
 }

@@ -1,5 +1,5 @@
-use quote::{quote, ToTokens};
-use syn::{FieldsUnnamed, Result, Type};
+use quote::{quote};
+use syn::{FieldsUnnamed, Result};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -42,11 +42,7 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
         syn_err_spanned!(fields; "`type` is not compatible with `as`")
     }
 
-    let inner_ty = if let Some(ref type_as) = type_as {
-        syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
-    } else {
-        inner.ty.clone()
-    };
+    let inner_ty = type_as.as_ref().unwrap_or(&inner.ty).clone();
 
     let mut dependencies = Dependencies::default();
 

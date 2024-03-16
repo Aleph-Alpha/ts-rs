@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
-use syn::{Field, FieldsUnnamed, Result, Type};
+use quote::{quote};
+use syn::{Field, FieldsUnnamed, Result};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -59,11 +59,7 @@ fn format_field(
         return Ok(());
     }
 
-    let ty = if let Some(ref type_as) = type_as {
-        syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
-    } else {
-        field.ty.clone()
-    };
+    let ty = type_as.as_ref().unwrap_or(&field.ty).clone();
 
     if type_as.is_some() && type_override.is_some() {
         syn_err_spanned!(field; "`type` is not compatible with `as`")
