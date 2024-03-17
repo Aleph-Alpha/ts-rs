@@ -247,7 +247,7 @@ pub mod typelist;
 ///
 ///   ##[derive(TS)]
 ///   ##[ts(export, concrete(C = MyContainer))]
-///   struct Inner<C: MyContainer> {
+///   struct Inner<C: Container> {
 ///       value: C::Value,
 ///   }
 ///
@@ -255,7 +255,7 @@ pub mod typelist;
 ///   // Without `#[ts(bound)]`, `#[derive(TS)]` would generate an unnecessary
 ///   // `C: TS` bound
 ///   ##[ts(export, concrete(C = MyContainer), bound = "C::Value: TS")]
-///   struct Outer<C: MyContainer> {
+///   struct Outer<C: Container> {
 ///       inner: Inner<C>,
 ///   }
 ///   ```
