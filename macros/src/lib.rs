@@ -8,7 +8,7 @@ use quote::{format_ident, quote};
 use syn::{
     parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Result,
     Type, TypeArray, TypeParam, TypeParen, TypePath, TypeReference, TypeSlice, TypeTuple,
-    WhereClause,
+    WhereClause, WherePredicate,
 };
 
 use crate::{deps::Dependencies, utils::format_generics};
@@ -26,7 +26,7 @@ struct DerivedTS {
     inline_flattened: Option<TokenStream>,
     dependencies: Dependencies,
     concrete: HashMap<Ident, Type>,
-    bound: Option<String>,
+    bound: Option<Vec<WherePredicate>>,
 
     export: bool,
     export_to: Option<String>,
@@ -301,7 +301,7 @@ fn generate_assoc_type(
 fn generate_impl_block_header(
     ty: &Ident,
     generics: &Generics,
-    bounds: Option<&str>,
+    bounds: Option<&[WherePredicate]>,
     dependencies: &Dependencies,
 ) -> TokenStream {
     use GenericParam as G;
@@ -338,8 +338,7 @@ fn generate_impl_block_header(
             quote! { #bounds }
         },
         |bounds| {
-            let bounds = syn::parse_str::<TokenStream>(bounds).expect("malformed `bounds`");
-            quote! { where #bounds }
+            quote! { where #(#bounds),* }
         },
     );
 
