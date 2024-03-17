@@ -332,15 +332,13 @@ fn generate_impl_block_header(
         G::Lifetime(LifetimeParam { lifetime, .. }) => quote!(#lifetime),
     });
 
-    let where_bound = bounds.map_or_else(
-        || {
+    let where_bound = match bounds {
+        Some(bounds) => quote! { where #(#bounds),* },
+        None => {
             let bounds = generate_where_clause(generics, dependencies);
             quote! { #bounds }
-        },
-        |bounds| {
-            quote! { where #(#bounds),* }
-        },
-    );
+        }
+    };
 
     quote!(impl <#(#params),*> ::ts_rs::TS for #ty <#(#type_args),*> #where_bound)
 }
