@@ -1,9 +1,10 @@
-use std::convert::TryFrom;
+use std::{collections::HashMap, convert::TryFrom};
 
-use syn::{Attribute, Ident, Result};
+use syn::{Attribute, Ident, Result, Type, WherePredicate};
 
+use super::parse_bound;
 use crate::{
-    attr::{parse_assign_str, Inflection, VariantAttr},
+    attr::{parse_assign_str, parse_concrete, Inflection, VariantAttr},
     utils::{parse_attrs, parse_docs},
 };
 
@@ -15,6 +16,8 @@ pub struct StructAttr {
     pub export: bool,
     pub tag: Option<String>,
     pub docs: String,
+    pub concrete: HashMap<Ident, Type>,
+    pub bound: Option<Vec<WherePredicate>>,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -43,6 +46,8 @@ impl StructAttr {
             export_to,
             tag,
             docs,
+            concrete,
+            bound,
         }: StructAttr,
     ) {
         self.rename = self.rename.take().or(rename);
@@ -51,6 +56,16 @@ impl StructAttr {
         self.export = self.export || export;
         self.tag = self.tag.take().or(tag);
         self.docs = docs;
+        self.concrete.extend(concrete);
+        self.bound = self
+            .bound
+            .take()
+            .map(|b| {
+                b.into_iter()
+                    .chain(bound.clone().unwrap_or_default())
+                    .collect()
+            })
+            .or(bound);
     }
 }
 
@@ -75,7 +90,9 @@ impl_parse! {
         "rename_all" => out.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
         "tag" => out.tag = Some(parse_assign_str(input)?),
         "export" => out.export = true,
-        "export_to" => out.export_to = Some(parse_assign_str(input)?)
+        "export_to" => out.export_to = Some(parse_assign_str(input)?),
+        "concrete" => out.concrete = parse_concrete(input)?,
+        "bound" => out.bound = Some(parse_bound(input)?),
     }
 }
 
@@ -85,6 +102,7 @@ impl_parse! {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.0.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
         "tag" => out.0.tag = Some(parse_assign_str(input)?),
+        "bound" => out.0.bound = Some(parse_bound(input)?),
         // parse #[serde(default)] to not emit a warning
         "deny_unknown_fields" | "default" => {
             use syn::Token;

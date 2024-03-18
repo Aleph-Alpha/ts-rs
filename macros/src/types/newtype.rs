@@ -1,5 +1,5 @@
-use quote::{quote, ToTokens};
-use syn::{FieldsUnnamed, Generics, Result, Type};
+use quote::quote;
+use syn::{FieldsUnnamed, Result};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -7,12 +7,7 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn newtype(
-    attr: &StructAttr,
-    name: &str,
-    fields: &FieldsUnnamed,
-    generics: &Generics,
-) -> Result<DerivedTS> {
+pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Result<DerivedTS> {
     if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to newtype structs");
     }
@@ -33,9 +28,13 @@ pub(crate) fn newtype(
 
     match (&rename_inner, skip, optional.optional, flatten) {
         (Some(_), ..) => syn_err_spanned!(fields; "`rename` is not applicable to newtype fields"),
-        (_, true, ..) => return super::unit::null(attr, name, generics.clone()),
-        (_, _, true, ..) => syn_err_spanned!(fields; "`optional` is not applicable to newtype fields"),
-        (_, _, _, true) => syn_err_spanned!(fields; "`flatten` is not applicable to newtype fields"),
+        (_, true, ..) => return super::unit::null(attr, name),
+        (_, _, true, ..) => {
+            syn_err_spanned!(fields; "`optional` is not applicable to newtype fields")
+        }
+        (_, _, _, true) => {
+            syn_err_spanned!(fields; "`flatten` is not applicable to newtype fields")
+        }
         _ => {}
     };
 
@@ -43,11 +42,7 @@ pub(crate) fn newtype(
         syn_err_spanned!(fields; "`type` is not compatible with `as`")
     }
 
-    let inner_ty = if let Some(ref type_as) = type_as {
-        syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
-    } else {
-        inner.ty.clone()
-    };
+    let inner_ty = type_as.as_ref().unwrap_or(&inner.ty).clone();
 
     let mut dependencies = Dependencies::default();
 
@@ -59,12 +54,11 @@ pub(crate) fn newtype(
 
     let inline_def = match type_override {
         Some(ref o) => quote!(#o.to_owned()),
-        None if inline => quote!(<#inner_ty as ts_rs::TS>::inline()),
-        None => quote!(<#inner_ty as ts_rs::TS>::name()),
+        None if inline => quote!(<#inner_ty as ::ts_rs::TS>::inline()),
+        None => quote!(<#inner_ty as ::ts_rs::TS>::name()),
     };
 
     Ok(DerivedTS {
-        generics: generics.clone(),
         inline: inline_def,
         inline_flattened: None,
         docs: attr.docs.clone(),
@@ -72,5 +66,7 @@ pub(crate) fn newtype(
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
+        concrete: attr.concrete.clone(),
+        bound: attr.bound.clone(),
     })
 }

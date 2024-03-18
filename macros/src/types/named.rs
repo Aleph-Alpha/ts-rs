@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
-use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, Type};
+use quote::quote;
+use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, PathArguments, Result, Type};
 
 use crate::{
     attr::{FieldAttr, Inflection, Optional, StructAttr},
@@ -9,15 +9,11 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn named(
-    attr: &StructAttr,
-    name: &str,
-    fields: &FieldsNamed,
-    generics: &Generics,
-) -> Result<DerivedTS> {
+pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Result<DerivedTS> {
     let mut formatted_fields = Vec::new();
     let mut flattened_fields = Vec::new();
     let mut dependencies = Dependencies::default();
+
     if let Some(tag) = &attr.tag {
         let formatted = format!("{}: \"{}\",", tag, name);
         formatted_fields.push(quote! {
@@ -32,7 +28,6 @@ pub(crate) fn named(
             &mut dependencies,
             field,
             &attr.rename_all,
-            generics,
         )?;
     }
 
@@ -48,7 +43,8 @@ pub(crate) fn named(
     };
 
     Ok(DerivedTS {
-        generics: generics.clone(),
+        // the `replace` combines `{ ... } & { ... }` into just one `{ ... }`. Not necessary, but it
+        // results in simpler type definitions.
         inline: quote!(#inline.replace(" } & { ", " ")),
         inline_flattened: Some(quote!(format!("{{ {} }}", #fields))),
         docs: attr.docs.clone(),
@@ -56,10 +52,12 @@ pub(crate) fn named(
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
+        concrete: attr.concrete.clone(),
+        bound: attr.bound.clone(),
     })
 }
 
-// build an expresion which expands to a string, representing a single field of a struct.
+// build an expression which expands to a string, representing a single field of a struct.
 //
 // formatted_fields will contain all the fields that do not contain the flatten
 // attribute, in the format
@@ -75,7 +73,6 @@ fn format_field(
     dependencies: &mut Dependencies,
     field: &Field,
     rename_all: &Option<Inflection>,
-    _generics: &Generics,
 ) -> Result<()> {
     let FieldAttr {
         type_as,
@@ -96,11 +93,7 @@ fn format_field(
         syn_err_spanned!(field; "`type` is not compatible with `as`")
     }
 
-    let parsed_ty = if let Some(ref type_as) = type_as {
-        syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
-    } else {
-        field.ty.clone()
-    };
+    let parsed_ty = type_as.as_ref().unwrap_or(&field.ty).clone();
 
     let (ty, optional_annotation) = match optional {
         Optional {
@@ -121,13 +114,17 @@ fn format_field(
     if flatten {
         match (&type_as, &type_override, &rename, inline) {
             (Some(_), _, _, _) => syn_err_spanned!(field; "`as` is not compatible with `flatten`"),
-            (_, Some(_), _, _) => syn_err_spanned!(field; "`type` is not compatible with `flatten`"),
-            (_, _, Some(_), _) => syn_err_spanned!(field; "`rename` is not compatible with `flatten`"),
+            (_, Some(_), _, _) => {
+                syn_err_spanned!(field; "`type` is not compatible with `flatten`")
+            }
+            (_, _, Some(_), _) => {
+                syn_err_spanned!(field; "`rename` is not compatible with `flatten`")
+            }
             (_, _, _, true) => syn_err_spanned!(field; "`inline` is not compatible with `flatten`"),
             _ => {}
         }
 
-        flattened_fields.push(quote!(<#ty as ts_rs::TS>::inline_flattened()));
+        flattened_fields.push(quote!(<#ty as ::ts_rs::TS>::inline_flattened()));
         dependencies.append_from(ty);
         return Ok(());
     }
@@ -135,10 +132,10 @@ fn format_field(
     let formatted_ty = type_override.map(|t| quote!(#t)).unwrap_or_else(|| {
         if inline {
             dependencies.append_from(ty);
-            quote!(<#ty as ts_rs::TS>::inline())
+            quote!(<#ty as ::ts_rs::TS>::inline())
         } else {
             dependencies.push(ty);
-            quote!(<#ty as ts_rs::TS>::name())
+            quote!(<#ty as ::ts_rs::TS>::name())
         }
     });
     let field_name = to_ts_ident(field.ident.as_ref().unwrap());
@@ -178,7 +175,9 @@ fn extract_option_argument(ty: &Type) -> Result<&Type> {
                         other => syn_err!(other.span(); "`Option` argument must be a type"),
                     }
                 }
-                other => syn_err!(other.span(); "`Option` type must have a single generic argument"),
+                other => {
+                    syn_err!(other.span(); "`Option` type must have a single generic argument")
+                }
             }
         }
         other => syn_err!(other.span(); "`optional` can only be used on an Option<T> type"),

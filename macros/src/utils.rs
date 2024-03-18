@@ -1,9 +1,10 @@
-use std::convert::TryFrom;
+use std::{collections::HashMap, convert::TryFrom};
 
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::{
     spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result,
+    Type,
 };
 
 use crate::deps::Dependencies;
@@ -223,20 +224,29 @@ mod warning {
 /// this expands to an expression which evaluates to a `String`.
 ///
 /// If a default type arg is encountered, it will be added to the dependencies.
-pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStream {
+pub fn format_generics(
+    deps: &mut Dependencies,
+    generics: &Generics,
+    concrete: &HashMap<Ident, Type>,
+) -> TokenStream {
     let mut expanded_params = generics
         .params
         .iter()
         .filter_map(|param| match param {
-            GenericParam::Type(type_param) => Some({
+            GenericParam::Type(type_param) => {
+                if concrete.contains_key(&type_param.ident) {
+                    return None;
+                }
                 let ty = type_param.ident.to_string();
                 if let Some(default) = &type_param.default {
                     deps.push(default);
-                    quote!(format!("{} = {}", #ty, <#default as ts_rs::TS>::name()))
+                    Some(quote!(
+                        format!("{} = {}", #ty, <#default as ::ts_rs::TS>::name())
+                    ))
                 } else {
-                    quote!(#ty.to_owned())
+                    Some(quote!(#ty.to_owned()))
                 }
-            }),
+            }
             _ => None,
         })
         .peekable();

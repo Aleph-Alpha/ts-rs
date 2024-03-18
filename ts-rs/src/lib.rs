@@ -40,7 +40,7 @@
 //! ## get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "7.1"
+//! ts-rs = "8.0"
 //! ```
 //!
 //! ```rust
@@ -132,8 +132,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub use ts_rs_macros::ts_rs_fn;
-pub use ts_rs_macros::TS;
+pub use ts_rs_macros::{ts_rs_fn, TS};
 
 pub use crate::export::ExportError;
 use crate::typelist::TypeList;
@@ -150,14 +149,24 @@ pub mod typelist;
 ///
 /// ### exporting
 /// Because Rusts procedural macros are evaluated before other compilation steps, TypeScript
-/// bindings cannot be exported during compile time.
-/// Bindings can be exported within a test, which ts-rs generates for you by adding `#[ts(export)]`
-/// to a type you wish to export to a file.
-/// If, for some reason, you need to do this during runtime, you can call [`TS::export`] yourself.
+/// bindings __cannot__ be exported during compile time.
 ///
-/// **Note:**
-/// Annotating a type with `#[ts(export)]` (or exporting it during runtime using
-/// [`TS::export`]) will cause all of its dependencies to be exported as well.
+/// Bindings can be exported within a test, which ts-rs generates for you by adding `#[ts(export)]`
+/// to a type you wish to export to a file.  
+/// When `cargo test` is run, all types annotated with `#[ts(export)]` and all of their
+/// dependencies will be written to `TS_RS_EXPORT_DIR`, or `./bindings` by default.
+///
+/// For each individual type, path and filename within the output directory can be changed using
+/// `#[ts(export_to = "...")]`. By default, the filename will be derived from the name of the type.
+///
+/// If, for some reason, you need to do this during runtime or cannot use `#[ts(export)]`, bindings
+/// can be exported manually:
+///
+/// | Function              | Includes Dependencies | To                 |
+/// |-----------------------|-----------------------|--------------------|
+/// | [`TS::export`]        | ❌                    | `TS_RS_EXPORT_DIR` |
+/// | [`TS::export_all`]    | ✔️                    | `TS_RS_EXPORT_DIR` |
+/// | [`TS::export_all_to`] | ✔️                    | _custom_           |
 ///
 /// ### serde compatibility
 /// By default, the feature `serde-compat` is enabled.
@@ -193,8 +202,63 @@ pub mod typelist;
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename_all = "..")]`**  
-///   Rename all fields/variants of the type.
+///   Rename all fields/variants of the type.  
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   <br/><br/>
+///
+/// - **`#[ts(concrete(..)]`**  
+///   Disables one ore more generic type parameters by specifying a concrete type for them.  
+///   The resulting TypeScript definition will not be generic over these parameters and will use the
+///   provided type instead.  
+///   This is especially useful for generic types containing associated types. Since TypeScript does
+///   not have an equivalent construct to associated types, we cannot generate a generic definition
+///   for them. Using `#[ts(concrete(..)]`, we can however generate a non-generic definition.
+///   Example:
+///   ```
+///   # use ts_rs::TS;
+///   ##[derive(TS)]
+///   ##[ts(concrete(I = std::vec::IntoIter<String>))]
+///   struct SearchResult<I: Iterator>(Vec<I::Item>);
+///   // will always generate `type SearchResult = Array<String>`.
+///   ```
+///   <br/><br/>
+///
+/// - **`#[ts(bound)]`**
+///   Override the bounds generated on the `TS` implementation for this type. This is useful in
+///   combination with `#[ts(concrete)]`, when the type's generic parameters aren't directly used
+///   in a field or variant.
+///
+///   Example:
+///   ```
+///   # use ts_rs::TS;
+///
+///   trait Container {
+///       type Value: TS;
+///   }
+///
+///   struct MyContainer;
+///
+///   ##[derive(TS)]
+///   struct MyValue;
+///
+///   impl Container for MyContainer {
+///       type Value = MyValue;
+///   }
+///
+///   ##[derive(TS)]
+///   ##[ts(export, concrete(C = MyContainer))]
+///   struct Inner<C: Container> {
+///       value: C::Value,
+///   }
+///
+///   ##[derive(TS)]
+///   // Without `#[ts(bound)]`, `#[derive(TS)]` would generate an unnecessary
+///   // `C: TS` bound
+///   ##[ts(export, concrete(C = MyContainer), bound = "C::Value: TS")]
+///   struct Outer<C: Container> {
+///       inner: Inner<C>,
+///   }
+///   ```
 ///   <br/><br/>
 ///
 /// ### struct attributes
@@ -381,50 +445,123 @@ pub trait TS {
         deps
     }
 
-    /// Manually export this type to a file.
-    /// The output file can be specified by annotating the type with `#[ts(export_to = ".."]`.
-    /// By default, the filename will be derived from the types name.
+    /// Manually export this type to the filesystem.
+    /// To export this type together with all of its dependencies, use [`TS::export_all`].
     ///
-    /// When a type is annotated with `#[ts(export)]`, it is exported automatically within a test.
-    /// This function is only usefull if you need to export the type outside of the context of a
-    /// test.
+    /// # Automatic Exporting
+    /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
+    /// exported automatically whenever `cargo test` is run.  
+    /// In that case, there is no need to manually call this function.
+    ///
+    /// # Target Directory
+    /// The target directory to which the type will be exported may be changed by setting the
+    /// `TS_RS_EXPORT_DIR` environment variable. By default, `./bindings` will be used.
+    ///
+    /// To specify a target directory manually, use [`TS::export_all_to`], which also exports all
+    /// dependencies.
+    ///
+    /// To alter the filename or path of the type within the target directory,
+    /// use `#[ts(export_to = "...")]`.
     fn export() -> Result<(), ExportError>
     where
         Self: 'static,
     {
-        export::export_type_with_dependencies::<Self>()
+        let path = Self::default_output_path()
+            .ok_or_else(std::any::type_name::<Self>)
+            .map_err(ExportError::CannotBeExported)?;
+
+        export::export_to::<Self, _>(path)
     }
 
-    /// Manually export this type to a file with a file with the specified path. This
-    /// function will ignore the `#[ts(export_to = "..)]` attribute.
-    fn export_to(path: impl AsRef<Path>) -> Result<(), ExportError>
+    /// Manually export this type to the filesystem, together with all of its dependencies.  
+    /// To export only this type, without its dependencies, use [`TS::export`].
+    ///
+    /// # Automatic Exporting
+    /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
+    /// exported automatically whenever `cargo test` is run.  
+    /// In that case, there is no need to manually call this function.
+    ///
+    /// # Target Directory
+    /// The target directory to which the types will be exported may be changed by setting the
+    /// `TS_RS_EXPORT_DIR` environment variable. By default, `./bindings` will be used.
+    ///
+    /// To specify a target directory manually, use [`TS::export_all_to`].
+    ///
+    /// To alter the filenames or paths of the types within the target directory,
+    /// use `#[ts(export_to = "...")]`.
+    fn export_all() -> Result<(), ExportError>
     where
         Self: 'static,
     {
-        export::export_type_to::<Self, _>(path)
+        export::export_all_into::<Self>(&*export::default_out_dir())
+    }
+
+    /// Manually export this type into the given directory, together with all of its dependencies.  
+    /// To export only this type, without its dependencies, use [`TS::export`].
+    ///
+    /// Unlike [`TS::export_all`], this function disregards `TS_RS_EXPORT_DIR`, using the provided
+    /// directory instead.
+    ///
+    /// To alter the filenames or paths of the types within the target directory,
+    /// use `#[ts(export_to = "...")]`.
+    ///
+    /// # Automatic Exporting
+    /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
+    /// exported automatically whenever `cargo test` is run.  
+    /// In that case, there is no need to manually call this function.
+    fn export_all_to(out_dir: impl AsRef<Path>) -> Result<(), ExportError>
+    where
+        Self: 'static,
+    {
+        export::export_all_into::<Self>(out_dir)
     }
 
     /// Manually generate bindings for this type, returning a [`String`].  
-    /// This function does not format the output, even if the `format` feature is enabled.
+    /// This function does not format the output, even if the `format` feature is enabled. TODO
+    ///
+    /// # Automatic Exporting
+    /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
+    /// exported automatically whenever `cargo test` is run.  
+    /// In that case, there is no need to manually call this function.
     fn export_to_string() -> Result<String, ExportError>
     where
         Self: 'static,
     {
-        export::export_type_to_string::<Self>()
+        export::export_to_string::<Self>()
     }
 
-    /// Returns the output path to where `T` should be exported.
+    /// Returns the output path to where `T` should be exported.  
+    /// The returned path does _not_ include the base directory from `TS_RS_EXPORT_DIR`.  
+    ///
+    /// To get the output path containing `TS_RS_EXPORT_DIR`, use [`TS::default_output_path`].
     ///
     /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.  
     /// See the documentation of [`TS`] for more details.
-    /// 
+    ///
     /// The output of this function depends on the environment variable `TS_RS_EXPORT_DIR`, which is
     /// used as base directory. If it is not set, `./bindings` is used as default directory.
     ///
     /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
     /// `None`.
-    fn output_path() -> Option<PathBuf> {
+    fn output_path() -> Option<&'static Path> {
         None
+    }
+
+    /// Returns the output path to where `T` should be exported.  
+    ///
+    /// The output of this function depends on the environment variable `TS_RS_EXPORT_DIR`, which is
+    /// used as base directory. If it is not set, `./bindings` is used as default directory.
+    ///
+    /// To get the output path relative to `TS_RS_EXPORT_DIR` and without reading the environment
+    /// variable, use [`TS::output_path`].
+    ///
+    /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.  
+    /// See the documentation of [`TS`] for more details.
+    ///
+    /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
+    /// `None`.
+    fn default_output_path() -> Option<PathBuf> {
+        Some(export::default_out_dir().join(Self::output_path()?))
     }
 }
 
@@ -437,8 +574,9 @@ pub struct Dependency {
     /// Name of the type in TypeScript
     pub ts_name: String,
     /// Path to where the type would be exported. By default a filename is derived from the types
-    /// name, which can be customized with `#[ts(export_to = "..")]`.
-    pub exported_to: String,
+    /// name, which can be customized with `#[ts(export_to = "..")]`.  
+    /// This path does _not_ include a base directory.
+    pub output_path: &'static Path,
 }
 
 impl Dependency {
@@ -446,11 +584,11 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
-        let exported_to = T::output_path()?.to_str()?.to_owned();
+        let output_path = T::output_path()?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
             ts_name: T::ident(),
-            exported_to,
+            output_path,
         })
     }
 }

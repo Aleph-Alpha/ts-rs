@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
-use syn::{Field, FieldsUnnamed, Generics, Result, Type};
+use quote::quote;
+use syn::{Field, FieldsUnnamed, Result};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -8,12 +8,7 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn tuple(
-    attr: &StructAttr,
-    name: &str,
-    fields: &FieldsUnnamed,
-    generics: &Generics,
-) -> Result<DerivedTS> {
+pub(crate) fn tuple(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Result<DerivedTS> {
     if attr.rename_all.is_some() {
         syn_err!("`rename_all` is not applicable to tuple structs");
     }
@@ -24,11 +19,10 @@ pub(crate) fn tuple(
     let mut formatted_fields = Vec::new();
     let mut dependencies = Dependencies::default();
     for field in &fields.unnamed {
-        format_field(&mut formatted_fields, &mut dependencies, field, generics)?;
+        format_field(&mut formatted_fields, &mut dependencies, field)?;
     }
 
     Ok(DerivedTS {
-        generics: generics.clone(),
         inline: quote! {
             format!(
                 "[{}]",
@@ -41,6 +35,8 @@ pub(crate) fn tuple(
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
+        concrete: attr.concrete.clone(),
+        bound: attr.bound.clone(),
     })
 }
 
@@ -48,7 +44,6 @@ fn format_field(
     formatted_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     field: &Field,
-    _generics: &Generics,
 ) -> Result<()> {
     let FieldAttr {
         type_as,
@@ -65,11 +60,7 @@ fn format_field(
         return Ok(());
     }
 
-    let ty = if let Some(ref type_as) = type_as {
-        syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
-    } else {
-        field.ty.clone()
-    };
+    let ty = type_as.as_ref().unwrap_or(&field.ty).clone();
 
     if type_as.is_some() && type_override.is_some() {
         syn_err_spanned!(field; "`type` is not compatible with `as`")
@@ -89,8 +80,8 @@ fn format_field(
 
     formatted_fields.push(match type_override {
         Some(ref o) => quote!(#o.to_owned()),
-        None if inline => quote!(<#ty as ts_rs::TS>::inline()),
-        None => quote!(<#ty as ts_rs::TS>::name()),
+        None if inline => quote!(<#ty as ::ts_rs::TS>::inline()),
+        None => quote!(<#ty as ::ts_rs::TS>::name()),
     });
 
     match (inline, type_override) {

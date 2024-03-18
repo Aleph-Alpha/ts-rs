@@ -25,7 +25,6 @@ fn my_non_void_function_with_flattened_args(str_arg: &str, int_arg: u32) -> Stri
     String::from("Hello world")
 }
 
-
 #[derive(TS)]
 #[ts(export, export_to = "tests-out/fn/")]
 struct Foo {
@@ -55,22 +54,34 @@ fn non_void_fn() {
 
 #[test]
 fn void_fn_inlined_args() {
-    assert_eq!(MyVoidFunctionWithInlinedArgsFn::inline(), "(args: { str_arg: string, int_arg: number, }) => void")
+    assert_eq!(
+        MyVoidFunctionWithInlinedArgsFn::inline(),
+        "(args: { str_arg: string, int_arg: number, }) => void"
+    )
 }
 
 #[test]
 fn void_fn_flattened_args() {
-    assert_eq!(MyVoidFunctionWithFlattenedArgsFn::inline(), "(str_arg: string, int_arg: number,) => void")
+    assert_eq!(
+        MyVoidFunctionWithFlattenedArgsFn::inline(),
+        "(str_arg: string, int_arg: number,) => void"
+    )
 }
 
 #[test]
 fn non_void_fn_inlined_args() {
-    assert_eq!(MyNonVoidFunctionWithInlinedArgsFn::inline(), "(args: { str_arg: string, int_arg: number, }) => string")
+    assert_eq!(
+        MyNonVoidFunctionWithInlinedArgsFn::inline(),
+        "(args: { str_arg: string, int_arg: number, }) => string"
+    )
 }
 
 #[test]
 fn non_void_fn_flattened_args() {
-    assert_eq!(MyNonVoidFunctionWithFlattenedArgsFn::inline(), "(str_arg: string, int_arg: number,) => string")
+    assert_eq!(
+        MyNonVoidFunctionWithFlattenedArgsFn::inline(),
+        "(str_arg: string, int_arg: number,) => string"
+    )
 }
 
 #[test]
@@ -80,10 +91,16 @@ fn fn_with_imported_return() {
 
 #[test]
 fn fn_with_imported_inlined_args() {
-    assert_eq!(FunctionWithImportedInlinedArgsFn::inline(), "(args: { foo: Foo, }) => void")
+    assert_eq!(
+        FunctionWithImportedInlinedArgsFn::inline(),
+        "(args: { foo: Foo, }) => void"
+    )
 }
 
 #[test]
 fn fn_with_imported_flattened_args() {
-    assert_eq!(FunctionWithImportedFlattenedArgsFn::inline(), "(foo: Foo,) => void")
+    assert_eq!(
+        FunctionWithImportedFlattenedArgsFn::inline(),
+        "(foo: Foo,) => void"
+    )
 }

@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-
 use std::{collections::HashMap, sync::Arc};
 
 #[cfg(feature = "serde-compat")]

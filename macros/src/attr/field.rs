@@ -1,11 +1,11 @@
-use syn::{Attribute, Ident, Result, Path};
+use syn::{Attribute, Ident, Result, Type};
 
-use super::{parse_assign_str, parse_assign_from_str};
+use super::{parse_assign_from_str, parse_assign_str};
 use crate::utils::{parse_attrs, parse_docs};
 
 #[derive(Default)]
 pub struct FieldAttr {
-    pub type_as: Option<Path>,
+    pub type_as: Option<Type>,
     pub type_override: Option<String>,
     pub rename: Option<String>,
     pub inline: bool,

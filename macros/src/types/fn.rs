@@ -1,10 +1,11 @@
-use std::ops::Not;
+use std::{collections::HashMap, ops::Not};
 
 use inflector::Inflector;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use syn::{
-    parse_quote, punctuated::Punctuated, spanned::Spanned, token::Comma, Error, Field, FnArg, ItemFn, PatType, Result, TypeReference
+    parse_quote, punctuated::Punctuated, spanned::Spanned, token::Comma, Error, Field, FnArg,
+    ItemFn, PatType, Result, TypeReference,
 };
 
 use crate::{
@@ -42,7 +43,9 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
                     ident: Some(syn::parse2(pat.to_token_stream())?),
                     colon_token: None,
                     ty: match ty.as_ref() {
-                        syn::Type::Reference(TypeReference { elem, .. }) => parse_quote!(Box<#elem>),
+                        syn::Type::Reference(TypeReference { elem, .. }) => {
+                            parse_quote!(Box<#elem>)
+                        }
                         x => x.clone(),
                     },
                 })
@@ -61,18 +64,19 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
         Some(quote!(#[ts(rename_all = #rename_all)]))
     });
 
-    let args_struct = fields.is_empty().not().then_some(
-        quote!(
-            #[derive(ts_rs::TS)]
-            #struct_attr
-            struct #struct_ident #ty_generics #where_clause {
-                #fields
-            }
-        )
-    );
+    let args_struct = fields.is_empty().not().then_some(quote!(
+        #[derive(ts_rs::TS)]
+        #struct_attr
+        struct #struct_ident #ty_generics #where_clause {
+            #fields
+        }
+    ));
 
     let docs = parse_docs(&input.attrs)?;
-    let ts_name = rename.clone().unwrap_or_else(|| to_ts_ident(ident)).to_pascal_case();
+    let ts_name = rename
+        .clone()
+        .unwrap_or_else(|| to_ts_ident(ident))
+        .to_pascal_case();
     let is_async = input.sig.asyncness.is_some();
     let return_ty = match (is_async, input.sig.output.clone()) {
         (false, syn::ReturnType::Default) => quote!("void"),
@@ -80,11 +84,11 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
         (false, syn::ReturnType::Type(_, ref ty)) => {
             dependencies.push(ty);
             quote!(<#ty as ts_rs::TS>::name())
-        },
+        }
         (true, syn::ReturnType::Type(_, ref ty)) => {
             dependencies.push(ty);
             quote!(format!("Promise<{}>", <#ty as ts_rs::TS>::name()))
-        },
+        }
     };
 
     let inline = match (&args_struct, args) {
@@ -103,7 +107,6 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
     Ok(ParsedFn {
         args_struct,
         derived_fn: DerivedTS {
-            generics: generics.clone(),
             ts_name,
             docs,
             inline,
@@ -111,6 +114,8 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
             dependencies,
             export: true,
             export_to,
+            concrete: HashMap::default(),
+            bound: None,
         },
     })
 }
