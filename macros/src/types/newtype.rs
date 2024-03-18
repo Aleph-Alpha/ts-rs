@@ -71,5 +71,6 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
         concrete: attr.concrete.clone(),
+        bound: attr.bound.clone(),
     })
 }

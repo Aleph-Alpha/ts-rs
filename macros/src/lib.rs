@@ -8,7 +8,7 @@ use quote::{format_ident, quote};
 use syn::{
     parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Result,
     Type, TypeArray, TypeParam, TypeParen, TypePath, TypeReference, TypeSlice, TypeTuple,
-    WhereClause,
+    WhereClause, WherePredicate,
 };
 
 use crate::{deps::Dependencies, utils::format_generics};
@@ -26,6 +26,7 @@ struct DerivedTS {
     inline_flattened: Option<TokenStream>,
     dependencies: Dependencies,
     concrete: HashMap<Ident, Type>,
+    bound: Option<Vec<WherePredicate>>,
 
     export: bool,
     export_to: Option<String>,
@@ -59,7 +60,12 @@ impl DerivedTS {
         };
 
         let ident = self.ts_name.clone();
-        let impl_start = generate_impl_block_header(&rust_ty, &generics, &self.dependencies);
+        let impl_start = generate_impl_block_header(
+            &rust_ty,
+            &generics,
+            self.bound.as_deref(),
+            &self.dependencies,
+        );
         let assoc_type = generate_assoc_type(&rust_ty, &generics, &self.concrete);
         let name = self.generate_name_fn(&generics);
         let inline = self.generate_inline_fn();
@@ -295,11 +301,12 @@ fn generate_assoc_type(
 fn generate_impl_block_header(
     ty: &Ident,
     generics: &Generics,
+    bounds: Option<&[WherePredicate]>,
     dependencies: &Dependencies,
 ) -> TokenStream {
     use GenericParam as G;
 
-    let bounds = generics.params.iter().map(|param| match param {
+    let params = generics.params.iter().map(|param| match param {
         G::Type(TypeParam {
             ident,
             colon_token,
@@ -325,8 +332,15 @@ fn generate_impl_block_header(
         G::Lifetime(LifetimeParam { lifetime, .. }) => quote!(#lifetime),
     });
 
-    let where_bound = generate_where_clause(generics, dependencies);
-    quote!(impl <#(#bounds),*> ::ts_rs::TS for #ty <#(#type_args),*> #where_bound)
+    let where_bound = match bounds {
+        Some(bounds) => quote! { where #(#bounds),* },
+        None => {
+            let bounds = generate_where_clause(generics, dependencies);
+            quote! { #bounds }
+        }
+    };
+
+    quote!(impl <#(#params),*> ::ts_rs::TS for #ty <#(#type_args),*> #where_bound)
 }
 
 fn generate_where_clause(generics: &Generics, dependencies: &Dependencies) -> WhereClause {

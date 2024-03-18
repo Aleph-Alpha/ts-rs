@@ -223,6 +223,44 @@ pub mod typelist;
 ///   ```
 ///   <br/><br/>
 ///
+/// - **`#[ts(bound)]`**
+///   Override the bounds generated on the `TS` implementation for this type. This is useful in
+///   combination with `#[ts(concrete)]`, when the type's generic parameters aren't directly used
+///   in a field or variant.
+///
+///   Example:
+///   ```
+///   # use ts_rs::TS;
+///
+///   trait Container {
+///       type Value: TS;
+///   }
+///
+///   struct MyContainer;
+///
+///   ##[derive(TS)]
+///   struct MyValue;
+///
+///   impl Container for MyContainer {
+///       type Value = MyValue;
+///   }
+///
+///   ##[derive(TS)]
+///   ##[ts(export, concrete(C = MyContainer))]
+///   struct Inner<C: Container> {
+///       value: C::Value,
+///   }
+///
+///   ##[derive(TS)]
+///   // Without `#[ts(bound)]`, `#[derive(TS)]` would generate an unnecessary
+///   // `C: TS` bound
+///   ##[ts(export, concrete(C = MyContainer), bound = "C::Value: TS")]
+///   struct Outer<C: Container> {
+///       inner: Inner<C>,
+///   }
+///   ```
+///   <br/><br/>
+///
 /// ### struct attributes
 /// - **`#[ts(tag = "..")]`**  
 ///   Include the structs name (or value of `#[ts(rename = "..")]`) as a field with the given key.
