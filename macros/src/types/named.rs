@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::{quote};
 use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, PathArguments, Result, Type};
 
 use crate::{
@@ -43,6 +43,8 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
     };
 
     Ok(DerivedTS {
+        // the `replace` combines `{ ... } & { ... }` into just one `{ ... }`. Not necessary, but it
+        // results in simpler type definitions.
         inline: quote!(#inline.replace(" } & { ", " ")),
         inline_flattened: Some(quote!(format!("{{ {} }}", #fields))),
         docs: attr.docs.clone(),
@@ -55,7 +57,7 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
     })
 }
 
-// build an expresion which expands to a string, representing a single field of a struct.
+// build an expression which expands to a string, representing a single field of a struct.
 //
 // formatted_fields will contain all the fields that do not contain the flatten
 // attribute, in the format
@@ -91,11 +93,7 @@ fn format_field(
         syn_err_spanned!(field; "`type` is not compatible with `as`")
     }
 
-    let parsed_ty = if let Some(ref type_as) = type_as {
-        syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
-    } else {
-        field.ty.clone()
-    };
+    let parsed_ty = type_as.as_ref().unwrap_or(&field.ty).clone();
 
     let (ty, optional_annotation) = match optional {
         Optional {

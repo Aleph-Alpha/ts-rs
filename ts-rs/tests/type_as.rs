@@ -26,13 +26,20 @@ struct Override {
     // here, 'as' just behaves like 'type' (though it adds a dependency!)
     #[ts(as = "ExternalTypeDef")]
     y: Unsupported,
+    #[ts(as = "(i32, ExternalTypeDef, i32)")]
+    z: Unsupported,
 }
 
 #[test]
 fn struct_properties() {
     assert_eq!(
         Override::inline(),
-        "{ a: number, x: { a: number, b: number, c: number, }, y: ExternalTypeDef, }"
+        "{ \
+           a: number, \
+           x: { a: number, b: number, c: number, }, \
+           y: ExternalTypeDef, \
+           z: [number, ExternalTypeDef, number], \
+        }"
     );
     assert!(Override::dependencies()
         .iter()
