@@ -7,6 +7,7 @@ pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
+        crate_rename: attr.crate_rename.clone(),
         inline: quote!("Record<string, never>".to_owned()),
         inline_flattened: None,
         docs: attr.docs.clone(),
@@ -23,6 +24,7 @@ pub(crate) fn empty_array(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
+        crate_rename: attr.crate_rename.clone(),
         inline: quote!("never[]".to_owned()),
         inline_flattened: None,
         docs: attr.docs.clone(),
@@ -39,6 +41,7 @@ pub(crate) fn null(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
 
     Ok(DerivedTS {
+        crate_rename: attr.crate_rename.clone(),
         inline: quote!("null".to_owned()),
         inline_flattened: None,
         docs: attr.docs.clone(),

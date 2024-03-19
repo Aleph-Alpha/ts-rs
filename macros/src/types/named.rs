@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{quote};
+use quote::quote;
 use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, PathArguments, Result, Type};
 
 use crate::{
@@ -43,6 +43,7 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
     };
 
     Ok(DerivedTS {
+        crate_rename: attr.crate_rename.clone(),
         // the `replace` combines `{ ... } & { ... }` into just one `{ ... }`. Not necessary, but it
         // results in simpler type definitions.
         inline: quote!(#inline.replace(" } & { ", " ")),

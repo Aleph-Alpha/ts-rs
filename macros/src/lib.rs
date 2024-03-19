@@ -20,6 +20,7 @@ mod deps;
 mod types;
 
 struct DerivedTS {
+    crate_rename: Option<TokenStream>,
     ts_name: String,
     docs: String,
     inline: TokenStream,
@@ -59,8 +60,14 @@ impl DerivedTS {
             docs => Some(quote!(const DOCS: Option<&'static str> = Some(#docs);)),
         };
 
+        let crate_rename = self
+            .crate_rename
+            .clone()
+            .unwrap_or_else(|| quote! { ::ts_rs });
+
         let ident = self.ts_name.clone();
         let impl_start = generate_impl_block_header(
+            &crate_rename,
             &rust_ty,
             &generics,
             self.bound.as_deref(),
@@ -299,6 +306,7 @@ fn generate_assoc_type(
 
 // generate start of the `impl TS for #ty` block, up to (excluding) the open brace
 fn generate_impl_block_header(
+    crate_rename: &TokenStream,
     ty: &Ident,
     generics: &Generics,
     bounds: Option<&[WherePredicate]>,
@@ -340,7 +348,7 @@ fn generate_impl_block_header(
         }
     };
 
-    quote!(impl <#(#params),*> ::ts_rs::TS for #ty <#(#type_args),*> #where_bound)
+    quote!(impl <#(#params),*> #crate_rename::TS for #ty <#(#type_args),*> #where_bound)
 }
 
 fn generate_where_clause(generics: &Generics, dependencies: &Dependencies) -> WhereClause {

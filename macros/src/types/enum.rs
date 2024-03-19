@@ -22,6 +22,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 
     if s.variants.is_empty() {
         return Ok(DerivedTS {
+            crate_rename: enum_attr.crate_rename,
             ts_name: name,
             docs: enum_attr.docs,
             inline: quote!("never".to_owned()),
@@ -46,6 +47,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     }
 
     Ok(DerivedTS {
+        crate_rename: enum_attr.crate_rename,
         inline: quote!([#(#formatted_variants),*].join(" | ")),
         inline_flattened: Some(quote!(
             format!("({})", [#(#formatted_variants),*].join(" | "))
@@ -199,6 +201,7 @@ fn format_variant(
 fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
     let name = name.into();
     DerivedTS {
+        crate_rename: enum_attr.crate_rename,
         inline: quote!("never".to_owned()),
         docs: enum_attr.docs,
         inline_flattened: None,

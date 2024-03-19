@@ -1,16 +1,17 @@
 use std::{collections::HashMap, convert::TryFrom};
 
+use proc_macro2::TokenStream;
 use syn::{Attribute, Ident, Result, Type, WherePredicate};
 
+use super::{parse_assign_from_str, parse_bound};
 use crate::{
     attr::{parse_assign_str, parse_concrete, Inflection, VariantAttr},
     utils::{parse_attrs, parse_docs},
 };
 
-use super::parse_bound;
-
 #[derive(Default, Clone)]
 pub struct StructAttr {
+    pub crate_rename: Option<TokenStream>,
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,
     pub export_to: Option<String>,
@@ -41,6 +42,7 @@ impl StructAttr {
     fn merge(
         &mut self,
         StructAttr {
+            crate_rename,
             rename_all,
             rename,
             export,
@@ -51,6 +53,7 @@ impl StructAttr {
             bound,
         }: StructAttr,
     ) {
+        self.crate_rename = self.crate_rename.take().or(crate_rename);
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
         self.export_to = self.export_to.take().or(export_to);
@@ -58,9 +61,14 @@ impl StructAttr {
         self.tag = self.tag.take().or(tag);
         self.docs = docs;
         self.concrete.extend(concrete);
-        self.bound = self.bound
+        self.bound = self
+            .bound
             .take()
-            .map(|b| b.into_iter().chain(bound.clone().unwrap_or_default()).collect())
+            .map(|b| {
+                b.into_iter()
+                    .chain(bound.clone().unwrap_or_default())
+                    .collect()
+            })
             .or(bound);
     }
 }
@@ -82,6 +90,7 @@ impl From<VariantAttr> for StructAttr {
 
 impl_parse! {
     StructAttr(input, out) {
+        "crate_rename" => out.crate_rename = Some(parse_assign_from_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
         "tag" => out.tag = Some(parse_assign_str(input)?),

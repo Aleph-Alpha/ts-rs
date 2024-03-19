@@ -1,4 +1,4 @@
-use quote::{quote};
+use quote::quote;
 use syn::{FieldsUnnamed, Result};
 
 use crate::{
@@ -59,6 +59,7 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
     };
 
     Ok(DerivedTS {
+        crate_rename: attr.crate_rename.clone(),
         inline: inline_def,
         inline_flattened: None,
         docs: attr.docs.clone(),

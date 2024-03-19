@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{quote};
+use quote::quote;
 use syn::{Field, FieldsUnnamed, Result};
 
 use crate::{
@@ -23,6 +23,7 @@ pub(crate) fn tuple(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Re
     }
 
     Ok(DerivedTS {
+        crate_rename: attr.crate_rename.clone(),
         inline: quote! {
             format!(
                 "[{}]",
