@@ -40,3 +40,20 @@ fn using_serde_json() {
          };"
     )
 }
+
+#[derive(TS)]
+#[ts(export, export_to = "serde_json_impl/")]
+struct InlinedValue {
+    #[ts(inline)]
+    any: serde_json::Value,
+}
+
+#[test]
+fn inlined_value() {
+    assert_eq!(
+        InlinedValue::decl(),
+        "type InlinedValue = { \
+            any: number | string | Array<JsonValue> | { [key: string]: JsonValue }, \
+         };"
+    );
+}
