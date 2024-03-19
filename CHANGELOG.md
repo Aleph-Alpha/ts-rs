@@ -1,4 +1,11 @@
 # master
+### Breaking
+### Features
+- Add support types from `serde_json` behind cargo feature `serde-json-impl`
+### Fixes
+
+
+# v8.0.0
 
 ### Breaking
 
