@@ -3,8 +3,8 @@ use std::{collections::HashMap, convert::TryFrom};
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::{
-    spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result,
-    Type, Path,
+    spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Path,
+    Result, Type,
 };
 
 use crate::deps::Dependencies;

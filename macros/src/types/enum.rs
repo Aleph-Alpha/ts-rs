@@ -11,10 +11,7 @@ use crate::{
 pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     let enum_attr: EnumAttr = EnumAttr::from_attrs(&s.attrs)?;
 
-    let crate_rename = enum_attr
-        .crate_rename
-        .clone()
-        .unwrap();
+    let crate_rename = enum_attr.crate_rename.clone().unwrap();
 
     let name = match &enum_attr.rename {
         Some(existing) => existing.clone(),

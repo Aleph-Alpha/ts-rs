@@ -6,9 +6,9 @@ use std::collections::{HashMap, HashSet};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
-    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Result,
-    Type, TypeArray, TypeParam, TypeParen, TypePath, TypeReference, TypeSlice, TypeTuple,
-    WhereClause, WherePredicate, Path,
+    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Path,
+    Result, Type, TypeArray, TypeParam, TypeParen, TypePath, TypeReference, TypeSlice, TypeTuple,
+    WhereClause, WherePredicate,
 };
 
 use crate::{deps::Dependencies, utils::format_generics};
@@ -254,7 +254,12 @@ impl DerivedTS {
         let name = &self.ts_name;
         let crate_rename = &self.crate_rename;
         let generic_types = self.generate_generic_types(generics);
-        let ts_generics = format_generics(&mut self.dependencies, crate_rename, generics, &self.concrete);
+        let ts_generics = format_generics(
+            &mut self.dependencies,
+            crate_rename,
+            generics,
+            &self.concrete,
+        );
 
         use GenericParam as G;
         // These are the generic parameters we'll be using.
@@ -353,7 +358,11 @@ fn generate_impl_block_header(
     quote!(impl <#(#params),*> #crate_rename::TS for #ty <#(#type_args),*> #where_bound)
 }
 
-fn generate_where_clause(crate_rename: &Path, generics: &Generics, dependencies: &Dependencies) -> WhereClause {
+fn generate_where_clause(
+    crate_rename: &Path,
+    generics: &Generics,
+    dependencies: &Dependencies,
+) -> WhereClause {
     let used_types = {
         let is_type_param = |id: &Ident| generics.type_params().any(|p| &p.ident == id);
 

@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Field, FieldsUnnamed, Result, Path};
+use syn::{Field, FieldsUnnamed, Path, Result};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -20,7 +20,12 @@ pub(crate) fn tuple(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Re
     let mut formatted_fields = Vec::new();
     let mut dependencies = Dependencies::new(crate_rename.clone());
     for field in &fields.unnamed {
-        format_field(&crate_rename, &mut formatted_fields, &mut dependencies, field)?;
+        format_field(
+            &crate_rename,
+            &mut formatted_fields,
+            &mut dependencies,
+            field,
+        )?;
     }
 
     Ok(DerivedTS {

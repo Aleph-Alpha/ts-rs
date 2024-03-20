@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use syn::{Attribute, Ident, Result, Type, WherePredicate, Path, parse_quote};
+use syn::{parse_quote, Attribute, Ident, Path, Result, Type, WherePredicate};
 
 use super::{parse_assign_from_str, parse_bound};
 use crate::{
@@ -56,9 +56,7 @@ impl EnumAttr {
         let docs = parse_docs(attrs)?;
         result.docs = docs;
 
-        result.crate_rename = result
-            .crate_rename
-            .or_else(|| Some(parse_quote!(::ts_rs)));
+        result.crate_rename = result.crate_rename.or_else(|| Some(parse_quote!(::ts_rs)));
 
         #[cfg(feature = "serde-compat")]
         crate::utils::parse_serde_attrs::<SerdeEnumAttr>(attrs).for_each(|a| result.merge(a.0));

@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{Type, Path};
+use syn::{Path, Type};
 
 pub struct Dependencies {
     dependencies: Vec<TokenStream>,
