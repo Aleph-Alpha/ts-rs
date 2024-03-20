@@ -863,7 +863,7 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     type WithoutGenerics = HashMap<Dummy, Dummy>;
 
     fn ident() -> String {
-        "{ [key: any]: any }".to_owned()
+        panic!()
     }
 
     fn name() -> String {
