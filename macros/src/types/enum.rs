@@ -85,7 +85,7 @@ fn format_variant(
     };
 
     let mut struct_attr = StructAttr::from(variant_attr);
-    struct_attr.crate_rename = enum_attr.crate_rename.clone();
+    struct_attr.crate_rename.clone_from(&enum_attr.crate_rename);
     let variant_type = types::type_def(
         &struct_attr,
         // since we are generating the variant as a struct, it doesn't have a name
