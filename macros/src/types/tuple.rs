@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
-use quote::{quote};
-use syn::{Field, FieldsUnnamed, Result};
+use quote::quote;
+use syn::{Field, FieldsUnnamed, Path, Result};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -16,13 +16,20 @@ pub(crate) fn tuple(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Re
         syn_err!("`tag` is not applicable to tuple structs");
     }
 
+    let crate_rename = attr.crate_rename();
     let mut formatted_fields = Vec::new();
-    let mut dependencies = Dependencies::default();
+    let mut dependencies = Dependencies::new(crate_rename.clone());
     for field in &fields.unnamed {
-        format_field(&mut formatted_fields, &mut dependencies, field)?;
+        format_field(
+            &crate_rename,
+            &mut formatted_fields,
+            &mut dependencies,
+            field,
+        )?;
     }
 
     Ok(DerivedTS {
+        crate_rename,
         inline: quote! {
             format!(
                 "[{}]",
@@ -41,6 +48,7 @@ pub(crate) fn tuple(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Re
 }
 
 fn format_field(
+    crate_rename: &Path,
     formatted_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     field: &Field,
@@ -80,8 +88,8 @@ fn format_field(
 
     formatted_fields.push(match type_override {
         Some(ref o) => quote!(#o.to_owned()),
-        None if inline => quote!(<#ty as ::ts_rs::TS>::inline()),
-        None => quote!(<#ty as ::ts_rs::TS>::name()),
+        None if inline => quote!(<#ty as #crate_rename::TS>::inline()),
+        None => quote!(<#ty as #crate_rename::TS>::name()),
     });
 
     match (inline, type_override) {
