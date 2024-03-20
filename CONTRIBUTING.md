@@ -22,4 +22,11 @@ There is nothing special going on here - just run `cargo build`.
 To run the test suite, just run `cargo test` in the root directory.  
 
 ### Formatting
-To ensure proper formatting, please run `cargo +nightly fmt`.
+To ensure proper formatting, please make sure you have the nigthly toolchain installed.
+After that, in the project's root directory, create a file called `.git/hooks/pre-commit` without a file extension and add the following two lines:
+```sh
+#!/bin/sh
+cargo +nightly fmt
+```
+
+This will make sure your files are formatted before your commit is sent, so you don't have to manually run `cargo +nightly fmt`
