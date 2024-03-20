@@ -20,7 +20,7 @@ fn using_serde_json() {
     assert_eq!(serde_json::Number::inline(), "number");
     assert_eq!(
         serde_json::Map::<String, i32>::inline(),
-        "Record<string, number>"
+        "{ [key: string]: number }"
     );
     assert_eq!(
         serde_json::Value::decl(),
@@ -31,11 +31,11 @@ fn using_serde_json() {
         UsingSerdeJson::decl(),
         "type UsingSerdeJson = { \
             num: number, \
-            map1: Record<string, number>, \
-            map2: Record<string, UsingSerdeJson>, \
-            map3: Record<string, Record<string, number>>, \
-            map4: Record<string, number>, \
-            map5: Record<string, JsonValue>, \
+            map1: { [key: string]: number }, \
+            map2: { [key: string]: UsingSerdeJson }, \
+            map3: { [key: string]: { [key: string]: number } }, \
+            map4: { [key: string]: number }, \
+            map5: { [key: string]: JsonValue }, \
             any: JsonValue, \
          };"
     )
@@ -56,4 +56,10 @@ fn inlined_value() {
             any: number | string | Array<JsonValue> | { [key: string]: JsonValue }, \
          };"
     );
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "serde_json_impl/")]
+struct Simple {
+    json: serde_json::Value
 }

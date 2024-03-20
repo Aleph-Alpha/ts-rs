@@ -689,8 +689,8 @@ macro_rules! impl_shadow {
             {
                 <$s>::generics()
             }
-            fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
-            fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
+            fn decl() -> String { <$s>::decl() }
+            fn decl_concrete() -> String { <$s>::decl_concrete() }
         }
     };
 }
