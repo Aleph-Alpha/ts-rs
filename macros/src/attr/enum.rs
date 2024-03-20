@@ -1,16 +1,16 @@
 use std::collections::HashMap;
 
-use syn::{Attribute, Ident, Result, Type, WherePredicate};
+use syn::{parse_quote, Attribute, Ident, Path, Result, Type, WherePredicate};
 
+use super::{parse_assign_from_str, parse_bound};
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
     utils::{parse_attrs, parse_docs},
 };
 
-use super::parse_bound;
-
 #[derive(Default)]
 pub struct EnumAttr {
+    crate_rename: Option<Path>,
     pub rename_all: Option<Inflection>,
     pub rename_all_fields: Option<Inflection>,
     pub rename: Option<String>,
@@ -61,9 +61,16 @@ impl EnumAttr {
         Ok(result)
     }
 
+    pub fn crate_rename(&self) -> Path {
+        self.crate_rename
+            .clone()
+            .unwrap_or_else(|| parse_quote!(::ts_rs))
+    }
+
     fn merge(
         &mut self,
         EnumAttr {
+            crate_rename,
             rename_all,
             rename_all_fields,
             rename,
@@ -77,6 +84,7 @@ impl EnumAttr {
             bound,
         }: EnumAttr,
     ) {
+        self.crate_rename = self.crate_rename.take().or(crate_rename);
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
         self.rename_all_fields = self.rename_all_fields.take().or(rename_all_fields);
@@ -87,15 +95,21 @@ impl EnumAttr {
         self.export_to = self.export_to.take().or(export_to);
         self.docs = docs;
         self.concrete.extend(concrete);
-        self.bound = self.bound
+        self.bound = self
+            .bound
             .take()
-            .map(|b| b.into_iter().chain(bound.clone().unwrap_or_default()).collect())
+            .map(|b| {
+                b.into_iter()
+                    .chain(bound.clone().unwrap_or_default())
+                    .collect()
+            })
             .or(bound);
     }
 }
 
 impl_parse! {
     EnumAttr(input, out) {
+        "crate" => out.crate_rename = Some(parse_assign_from_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
         "rename_all_fields" => out.rename_all_fields = Some(parse_assign_inflection(input)?),

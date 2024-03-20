@@ -1,4 +1,10 @@
 # master
+### Breaking
+### Features
+- Add `#[ts(crate = "..")]` to allow usage of `#[derive(TS)]` from other proc-macro crates  ([#274](https://github.com/Aleph-Alpha/ts-rs/pull/274))
+### Fixes
+
+# v8.0.0
 
 ### Breaking
 

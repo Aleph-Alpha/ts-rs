@@ -177,6 +177,10 @@ pub mod typelist;
 /// ### container attributes
 /// attributes applicable for both structs and enums
 ///
+/// - **`#[ts(crate = "..")]`**
+///   Generates code which references the module passed to it instead of defaulting to `::ts_rs`
+///   This is useful for cases where you have to re-export the crate.
+///
 /// - **`#[ts(export)]`**  
 ///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
 ///   `cargo test`. The default base directory can be overridden with the `TS_RS_EXPORT_DIR` environment variable.

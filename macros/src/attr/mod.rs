@@ -1,11 +1,12 @@
-use std::{collections::HashMap, convert::TryFrom};
+use std::collections::HashMap;
 
 pub use field::*;
 pub use r#enum::*;
 pub use r#struct::*;
 use syn::{
     parse::{Parse, ParseStream},
-    Error, Lit, Result, Token, WherePredicate, punctuated::Punctuated,
+    punctuated::Punctuated,
+    Error, Lit, Result, Token, WherePredicate,
 };
 pub use variant::*;
 
@@ -136,7 +137,7 @@ fn parse_bound(input: ParseStream) -> Result<Vec<WherePredicate>> {
             let parser = Punctuated::<WherePredicate, Token![,]>::parse_terminated;
 
             Ok(string.parse_with(parser)?.into_iter().collect())
-        },
+        }
         other => Err(Error::new(other.span(), "expected string")),
     }
 }
