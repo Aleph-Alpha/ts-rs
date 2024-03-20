@@ -11,7 +11,7 @@ use crate::{
 pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     let enum_attr: EnumAttr = EnumAttr::from_attrs(&s.attrs)?;
 
-    let crate_rename = enum_attr.crate_rename.clone().unwrap();
+    let crate_rename = enum_attr.crate_rename();
 
     let name = match &enum_attr.rename {
         Some(existing) => existing.clone(),
@@ -70,7 +70,7 @@ fn format_variant(
     enum_attr: &EnumAttr,
     variant: &Variant,
 ) -> syn::Result<()> {
-    let crate_rename = enum_attr.crate_rename.as_ref().unwrap();
+    let crate_rename = enum_attr.crate_rename();
     let variant_attr = VariantAttr::new(&variant.attrs, enum_attr)?;
 
     if variant_attr.skip {
@@ -84,8 +84,7 @@ fn format_variant(
         (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
     };
 
-    let mut struct_attr = StructAttr::from(variant_attr);
-    struct_attr.crate_rename.clone_from(&enum_attr.crate_rename);
+    let struct_attr = StructAttr::from_variant(enum_attr, &variant_attr);
     let variant_type = types::type_def(
         &struct_attr,
         // since we are generating the variant as a struct, it doesn't have a name
@@ -205,7 +204,7 @@ fn format_variant(
 // bindings for an empty enum (`never` in TS)
 fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
     let name = name.into();
-    let crate_rename = enum_attr.crate_rename.unwrap();
+    let crate_rename = enum_attr.crate_rename();
     DerivedTS {
         crate_rename: crate_rename.clone(),
         inline: quote!("never".to_owned()),

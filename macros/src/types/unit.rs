@@ -5,7 +5,7 @@ use crate::{attr::StructAttr, deps::Dependencies, DerivedTS};
 
 pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
-    let crate_rename = attr.crate_rename.clone().unwrap();
+    let crate_rename = attr.crate_rename();
 
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),
@@ -23,7 +23,7 @@ pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
 
 pub(crate) fn empty_array(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
-    let crate_rename = attr.crate_rename.clone().unwrap();
+    let crate_rename = attr.crate_rename();
 
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),
@@ -41,7 +41,7 @@ pub(crate) fn empty_array(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
 
 pub(crate) fn null(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
-    let crate_rename = attr.crate_rename.clone().unwrap();
+    let crate_rename = attr.crate_rename();
 
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),

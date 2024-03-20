@@ -16,7 +16,7 @@ pub(crate) fn tuple(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Re
         syn_err!("`tag` is not applicable to tuple structs");
     }
 
-    let crate_rename = attr.crate_rename.clone().unwrap();
+    let crate_rename = attr.crate_rename();
     let mut formatted_fields = Vec::new();
     let mut dependencies = Dependencies::new(crate_rename.clone());
     for field in &fields.unnamed {

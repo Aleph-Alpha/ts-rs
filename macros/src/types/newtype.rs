@@ -26,7 +26,7 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
         docs: _,
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
-    let crate_rename = attr.crate_rename.clone().unwrap();
+    let crate_rename = attr.crate_rename();
 
     match (&rename_inner, skip, optional.optional, flatten) {
         (Some(_), ..) => syn_err_spanned!(fields; "`rename` is not applicable to newtype fields"),

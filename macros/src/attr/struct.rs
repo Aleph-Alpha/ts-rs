@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use syn::{parse_quote, Attribute, Ident, Path, Result, Type, WherePredicate};
 
 use super::{parse_assign_from_str, parse_bound, parse_concrete};
+use crate::attr::EnumAttr;
 use crate::{
     attr::{parse_assign_str, Inflection, VariantAttr},
     utils::{parse_attrs, parse_docs},
@@ -10,7 +11,7 @@ use crate::{
 
 #[derive(Default, Clone)]
 pub struct StructAttr {
-    pub crate_rename: Option<Path>,
+    crate_rename: Option<Path>,
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,
     pub export_to: Option<String>,
@@ -33,11 +34,25 @@ impl StructAttr {
         let docs = parse_docs(attrs)?;
         result.docs = docs;
 
-        result.crate_rename = result.crate_rename.or_else(|| Some(parse_quote!(::ts_rs)));
-
         #[cfg(feature = "serde-compat")]
         crate::utils::parse_serde_attrs::<SerdeStructAttr>(attrs).for_each(|a| result.merge(a.0));
         Ok(result)
+    }
+
+    pub fn from_variant(enum_attr: &EnumAttr, variant_attr: &VariantAttr) -> Self {
+        Self {
+            crate_rename: Some(enum_attr.crate_rename()),
+            rename: variant_attr.rename.clone(),
+            rename_all: variant_attr.rename_all,
+            // inline and skip are not supported on StructAttr
+            ..Self::default()
+        }
+    }
+
+    pub fn crate_rename(&self) -> Path {
+        self.crate_rename
+            .clone()
+            .unwrap_or_else(|| parse_quote!(::ts_rs))
     }
 
     fn merge(
@@ -71,21 +86,6 @@ impl StructAttr {
                     .collect()
             })
             .or(bound);
-    }
-}
-
-impl From<VariantAttr> for StructAttr {
-    fn from(
-        VariantAttr {
-            rename, rename_all, ..
-        }: VariantAttr,
-    ) -> Self {
-        Self {
-            rename,
-            rename_all,
-            // inline and skip are not supported on StructAttr
-            ..Self::default()
-        }
     }
 }
 

@@ -10,7 +10,7 @@ use crate::{
 
 #[derive(Default)]
 pub struct EnumAttr {
-    pub crate_rename: Option<Path>,
+    crate_rename: Option<Path>,
     pub rename_all: Option<Inflection>,
     pub rename_all_fields: Option<Inflection>,
     pub rename: Option<String>,
@@ -56,11 +56,15 @@ impl EnumAttr {
         let docs = parse_docs(attrs)?;
         result.docs = docs;
 
-        result.crate_rename = result.crate_rename.or_else(|| Some(parse_quote!(::ts_rs)));
-
         #[cfg(feature = "serde-compat")]
         crate::utils::parse_serde_attrs::<SerdeEnumAttr>(attrs).for_each(|a| result.merge(a.0));
         Ok(result)
+    }
+
+    pub fn crate_rename(&self) -> Path {
+        self.crate_rename
+            .clone()
+            .unwrap_or_else(|| parse_quote!(::ts_rs))
     }
 
     fn merge(
