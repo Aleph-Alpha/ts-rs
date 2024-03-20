@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Fields, ItemEnum, Variant, parse_quote, Path};
+use syn::{Fields, ItemEnum, Variant};
 
 use crate::{
     attr::{EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
@@ -14,7 +14,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     let crate_rename = enum_attr
         .crate_rename
         .clone()
-        .unwrap_or_else(|| parse_quote!(::ts_rs));
+        .unwrap();
 
     let name = match &enum_attr.rename {
         Some(existing) => existing.clone(),
@@ -44,7 +44,6 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     let mut dependencies = Dependencies::new(crate_rename.clone());
     for variant in &s.variants {
         format_variant(
-            &crate_rename,
             &mut formatted_variants,
             &mut dependencies,
             &enum_attr,
@@ -69,12 +68,12 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 }
 
 fn format_variant(
-    crate_rename: &Path,
     formatted_variants: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     enum_attr: &EnumAttr,
     variant: &Variant,
 ) -> syn::Result<()> {
+    let crate_rename = enum_attr.crate_rename.as_ref().unwrap();
     let variant_attr = VariantAttr::new(&variant.attrs, enum_attr)?;
 
     if variant_attr.skip {
@@ -88,8 +87,10 @@ fn format_variant(
         (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
     };
 
+    let mut struct_attr = StructAttr::from(variant_attr);
+    struct_attr.crate_rename = enum_attr.crate_rename.clone();
     let variant_type = types::type_def(
-        &StructAttr::from(variant_attr),
+        &struct_attr,
         // since we are generating the variant as a struct, it doesn't have a name
         &format_ident!("_"),
         &variant.fields,
@@ -207,7 +208,7 @@ fn format_variant(
 // bindings for an empty enum (`never` in TS)
 fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
     let name = name.into();
-    let crate_rename = enum_attr.crate_rename.unwrap_or_else(|| parse_quote!(::ts_rs));
+    let crate_rename = enum_attr.crate_rename.unwrap();
     DerivedTS {
         crate_rename: crate_rename.clone(),
         inline: quote!("never".to_owned()),

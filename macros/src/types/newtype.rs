@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{FieldsUnnamed, Result, parse_quote};
+use syn::{FieldsUnnamed, Result};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -26,10 +26,7 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
         docs: _,
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
-    let crate_rename = attr
-        .crate_rename
-        .clone()
-        .unwrap_or_else(|| parse_quote!(::ts_rs));
+    let crate_rename = attr.crate_rename.clone().unwrap();
 
     match (&rename_inner, skip, optional.optional, flatten) {
         (Some(_), ..) => syn_err_spanned!(fields; "`rename` is not applicable to newtype fields"),

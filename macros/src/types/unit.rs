@@ -1,14 +1,11 @@
 use quote::quote;
-use syn::{Result, parse_quote};
+use syn::Result;
 
 use crate::{attr::StructAttr, deps::Dependencies, DerivedTS};
 
 pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
-    let crate_rename = attr
-        .crate_rename
-        .clone()
-        .unwrap_or_else(|| parse_quote!(::ts_rs));
+    let crate_rename = attr.crate_rename.clone().unwrap();
 
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),
@@ -26,10 +23,7 @@ pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
 
 pub(crate) fn empty_array(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
-    let crate_rename = attr
-        .crate_rename
-        .clone()
-        .unwrap_or_else(|| parse_quote!(::ts_rs));
+    let crate_rename = attr.crate_rename.clone().unwrap();
 
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),
@@ -47,10 +41,7 @@ pub(crate) fn empty_array(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
 
 pub(crate) fn null(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;
-    let crate_rename = attr
-        .crate_rename
-        .clone()
-        .unwrap_or_else(|| parse_quote!(::ts_rs));
+    let crate_rename = attr.crate_rename.clone().unwrap();
 
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),

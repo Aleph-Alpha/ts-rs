@@ -1,6 +1,6 @@
 use std::{collections::HashMap, convert::TryFrom};
 
-use syn::{Attribute, Ident, Result, Type, WherePredicate, Path};
+use syn::{Attribute, Ident, Result, Type, WherePredicate, Path, parse_quote};
 
 use super::{parse_assign_from_str, parse_bound, parse_concrete};
 use crate::{
@@ -32,6 +32,10 @@ impl StructAttr {
 
         let docs = parse_docs(attrs)?;
         result.docs = docs;
+
+        result.crate_rename = result
+            .crate_rename
+            .or_else(|| Some(parse_quote!(::ts_rs)));
 
         #[cfg(feature = "serde-compat")]
         crate::utils::parse_serde_attrs::<SerdeStructAttr>(attrs).for_each(|a| result.merge(a.0));

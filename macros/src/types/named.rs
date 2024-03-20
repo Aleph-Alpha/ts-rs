@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, PathArguments, Result, Type, parse_quote, Path};
+use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, PathArguments, Result, Type, Path};
 
 use crate::{
     attr::{FieldAttr, Inflection, Optional, StructAttr},
@@ -13,7 +13,7 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
     let crate_rename = attr
         .crate_rename
         .clone()
-        .unwrap_or_else(|| parse_quote!(::ts_rs));
+        .unwrap();
 
     let mut formatted_fields = Vec::new();
     let mut flattened_fields = Vec::new();

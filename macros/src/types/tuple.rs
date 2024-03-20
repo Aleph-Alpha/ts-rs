@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Field, FieldsUnnamed, Result, parse_quote, Path};
+use syn::{Field, FieldsUnnamed, Result, Path};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -16,10 +16,7 @@ pub(crate) fn tuple(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Re
         syn_err!("`tag` is not applicable to tuple structs");
     }
 
-    let crate_rename = attr
-        .crate_rename
-        .clone()
-        .unwrap_or_else(|| parse_quote!(::ts_rs));
+    let crate_rename = attr.crate_rename.clone().unwrap();
     let mut formatted_fields = Vec::new();
     let mut dependencies = Dependencies::new(crate_rename.clone());
     for field in &fields.unnamed {
