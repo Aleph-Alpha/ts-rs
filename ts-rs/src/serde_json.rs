@@ -5,7 +5,7 @@ use super::{impl_primitives, impl_shadow, TS};
 #[derive(TS)]
 #[ts(
     crate = "crate",
-    rename = "Value",
+    rename = "JsonValue",
     untagged,
     export_to = "serde_json/"
 )]
