@@ -24,7 +24,7 @@ fn using_serde_json() {
     );
     assert_eq!(
         serde_json::Value::decl(),
-        "type JsonValue = number | string | Array<JsonValue> | { [key: string]: JsonValue };",
+        "type Value = number | string | Array<Value> | { [key: string]: Value };",
     );
 
     assert_eq!(
@@ -35,8 +35,8 @@ fn using_serde_json() {
             map2: { [key: string]: UsingSerdeJson }, \
             map3: { [key: string]: { [key: string]: number } }, \
             map4: { [key: string]: number }, \
-            map5: { [key: string]: JsonValue }, \
-            any: JsonValue, \
+            map5: { [key: string]: Value }, \
+            any: Value, \
          };"
     )
 }
@@ -53,7 +53,7 @@ fn inlined_value() {
     assert_eq!(
         InlinedValue::decl(),
         "type InlinedValue = { \
-            any: number | string | Array<JsonValue> | { [key: string]: JsonValue }, \
+            any: number | string | Array<Value> | { [key: string]: Value }, \
          };"
     );
 }

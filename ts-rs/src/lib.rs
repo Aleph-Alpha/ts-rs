@@ -691,6 +691,7 @@ macro_rules! impl_shadow {
             }
             fn decl() -> String { <$s>::decl() }
             fn decl_concrete() -> String { <$s>::decl_concrete() }
+            fn output_path() -> Option<&'static std::path::Path> { <$s>::output_path() }
         }
     };
 }
