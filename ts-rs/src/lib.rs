@@ -73,6 +73,7 @@
 //! | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
 //! | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
 //! | import-esm         | When enabled,`import` statements in the generated file will have the `.js` extension in the end of the path to conform to the ES Modules spec. <br/> Example: `import { MyStruct } from "./my_struct.js"` |
+//! | serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                                                                                |
 //! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
 //! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
 //! | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
@@ -137,6 +138,8 @@ pub use ts_rs_macros::TS;
 pub use crate::export::ExportError;
 use crate::typelist::TypeList;
 
+#[cfg(feature = "serde-json-impl")]
+mod serde_json;
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
@@ -686,8 +689,9 @@ macro_rules! impl_shadow {
             {
                 <$s>::generics()
             }
-            fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
-            fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
+            fn decl() -> String { <$s>::decl() }
+            fn decl_concrete() -> String { <$s>::decl_concrete() }
+            fn output_path() -> Option<&'static std::path::Path> { <$s>::output_path() }
         }
     };
 }
@@ -1011,8 +1015,11 @@ impl_primitives! {
     Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr => "string",
     () => "null"
 }
+
 #[rustfmt::skip]
 pub(crate) use impl_primitives;
+#[rustfmt::skip]
+pub(crate) use impl_shadow;
 
 #[doc(hidden)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
