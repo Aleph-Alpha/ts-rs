@@ -3,7 +3,7 @@
 use ts_rs as reexport;
 
 #[derive(ts_rs::TS)]
-#[ts(crate_rename = "reexport")]
+#[ts(crate = "reexport")]
 struct TestStruct {
     hello: String,
     world: i32,

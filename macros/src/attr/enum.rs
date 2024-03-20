@@ -104,7 +104,7 @@ impl EnumAttr {
 
 impl_parse! {
     EnumAttr(input, out) {
-        "crate_rename" => out.crate_rename = Some(parse_assign_from_str(input)?),
+        "crate" => out.crate_rename = Some(parse_assign_from_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
         "rename_all_fields" => out.rename_all_fields = Some(parse_assign_inflection(input)?),

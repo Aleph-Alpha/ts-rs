@@ -90,7 +90,7 @@ impl From<VariantAttr> for StructAttr {
 
 impl_parse! {
     StructAttr(input, out) {
-        "crate_rename" => out.crate_rename = Some(parse_assign_from_str(input)?),
+        "crate" => out.crate_rename = Some(parse_assign_from_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
         "tag" => out.tag = Some(parse_assign_str(input)?),
