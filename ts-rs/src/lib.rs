@@ -132,7 +132,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub use ts_rs_macros::TS;
+pub use ts_rs_macros::{ts_rs_fn, TS};
 
 pub use crate::export::ExportError;
 use crate::typelist::TypeList;

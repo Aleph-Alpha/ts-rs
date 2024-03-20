@@ -2,12 +2,11 @@ use std::{collections::HashMap, convert::TryFrom};
 
 use syn::{Attribute, Ident, Result, Type, WherePredicate};
 
+use super::parse_bound;
 use crate::{
     attr::{parse_assign_str, parse_concrete, Inflection, VariantAttr},
     utils::{parse_attrs, parse_docs},
 };
-
-use super::parse_bound;
 
 #[derive(Default, Clone)]
 pub struct StructAttr {
@@ -58,9 +57,14 @@ impl StructAttr {
         self.tag = self.tag.take().or(tag);
         self.docs = docs;
         self.concrete.extend(concrete);
-        self.bound = self.bound
+        self.bound = self
+            .bound
             .take()
-            .map(|b| b.into_iter().chain(bound.clone().unwrap_or_default()).collect())
+            .map(|b| {
+                b.into_iter()
+                    .chain(bound.clone().unwrap_or_default())
+                    .collect()
+            })
             .or(bound);
     }
 }

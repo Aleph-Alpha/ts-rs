@@ -1,4 +1,4 @@
-use quote::{quote};
+use quote::quote;
 use syn::{FieldsUnnamed, Result};
 
 use crate::{

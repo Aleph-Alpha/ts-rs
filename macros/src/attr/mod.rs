@@ -2,15 +2,18 @@ use std::{collections::HashMap, convert::TryFrom};
 
 pub use field::*;
 pub use r#enum::*;
+pub use r#fn::*;
 pub use r#struct::*;
 use syn::{
     parse::{Parse, ParseStream},
-    Error, Lit, Result, Token, WherePredicate, punctuated::Punctuated,
+    punctuated::Punctuated,
+    Error, Lit, Result, Token, WherePredicate,
 };
 pub use variant::*;
 
 mod r#enum;
 mod field;
+mod r#fn;
 mod r#struct;
 mod variant;
 
@@ -57,6 +60,18 @@ impl Inflection {
             }
             Inflection::ScreamingSnake => string.to_screaming_snake_case(),
             Inflection::Kebab => string.to_kebab_case(),
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Lower => "lowercase",
+            Self::Upper => "UPPERCASE",
+            Self::Kebab => "kebab-case",
+            Self::Camel => "camelCase",
+            Self::Snake => "snake_case",
+            Self::Pascal => "PascalCase",
+            Self::ScreamingSnake => "SCREAMING_SNAKE_CASE",
         }
     }
 }
@@ -136,7 +151,7 @@ fn parse_bound(input: ParseStream) -> Result<Vec<WherePredicate>> {
             let parser = Punctuated::<WherePredicate, Token![,]>::parse_terminated;
 
             Ok(string.parse_with(parser)?.into_iter().collect())
-        },
+        }
         other => Err(Error::new(other.span(), "expected string")),
     }
 }

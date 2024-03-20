@@ -2,12 +2,11 @@ use std::collections::HashMap;
 
 use syn::{Attribute, Ident, Result, Type, WherePredicate};
 
+use super::parse_bound;
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
     utils::{parse_attrs, parse_docs},
 };
-
-use super::parse_bound;
 
 #[derive(Default)]
 pub struct EnumAttr {
@@ -87,9 +86,14 @@ impl EnumAttr {
         self.export_to = self.export_to.take().or(export_to);
         self.docs = docs;
         self.concrete.extend(concrete);
-        self.bound = self.bound
+        self.bound = self
+            .bound
             .take()
-            .map(|b| b.into_iter().chain(bound.clone().unwrap_or_default()).collect())
+            .map(|b| {
+                b.into_iter()
+                    .chain(bound.clone().unwrap_or_default())
+                    .collect()
+            })
             .or(bound);
     }
 }

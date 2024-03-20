@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{quote};
+use quote::quote;
 use syn::{Field, FieldsUnnamed, Result};
 
 use crate::{
