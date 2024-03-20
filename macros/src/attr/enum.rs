@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use proc_macro2::TokenStream;
-use syn::{Attribute, Ident, Result, Type, WherePredicate};
+use syn::{Attribute, Ident, Result, Type, WherePredicate, Path};
 
 use super::{parse_assign_from_str, parse_bound};
 use crate::{
@@ -11,7 +10,7 @@ use crate::{
 
 #[derive(Default)]
 pub struct EnumAttr {
-    pub crate_rename: Option<TokenStream>,
+    pub crate_rename: Option<Path>,
     pub rename_all: Option<Inflection>,
     pub rename_all_fields: Option<Inflection>,
     pub rename: Option<String>,

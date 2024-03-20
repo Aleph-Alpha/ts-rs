@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use syn::{Fields, ItemEnum, Variant};
+use syn::{Fields, ItemEnum, Variant, parse_quote, Path};
 
 use crate::{
     attr::{EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
@@ -10,6 +10,11 @@ use crate::{
 
 pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     let enum_attr: EnumAttr = EnumAttr::from_attrs(&s.attrs)?;
+
+    let crate_rename = enum_attr
+        .crate_rename
+        .clone()
+        .unwrap_or_else(|| parse_quote!(::ts_rs));
 
     let name = match &enum_attr.rename {
         Some(existing) => existing.clone(),
@@ -22,12 +27,12 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 
     if s.variants.is_empty() {
         return Ok(DerivedTS {
-            crate_rename: enum_attr.crate_rename,
+            crate_rename: crate_rename.clone(),
             ts_name: name,
             docs: enum_attr.docs,
             inline: quote!("never".to_owned()),
             inline_flattened: None,
-            dependencies: Dependencies::default(),
+            dependencies: Dependencies::new(crate_rename),
             export: enum_attr.export,
             export_to: enum_attr.export_to,
             concrete: enum_attr.concrete,
@@ -36,9 +41,10 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     }
 
     let mut formatted_variants = Vec::new();
-    let mut dependencies = Dependencies::default();
+    let mut dependencies = Dependencies::new(crate_rename.clone());
     for variant in &s.variants {
         format_variant(
+            &crate_rename,
             &mut formatted_variants,
             &mut dependencies,
             &enum_attr,
@@ -47,7 +53,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     }
 
     Ok(DerivedTS {
-        crate_rename: enum_attr.crate_rename,
+        crate_rename,
         inline: quote!([#(#formatted_variants),*].join(" | ")),
         inline_flattened: Some(quote!(
             format!("({})", [#(#formatted_variants),*].join(" | "))
@@ -63,6 +69,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 }
 
 fn format_variant(
+    crate_rename: &Path,
     formatted_variants: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     enum_attr: &EnumAttr,
@@ -122,11 +129,11 @@ fn format_variant(
                         }
                         (Some(type_override), None) => quote! { #type_override },
                         (None, Some(type_as)) => {
-                            quote!(<#type_as as ::ts_rs::TS>::name())
+                            quote!(<#type_as as #crate_rename::TS>::name())
                         }
                         (None, None) => {
                             let ty = &unnamed.unnamed[0].ty;
-                            quote!(<#ty as ::ts_rs::TS>::name())
+                            quote!(<#ty as #crate_rename::TS>::name())
                         }
                     };
 
@@ -173,11 +180,11 @@ fn format_variant(
                             }
                             (Some(type_override), None) => quote! { #type_override },
                             (None, Some(type_as)) => {
-                                quote!(<#type_as as ::ts_rs::TS>::name())
+                                quote!(<#type_as as #crate_rename::TS>::name())
                             }
                             (None, None) => {
                                 let ty = &unnamed.unnamed[0].ty;
-                                quote!(<#ty as ::ts_rs::TS>::name())
+                                quote!(<#ty as #crate_rename::TS>::name())
                             }
                         };
 
@@ -200,12 +207,13 @@ fn format_variant(
 // bindings for an empty enum (`never` in TS)
 fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
     let name = name.into();
+    let crate_rename = enum_attr.crate_rename.unwrap_or_else(|| parse_quote!(::ts_rs));
     DerivedTS {
-        crate_rename: enum_attr.crate_rename,
+        crate_rename: crate_rename.clone(),
         inline: quote!("never".to_owned()),
         docs: enum_attr.docs,
         inline_flattened: None,
-        dependencies: Dependencies::default(),
+        dependencies: Dependencies::new(crate_rename),
         export: enum_attr.export,
         export_to: enum_attr.export_to,
         ts_name: name,

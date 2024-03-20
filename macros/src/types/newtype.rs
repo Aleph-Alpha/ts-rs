@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{FieldsUnnamed, Result};
+use syn::{FieldsUnnamed, Result, parse_quote};
 
 use crate::{
     attr::{FieldAttr, StructAttr},
@@ -26,6 +26,11 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
         docs: _,
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
+    let crate_rename = attr
+        .crate_rename
+        .clone()
+        .unwrap_or_else(|| parse_quote!(::ts_rs));
+
     match (&rename_inner, skip, optional.optional, flatten) {
         (Some(_), ..) => syn_err_spanned!(fields; "`rename` is not applicable to newtype fields"),
         (_, true, ..) => return super::unit::null(attr, name),
@@ -44,7 +49,7 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
 
     let inner_ty = type_as.as_ref().unwrap_or(&inner.ty).clone();
 
-    let mut dependencies = Dependencies::default();
+    let mut dependencies = Dependencies::new(crate_rename.clone());
 
     match (type_override.is_none(), inline) {
         (false, _) => (),
@@ -54,12 +59,12 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
 
     let inline_def = match type_override {
         Some(ref o) => quote!(#o.to_owned()),
-        None if inline => quote!(<#inner_ty as ::ts_rs::TS>::inline()),
-        None => quote!(<#inner_ty as ::ts_rs::TS>::name()),
+        None if inline => quote!(<#inner_ty as #crate_rename::TS>::inline()),
+        None => quote!(<#inner_ty as #crate_rename::TS>::name()),
     };
 
     Ok(DerivedTS {
-        crate_rename: attr.crate_rename.clone(),
+        crate_rename,
         inline: inline_def,
         inline_flattened: None,
         docs: attr.docs.clone(),

@@ -4,7 +4,7 @@ use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::{
     spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result,
-    Type,
+    Type, Path,
 };
 
 use crate::deps::Dependencies;
@@ -226,6 +226,7 @@ mod warning {
 /// If a default type arg is encountered, it will be added to the dependencies.
 pub fn format_generics(
     deps: &mut Dependencies,
+    crate_rename: &Path,
     generics: &Generics,
     concrete: &HashMap<Ident, Type>,
 ) -> TokenStream {
@@ -241,7 +242,7 @@ pub fn format_generics(
                 if let Some(default) = &type_param.default {
                     deps.push(default);
                     Some(quote!(
-                        format!("{} = {}", #ty, <#default as ::ts_rs::TS>::name())
+                        format!("{} = {}", #ty, <#default as #crate_rename::TS>::name())
                     ))
                 } else {
                     Some(quote!(#ty.to_owned()))

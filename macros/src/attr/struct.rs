@@ -1,17 +1,16 @@
 use std::{collections::HashMap, convert::TryFrom};
 
-use proc_macro2::TokenStream;
-use syn::{Attribute, Ident, Result, Type, WherePredicate};
+use syn::{Attribute, Ident, Result, Type, WherePredicate, Path};
 
-use super::{parse_assign_from_str, parse_bound};
+use super::{parse_assign_from_str, parse_bound, parse_concrete};
 use crate::{
-    attr::{parse_assign_str, parse_concrete, Inflection, VariantAttr},
+    attr::{parse_assign_str, Inflection, VariantAttr},
     utils::{parse_attrs, parse_docs},
 };
 
 #[derive(Default, Clone)]
 pub struct StructAttr {
-    pub crate_rename: Option<TokenStream>,
+    pub crate_rename: Option<Path>,
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,
     pub export_to: Option<String>,

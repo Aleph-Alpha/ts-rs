@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, PathArguments, Result, Type};
+use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, PathArguments, Result, Type, parse_quote, Path};
 
 use crate::{
     attr::{FieldAttr, Inflection, Optional, StructAttr},
@@ -10,9 +10,14 @@ use crate::{
 };
 
 pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Result<DerivedTS> {
+    let crate_rename = attr
+        .crate_rename
+        .clone()
+        .unwrap_or_else(|| parse_quote!(::ts_rs));
+
     let mut formatted_fields = Vec::new();
     let mut flattened_fields = Vec::new();
-    let mut dependencies = Dependencies::default();
+    let mut dependencies = Dependencies::new(crate_rename.clone());
 
     if let Some(tag) = &attr.tag {
         let formatted = format!("{}: \"{}\",", tag, name);
@@ -23,6 +28,7 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
 
     for field in &fields.named {
         format_field(
+            &crate_rename,
             &mut formatted_fields,
             &mut flattened_fields,
             &mut dependencies,
@@ -43,7 +49,7 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
     };
 
     Ok(DerivedTS {
-        crate_rename: attr.crate_rename.clone(),
+        crate_rename,
         // the `replace` combines `{ ... } & { ... }` into just one `{ ... }`. Not necessary, but it
         // results in simpler type definitions.
         inline: quote!(#inline.replace(" } & { ", " ")),
@@ -69,6 +75,7 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
 // but for enums is
 // ({ /* variant data */ } | { /* variant data */ })
 fn format_field(
+    crate_rename: &Path,
     formatted_fields: &mut Vec<TokenStream>,
     flattened_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
@@ -125,7 +132,7 @@ fn format_field(
             _ => {}
         }
 
-        flattened_fields.push(quote!(<#ty as ::ts_rs::TS>::inline_flattened()));
+        flattened_fields.push(quote!(<#ty as #crate_rename::TS>::inline_flattened()));
         dependencies.append_from(ty);
         return Ok(());
     }
@@ -133,10 +140,10 @@ fn format_field(
     let formatted_ty = type_override.map(|t| quote!(#t)).unwrap_or_else(|| {
         if inline {
             dependencies.append_from(ty);
-            quote!(<#ty as ::ts_rs::TS>::inline())
+            quote!(<#ty as #crate_rename::TS>::inline())
         } else {
             dependencies.push(ty);
-            quote!(<#ty as ::ts_rs::TS>::name())
+            quote!(<#ty as #crate_rename::TS>::name())
         }
     });
     let field_name = to_ts_ident(field.ident.as_ref().unwrap());
