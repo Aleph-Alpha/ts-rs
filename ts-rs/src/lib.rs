@@ -863,15 +863,15 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     type WithoutGenerics = HashMap<Dummy, Dummy>;
 
     fn ident() -> String {
-        "Record".to_owned()
+        panic!()
     }
 
     fn name() -> String {
-        format!("Record<{}, {}>", K::name(), V::name())
+        format!("{{ [key: {}]: {} }}", K::name(), V::name())
     }
 
     fn inline() -> String {
-        format!("Record<{}, {}>", K::inline(), V::inline())
+        format!("{{ [key: {}]: {} }}", K::inline(), V::inline())
     }
 
     fn dependency_types() -> impl TypeList

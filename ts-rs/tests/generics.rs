@@ -85,7 +85,7 @@ fn test() {
 
     assert_eq!(
         Container::decl(),
-        "type Container = { foo: Generic<number>, bar: Array<Generic<number>>, baz: Record<string, Generic<string>>, };"
+        "type Container = { foo: Generic<number>, bar: Array<Generic<number>>, baz: { [key: string]: Generic<string> }, };"
     );
 }
 
