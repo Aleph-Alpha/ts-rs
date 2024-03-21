@@ -121,6 +121,9 @@ impl_parse! {
                 parse_assign_str(input)?;
             }
         },
-        "with" => out.0.using_serde_with = true,
+        "with" => {
+            parse_assign_str(input)?;
+            out.0.using_serde_with = true;
+        },
     }
 }
