@@ -14,7 +14,8 @@ struct Bar {
 }
 
 mod deser {
-    use serde::{Deserialize, Serialize, Serializer, Deserializer};
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
     use super::Foo;
 
     pub fn serialize<S: Serializer>(foo: &Foo, serializer: S) -> Result<S::Ok, S::Error> {
