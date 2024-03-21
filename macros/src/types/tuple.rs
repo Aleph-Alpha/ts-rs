@@ -62,6 +62,9 @@ fn format_field(
         optional,
         flatten,
         docs: _,
+
+        #[cfg(feature = "serde-compat")]
+        using_serde_with,
     } = FieldAttr::from_attrs(&field.attrs)?;
 
     if skip {
@@ -69,6 +72,14 @@ fn format_field(
     }
 
     let ty = type_as.as_ref().unwrap_or(&field.ty).clone();
+
+    #[cfg(feature = "serde-compat")]
+    if using_serde_with && !(type_as.is_some() || type_override.is_some()) {
+        syn_err_spanned!(
+            field;
+            r#"using `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]`"#
+        )
+    }
 
     if type_as.is_some() && type_override.is_some() {
         syn_err_spanned!(field; "`type` is not compatible with `as`")

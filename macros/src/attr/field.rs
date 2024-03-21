@@ -13,6 +13,9 @@ pub struct FieldAttr {
     pub optional: Optional,
     pub flatten: bool,
     pub docs: String,
+
+    #[cfg(feature = "serde-compat")]
+    pub using_serde_with: bool,
 }
 
 /// Indicates whether the field is marked with `#[ts(optional)]`.
@@ -52,6 +55,9 @@ impl FieldAttr {
             optional: Optional { optional, nullable },
             flatten,
             docs,
+
+            #[cfg(feature = "serde-compat")]
+            using_serde_with,
         }: FieldAttr,
     ) {
         self.rename = self.rename.take().or(rename);
@@ -65,6 +71,11 @@ impl FieldAttr {
         };
         self.flatten |= flatten;
         self.docs.push_str(&docs);
+
+        #[cfg(feature = "serde-compat")]
+        {
+            self.using_serde_with = self.using_serde_with || using_serde_with;
+        }
     }
 }
 
@@ -110,5 +121,6 @@ impl_parse! {
                 parse_assign_str(input)?;
             }
         },
+        "with" => out.0.using_serde_with = true,
     }
 }

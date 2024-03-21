@@ -24,9 +24,20 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
         optional,
         flatten,
         docs: _,
+
+        #[cfg(feature = "serde-compat")]
+        using_serde_with,
     } = FieldAttr::from_attrs(&inner.attrs)?;
 
     let crate_rename = attr.crate_rename();
+
+    #[cfg(feature = "serde-compat")]
+    if using_serde_with && !(type_as.is_some() || type_override.is_some()) {
+        syn_err_spanned!(
+            fields;
+            r#"using `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]`"#
+        )
+    }
 
     match (&rename_inner, skip, optional.optional, flatten) {
         (Some(_), ..) => syn_err_spanned!(fields; "`rename` is not applicable to newtype fields"),

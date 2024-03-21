@@ -138,11 +138,11 @@ pub use ts_rs_macros::TS;
 pub use crate::export::ExportError;
 use crate::typelist::TypeList;
 
-#[cfg(feature = "serde-json-impl")]
-mod serde_json;
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
+#[cfg(feature = "serde-json-impl")]
+mod serde_json;
 pub mod typelist;
 
 /// A type which can be represented in TypeScript.  
