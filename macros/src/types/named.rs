@@ -90,10 +90,20 @@ fn format_field(
         optional,
         flatten,
         docs,
+        #[cfg(feature = "serde-compat")]
+        using_serde_with,
     } = FieldAttr::from_attrs(&field.attrs)?;
 
     if skip {
         return Ok(());
+    }
+
+    #[cfg(feature = "serde-compat")]
+    if using_serde_with && !(type_as.is_some() || type_override.is_some()) {
+        syn_err_spanned!(
+            field;
+            r#"using `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]`"#
+        )
     }
 
     if type_as.is_some() && type_override.is_some() {

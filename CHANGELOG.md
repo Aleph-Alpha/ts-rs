@@ -1,7 +1,12 @@
 # master
+
 ### Breaking
+
+- `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]` ([#280](https://github.com/Aleph-Alpha/ts-rs/pull/280))
+
 ### Features
-- Add `#[ts(crate = "..")]` to allow usage of `#[derive(TS)]` from other proc-macro crates  ([#274](https://github.com/Aleph-Alpha/ts-rs/pull/274))
+
+- Add `#[ts(crate = "..")]` to allow usage of `#[derive(TS)]` from other proc-macro crates ([#274](https://github.com/Aleph-Alpha/ts-rs/pull/274))
 - Add support types from `serde_json` behind cargo feature `serde-json-impl` ([#276](https://github.com/Aleph-Alpha/ts-rs/pull/276))
 
 ### Fixes
