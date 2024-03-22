@@ -1,13 +1,15 @@
-use syn::{Attribute, Ident, Result};
+use syn::{Attribute, Ident, Result, Type};
 
 use super::EnumAttr;
 use crate::{
-    attr::{parse_assign_inflection, parse_assign_str, Inflection},
+    attr::{parse_assign_from_str, parse_assign_inflection, parse_assign_str, Inflection},
     utils::parse_attrs,
 };
 
 #[derive(Default)]
 pub struct VariantAttr {
+    pub type_as: Option<Type>,
+    pub type_override: Option<String>,
     pub rename: Option<String>,
     pub rename_all: Option<Inflection>,
     pub inline: bool,
@@ -35,6 +37,8 @@ impl VariantAttr {
     fn merge(
         &mut self,
         VariantAttr {
+            type_as,
+            type_override,
             rename,
             rename_all,
             inline,
@@ -42,6 +46,8 @@ impl VariantAttr {
             untagged,
         }: VariantAttr,
     ) {
+        self.type_as = self.type_as.take().or(type_as);
+        self.type_override = self.type_override.take().or(type_override);
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
         self.inline = self.inline || inline;
@@ -52,6 +58,8 @@ impl VariantAttr {
 
 impl_parse! {
     VariantAttr(input, out) {
+        "as" => out.type_as = Some(parse_assign_from_str(input)?),
+        "type" => out.type_override = Some(parse_assign_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
         "inline" => out.inline = true,
