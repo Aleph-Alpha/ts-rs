@@ -61,5 +61,5 @@ fn inlined_value() {
 #[derive(TS)]
 #[ts(export, export_to = "serde_json_impl/")]
 struct Simple {
-    json: serde_json::Value
+    json: serde_json::Value,
 }
