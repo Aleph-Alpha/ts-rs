@@ -6,6 +6,8 @@
 
 ### Fixes
 
+- Macro expansion for types with generic parameters now works without the `TS` trait in scope ([#281](https://github.com/Aleph-Alpha/ts-rs/pull/281))
+
 # v8.0.0
 
 ### Breaking
