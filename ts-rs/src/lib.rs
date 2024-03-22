@@ -40,7 +40,7 @@
 //! ## get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "8.0"
+//! ts-rs = "8.1"
 //! ```
 //!
 //! ```rust
