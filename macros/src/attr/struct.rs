@@ -3,9 +3,8 @@ use std::collections::HashMap;
 use syn::{parse_quote, Attribute, Ident, Path, Result, Type, WherePredicate};
 
 use super::{parse_assign_from_str, parse_bound, parse_concrete};
-use crate::attr::EnumAttr;
 use crate::{
-    attr::{parse_assign_str, Inflection, VariantAttr},
+    attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
     utils::{parse_attrs, parse_docs},
 };
 
