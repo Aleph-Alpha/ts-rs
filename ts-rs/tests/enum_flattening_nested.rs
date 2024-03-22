@@ -103,15 +103,30 @@ struct NestedAdjecently {
     u: u32,
 }
 
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[ts(export, export_to = "enum_flattening_nested/externally_tagged/")]
+struct NestedAdjecentlyLonely {
+    #[cfg_attr(feature = "serde-compat", serde(flatten))]
+    #[cfg_attr(not(feature = "serde-compat"), ts(flatten))]
+    a: FooAdjecently,
+}
+
 #[test]
 fn adjacently_tagged() {
     assert_eq!(
         FooAdjecently::inline(),
         r#"{ "type": "Baz", "stuff": { a: number, a2: string, } } | { "type": "Biz", "stuff": { b: boolean, } } | { c: string, d: number | null, }"#
     );
+
     assert_eq!(
         NestedAdjecently::inline(),
         r#"{ u: number, } & ({ "type": "Baz", "stuff": { a: number, a2: string, } } | { "type": "Biz", "stuff": { b: boolean, } } | { c: string, d: number | null, })"#
+    );
+
+    assert_eq!(
+        NestedAdjecentlyLonely::inline(),
+        r#"{ "type": "Baz", "stuff": { a: number, a2: string, } } | { "type": "Biz", "stuff": { b: boolean, } } | { c: string, d: number | null, }"#
     );
 }
 
@@ -144,15 +159,30 @@ struct NestedInternally {
     u: u32,
 }
 
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[ts(export, export_to = "enum_flattening_nested/externally_tagged/")]
+struct NestedInternallyLonely {
+    #[cfg_attr(feature = "serde-compat", serde(flatten))]
+    #[cfg_attr(not(feature = "serde-compat"), ts(flatten))]
+    a: FooInternally,
+}
+
 #[test]
 fn internally_tagged() {
     assert_eq!(
         FooInternally::inline(),
         r#"{ "type": "Baz", a: number, a2: string, } | { "type": "Biz", b: boolean, } | { "type": "Buz", c: string, d: number | null, }"#
     );
+
     assert_eq!(
         NestedInternally::inline(),
         r#"{ u: number, } & ({ "type": "Baz", a: number, a2: string, } | { "type": "Biz", b: boolean, } | { "type": "Buz", c: string, d: number | null, })"#
+    );
+
+    assert_eq!(
+        NestedInternallyLonely::inline(),
+        r#"{ "type": "Baz", a: number, a2: string, } | { "type": "Biz", b: boolean, } | { "type": "Buz", c: string, d: number | null, }"#
     );
 }
 
@@ -166,15 +196,6 @@ struct FooUntagged {
 }
 
 #[derive(TS)]
-#[cfg_attr(feature = "serde-compat", derive(Serialize))]
-struct NestedUntagged {
-    #[cfg_attr(feature = "serde-compat", serde(flatten))]
-    #[cfg_attr(not(feature = "serde-compat"), ts(flatten))]
-    a: FooUntagged,
-    u: u32,
-}
-
-#[derive(TS)]
 #[ts(export, export_to = "enum_flattening_nested/untagged/")]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
 #[cfg_attr(feature = "serde-compat", serde(untagged))]
@@ -185,14 +206,38 @@ enum BarUntagged {
     Buz { c: String },
 }
 
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+struct NestedUntagged {
+    #[cfg_attr(feature = "serde-compat", serde(flatten))]
+    #[cfg_attr(not(feature = "serde-compat"), ts(flatten))]
+    a: FooUntagged,
+    u: u32,
+}
+
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[ts(export, export_to = "enum_flattening_nested/externally_tagged/")]
+struct NestedUntaggedLonely {
+    #[cfg_attr(feature = "serde-compat", serde(flatten))]
+    #[cfg_attr(not(feature = "serde-compat"), ts(flatten))]
+    a: FooUntagged,
+}
+
 #[test]
 fn untagged() {
     assert_eq!(
         FooUntagged::inline(),
         r#"{ a: number, a2: string, } | { b: boolean, } | { c: string, }"#
     );
+
     assert_eq!(
         NestedUntagged::inline(),
         r#"{ u: number, } & ({ a: number, a2: string, } | { b: boolean, } | { c: string, })"#
+    );
+
+    assert_eq!(
+        NestedUntaggedLonely::inline(),
+        r#"{ a: number, a2: string, } | { b: boolean, } | { c: string, }"#
     );
 }
