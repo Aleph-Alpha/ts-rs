@@ -1,12 +1,16 @@
 # master
+
 ### Breaking
+
 ### Features
-- Add `#[ts(crate = "..")]` to allow usage of `#[derive(TS)]` from other proc-macro crates  ([#274](https://github.com/Aleph-Alpha/ts-rs/pull/274))
+
+- Add `#[ts(crate = "..")]` to allow usage of `#[derive(TS)]` from other proc-macro crates ([#274](https://github.com/Aleph-Alpha/ts-rs/pull/274))
 - Add support types from `serde_json` behind cargo feature `serde-json-impl` ([#276](https://github.com/Aleph-Alpha/ts-rs/pull/276))
 
 ### Fixes
 
 - Macro expansion for types with generic parameters now works without the `TS` trait in scope ([#281](https://github.com/Aleph-Alpha/ts-rs/pull/281))
+- Fix enum flattening a struct that contains a flattened enum ([#282](https://github.com/Aleph-Alpha/ts-rs/pull/282))
 
 # v8.0.0
 
