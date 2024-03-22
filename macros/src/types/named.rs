@@ -47,12 +47,19 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
         (_, _) => quote!(format!("{{ {} }} & {}", #fields, #flattened)),
     };
 
+    let inline_flattened = match (formatted_fields.len(), flattened_fields.len()) {
+        (0, 0) => quote!("{  }".to_owned()),
+        (_, 0) => quote!(format!("{{ {} }}", #fields)),
+        (0, _) => quote!(#flattened),
+        (_, _) => quote!(format!("{{ {} }} & {}", #fields, #flattened)),
+    };
+
     Ok(DerivedTS {
         crate_rename,
         // the `replace` combines `{ ... } & { ... }` into just one `{ ... }`. Not necessary, but it
         // results in simpler type definitions.
         inline: quote!(#inline.replace(" } & { ", " ")),
-        inline_flattened: Some(quote!(format!("{{ {} }}", #fields))),
+        inline_flattened: Some(quote!(#inline_flattened.replace(" } & { ", " "))),
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
