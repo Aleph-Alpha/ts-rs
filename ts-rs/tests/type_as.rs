@@ -58,12 +58,30 @@ enum OverrideEnum {
     },
 }
 
+#[derive(TS)]
+#[ts(export, export_to = "type_as/")]
+enum OverrideVariant {
+    #[ts(as = "ExternalTypeDef")]
+    A(Instant),
+    B {
+        #[ts(as = "ExternalTypeDef")]
+        x: Unsupported,
+        y: i32,
+        z: i32,
+    },
+}
+
 #[test]
 fn enum_variants() {
     assert_eq!(
         OverrideEnum::inline(),
         r#"{ "A": ExternalTypeDef } | { "B": { x: ExternalTypeDef, y: number, z: number, } }"#
-    )
+    );
+
+    assert_eq!(
+        OverrideVariant::inline(),
+        r#"{ "A": ExternalTypeDef } | { "B": { x: ExternalTypeDef, y: number, z: number, } }"#
+    );
 }
 
 #[derive(TS)]
