@@ -11,6 +11,7 @@ use crate::{
 #[derive(Default, Clone)]
 pub struct StructAttr {
     crate_rename: Option<Path>,
+    pub type_override: Option<String>,
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,
     pub export_to: Option<String>,
@@ -58,6 +59,7 @@ impl StructAttr {
         &mut self,
         StructAttr {
             crate_rename,
+            type_override,
             rename_all,
             rename,
             export,
@@ -69,6 +71,7 @@ impl StructAttr {
         }: StructAttr,
     ) {
         self.crate_rename = self.crate_rename.take().or(crate_rename);
+        self.type_override = self.type_override.take().or(type_override);
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
         self.export_to = self.export_to.take().or(export_to);
@@ -91,6 +94,7 @@ impl StructAttr {
 impl_parse! {
     StructAttr(input, out) {
         "crate" => out.crate_rename = Some(parse_assign_from_str(input)?),
+        "type" => out.type_override = Some(parse_assign_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
         "tag" => out.tag = Some(parse_assign_str(input)?),
