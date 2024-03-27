@@ -184,6 +184,7 @@ impl DerivedTS {
         quote! {
             #[cfg(test)]
             #[test]
+            #[ignore = "To export your ts-rs bindings, run `cargo test export_bindings_ -- --ignored`"]
             fn #test_fn() {
                 #ty::export_all().expect("could not export type");
             }
