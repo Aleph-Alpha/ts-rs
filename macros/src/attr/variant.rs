@@ -21,14 +21,8 @@ pub struct SerdeVariantAttr(VariantAttr);
 
 impl VariantAttr {
     pub fn new(attrs: &[Attribute], enum_attr: &EnumAttr) -> Result<Self> {
-        let mut result = Self::default();
-        parse_attrs(attrs)?.for_each(|a| result.merge(a));
+        let mut result = Self::from_attrs(attrs)?;
         result.rename_all = result.rename_all.or(enum_attr.rename_all_fields);
-        #[cfg(feature = "serde-compat")]
-        if !result.skip {
-            crate::utils::parse_serde_attrs::<SerdeVariantAttr>(attrs)
-                .for_each(|a| result.merge(a.0));
-        }
         Ok(result)
     }
 
