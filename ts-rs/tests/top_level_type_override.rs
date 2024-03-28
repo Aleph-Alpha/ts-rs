@@ -19,7 +19,6 @@ pub fn top_level_type_override_enum() {
 #[derive(TS)]
 #[ts(export, export_to = "top_level_type_override/")]
 #[ts(type = "string")]
-#[non_exhaustive]
 pub struct DataUrl {
     pub mime: String,
     pub contents: Vec<u8>,
