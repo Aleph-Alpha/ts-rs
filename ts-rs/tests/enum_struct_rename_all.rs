@@ -44,12 +44,16 @@ pub enum TaskStatus2 {
         stdout: String,
         stderr: String,
     },
+
+    A(i32),
+    B(i32, i32),
+    C,
 }
 
 #[test]
 pub fn enum_struct_rename_all_fields() {
     assert_eq!(
         TaskStatus2::inline(),
-        r#"{ "Running": { "started-time": string, } } | { "Terminated": { status: number, stdout: string, stderr: string, } }"#
+        r#"{ "Running": { "started-time": string, } } | { "Terminated": { status: number, stdout: string, stderr: string, } } | { "A": number } | { "B": [number, number] } | "C""#
     )
 }

@@ -71,7 +71,10 @@ fn format_variant(
     variant: &Variant,
 ) -> syn::Result<()> {
     let crate_rename = enum_attr.crate_rename();
-    let variant_attr = VariantAttr::new(&variant.attrs, enum_attr)?;
+    let variant_attr = match variant.fields {
+        Fields::Unit | Fields::Unnamed(_) => VariantAttr::from_attrs(&variant.attrs)?,
+        Fields::Named(_) => VariantAttr::new(&variant.attrs, enum_attr)?,
+    };
 
     if variant_attr.skip {
         return Ok(());
