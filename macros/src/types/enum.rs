@@ -71,6 +71,10 @@ fn format_variant(
     variant: &Variant,
 ) -> syn::Result<()> {
     let crate_rename = enum_attr.crate_rename();
+
+    // If `variant.fields` is not a `Fields::Named(_)` the `rename_all_fields`
+    // attribute must be ignored to prevent a `rename_all` from getting to
+    // the newtype, tuple or unit formatting, which would cause an error
     let variant_attr = match variant.fields {
         Fields::Unit | Fields::Unnamed(_) => VariantAttr::from_attrs(&variant.attrs)?,
         Fields::Named(_) => VariantAttr::new(&variant.attrs, enum_attr)?,
