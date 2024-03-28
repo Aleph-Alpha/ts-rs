@@ -20,9 +20,9 @@ pub struct EnumAttr {
     pub docs: String,
     pub concrete: HashMap<Ident, Type>,
     pub bound: Option<Vec<WherePredicate>>,
-    tag: Option<String>,
-    untagged: bool,
-    content: Option<String>,
+    pub tag: Option<String>,
+    pub untagged: bool,
+    pub content: Option<String>,
 }
 
 #[cfg(feature = "serde-compat")]
