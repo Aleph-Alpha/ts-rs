@@ -1,6 +1,7 @@
 # master
 ### Breaking
 ### Features
+- Add support for `#[ts(type = "..")]` directly on structs and enums ([#286](https://github.com/Aleph-Alpha/ts-rs/pull/286))
 ### Fixes
 
 
