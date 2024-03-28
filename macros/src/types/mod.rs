@@ -19,8 +19,8 @@ pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
 
 fn type_def(attr: &StructAttr, ident: &Ident, fields: &Fields) -> Result<DerivedTS> {
     let name = attr.rename.clone().unwrap_or_else(|| to_ts_ident(ident));
-    if let Some(t_o) = &attr.type_override {
-        return type_override::type_override_struct(attr, &name, t_o);
+    if let Some(attr_type_override) = &attr.type_override {
+        return type_override::type_override_struct(attr, &name, attr_type_override);
     }
 
     match fields {

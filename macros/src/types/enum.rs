@@ -19,8 +19,8 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         None => s.ident.to_string(),
     };
 
-    if let Some(t_o) = &enum_attr.type_override {
-        return type_override::type_override_enum(&enum_attr, &name, t_o);
+    if let Some(attr_type_override) = &enum_attr.type_override {
+        return type_override::type_override_enum(&enum_attr, &name, attr_type_override);
     }
 
     if s.variants.is_empty() {
