@@ -6,6 +6,7 @@ mod r#enum;
 mod named;
 mod newtype;
 mod tuple;
+mod type_override;
 mod unit;
 
 pub(crate) use r#enum::r#enum_def;
@@ -18,6 +19,10 @@ pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
 
 fn type_def(attr: &StructAttr, ident: &Ident, fields: &Fields) -> Result<DerivedTS> {
     let name = attr.rename.clone().unwrap_or_else(|| to_ts_ident(ident));
+    if let Some(attr_type_override) = &attr.type_override {
+        return type_override::type_override_struct(attr, &name, attr_type_override);
+    }
+
     match fields {
         Fields::Named(named) => match named.named.len() {
             0 => unit::empty_object(attr, &name),

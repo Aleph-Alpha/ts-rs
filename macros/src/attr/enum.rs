@@ -11,6 +11,7 @@ use crate::{
 #[derive(Default)]
 pub struct EnumAttr {
     crate_rename: Option<Path>,
+    pub type_override: Option<String>,
     pub rename_all: Option<Inflection>,
     pub rename_all_fields: Option<Inflection>,
     pub rename: Option<String>,
@@ -19,9 +20,9 @@ pub struct EnumAttr {
     pub docs: String,
     pub concrete: HashMap<Ident, Type>,
     pub bound: Option<Vec<WherePredicate>>,
-    tag: Option<String>,
-    untagged: bool,
-    content: Option<String>,
+    pub tag: Option<String>,
+    pub untagged: bool,
+    pub content: Option<String>,
 }
 
 #[cfg(feature = "serde-compat")]
@@ -71,6 +72,7 @@ impl EnumAttr {
         &mut self,
         EnumAttr {
             crate_rename,
+            type_override,
             rename_all,
             rename_all_fields,
             rename,
@@ -85,6 +87,7 @@ impl EnumAttr {
         }: EnumAttr,
     ) {
         self.crate_rename = self.crate_rename.take().or(crate_rename);
+        self.type_override = self.type_override.take().or(type_override);
         self.rename = self.rename.take().or(rename);
         self.rename_all = self.rename_all.take().or(rename_all);
         self.rename_all_fields = self.rename_all_fields.take().or(rename_all_fields);
@@ -110,6 +113,7 @@ impl EnumAttr {
 impl_parse! {
     EnumAttr(input, out) {
         "crate" => out.crate_rename = Some(parse_assign_from_str(input)?),
+        "type" => out.type_override = Some(parse_assign_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
         "rename_all_fields" => out.rename_all_fields = Some(parse_assign_inflection(input)?),
