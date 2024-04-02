@@ -21,7 +21,7 @@ pub struct SerdeVariantAttr(VariantAttr);
 
 impl VariantAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
-        let mut result = parse_attrs(attrs)?.fold(Self::default(), |acc, cur| acc.merge(cur));
+        let mut result = parse_attrs::<Self>(attrs)?;
         #[cfg(feature = "serde-compat")]
         if !result.skip {
             result = crate::utils::parse_serde_attrs::<SerdeVariantAttr>(attrs)

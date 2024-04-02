@@ -26,7 +26,7 @@ pub enum Inflection {
     Kebab,
 }
 
-pub(super) trait Attr {
+pub(super) trait Attr: Default {
     type Item;
 
     fn merge(self, other: Self) -> Self;

@@ -51,7 +51,7 @@ impl EnumAttr {
     }
 
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
-        let mut result = parse_attrs(attrs)?.fold(Self::default(), |acc, cur| acc.merge(cur));
+        let mut result = parse_attrs::<Self>(attrs)?;
 
         let docs = parse_docs(attrs)?;
         result.docs = docs;

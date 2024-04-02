@@ -7,6 +7,7 @@ use syn::{
     Result, Type,
 };
 
+use super::attr::Attr;
 use crate::deps::Dependencies;
 
 macro_rules! syn_err {
@@ -96,16 +97,17 @@ pub fn raw_name_to_ts_field(value: String) -> String {
 }
 
 /// Parse all `#[ts(..)]` attributes from the given slice.
-pub fn parse_attrs<'a, A>(attrs: &'a [Attribute]) -> Result<impl Iterator<Item = A>>
+pub fn parse_attrs<'a, A>(attrs: &'a [Attribute]) -> Result<A>
 where
-    A: TryFrom<&'a Attribute, Error = Error>,
+    A: TryFrom<&'a Attribute, Error = Error> + Attr,
 {
     Ok(attrs
         .iter()
         .filter(|a| a.path().is_ident("ts"))
         .map(A::try_from)
         .collect::<Result<Vec<A>>>()?
-        .into_iter())
+        .into_iter()
+        .fold(A::default(), |acc, cur| acc.merge(cur)))
 }
 
 /// Parse all `#[serde(..)]` attributes from the given slice.

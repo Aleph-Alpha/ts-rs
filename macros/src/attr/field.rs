@@ -30,7 +30,7 @@ pub struct SerdeFieldAttr(FieldAttr);
 
 impl FieldAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
-        let mut result = parse_attrs(attrs)?.fold(Self::default(), |acc, cur| acc.merge(cur));
+        let mut result = parse_attrs::<Self>(attrs)?;
 
         result.docs = parse_docs(attrs)?;
 
