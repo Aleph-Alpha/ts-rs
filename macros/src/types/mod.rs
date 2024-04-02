@@ -10,6 +10,7 @@ mod r#enum;
 mod named;
 mod newtype;
 mod tuple;
+mod type_as;
 mod type_override;
 mod unit;
 
@@ -27,6 +28,9 @@ fn type_def(attr: &StructAttr, ident: &Ident, fields: &Fields) -> Result<Derived
     let name = attr.rename.clone().unwrap_or_else(|| to_ts_ident(ident));
     if let Some(attr_type_override) = &attr.type_override {
         return type_override::type_override_struct(attr, &name, attr_type_override);
+    }
+    if let Some(attr_type_as) = &attr.type_as {
+        return type_as::type_as_struct(attr, &name, attr_type_as);
     }
 
     match fields {

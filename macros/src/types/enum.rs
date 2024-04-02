@@ -5,7 +5,7 @@ use syn::{Fields, ItemEnum, Variant};
 use crate::{
     attr::{Attr, EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
     deps::Dependencies,
-    types::{self, type_override},
+    types::{self, type_as, type_override},
     DerivedTS,
 };
 
@@ -23,6 +23,9 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 
     if let Some(attr_type_override) = &enum_attr.type_override {
         return type_override::type_override_enum(&enum_attr, &name, attr_type_override);
+    }
+    if let Some(attr_type_as) = &enum_attr.type_as {
+        return type_as::type_as_enum(&enum_attr, &name, attr_type_as);
     }
 
     if s.variants.is_empty() {

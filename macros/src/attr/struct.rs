@@ -11,6 +11,7 @@ use crate::{
 #[derive(Default, Clone)]
 pub struct StructAttr {
     crate_rename: Option<Path>,
+    pub type_as: Option<Type>,
     pub type_override: Option<String>,
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,
@@ -63,6 +64,7 @@ impl Attr for StructAttr {
     fn merge(self, other: Self) -> Self {
         Self {
             crate_rename: self.crate_rename.or(other.crate_rename),
+            type_as: self.type_as.or(other.type_as),
             type_override: self.type_override.or(other.type_override),
             rename: self.rename.or(other.rename),
             rename_all: self.rename_all.or(other.rename_all),
@@ -81,6 +83,10 @@ impl Attr for StructAttr {
 
     fn assert_validity(&self, item: &Self::Item) -> Result<()> {
         if self.type_override.is_some() {
+            if self.type_as.is_some() {
+                syn_err!("`as` is not compatible with `type`");
+            }
+
             if self.rename_all.is_some() {
                 syn_err!("`rename_all` is not compatible with `type`");
             }
@@ -115,6 +121,7 @@ impl ContainerAttr for StructAttr {
 impl_parse! {
     StructAttr(input, out) {
         "crate" => out.crate_rename = Some(parse_assign_from_str(input)?),
+        "as" => out.type_as = Some(parse_assign_from_str(input)?),
         "type" => out.type_override = Some(parse_assign_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),

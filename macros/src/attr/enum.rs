@@ -11,6 +11,7 @@ use crate::{
 #[derive(Default)]
 pub struct EnumAttr {
     crate_rename: Option<Path>,
+    pub type_as: Option<Type>,
     pub type_override: Option<String>,
     pub rename_all: Option<Inflection>,
     pub rename_all_fields: Option<Inflection>,
@@ -75,6 +76,7 @@ impl Attr for EnumAttr {
     fn merge(self, other: Self) -> Self {
         Self {
             crate_rename: self.crate_rename.or(other.crate_rename),
+            type_as: self.type_as.or(other.type_as),
             type_override: self.type_override.or(other.type_override),
             rename: self.rename.or(other.rename),
             rename_all: self.rename_all.or(other.rename_all),
@@ -96,6 +98,13 @@ impl Attr for EnumAttr {
 
     fn assert_validity(&self, item: &Self::Item) -> Result<()> {
         if self.type_override.is_some() {
+            if self.type_as.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`as` is not compatible with `type`"
+                );
+            }
+          
             if self.rename_all.is_some() {
                 syn_err_spanned!(
                     item;
@@ -163,6 +172,7 @@ impl ContainerAttr for EnumAttr {
 impl_parse! {
     EnumAttr(input, out) {
         "crate" => out.crate_rename = Some(parse_assign_from_str(input)?),
+        "as" => out.type_as = Some(parse_assign_from_str(input)?),
         "type" => out.type_override = Some(parse_assign_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
