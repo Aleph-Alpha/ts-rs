@@ -47,6 +47,9 @@ pub(crate) fn type_as_enum(attr: &EnumAttr, name: &str, type_as: &Type) -> Resul
     if attr.untagged {
         syn_err!("`untagged` is not compatible with `as`");
     }
+    if attr.type_override.is_some() {
+        syn_err!("`type` is not compatible with `as`");
+    }
 
     let crate_rename = attr.crate_rename();
 

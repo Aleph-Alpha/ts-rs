@@ -55,6 +55,9 @@ pub(crate) fn type_override_enum(
     if attr.untagged {
         syn_err!("`untagged` is not compatible with `type`");
     }
+    if attr.type_as.is_some() {
+        syn_err!("`type` is not compatible with `as`");
+    }
 
     let crate_rename = attr.crate_rename();
 
