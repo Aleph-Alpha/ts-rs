@@ -96,6 +96,16 @@ impl Attr for StructAttr {
             }
         }
 
+        if self.type_as.is_some() {
+            if self.tag.is_some() {
+                syn_err!("`tag` is not compatible with `as`");
+            }
+
+            if self.rename_all.is_some() {
+                syn_err!("`rename_all` is not compatible with `as`");
+            }
+        }
+
         if !matches!(item, Fields::Named(_)) {
             if self.tag.is_some() {
                 syn_err!("`tag` cannot be used with unit or tuple structs");

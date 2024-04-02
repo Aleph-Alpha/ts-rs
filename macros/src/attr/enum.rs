@@ -141,6 +141,43 @@ impl Attr for EnumAttr {
             }
         }
 
+        if self.type_as.is_some() {
+            if self.rename_all.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`rename_all` is not compatible with `as`"
+                );
+            }
+
+            if self.rename_all_fields.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`rename_all_fields` is not compatible with `as`"
+                );
+            }
+
+            if self.tag.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`tag` is not compatible with `as`"
+                );
+            }
+
+            if self.content.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`content` is not compatible with `as`"
+                );
+            }
+
+            if self.untagged {
+                syn_err_spanned!(
+                    item;
+                    "`untagged` is not compatible with `as`"
+                );
+            }
+        }
+
         match (self.untagged, &self.tag, &self.content) {
             (true, Some(_), None) => syn_err_spanned!(
                 item;
