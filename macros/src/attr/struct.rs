@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use syn::{parse_quote, Attribute, Ident, Path, Result, Type, WherePredicate};
+use syn::{parse_quote, Attribute, Fields, Ident, Path, Result, Type, WherePredicate};
 
-use super::{parse_assign_from_str, parse_bound, parse_concrete};
+use super::{parse_assign_from_str, parse_bound, parse_concrete, Attr, ContainerAttr};
 use crate::{
     attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
     utils::{parse_attrs, parse_docs},
@@ -28,66 +28,87 @@ pub struct SerdeStructAttr(StructAttr);
 
 impl StructAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
-        let mut result = Self::default();
-        parse_attrs(attrs)?.for_each(|a| result.merge(a));
+        let mut result = parse_attrs(attrs)?.fold(Self::default(), |acc, cur| acc.merge(cur));
 
         let docs = parse_docs(attrs)?;
         result.docs = docs;
 
         #[cfg(feature = "serde-compat")]
-        crate::utils::parse_serde_attrs::<SerdeStructAttr>(attrs).for_each(|a| result.merge(a.0));
+        let result = crate::utils::parse_serde_attrs::<SerdeStructAttr>(attrs)
+            .fold(result, |acc, cur| acc.merge(cur.0));
         Ok(result)
     }
 
-    pub fn from_variant(enum_attr: &EnumAttr, variant_attr: &VariantAttr) -> Self {
+    pub fn from_variant(
+        enum_attr: &EnumAttr,
+        variant_attr: &VariantAttr,
+        variant_fields: &Fields,
+    ) -> Self {
         Self {
             crate_rename: Some(enum_attr.crate_rename()),
             rename: variant_attr.rename.clone(),
-            rename_all: variant_attr.rename_all,
+            rename_all: variant_attr.rename_all.or(match variant_fields {
+                Fields::Named(_) => enum_attr.rename_all_fields,
+                Fields::Unnamed(_) | Fields::Unit => None,
+            }),
             // inline and skip are not supported on StructAttr
             ..Self::default()
         }
     }
+}
 
-    pub fn crate_rename(&self) -> Path {
+impl Attr for StructAttr {
+    type Item = Fields;
+
+    fn merge(self, other: Self) -> Self {
+        Self {
+            crate_rename: self.crate_rename.or(other.crate_rename),
+            type_override: self.type_override.or(other.type_override),
+            rename: self.rename.or(other.rename),
+            rename_all: self.rename_all.or(other.rename_all),
+            export_to: self.export_to.or(other.export_to),
+            export: self.export || other.export,
+            tag: self.tag.or(other.tag),
+            docs: other.docs,
+            concrete: self.concrete.into_iter().chain(other.concrete).collect(),
+            bound: match (self.bound, other.bound) {
+                (Some(a), Some(b)) => Some(a.into_iter().chain(b).collect()),
+                (Some(bound), None) | (None, Some(bound)) => Some(bound),
+                (None, None) => None,
+            },
+        }
+    }
+
+    fn assert_validity(&self, item: &Self::Item) -> Result<()> {
+        if self.type_override.is_some() {
+            if self.rename_all.is_some() {
+                syn_err!("`rename_all` is not compatible with `type`");
+            }
+
+            if self.tag.is_some() {
+                syn_err!("`tag` is not compatible with `type`");
+            }
+        }
+
+        if !matches!(item, Fields::Named(_)) {
+            if self.tag.is_some() {
+                syn_err!("`tag` cannot be used with unit or tuple structs");
+            }
+
+            if self.rename_all.is_some() {
+                syn_err!("`rename_all` cannot be used with unit or tuple structs");
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl ContainerAttr for StructAttr {
+    fn crate_rename(&self) -> Path {
         self.crate_rename
             .clone()
             .unwrap_or_else(|| parse_quote!(::ts_rs))
-    }
-
-    fn merge(
-        &mut self,
-        StructAttr {
-            crate_rename,
-            type_override,
-            rename_all,
-            rename,
-            export,
-            export_to,
-            tag,
-            docs,
-            concrete,
-            bound,
-        }: StructAttr,
-    ) {
-        self.crate_rename = self.crate_rename.take().or(crate_rename);
-        self.type_override = self.type_override.take().or(type_override);
-        self.rename = self.rename.take().or(rename);
-        self.rename_all = self.rename_all.take().or(rename_all);
-        self.export_to = self.export_to.take().or(export_to);
-        self.export = self.export || export;
-        self.tag = self.tag.take().or(tag);
-        self.docs = docs;
-        self.concrete.extend(concrete);
-        self.bound = self
-            .bound
-            .take()
-            .map(|b| {
-                b.into_iter()
-                    .chain(bound.clone().unwrap_or_default())
-                    .collect()
-            })
-            .or(bound);
     }
 }
 

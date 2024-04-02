@@ -1,6 +1,6 @@
-use syn::{Attribute, Ident, Result, Type};
+use syn::{Attribute, Field, Ident, Result, Type};
 
-use super::{parse_assign_from_str, parse_assign_str};
+use super::{parse_assign_from_str, parse_assign_str, Attr};
 use crate::utils::{parse_attrs, parse_docs};
 
 #[derive(Default)]
@@ -30,41 +30,119 @@ pub struct SerdeFieldAttr(FieldAttr);
 
 impl FieldAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
-        let mut result = Self::default();
-        parse_attrs(attrs)?.for_each(|a| result.merge(a));
+        let mut result = parse_attrs(attrs)?.fold(Self::default(), |acc, cur| acc.merge(cur));
+
         result.docs = parse_docs(attrs)?;
+
         #[cfg(feature = "serde-compat")]
         if !result.skip {
-            crate::utils::parse_serde_attrs::<SerdeFieldAttr>(attrs)
-                .for_each(|a| result.merge(a.0));
+            result = crate::utils::parse_serde_attrs::<SerdeFieldAttr>(attrs)
+                .fold(result, |acc, cur| acc.merge(cur.0));
         }
+
         Ok(result)
     }
+}
 
-    fn merge(
-        &mut self,
-        FieldAttr {
-            type_as,
-            type_override,
-            rename,
-            inline,
-            skip,
-            optional: Optional { optional, nullable },
-            flatten,
-            docs,
-        }: FieldAttr,
-    ) {
-        self.rename = self.rename.take().or(rename);
-        self.type_as = self.type_as.take().or(type_as);
-        self.type_override = self.type_override.take().or(type_override);
-        self.inline = self.inline || inline;
-        self.skip = self.skip || skip;
-        self.optional = Optional {
-            optional: self.optional.optional || optional,
-            nullable: self.optional.nullable || nullable,
-        };
-        self.flatten |= flatten;
-        self.docs.push_str(&docs);
+impl Attr for FieldAttr {
+    type Item = Field;
+
+    fn merge(self, other: Self) -> Self {
+        Self {
+            type_as: self.type_as.or(other.type_as),
+            type_override: self.type_override.or(other.type_override),
+            rename: self.rename.or(other.rename),
+            inline: self.inline || other.inline,
+            skip: self.skip || other.skip,
+            optional: Optional {
+                optional: self.optional.optional || other.optional.optional,
+                nullable: self.optional.nullable || other.optional.nullable,
+            },
+            flatten: self.flatten || other.flatten,
+
+            // We can't emit TSDoc for a flattened field
+            // and we cant make this invalid in assert_validity because
+            // this documentation is totally valid in Rust
+            docs: if self.flatten || other.flatten {
+                String::new()
+            } else {
+                self.docs + &other.docs
+            },
+        }
+    }
+
+    fn assert_validity(&self, field: &Self::Item) -> Result<()> {
+        if self.type_override.is_some() {
+            if self.type_as.is_some() {
+                syn_err_spanned!(field; "`type` is not compatible with `as`")
+            }
+
+            if self.inline {
+                syn_err_spanned!(field; "`type` is not compatible with `inline`")
+            }
+
+            if self.flatten {
+                syn_err_spanned!(
+                    field;
+                    "`type` is not compatible with `flatten`"
+                );
+            }
+        }
+
+        if self.flatten {
+            if self.type_as.is_some() {
+                syn_err_spanned!(
+                    field;
+                    "`as` is not compatible with `flatten`"
+                );
+            }
+
+            if self.rename.is_some() {
+                syn_err_spanned!(
+                    field;
+                    "`rename` is not compatible with `flatten`"
+                );
+            }
+
+            if self.inline {
+                syn_err_spanned!(
+                    field;
+                    "`inline` is not compatible with `flatten`"
+                );
+            }
+
+            if self.optional.optional {
+                syn_err_spanned!(
+                    field;
+                    "`optional` is not compatible with `flatten`"
+                );
+            }
+        }
+
+        if field.ident.is_none() {
+            if self.flatten {
+                syn_err_spanned!(
+                    field;
+                    "`flatten` cannot with tuple struct fields"
+                );
+            }
+
+            if self.rename.is_some() {
+                syn_err_spanned!(
+                    field;
+                    "`flatten` cannot with tuple struct fields"
+                );
+            }
+
+            if self.optional.optional {
+                syn_err_spanned!(
+                    field;
+                    "`optional` cannot with tuple struct fields"
+                );
+            }
+        }
+
+        Ok(())
     }
 }
 

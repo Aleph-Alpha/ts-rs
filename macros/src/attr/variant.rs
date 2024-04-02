@@ -1,6 +1,6 @@
-use syn::{Attribute, Ident, Result};
+use syn::{Attribute, Fields, Ident, Result, Variant};
 
-use super::EnumAttr;
+use super::Attr;
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, Inflection},
     utils::parse_attrs,
@@ -20,38 +20,39 @@ pub struct VariantAttr {
 pub struct SerdeVariantAttr(VariantAttr);
 
 impl VariantAttr {
-    pub fn new(attrs: &[Attribute], enum_attr: &EnumAttr) -> Result<Self> {
-        let mut result = Self::from_attrs(attrs)?;
-        result.rename_all = result.rename_all.or(enum_attr.rename_all_fields);
-        Ok(result)
-    }
-
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
-        let mut result = Self::default();
-        parse_attrs(attrs)?.for_each(|a| result.merge(a));
+        let mut result = parse_attrs(attrs)?.fold(Self::default(), |acc, cur| acc.merge(cur));
         #[cfg(feature = "serde-compat")]
         if !result.skip {
-            crate::utils::parse_serde_attrs::<SerdeVariantAttr>(attrs)
-                .for_each(|a| result.merge(a.0));
+            result = crate::utils::parse_serde_attrs::<SerdeVariantAttr>(attrs)
+                .fold(result, |acc, cur| acc.merge(cur.0));
         }
         Ok(result)
     }
+}
 
-    fn merge(
-        &mut self,
-        VariantAttr {
-            rename,
-            rename_all,
-            inline,
-            skip,
-            untagged,
-        }: VariantAttr,
-    ) {
-        self.rename = self.rename.take().or(rename);
-        self.rename_all = self.rename_all.take().or(rename_all);
-        self.inline = self.inline || inline;
-        self.skip = self.skip || skip;
-        self.untagged = self.untagged || untagged;
+impl Attr for VariantAttr {
+    type Item = Variant;
+
+    fn merge(self, other: Self) -> Self {
+        Self {
+            rename: self.rename.or(other.rename),
+            rename_all: self.rename_all.or(other.rename_all),
+            inline: self.inline || other.inline,
+            skip: self.skip || other.skip,
+            untagged: self.untagged || other.untagged,
+        }
+    }
+
+    fn assert_validity(&self, item: &Self::Item) -> Result<()> {
+        if !matches!(item.fields, Fields::Named(_)) && self.rename_all.is_some() {
+            syn_err_spanned!(
+                item;
+                "`rename_all` is not applicable to unit or tuple variants"
+            )
+        }
+
+        Ok(())
     }
 }
 

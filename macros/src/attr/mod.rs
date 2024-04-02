@@ -6,7 +6,7 @@ pub use r#struct::*;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Error, Lit, Result, Token, WherePredicate,
+    Error, Lit, Path, Result, Token, WherePredicate,
 };
 pub use variant::*;
 
@@ -24,6 +24,17 @@ pub enum Inflection {
     Pascal,
     ScreamingSnake,
     Kebab,
+}
+
+pub(super) trait Attr {
+    type Item;
+
+    fn merge(self, other: Self) -> Self;
+    fn assert_validity(&self, item: &Self::Item) -> Result<()>;
+}
+
+pub(super) trait ContainerAttr: Attr {
+    fn crate_rename(&self) -> Path;
 }
 
 impl Inflection {
