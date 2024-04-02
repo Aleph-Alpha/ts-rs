@@ -35,7 +35,9 @@ impl Dependencies {
     }
 
     pub fn append(&mut self, mut other: Dependencies) {
-        self.dependencies.push(quote![.extend(#other)]);
+        if !other.dependencies.is_empty() {
+            self.dependencies.push(quote![.extend(#other)]);
+        }
         self.types.append(&mut other.types);
     }
 }
