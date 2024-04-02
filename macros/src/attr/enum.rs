@@ -104,7 +104,7 @@ impl Attr for EnumAttr {
                     "`as` is not compatible with `type`"
                 );
             }
-          
+
             if self.rename_all.is_some() {
                 syn_err_spanned!(
                     item;

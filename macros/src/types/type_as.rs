@@ -2,7 +2,7 @@ use quote::quote;
 use syn::{Result, Type};
 
 use crate::{
-    attr::{EnumAttr, StructAttr, ContainerAttr},
+    attr::{ContainerAttr, EnumAttr, StructAttr},
     deps::Dependencies,
     DerivedTS,
 };
