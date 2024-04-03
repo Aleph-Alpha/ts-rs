@@ -74,7 +74,7 @@ impl Attr for FieldAttr {
 
     fn assert_validity(&self, field: &Self::Item) -> Result<()> {
         #[cfg(feature = "serde-compat")]
-        if using_serde_with && !(type_as.is_some() || type_override.is_some()) {
+        if self.using_serde_with && !(self.type_as.is_some() || self.type_override.is_some()) {
             syn_err_spanned!(
                 field;
                 r#"using `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]`"#
