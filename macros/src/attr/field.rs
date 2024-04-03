@@ -59,7 +59,7 @@ impl Attr for FieldAttr {
             },
             flatten: self.flatten || other.flatten,
             #[cfg(feature = "serde-compat")]
-            using_serde_with = self.using_serde_with || other.using_serde_with;
+            using_serde_with: self.using_serde_with || other.using_serde_with,
 
             // We can't emit TSDoc for a flattened field
             // and we cant make this invalid in assert_validity because
