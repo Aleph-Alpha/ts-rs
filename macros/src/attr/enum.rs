@@ -55,7 +55,8 @@ impl EnumAttr {
 
         #[cfg(feature = "serde-compat")]
         {
-            result = crate::utils::parse_serde_attrs::<EnumAttr>(attrs, result);
+            let serde_attr = crate::utils::parse_serde_attrs::<EnumAttr>(attrs);
+            result.merge_with_serde(serde_attr);
         }
 
         Ok(result)
@@ -92,6 +93,17 @@ impl Attr for EnumAttr {
                 (None, None) => None,
             },
         }
+    }
+
+    #[cfg(feature = "serde-compat")]
+    fn merge_with_serde(&mut self, serde: Serde<Self>) {
+        self.rename = self.rename.take().or(serde.0.rename);
+        self.rename_all = self.rename_all.take().or(serde.0.rename_all);
+        self.rename_all_fields = self.rename_all_fields.take().or(serde.0.rename_all_fields);
+        self.tag = self.tag.take().or(serde.0.tag);
+        self.content = self.content.take().or(serde.0.content);
+        self.untagged = self.untagged || serde.0.untagged;
+        self.bound = self.bound.take().or(serde.0.bound);
     }
 
     fn assert_validity(&self, item: &Self::Item) -> Result<()> {

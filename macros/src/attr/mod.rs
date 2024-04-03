@@ -30,6 +30,8 @@ pub(super) trait Attr: Default {
     type Item;
 
     fn merge(self, other: Self) -> Self;
+    #[cfg(feature = "serde-compat")]
+    fn merge_with_serde(&mut self, serde: Serde<Self>);
     fn assert_validity(&self, item: &Self::Item) -> Result<()>;
 }
 
@@ -44,18 +46,12 @@ where
     T: Attr;
 
 #[cfg(feature = "serde-compat")]
-impl<T> Attr for Serde<T>
+impl<T> Serde<T>
 where
     T: Attr,
 {
-    type Item = std::convert::Infallible;
-
-    fn merge(self, other: Self) -> Self {
+    pub fn merge(self, other: Self) -> Self {
         Self(self.0.merge(other.0))
-    }
-
-    fn assert_validity(&self, _: &Self::Item) -> Result<()> {
-        unimplemented!("This method should not be called on Serde<T>")
     }
 }
 

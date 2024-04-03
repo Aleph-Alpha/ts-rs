@@ -32,7 +32,8 @@ impl FieldAttr {
 
         #[cfg(feature = "serde-compat")]
         if !result.skip {
-            result = crate::utils::parse_serde_attrs::<FieldAttr>(attrs, result);
+            let serde_attr = crate::utils::parse_serde_attrs::<FieldAttr>(attrs);
+            result.merge_with_serde(serde_attr)
         }
 
         Ok(result)
@@ -64,6 +65,13 @@ impl Attr for FieldAttr {
                 self.docs + &other.docs
             },
         }
+    }
+
+    #[cfg(feature = "serde-compat")]
+    fn merge_with_serde(&mut self, serde: Serde<Self>) {
+        self.rename = self.rename.take().or(serde.0.rename);
+        self.skip = self.skip || serde.0.skip;
+        self.flatten = self.flatten || serde.0.flatten;
     }
 
     fn assert_validity(&self, field: &Self::Item) -> Result<()> {

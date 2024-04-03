@@ -113,10 +113,10 @@ where
 /// Parse all `#[serde(..)]` attributes from the given slice.
 #[cfg(feature = "serde-compat")]
 #[allow(unused)]
-pub fn parse_serde_attrs<'a, A>(attrs: &'a [Attribute], initial: A) -> A
+pub fn parse_serde_attrs<'a, A>(attrs: &'a [Attribute]) -> Serde<A>
 where
     A: Attr,
-    Serde<A>: TryFrom<&'a Attribute, Error = Error> + Attr,
+    Serde<A>: TryFrom<&'a Attribute, Error = Error>,
 {
     use crate::attr::Serde;
 
@@ -139,7 +139,7 @@ where
                 None
             }
         })
-        .fold(initial, |acc, cur| acc.merge(cur.0))
+        .fold(Serde::<A>::default(), |acc, cur| acc.merge(cur))
 }
 
 /// Return doc comments parsed and formatted as JSDoc.
