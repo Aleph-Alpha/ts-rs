@@ -50,14 +50,14 @@ impl EnumAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = parse_attrs::<Self>(attrs)?;
 
-        let docs = parse_docs(attrs)?;
-        result.docs = docs;
-
         #[cfg(feature = "serde-compat")]
         {
             let serde_attr = crate::utils::parse_serde_attrs::<EnumAttr>(attrs);
-            result.merge_with_serde(serde_attr);
+            result = result.merge(serde_attr.0);
         }
+
+        let docs = parse_docs(attrs)?;
+        result.docs = docs;
 
         Ok(result)
     }
@@ -93,17 +93,6 @@ impl Attr for EnumAttr {
                 (None, None) => None,
             },
         }
-    }
-
-    #[cfg(feature = "serde-compat")]
-    fn merge_with_serde(&mut self, serde: Serde<Self>) {
-        self.rename = self.rename.take().or(serde.0.rename);
-        self.rename_all = self.rename_all.take().or(serde.0.rename_all);
-        self.rename_all_fields = self.rename_all_fields.take().or(serde.0.rename_all_fields);
-        self.tag = self.tag.take().or(serde.0.tag);
-        self.content = self.content.take().or(serde.0.content);
-        self.untagged = self.untagged || serde.0.untagged;
-        self.bound = self.bound.take().or(serde.0.bound);
     }
 
     fn assert_validity(&self, item: &Self::Item) -> Result<()> {

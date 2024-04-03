@@ -28,13 +28,13 @@ impl FieldAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = parse_attrs::<Self>(attrs)?;
 
-        result.docs = parse_docs(attrs)?;
-
         #[cfg(feature = "serde-compat")]
         if !result.skip {
             let serde_attr = crate::utils::parse_serde_attrs::<FieldAttr>(attrs);
-            result.merge_with_serde(serde_attr)
+            result = result.merge(serde_attr.0);
         }
+
+        result.docs = parse_docs(attrs)?;
 
         Ok(result)
     }
@@ -65,13 +65,6 @@ impl Attr for FieldAttr {
                 self.docs + &other.docs
             },
         }
-    }
-
-    #[cfg(feature = "serde-compat")]
-    fn merge_with_serde(&mut self, serde: Serde<Self>) {
-        self.rename = self.rename.take().or(serde.0.rename);
-        self.skip = self.skip || serde.0.skip;
-        self.flatten = self.flatten || serde.0.flatten;
     }
 
     fn assert_validity(&self, field: &Self::Item) -> Result<()> {

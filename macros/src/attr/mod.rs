@@ -30,8 +30,6 @@ pub(super) trait Attr: Default {
     type Item;
 
     fn merge(self, other: Self) -> Self;
-    #[cfg(feature = "serde-compat")]
-    fn merge_with_serde(&mut self, serde: Serde<Self>);
     fn assert_validity(&self, item: &Self::Item) -> Result<()>;
 }
 

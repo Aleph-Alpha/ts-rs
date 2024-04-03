@@ -27,14 +27,15 @@ impl StructAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = parse_attrs::<Self>(attrs)?;
 
-        let docs = parse_docs(attrs)?;
-        result.docs = docs;
-
         #[cfg(feature = "serde-compat")]
         {
             let serde_attr = crate::utils::parse_serde_attrs::<StructAttr>(attrs);
-            result.merge_with_serde(serde_attr)
+            result = result.merge(serde_attr.0);
         }
+
+        let docs = parse_docs(attrs)?;
+        result.docs = docs;
+        
         Ok(result)
     }
 
@@ -77,14 +78,6 @@ impl Attr for StructAttr {
                 (None, None) => None,
             },
         }
-    }
-
-    #[cfg(feature = "serde-compat")]
-    fn merge_with_serde(&mut self, serde: Serde<Self>) {
-        self.rename = self.rename.take().or(serde.0.rename);
-        self.rename_all = self.rename_all.take().or(serde.0.rename_all);
-        self.tag = self.tag.take().or(serde.0.tag);
-        self.bound = self.bound.take().or(serde.0.bound);
     }
 
     fn assert_validity(&self, item: &Self::Item) -> Result<()> {

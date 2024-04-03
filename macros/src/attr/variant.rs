@@ -21,7 +21,7 @@ impl VariantAttr {
         #[cfg(feature = "serde-compat")]
         if !result.skip {
             let serde_attr = crate::utils::parse_serde_attrs::<VariantAttr>(attrs);
-            result.merge_with_serde(serde_attr);
+            result = result.merge(serde_attr.0);
         }
         Ok(result)
     }
@@ -38,14 +38,6 @@ impl Attr for VariantAttr {
             skip: self.skip || other.skip,
             untagged: self.untagged || other.untagged,
         }
-    }
-
-    #[cfg(feature = "serde-compat")]
-    fn merge_with_serde(&mut self, serde: Serde<Self>) {
-        self.rename = self.rename.take().or(serde.0.rename);
-        self.rename_all = self.rename_all.take().or(serde.0.rename_all);
-        self.skip = self.skip || serde.0.skip;
-        self.untagged = self.untagged || serde.0.untagged;
     }
 
     fn assert_validity(&self, item: &Self::Item) -> Result<()> {
