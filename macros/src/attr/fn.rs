@@ -1,6 +1,6 @@
-use syn::{Ident, Result, Path, parse_quote};
+use syn::{parse_quote, Ident, Path, Result};
 
-use super::{parse_assign_inflection, parse_assign_str, Inflection, parse_assign_from_str};
+use super::{parse_assign_from_str, parse_assign_inflection, parse_assign_str, Inflection};
 
 #[derive(Default)]
 pub struct FnAttr {
@@ -13,7 +13,9 @@ pub struct FnAttr {
 
 impl FnAttr {
     pub fn crate_rename(&self) -> Path {
-        self.crate_rename.clone().unwrap_or_else(|| parse_quote!(::ts_rs))
+        self.crate_rename
+            .clone()
+            .unwrap_or_else(|| parse_quote!(::ts_rs))
     }
 }
 

@@ -8,9 +8,9 @@ use inflector::Inflector;
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
-    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, ItemFn, LifetimeParam, Path,
-    Result, Type, TypeArray, TypeParam, TypeParen, TypePath, TypeReference, TypeSlice, TypeTuple,
-    WhereClause, WherePredicate,
+    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, ItemFn, LifetimeParam,
+    Path, Result, Type, TypeArray, TypeParam, TypeParen, TypePath, TypeReference, TypeSlice,
+    TypeTuple, WhereClause, WherePredicate,
 };
 use types::ParsedFn;
 
