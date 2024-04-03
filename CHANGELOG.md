@@ -2,6 +2,32 @@
 
 ### Breaking
 
+### Features
+
+- Add support for `#[ts(type = "..")]` directly on structs and enums ([#286](https://github.com/Aleph-Alpha/ts-rs/pull/286))
+
+### Fixes
+
+Fix `#[ts(rename_all_fields = "...")]` on enums containing tuple or unit variants ([#287](https://github.com/Aleph-Alpha/ts-rs/pull/287))
+
+# 8.1.0
+
+### Breaking
+
+### Features
+
+- Add `#[ts(crate = "..")]` to allow usage of `#[derive(TS)]` from other proc-macro crates ([#274](https://github.com/Aleph-Alpha/ts-rs/pull/274))
+- Add support types from `serde_json` behind cargo feature `serde-json-impl` ([#276](https://github.com/Aleph-Alpha/ts-rs/pull/276))
+
+### Fixes
+
+- Macro expansion for types with generic parameters now works without the `TS` trait in scope ([#281](https://github.com/Aleph-Alpha/ts-rs/pull/281))
+- Fix enum flattening a struct that contains a flattened enum ([#282](https://github.com/Aleph-Alpha/ts-rs/pull/282))
+
+# v8.0.0
+
+### Breaking
+
 - Export types as `type` instead of `ìnterface` ([#203](https://github.com/Aleph-Alpha/ts-rs/pull/203))
 - Automatically export all dependencies when using `#[ts(export)]`, add `TS::dependency_types()` ([#221](https://github.com/Aleph-Alpha/ts-rs/pull/221))
 - Remove support for "skip_serializing", "skip_serializing_if" and "skip_deserializing". ([#204](https://github.com/Aleph-Alpha/ts-rs/pull/204))

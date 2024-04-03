@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs"
-version = "8.0.0"
+version = "8.1.0"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -30,6 +30,7 @@ indexmap-impl = ["indexmap"]
 ordered-float-impl = ["ordered-float"]
 heapless-impl = ["heapless"]
 semver-impl = ["semver"]
+serde-json-impl = ["serde_json"]
 no-serde-warnings = ["ts-rs-macros/no-serde-warnings"]
 import-esm = []
 
@@ -39,7 +40,7 @@ chrono = { version = "0.4", features = ["serde"] }
 
 [dependencies]
 heapless = { version = ">= 0.7, < 0.9", optional = true }
-ts-rs-macros = { version = "=8.0.0", path = "../macros" }
+ts-rs-macros = { version = "=8.1.0", path = "../macros" }
 dprint-plugin-typescript = { version = "0.89", optional = true }
 chrono = { version = "0.4", optional = true }
 bigdecimal = { version = ">= 0.0.13, < 0.5", features = [
@@ -53,3 +54,4 @@ semver = { version = "1", optional = true }
 thiserror = "1"
 indexmap = { version = "2", optional = true }
 ordered-float = { version = ">= 3, < 5", optional = true }
+serde_json = { version = "1", optional = true }

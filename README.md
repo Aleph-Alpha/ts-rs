@@ -42,7 +42,7 @@ We recommend doing this in your tests.
 ### get started
 ```toml
 [dependencies]
-ts-rs = "8.0"
+ts-rs = "8.1"
 ```
 
 ```rust
@@ -75,6 +75,7 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
 | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
 | import-esm         | When enabled,`import` statements in the generated file will have the `.js` extension in the end of the path to conform to the ES Modules spec. <br/> Example: `import { MyStruct } from "./my_struct.js"` |
+| serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                                                                                |
 | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
 | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
 | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |

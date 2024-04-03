@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use syn::{Attribute, Ident, Result, Type, WherePredicate};
+use syn::{parse_quote, Attribute, Ident, ItemEnum, Path, Result, Type, WherePredicate};
 
-use super::parse_bound;
+use super::{parse_assign_from_str, parse_bound, Attr, ContainerAttr, Serde};
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
     utils::{parse_attrs, parse_docs},
@@ -10,6 +10,9 @@ use crate::{
 
 #[derive(Default)]
 pub struct EnumAttr {
+    crate_rename: Option<Path>,
+    pub type_as: Option<Type>,
+    pub type_override: Option<String>,
     pub rename_all: Option<Inflection>,
     pub rename_all_fields: Option<Inflection>,
     pub rename: Option<String>,
@@ -18,14 +21,10 @@ pub struct EnumAttr {
     pub docs: String,
     pub concrete: HashMap<Ident, Type>,
     pub bound: Option<Vec<WherePredicate>>,
-    tag: Option<String>,
-    untagged: bool,
-    content: Option<String>,
+    pub tag: Option<String>,
+    pub untagged: bool,
+    pub content: Option<String>,
 }
-
-#[cfg(feature = "serde-compat")]
-#[derive(Default)]
-pub struct SerdeEnumAttr(EnumAttr);
 
 #[derive(Copy, Clone)]
 pub enum Tagged<'a> {
@@ -49,57 +48,168 @@ impl EnumAttr {
     }
 
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
-        let mut result = Self::default();
-        parse_attrs(attrs)?.for_each(|a| result.merge(a));
+        let mut result = parse_attrs::<Self>(attrs)?;
+
+        #[cfg(feature = "serde-compat")]
+        {
+            let serde_attr = crate::utils::parse_serde_attrs::<EnumAttr>(attrs);
+            result = result.merge(serde_attr.0);
+        }
 
         let docs = parse_docs(attrs)?;
         result.docs = docs;
 
-        #[cfg(feature = "serde-compat")]
-        crate::utils::parse_serde_attrs::<SerdeEnumAttr>(attrs).for_each(|a| result.merge(a.0));
         Ok(result)
     }
 
-    fn merge(
-        &mut self,
-        EnumAttr {
-            rename_all,
-            rename_all_fields,
-            rename,
-            tag,
-            content,
-            untagged,
-            export_to,
-            export,
-            docs,
-            concrete,
-            bound,
-        }: EnumAttr,
-    ) {
-        self.rename = self.rename.take().or(rename);
-        self.rename_all = self.rename_all.take().or(rename_all);
-        self.rename_all_fields = self.rename_all_fields.take().or(rename_all_fields);
-        self.tag = self.tag.take().or(tag);
-        self.untagged = self.untagged || untagged;
-        self.content = self.content.take().or(content);
-        self.export = self.export || export;
-        self.export_to = self.export_to.take().or(export_to);
-        self.docs = docs;
-        self.concrete.extend(concrete);
-        self.bound = self
-            .bound
-            .take()
-            .map(|b| {
-                b.into_iter()
-                    .chain(bound.clone().unwrap_or_default())
-                    .collect()
-            })
-            .or(bound);
+    pub fn crate_rename(&self) -> Path {
+        self.crate_rename
+            .clone()
+            .unwrap_or_else(|| parse_quote!(::ts_rs))
+    }
+}
+
+impl Attr for EnumAttr {
+    type Item = ItemEnum;
+
+    fn merge(self, other: Self) -> Self {
+        Self {
+            crate_rename: self.crate_rename.or(other.crate_rename),
+            type_as: self.type_as.or(other.type_as),
+            type_override: self.type_override.or(other.type_override),
+            rename: self.rename.or(other.rename),
+            rename_all: self.rename_all.or(other.rename_all),
+            rename_all_fields: self.rename_all_fields.or(other.rename_all_fields),
+            tag: self.tag.or(other.tag),
+            untagged: self.untagged || other.untagged,
+            content: self.content.or(other.content),
+            export: self.export || other.export,
+            export_to: self.export_to.or(other.export_to),
+            docs: other.docs,
+            concrete: self.concrete.into_iter().chain(other.concrete).collect(),
+            bound: match (self.bound, other.bound) {
+                (Some(a), Some(b)) => Some(a.into_iter().chain(b).collect()),
+                (Some(bound), None) | (None, Some(bound)) => Some(bound),
+                (None, None) => None,
+            },
+        }
+    }
+
+    fn assert_validity(&self, item: &Self::Item) -> Result<()> {
+        if self.type_override.is_some() {
+            if self.type_as.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`as` is not compatible with `type`"
+                );
+            }
+
+            if self.rename_all.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`rename_all` is not compatible with `type`"
+                );
+            }
+
+            if self.rename_all_fields.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`rename_all_fields` is not compatible with `type`"
+                );
+            }
+
+            if self.tag.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`tag` is not compatible with `type`"
+                );
+            }
+
+            if self.content.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`content` is not compatible with `type`"
+                );
+            }
+
+            if self.untagged {
+                syn_err_spanned!(
+                    item;
+                    "`untagged` is not compatible with `type`"
+                );
+            }
+        }
+
+        if self.type_as.is_some() {
+            if self.rename_all.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`rename_all` is not compatible with `as`"
+                );
+            }
+
+            if self.rename_all_fields.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`rename_all_fields` is not compatible with `as`"
+                );
+            }
+
+            if self.tag.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`tag` is not compatible with `as`"
+                );
+            }
+
+            if self.content.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`content` is not compatible with `as`"
+                );
+            }
+
+            if self.untagged {
+                syn_err_spanned!(
+                    item;
+                    "`untagged` is not compatible with `as`"
+                );
+            }
+        }
+
+        match (self.untagged, &self.tag, &self.content) {
+            (true, Some(_), None) => syn_err_spanned!(
+                item;
+                "untagged cannot be used with tag"
+            ),
+            (true, _, Some(_)) => syn_err_spanned!(
+                item;
+                "untagged cannot be used with content"
+            ),
+            (false, None, Some(_)) => syn_err_spanned!(
+                item;
+                "content cannot be used without tag"
+            ),
+            _ => (),
+        };
+
+        Ok(())
+    }
+}
+
+impl ContainerAttr for EnumAttr {
+    fn crate_rename(&self) -> Path {
+        self.crate_rename
+            .clone()
+            .unwrap_or_else(|| parse_quote!(::ts_rs))
     }
 }
 
 impl_parse! {
     EnumAttr(input, out) {
+        "crate" => out.crate_rename = Some(parse_assign_from_str(input)?),
+        "as" => out.type_as = Some(parse_assign_from_str(input)?),
+        "type" => out.type_override = Some(parse_assign_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
         "rename_all_fields" => out.rename_all_fields = Some(parse_assign_inflection(input)?),
@@ -115,7 +225,7 @@ impl_parse! {
 
 #[cfg(feature = "serde-compat")]
 impl_parse! {
-    SerdeEnumAttr(input, out) {
+    Serde<EnumAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.0.rename_all = Some(parse_assign_inflection(input)?),
         "rename_all_fields" => out.0.rename_all_fields = Some(parse_assign_inflection(input)?),

@@ -40,7 +40,7 @@
 //! ## get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "8.0"
+//! ts-rs = "8.1"
 //! ```
 //!
 //! ```rust
@@ -73,6 +73,7 @@
 //! | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
 //! | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
 //! | import-esm         | When enabled,`import` statements in the generated file will have the `.js` extension in the end of the path to conform to the ES Modules spec. <br/> Example: `import { MyStruct } from "./my_struct.js"` |
+//! | serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                                                                                |
 //! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
 //! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
 //! | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
@@ -140,6 +141,8 @@ use crate::typelist::TypeList;
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
+#[cfg(feature = "serde-json-impl")]
+mod serde_json;
 pub mod typelist;
 
 /// A type which can be represented in TypeScript.  
@@ -177,6 +180,10 @@ pub mod typelist;
 /// ### container attributes
 /// attributes applicable for both structs and enums
 ///
+/// - **`#[ts(crate = "..")]`**
+///   Generates code which references the module passed to it instead of defaulting to `::ts_rs`
+///   This is useful for cases where you have to re-export the crate.
+///
 /// - **`#[ts(export)]`**  
 ///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
 ///   `cargo test`. The default base directory can be overridden with the `TS_RS_EXPORT_DIR` environment variable.
@@ -195,6 +202,16 @@ pub mod typelist;
 ///   or, if `TS_RS_EXPORT_DIR` is not set, to `./bindings`  
 ///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
+///   <br/><br/>
+///
+/// - **`#[ts(as = "..")]`**  
+///   Overrides the type used in Typescript, using the provided Rust type instead.
+///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
+///   <br/><br/>
+///
+/// - **`#[ts(type = "..")]`**  
+///   Overrides the type used in TypeScript.  
+///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename = "..")]`**  
@@ -682,8 +699,9 @@ macro_rules! impl_shadow {
             {
                 <$s>::generics()
             }
-            fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
-            fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
+            fn decl() -> String { <$s>::decl() }
+            fn decl_concrete() -> String { <$s>::decl_concrete() }
+            fn output_path() -> Option<&'static std::path::Path> { <$s>::output_path() }
         }
     };
 }
@@ -863,15 +881,15 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     type WithoutGenerics = HashMap<Dummy, Dummy>;
 
     fn ident() -> String {
-        "Record".to_owned()
+        panic!()
     }
 
     fn name() -> String {
-        format!("Record<{}, {}>", K::name(), V::name())
+        format!("{{ [key: {}]: {} }}", K::name(), V::name())
     }
 
     fn inline() -> String {
-        format!("Record<{}, {}>", K::inline(), V::inline())
+        format!("{{ [key: {}]: {} }}", K::inline(), V::inline())
     }
 
     fn dependency_types() -> impl TypeList
@@ -1007,8 +1025,11 @@ impl_primitives! {
     Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr => "string",
     () => "null"
 }
+
 #[rustfmt::skip]
 pub(crate) use impl_primitives;
+#[rustfmt::skip]
+pub(crate) use impl_shadow;
 
 #[doc(hidden)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
