@@ -2,7 +2,7 @@ use quote::quote;
 use syn::Result;
 
 use crate::{
-    attr::{EnumAttr, StructAttr},
+    attr::{ContainerAttr, EnumAttr, StructAttr},
     deps::Dependencies,
     DerivedTS,
 };
@@ -12,13 +12,6 @@ pub(crate) fn type_override_struct(
     name: &str,
     type_override: &str,
 ) -> Result<DerivedTS> {
-    if attr.rename_all.is_some() {
-        syn_err!("`rename_all` is not compatible with `type`");
-    }
-    if attr.tag.is_some() {
-        syn_err!("`tag` is not compatible with `type`");
-    }
-
     let crate_rename = attr.crate_rename();
 
     Ok(DerivedTS {
@@ -40,25 +33,6 @@ pub(crate) fn type_override_enum(
     name: &str,
     type_override: &str,
 ) -> Result<DerivedTS> {
-    if attr.rename_all.is_some() {
-        syn_err!("`rename_all` is not compatible with `type`");
-    }
-    if attr.rename_all_fields.is_some() {
-        syn_err!("`rename_all_fields` is not compatible with `type`");
-    }
-    if attr.tag.is_some() {
-        syn_err!("`tag` is not compatible with `type`");
-    }
-    if attr.content.is_some() {
-        syn_err!("`content` is not compatible with `type`");
-    }
-    if attr.untagged {
-        syn_err!("`untagged` is not compatible with `type`");
-    }
-    if attr.type_as.is_some() {
-        syn_err!("`type` is not compatible with `as`");
-    }
-
     let crate_rename = attr.crate_rename();
 
     Ok(DerivedTS {
