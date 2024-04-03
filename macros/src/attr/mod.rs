@@ -48,7 +48,7 @@ impl<T> Attr for Serde<T>
 where
     T: Attr,
 {
-    type Item = syn::Error;
+    type Item = std::convert::Infallible;
 
     fn merge(self, other: Self) -> Self {
         Self(self.0.merge(other.0))
