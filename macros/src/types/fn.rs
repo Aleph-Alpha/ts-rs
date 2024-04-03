@@ -21,7 +21,7 @@ pub struct ParsedFn {
 }
 
 pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
-    let mut dependencies = Dependencies::default();
+    let mut dependencies = Dependencies::new(fn_attr.crate_rename());
 
     let ident = &input.sig.ident;
     let generics = &input.sig.generics;
@@ -53,11 +53,13 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
         })
         .collect::<Result<Punctuated<_, Comma>>>()?;
 
+    let crate_rename = fn_attr.crate_rename();
     let FnAttr {
         rename_all,
         rename,
         args,
         export_to,
+        ..
     } = fn_attr;
     let struct_attr = rename_all.map(|rename_all| {
         let rename_all = rename_all.as_str();
@@ -65,7 +67,7 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
     });
 
     let args_struct = fields.is_empty().not().then_some(quote!(
-        #[derive(ts_rs::TS)]
+        #[derive(#crate_rename::TS)]
         #struct_attr
         struct #struct_ident #ty_generics #where_clause {
             #fields
@@ -83,22 +85,22 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
         (true, syn::ReturnType::Default) => quote!("Promise<void>"),
         (false, syn::ReturnType::Type(_, ref ty)) => {
             dependencies.push(ty);
-            quote!(<#ty as ts_rs::TS>::name())
+            quote!(<#ty as #crate_rename::TS>::name())
         }
         (true, syn::ReturnType::Type(_, ref ty)) => {
             dependencies.push(ty);
-            quote!(format!("Promise<{}>", <#ty as ts_rs::TS>::name()))
+            quote!(format!("Promise<{}>", <#ty as #crate_rename::TS>::name()))
         }
     };
 
     let inline = match (&args_struct, args) {
         (Some(_), Args::Inlined) => quote!(format!(
             "(args: {}) => {}",
-            <#struct_ident as ts_rs::TS>::inline(),
+            <#struct_ident as #crate_rename::TS>::inline(),
             #return_ty,
         )),
         (Some(_), Args::Flattened) => quote!(format!("({}) => {}",
-            <#struct_ident as ts_rs::TS>::inline_flattened().trim_matches(['{', '}', ' ']),
+            <#struct_ident as #crate_rename::TS>::inline_flattened().trim_matches(['{', '}', ' ']),
             #return_ty
         )),
         (None, _) => quote!(format!("() => {}", #return_ty)),
@@ -107,6 +109,7 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
     Ok(ParsedFn {
         args_struct,
         derived_fn: DerivedTS {
+            crate_rename,
             ts_name,
             docs,
             inline,
