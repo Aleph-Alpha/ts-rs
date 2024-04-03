@@ -20,7 +20,7 @@ impl VariantAttr {
         let mut result = parse_attrs::<Self>(attrs)?;
         #[cfg(feature = "serde-compat")]
         if !result.skip {
-            let serde_attr = crate::utils::parse_serde_attrs::<VariantAttr>(attrs, result);
+            let serde_attr = crate::utils::parse_serde_attrs::<VariantAttr>(attrs);
             result.merge_with_serde(serde_attr);
         }
         Ok(result)
