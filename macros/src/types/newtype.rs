@@ -19,9 +19,6 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
         inline,
         skip,
         docs: _,
-
-        #[cfg(feature = "serde-compat")]
-        using_serde_with,
         ..
     } = field_attr;
 
