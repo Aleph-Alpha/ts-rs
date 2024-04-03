@@ -12,7 +12,7 @@ fn default_http_version() -> String {
 #[derive(Debug, Clone, Deserialize, Serialize, TS)]
 #[ts(export, export_to = "serde_skip_with_default/")]
 pub struct Foobar {
-    #[ts(skip)]
+    // #[ts(skip)]
     #[serde(skip, default = "default_http_version")]
     pub http_version: String,
     pub something_else: i32,

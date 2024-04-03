@@ -1,6 +1,6 @@
 use syn::{Attribute, Fields, Ident, Result, Variant};
 
-use super::Attr;
+use super::{Attr, Serde};
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, Inflection},
     utils::parse_attrs,
@@ -15,17 +15,12 @@ pub struct VariantAttr {
     pub untagged: bool,
 }
 
-#[cfg(feature = "serde-compat")]
-#[derive(Default)]
-pub struct SerdeVariantAttr(VariantAttr);
-
 impl VariantAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = parse_attrs::<Self>(attrs)?;
         #[cfg(feature = "serde-compat")]
         if !result.skip {
-            result = crate::utils::parse_serde_attrs::<SerdeVariantAttr>(attrs)
-                .fold(result, |acc, cur| acc.merge(cur.0));
+            result = crate::utils::parse_serde_attrs::<VariantAttr>(attrs, result);
         }
         Ok(result)
     }
@@ -68,7 +63,7 @@ impl_parse! {
 
 #[cfg(feature = "serde-compat")]
 impl_parse! {
-    SerdeVariantAttr(input, out) {
+    Serde<VariantAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.0.rename_all = Some(parse_assign_inflection(input)?),
         "skip" => out.0.skip = true,

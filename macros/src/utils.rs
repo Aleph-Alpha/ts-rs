@@ -7,7 +7,7 @@ use syn::{
     Result, Type,
 };
 
-use super::attr::Attr;
+use super::attr::{Attr, Serde};
 use crate::deps::Dependencies;
 
 macro_rules! syn_err {
@@ -26,16 +26,16 @@ macro_rules! syn_err_spanned {
 }
 
 macro_rules! impl_parse {
-    ($i:ident ($input:ident, $out:ident) { $($k:pat => $e:expr),* $(,)? }) => {
-        impl std::convert::TryFrom<&syn::Attribute> for $i {
+    ($i:ident $(<$inner: ident>)? ($input:ident, $out:ident) { $($k:pat => $e:expr),* $(,)? }) => {
+        impl std::convert::TryFrom<&syn::Attribute> for $i $(<$inner>)? {
             type Error = syn::Error;
 
             fn try_from(attr: &syn::Attribute) -> syn::Result<Self> { attr.parse_args() }
         }
 
-        impl syn::parse::Parse for $i {
+        impl syn::parse::Parse for $i $(<$inner>)? {
             fn parse($input: syn::parse::ParseStream) -> syn::Result<Self> {
-                let mut $out = $i::default();
+                let mut $out = Self::default();
                 loop {
                     let span = $input.span();
                     let key: Ident = $input.call(syn::ext::IdentExt::parse_any)?;
@@ -113,13 +113,17 @@ where
 /// Parse all `#[serde(..)]` attributes from the given slice.
 #[cfg(feature = "serde-compat")]
 #[allow(unused)]
-pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
-    attrs: &'a [Attribute],
-) -> impl Iterator<Item = A> {
+pub fn parse_serde_attrs<'a, A>(attrs: &'a [Attribute], initial: A) -> A
+where
+    A: Attr,
+    Serde<A>: TryFrom<&'a Attribute, Error = Error> + Attr,
+{
+    use crate::attr::Serde;
+
     attrs
         .iter()
         .filter(|a| a.path().is_ident("serde"))
-        .flat_map(|attr| match A::try_from(attr) {
+        .flat_map(|attr| match Serde::<A>::try_from(attr) {
             Ok(attr) => Some(attr),
             Err(_) => {
                 #[cfg(not(feature = "no-serde-warnings"))]
@@ -135,8 +139,7 @@ pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
                 None
             }
         })
-        .collect::<Vec<_>>()
-        .into_iter()
+        .fold(initial, |acc, cur| acc.merge(cur.0))
 }
 
 /// Return doc comments parsed and formatted as JSDoc.

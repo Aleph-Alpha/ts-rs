@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use syn::{parse_quote, Attribute, Fields, Ident, Path, Result, Type, WherePredicate};
 
-use super::{parse_assign_from_str, parse_bound, parse_concrete, Attr, ContainerAttr};
+use super::{parse_assign_from_str, parse_bound, parse_concrete, Attr, ContainerAttr, Serde};
 use crate::{
     attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
     utils::{parse_attrs, parse_docs},
@@ -23,10 +23,6 @@ pub struct StructAttr {
     pub bound: Option<Vec<WherePredicate>>,
 }
 
-#[cfg(feature = "serde-compat")]
-#[derive(Default)]
-pub struct SerdeStructAttr(StructAttr);
-
 impl StructAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = parse_attrs::<Self>(attrs)?;
@@ -35,8 +31,9 @@ impl StructAttr {
         result.docs = docs;
 
         #[cfg(feature = "serde-compat")]
-        let result = crate::utils::parse_serde_attrs::<SerdeStructAttr>(attrs)
-            .fold(result, |acc, cur| acc.merge(cur.0));
+        {
+            result = crate::utils::parse_serde_attrs::<StructAttr>(attrs, result);
+        }
         Ok(result)
     }
 
@@ -145,7 +142,7 @@ impl_parse! {
 
 #[cfg(feature = "serde-compat")]
 impl_parse! {
-    SerdeStructAttr(input, out) {
+    Serde<StructAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.0.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
         "tag" => out.0.tag = Some(parse_assign_str(input)?),

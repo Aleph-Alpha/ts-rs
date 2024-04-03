@@ -1,6 +1,6 @@
 use syn::{Attribute, Field, Ident, Result, Type};
 
-use super::{parse_assign_from_str, parse_assign_str, Attr};
+use super::{parse_assign_from_str, parse_assign_str, Attr, Serde};
 use crate::utils::{parse_attrs, parse_docs};
 
 #[derive(Default)]
@@ -24,10 +24,6 @@ pub struct Optional {
     pub nullable: bool,
 }
 
-#[cfg(feature = "serde-compat")]
-#[derive(Default)]
-pub struct SerdeFieldAttr(FieldAttr);
-
 impl FieldAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = parse_attrs::<Self>(attrs)?;
@@ -36,8 +32,7 @@ impl FieldAttr {
 
         #[cfg(feature = "serde-compat")]
         if !result.skip {
-            result = crate::utils::parse_serde_attrs::<SerdeFieldAttr>(attrs)
-                .fold(result, |acc, cur| acc.merge(cur.0));
+            result = crate::utils::parse_serde_attrs::<FieldAttr>(attrs, result);
         }
 
         Ok(result)
@@ -176,7 +171,7 @@ impl_parse! {
 
 #[cfg(feature = "serde-compat")]
 impl_parse! {
-    SerdeFieldAttr(input, out) {
+    Serde<FieldAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "skip" => out.0.skip = true,
         "flatten" => out.0.flatten = true,
@@ -184,7 +179,6 @@ impl_parse! {
         "default" => {
             use syn::Token;
             if input.peek(Token![=]) {
-                input.parse::<Token![=]>()?;
                 parse_assign_str(input)?;
             }
         },

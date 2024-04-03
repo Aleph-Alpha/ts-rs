@@ -37,6 +37,28 @@ pub(super) trait ContainerAttr: Attr {
     fn crate_rename(&self) -> Path;
 }
 
+#[cfg(feature = "serde-compat")]
+#[derive(Default)]
+pub(super) struct Serde<T>(pub T)
+where
+    T: Attr;
+
+#[cfg(feature = "serde-compat")]
+impl<T> Attr for Serde<T>
+where
+    T: Attr,
+{
+    type Item = syn::Error;
+
+    fn merge(self, other: Self) -> Self {
+        Self(self.0.merge(other.0))
+    }
+
+    fn assert_validity(&self, _: &Self::Item) -> Result<()> {
+        unimplemented!("This method should not be called on Serde<T>")
+    }
+}
+
 impl Inflection {
     pub fn apply(self, string: &str) -> String {
         use inflector::Inflector;

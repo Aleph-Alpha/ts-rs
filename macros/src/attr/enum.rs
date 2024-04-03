@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use syn::{parse_quote, Attribute, Ident, ItemEnum, Path, Result, Type, WherePredicate};
 
-use super::{parse_assign_from_str, parse_bound, Attr, ContainerAttr};
+use super::{parse_assign_from_str, parse_bound, Attr, ContainerAttr, Serde};
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
     utils::{parse_attrs, parse_docs},
@@ -25,10 +25,6 @@ pub struct EnumAttr {
     pub untagged: bool,
     pub content: Option<String>,
 }
-
-#[cfg(feature = "serde-compat")]
-#[derive(Default)]
-pub struct SerdeEnumAttr(EnumAttr);
 
 #[derive(Copy, Clone)]
 pub enum Tagged<'a> {
@@ -58,8 +54,10 @@ impl EnumAttr {
         result.docs = docs;
 
         #[cfg(feature = "serde-compat")]
-        let result = crate::utils::parse_serde_attrs::<SerdeEnumAttr>(attrs)
-            .fold(result, |acc, cur| acc.merge(cur.0));
+        {
+            result = crate::utils::parse_serde_attrs::<EnumAttr>(attrs, result);
+        }
+
         Ok(result)
     }
 
@@ -226,7 +224,7 @@ impl_parse! {
 
 #[cfg(feature = "serde-compat")]
 impl_parse! {
-    SerdeEnumAttr(input, out) {
+    Serde<EnumAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.0.rename_all = Some(parse_assign_inflection(input)?),
         "rename_all_fields" => out.0.rename_all_fields = Some(parse_assign_inflection(input)?),
