@@ -1,8 +1,14 @@
 # master
+
 ### Breaking
+
 ### Features
+
+- Add support for `#[ts(type = "..")]` directly on structs and enums ([#286](https://github.com/Aleph-Alpha/ts-rs/pull/286))
+
 ### Fixes
 
+Fix `#[ts(rename_all_fields = "...")]` on enums containing tuple or unit variants ([#287](https://github.com/Aleph-Alpha/ts-rs/pull/287))
 
 # 8.1.0
 

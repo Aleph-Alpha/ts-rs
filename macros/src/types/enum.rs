@@ -3,13 +3,16 @@ use quote::{format_ident, quote};
 use syn::{Fields, ItemEnum, Variant};
 
 use crate::{
-    attr::{EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
+    attr::{Attr, EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
     deps::Dependencies,
-    types, DerivedTS,
+    types::{self, type_as, type_override},
+    DerivedTS,
 };
 
 pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     let enum_attr: EnumAttr = EnumAttr::from_attrs(&s.attrs)?;
+
+    enum_attr.assert_validity(s)?;
 
     let crate_rename = enum_attr.crate_rename();
 
@@ -17,6 +20,13 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         Some(existing) => existing.clone(),
         None => s.ident.to_string(),
     };
+
+    if let Some(attr_type_override) = &enum_attr.type_override {
+        return type_override::type_override_enum(&enum_attr, &name, attr_type_override);
+    }
+    if let Some(attr_type_as) = &enum_attr.type_as {
+        return type_as::type_as_enum(&enum_attr, &name, attr_type_as);
+    }
 
     if s.variants.is_empty() {
         return Ok(empty_enum(name, enum_attr));
@@ -71,7 +81,13 @@ fn format_variant(
     variant: &Variant,
 ) -> syn::Result<()> {
     let crate_rename = enum_attr.crate_rename();
-    let variant_attr = VariantAttr::new(&variant.attrs, enum_attr)?;
+
+    // If `variant.fields` is not a `Fields::Named(_)` the `rename_all_fields`
+    // attribute must be ignored to prevent a `rename_all` from getting to
+    // the newtype, tuple or unit formatting, which would cause an error
+    let variant_attr = VariantAttr::from_attrs(&variant.attrs)?;
+
+    variant_attr.assert_validity(variant)?;
 
     if variant_attr.skip {
         return Ok(());
@@ -84,7 +100,7 @@ fn format_variant(
         (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
     };
 
-    let struct_attr = StructAttr::from_variant(enum_attr, &variant_attr);
+    let struct_attr = StructAttr::from_variant(enum_attr, &variant_attr, &variant.fields);
     let variant_type = types::type_def(
         &struct_attr,
         // since we are generating the variant as a struct, it doesn't have a name
@@ -112,8 +128,12 @@ fn format_variant(
         (false, Tagged::Externally) => match &variant.fields {
             Fields::Unit => quote!(format!("\"{}\"", #name)),
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
-                let FieldAttr { skip, .. } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
-                if skip {
+                let field = &unnamed.unnamed[0];
+                let field_attr = FieldAttr::from_attrs(&field.attrs)?;
+
+                field_attr.assert_validity(field)?;
+
+                if field_attr.skip {
                     quote!(format!("\"{}\"", #name))
                 } else {
                     quote!(format!("{{ \"{}\": {} }}", #name, #parsed_ty))
@@ -123,19 +143,24 @@ fn format_variant(
         },
         (false, Tagged::Adjacently { tag, content }) => match &variant.fields {
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
+                let field = &unnamed.unnamed[0];
+                let field_attr = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+
+                field_attr.assert_validity(field)?;
+
                 let FieldAttr {
                     type_as,
                     type_override,
                     skip,
                     ..
-                } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+                } = field_attr;
 
                 if skip {
                     quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                 } else {
                     let ty = match (type_override, type_as) {
                         (Some(_), Some(_)) => {
-                            syn_err_spanned!(variant; "`type` is not compatible with `as`")
+                            unreachable!("This has been handled by assert_validity")
                         }
                         (Some(type_override), None) => quote! { #type_override },
                         (None, Some(type_as)) => {
@@ -174,19 +199,24 @@ fn format_variant(
             },
             None => match &variant.fields {
                 Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
+                    let field = &unnamed.unnamed[0];
+                    let field_attr = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+
+                    field_attr.assert_validity(field)?;
+
                     let FieldAttr {
                         type_as,
                         skip,
                         type_override,
                         ..
-                    } = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+                    } = field_attr;
 
                     if skip {
                         quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                     } else {
                         let ty = match (type_override, type_as) {
                             (Some(_), Some(_)) => {
-                                syn_err_spanned!(variant; "`type` is not compatible with `as`")
+                                unreachable!("This has been handled by assert_validity")
                             }
                             (Some(type_override), None) => quote! { #type_override },
                             (None, Some(type_as)) => {
