@@ -140,6 +140,7 @@ impl DerivedTS {
     /// impl ts_rs::TS for B { /* .. */ }
     /// ```
     fn generate_generic_types(&self, generics: &Generics) -> TokenStream {
+        let crate_rename = &self.crate_rename;
         let generics = generics
             .type_params()
             .filter(|ty| !self.concrete.contains_key(&ty.ident))
@@ -154,7 +155,7 @@ impl DerivedTS {
                         write!(f, "{:?}", self)
                     }
                 }
-                impl TS for #generics {
+                impl #crate_rename::TS for #generics {
                     type WithoutGenerics = #generics;
                     fn name() -> String { stringify!(#generics).to_owned() }
                     fn inline() -> String { panic!("{} cannot be inlined", Self::name()) }

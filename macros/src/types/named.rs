@@ -5,7 +5,7 @@ use syn::{
 };
 
 use crate::{
-    attr::{FieldAttr, Inflection, Optional, StructAttr},
+    attr::{Attr, ContainerAttr, FieldAttr, Inflection, Optional, StructAttr},
     deps::Dependencies,
     utils::{raw_name_to_ts_field, to_ts_ident},
     DerivedTS,
@@ -47,12 +47,19 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
         (_, _) => quote!(format!("{{ {} }} & {}", #fields, #flattened)),
     };
 
+    let inline_flattened = match (formatted_fields.len(), flattened_fields.len()) {
+        (0, 0) => quote!("{  }".to_owned()),
+        (_, 0) => quote!(format!("{{ {} }}", #fields)),
+        (0, _) => quote!(#flattened),
+        (_, _) => quote!(format!("{{ {} }} & {}", #fields, #flattened)),
+    };
+
     Ok(DerivedTS {
         crate_rename,
         // the `replace` combines `{ ... } & { ... }` into just one `{ ... }`. Not necessary, but it
         // results in simpler type definitions.
         inline: quote!(#inline.replace(" } & { ", " ")),
-        inline_flattened: Some(quote!(format!("{{ {} }}", #fields))),
+        inline_flattened: Some(quote!(#inline_flattened.replace(" } & { ", " "))),
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
@@ -81,6 +88,10 @@ fn format_field(
     field: &Field,
     rename_all: &Option<Inflection>,
 ) -> Result<()> {
+    let field_attr = FieldAttr::from_attrs(&field.attrs)?;
+
+    field_attr.assert_validity(field)?;
+
     let FieldAttr {
         type_as,
         type_override,
@@ -90,24 +101,13 @@ fn format_field(
         optional,
         flatten,
         docs,
+
         #[cfg(feature = "serde-compat")]
         using_serde_with,
-    } = FieldAttr::from_attrs(&field.attrs)?;
+    } = field_attr;
 
     if skip {
         return Ok(());
-    }
-
-    #[cfg(feature = "serde-compat")]
-    if using_serde_with && !(type_as.is_some() || type_override.is_some()) {
-        syn_err_spanned!(
-            field;
-            r#"using `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]`"#
-        )
-    }
-
-    if type_as.is_some() && type_override.is_some() {
-        syn_err_spanned!(field; "`type` is not compatible with `as`")
     }
 
     let parsed_ty = type_as.as_ref().unwrap_or(&field.ty).clone();
@@ -129,18 +129,6 @@ fn format_field(
     };
 
     if flatten {
-        match (&type_as, &type_override, &rename, inline) {
-            (Some(_), _, _, _) => syn_err_spanned!(field; "`as` is not compatible with `flatten`"),
-            (_, Some(_), _, _) => {
-                syn_err_spanned!(field; "`type` is not compatible with `flatten`")
-            }
-            (_, _, Some(_), _) => {
-                syn_err_spanned!(field; "`rename` is not compatible with `flatten`")
-            }
-            (_, _, _, true) => syn_err_spanned!(field; "`inline` is not compatible with `flatten`"),
-            _ => {}
-        }
-
         flattened_fields.push(quote!(<#ty as #crate_rename::TS>::inline_flattened()));
         dependencies.append_from(ty);
         return Ok(());
@@ -155,6 +143,7 @@ fn format_field(
             quote!(<#ty as #crate_rename::TS>::name())
         }
     });
+
     let field_name = to_ts_ident(field.ident.as_ref().unwrap());
     let name = match (rename, rename_all) {
         (Some(rn), _) => rn,

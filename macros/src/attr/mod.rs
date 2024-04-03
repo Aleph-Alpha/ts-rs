@@ -6,7 +6,7 @@ pub use r#struct::*;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Error, Lit, Result, Token, WherePredicate,
+    Error, Lit, Path, Result, Token, WherePredicate,
 };
 pub use variant::*;
 
@@ -24,6 +24,33 @@ pub enum Inflection {
     Pascal,
     ScreamingSnake,
     Kebab,
+}
+
+pub(super) trait Attr: Default {
+    type Item;
+
+    fn merge(self, other: Self) -> Self;
+    fn assert_validity(&self, item: &Self::Item) -> Result<()>;
+}
+
+pub(super) trait ContainerAttr: Attr {
+    fn crate_rename(&self) -> Path;
+}
+
+#[cfg(feature = "serde-compat")]
+#[derive(Default)]
+pub(super) struct Serde<T>(pub T)
+where
+    T: Attr;
+
+#[cfg(feature = "serde-compat")]
+impl<T> Serde<T>
+where
+    T: Attr,
+{
+    pub fn merge(self, other: Self) -> Self {
+        Self(self.0.merge(other.0))
+    }
 }
 
 impl Inflection {

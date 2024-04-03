@@ -1,7 +1,11 @@
 use quote::quote;
 use syn::Result;
 
-use crate::{attr::StructAttr, deps::Dependencies, DerivedTS};
+use crate::{
+    attr::{ContainerAttr, StructAttr},
+    deps::Dependencies,
+    DerivedTS,
+};
 
 pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
     check_attributes(attr)?;

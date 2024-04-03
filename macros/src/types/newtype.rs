@@ -2,67 +2,43 @@ use quote::quote;
 use syn::{FieldsUnnamed, Result};
 
 use crate::{
-    attr::{FieldAttr, StructAttr},
+    attr::{Attr, ContainerAttr, FieldAttr, StructAttr},
     deps::Dependencies,
     DerivedTS,
 };
 
 pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Result<DerivedTS> {
-    if attr.rename_all.is_some() {
-        syn_err!("`rename_all` is not applicable to newtype structs");
-    }
-    if attr.tag.is_some() {
-        syn_err!("`tag` is not applicable to newtype structs");
-    }
     let inner = fields.unnamed.first().unwrap();
+
+    let field_attr = FieldAttr::from_attrs(&inner.attrs)?;
+    field_attr.assert_validity(inner)?;
+
     let FieldAttr {
         type_as,
         type_override,
-        rename: rename_inner,
         inline,
         skip,
-        optional,
-        flatten,
         docs: _,
 
         #[cfg(feature = "serde-compat")]
         using_serde_with,
-    } = FieldAttr::from_attrs(&inner.attrs)?;
+        ..
+    } = field_attr;
 
     let crate_rename = attr.crate_rename();
 
-    #[cfg(feature = "serde-compat")]
-    if using_serde_with && !(type_as.is_some() || type_override.is_some()) {
-        syn_err_spanned!(
-            fields;
-            r#"using `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]`"#
-        )
-    }
-
-    match (&rename_inner, skip, optional.optional, flatten) {
-        (Some(_), ..) => syn_err_spanned!(fields; "`rename` is not applicable to newtype fields"),
-        (_, true, ..) => return super::unit::null(attr, name),
-        (_, _, true, ..) => {
-            syn_err_spanned!(fields; "`optional` is not applicable to newtype fields")
-        }
-        (_, _, _, true) => {
-            syn_err_spanned!(fields; "`flatten` is not applicable to newtype fields")
-        }
-        _ => {}
-    };
-
-    if type_as.is_some() && type_override.is_some() {
-        syn_err_spanned!(fields; "`type` is not compatible with `as`")
+    if skip {
+        return super::unit::null(attr, name);
     }
 
     let inner_ty = type_as.as_ref().unwrap_or(&inner.ty).clone();
 
     let mut dependencies = Dependencies::new(crate_rename.clone());
 
-    match (type_override.is_none(), inline) {
-        (false, _) => (),
-        (true, true) => dependencies.append_from(&inner_ty),
-        (true, false) => dependencies.push(&inner_ty),
+    match (&type_override, inline) {
+        (Some(_), _) => (),
+        (None, true) => dependencies.append_from(&inner_ty),
+        (None, false) => dependencies.push(&inner_ty),
     };
 
     let inline_def = match type_override {

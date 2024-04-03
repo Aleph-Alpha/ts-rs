@@ -3,19 +3,12 @@ use quote::quote;
 use syn::{Field, FieldsUnnamed, Path, Result};
 
 use crate::{
-    attr::{FieldAttr, StructAttr},
+    attr::{Attr, ContainerAttr, FieldAttr, StructAttr},
     deps::Dependencies,
     DerivedTS,
 };
 
 pub(crate) fn tuple(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Result<DerivedTS> {
-    if attr.rename_all.is_some() {
-        syn_err!("`rename_all` is not applicable to tuple structs");
-    }
-    if attr.tag.is_some() {
-        syn_err!("`tag` is not applicable to tuple structs");
-    }
-
     let crate_rename = attr.crate_rename();
     let mut formatted_fields = Vec::new();
     let mut dependencies = Dependencies::new(crate_rename.clone());
@@ -53,49 +46,28 @@ fn format_field(
     dependencies: &mut Dependencies,
     field: &Field,
 ) -> Result<()> {
+    let field_attr = FieldAttr::from_attrs(&field.attrs)?;
+    field_attr.assert_validity(field)?;
+
     let FieldAttr {
         type_as,
         type_override,
-        rename,
+        rename: _,
         inline,
         skip,
-        optional,
-        flatten,
+        optional: _,
+        flatten: _,
         docs: _,
 
         #[cfg(feature = "serde-compat")]
-        using_serde_with,
-    } = FieldAttr::from_attrs(&field.attrs)?;
+        using_serde_with: _,
+    } = field_attr;
 
     if skip {
         return Ok(());
     }
 
     let ty = type_as.as_ref().unwrap_or(&field.ty).clone();
-
-    #[cfg(feature = "serde-compat")]
-    if using_serde_with && !(type_as.is_some() || type_override.is_some()) {
-        syn_err_spanned!(
-            field;
-            r#"using `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]`"#
-        )
-    }
-
-    if type_as.is_some() && type_override.is_some() {
-        syn_err_spanned!(field; "`type` is not compatible with `as`")
-    }
-
-    if rename.is_some() {
-        syn_err_spanned!(field; "`rename` is not applicable to tuple structs")
-    }
-
-    if optional.optional {
-        syn_err_spanned!(field; "`optional` is not applicable to tuple fields")
-    }
-
-    if flatten {
-        syn_err_spanned!(field; "`flatten` is not applicable to tuple fields")
-    }
 
     formatted_fields.push(match type_override {
         Some(ref o) => quote!(#o.to_owned()),

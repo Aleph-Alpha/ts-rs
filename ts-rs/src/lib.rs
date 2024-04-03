@@ -40,7 +40,7 @@
 //! ## get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "8.0"
+//! ts-rs = "8.1"
 //! ```
 //!
 //! ```rust
@@ -202,6 +202,16 @@ pub mod typelist;
 ///   or, if `TS_RS_EXPORT_DIR` is not set, to `./bindings`  
 ///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
+///   <br/><br/>
+///
+/// - **`#[ts(as = "..")]`**  
+///   Overrides the type used in Typescript, using the provided Rust type instead.
+///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
+///   <br/><br/>
+///
+/// - **`#[ts(type = "..")]`**  
+///   Overrides the type used in TypeScript.  
+///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename = "..")]`**  
