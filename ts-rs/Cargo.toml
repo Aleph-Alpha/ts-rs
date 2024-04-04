@@ -55,3 +55,13 @@ thiserror = "1"
 indexmap = { version = "2", optional = true }
 ordered-float = { version = ">= 3, < 5", optional = true }
 serde_json = { version = "1", optional = true }
+
+[profile.test]
+incremental = false
+opt-level = 0
+debug = 0
+lto = false
+debug-assertions = false
+overflow-checks = false
+rpath = false 
+codegen-units = 512
