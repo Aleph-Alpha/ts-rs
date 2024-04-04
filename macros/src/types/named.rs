@@ -4,6 +4,7 @@ use syn::{
     spanned::Spanned, Field, FieldsNamed, GenericArgument, Path, PathArguments, Result, Type,
 };
 
+use super::type_as_infer;
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, Inflection, Optional, StructAttr},
     deps::Dependencies,
@@ -107,7 +108,11 @@ fn format_field(
         return Ok(());
     }
 
-    let parsed_ty = type_as.as_ref().unwrap_or(&field.ty).clone();
+    let parsed_ty = type_as
+        .as_ref()
+        .map(|ty_as| type_as_infer(ty_as, &field.ty))
+        .transpose()?
+        .unwrap_or_else(|| field.ty.clone());
 
     let (ty, optional_annotation) = match optional {
         Optional {

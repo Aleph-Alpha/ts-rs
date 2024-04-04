@@ -1,6 +1,7 @@
 use quote::quote;
 use syn::{FieldsUnnamed, Result};
 
+use super::type_as_infer;
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, StructAttr},
     deps::Dependencies,
@@ -27,7 +28,11 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
         return super::unit::null(attr, name);
     }
 
-    let inner_ty = type_as.as_ref().unwrap_or(&inner.ty).clone();
+    let inner_ty = type_as
+        .as_ref()
+        .map(|ty_as| type_as_infer(ty_as, &inner.ty))
+        .transpose()?
+        .unwrap_or_else(|| inner.ty.clone());
 
     let mut dependencies = Dependencies::new(crate_rename.clone());
 

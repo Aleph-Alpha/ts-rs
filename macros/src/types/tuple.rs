@@ -2,6 +2,7 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use syn::{Field, FieldsUnnamed, Path, Result};
 
+use super::type_as_infer;
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, StructAttr},
     deps::Dependencies,
@@ -64,7 +65,11 @@ fn format_field(
         return Ok(());
     }
 
-    let ty = type_as.as_ref().unwrap_or(&field.ty).clone();
+    let ty = type_as
+        .as_ref()
+        .map(|ty_as| type_as_infer(ty_as, &field.ty))
+        .transpose()?
+        .unwrap_or_else(|| field.ty.clone());
 
     formatted_fields.push(match type_override {
         Some(ref o) => quote!(#o.to_owned()),

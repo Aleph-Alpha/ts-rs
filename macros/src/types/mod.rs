@@ -1,4 +1,8 @@
-use syn::{Fields, Ident, ItemStruct, Result};
+use quote::{quote, ToTokens};
+use syn::{
+    Fields, Ident, ItemStruct, Result, Type, TypeArray, TypeParen, TypeReference, TypeSlice,
+    TypeTuple,
+};
 
 use crate::{
     attr::{Attr, StructAttr},
@@ -45,4 +49,49 @@ fn type_def(attr: &StructAttr, ident: &Ident, fields: &Fields) -> Result<Derived
         },
         Fields::Unit => unit::null(attr, &name),
     }
+}
+
+#[allow(unused)]
+pub(super) fn type_as_infer(type_as: &Type, original_type: &Type) -> Result<Type> {
+    syn::parse2(
+        type_as
+            .to_token_stream()
+            .into_iter()
+            .map(|x| {
+                let ty = syn::parse2::<Type>(x.to_token_stream());
+                Ok(match ty {
+                    Ok(Type::Infer(_)) => original_type.to_token_stream(),
+                    Ok(Type::Reference(TypeReference {
+                        elem,
+                        lifetime,
+                        and_token,
+                        mutability,
+                    })) => {
+                        let elem = type_as_infer(&elem, original_type)?;
+                        quote!(#and_token #lifetime #mutability #elem)
+                    }
+                    Ok(Type::Array(TypeArray { elem, len, .. })) => {
+                        let elem = type_as_infer(&elem, original_type)?;
+                        quote!([#elem; #len])
+                    }
+                    Ok(Type::Tuple(TypeTuple { elems, .. })) => {
+                        let elems = elems
+                            .iter()
+                            .map(|x| type_as_infer(x, original_type))
+                            .collect::<Result<Vec<_>>>()?;
+                        quote![(#(#elems),*)]
+                    }
+                    Ok(Type::Slice(TypeSlice { elem, .. })) => {
+                        let elem = type_as_infer(&elem, original_type)?;
+                        quote!([#elem])
+                    }
+                    Ok(Type::Paren(TypeParen { elem, .. })) => {
+                        let elem = type_as_infer(&elem, original_type)?;
+                        quote![(elem)]
+                    }
+                    y => x.to_token_stream(),
+                })
+            })
+            .collect::<Result<proc_macro2::TokenStream>>()?,
+    )
 }
