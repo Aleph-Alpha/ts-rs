@@ -1,3 +1,13 @@
 [workspace]
 members = ["macros", "ts-rs", "example"]
 resolver = "2"
+
+[profile.test]
+incremental = false
+opt-level = 0
+debug = 0
+lto = false
+debug-assertions = false
+overflow-checks = false
+rpath = false 
+codegen-units = 512
