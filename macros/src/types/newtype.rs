@@ -31,7 +31,6 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
     let inner_ty = type_as
         .as_ref()
         .map(|ty_as| type_as_infer(ty_as, &inner.ty))
-        .transpose()?
         .unwrap_or_else(|| inner.ty.clone());
 
     let mut dependencies = Dependencies::new(crate_rename.clone());

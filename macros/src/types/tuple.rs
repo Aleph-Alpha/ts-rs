@@ -68,7 +68,6 @@ fn format_field(
     let ty = type_as
         .as_ref()
         .map(|ty_as| type_as_infer(ty_as, &field.ty))
-        .transpose()?
         .unwrap_or_else(|| field.ty.clone());
 
     formatted_fields.push(match type_override {

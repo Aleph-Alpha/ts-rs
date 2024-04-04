@@ -111,7 +111,6 @@ fn format_field(
     let parsed_ty = type_as
         .as_ref()
         .map(|ty_as| type_as_infer(ty_as, &field.ty))
-        .transpose()?
         .unwrap_or_else(|| field.ty.clone());
 
     let (ty, optional_annotation) = match optional {
