@@ -1,3 +1,5 @@
+#![allow(dead_code, unused)]
+
 mod arrays;
 mod bound;
 mod chrono;
