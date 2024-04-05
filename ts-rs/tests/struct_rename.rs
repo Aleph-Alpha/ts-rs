@@ -47,12 +47,9 @@ fn rename_all_pascal_case() {
 }
 
 #[derive(TS, Default, serde::Serialize)]
-#[ts(
-    export,
-    export_to = "struct_rename/",
-    rename_all = "SCREAMING-KEBAB-CASE"
-)]
-#[serde(rename_all = "SCREAMING-KEBAB-CASE")]
+#[ts(export, export_to = "struct_rename/")]
+#[cfg_attr(feature = "serde-compat", serde(rename_all = "SCREAMING-KEBAB-CASE"))]
+#[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "SCREAMING-KEBAB-CASE"))]
 struct RenameAllScreamingKebab {
     crc32c_hash: i32,
     some_field: i32,
