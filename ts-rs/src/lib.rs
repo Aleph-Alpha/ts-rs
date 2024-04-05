@@ -220,7 +220,7 @@ pub mod typelist;
 ///
 /// - **`#[ts(rename_all = "..")]`**  
 ///   Rename all fields/variants of the type.  
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///
 /// - **`#[ts(concrete(..)]`**  
@@ -336,13 +336,13 @@ pub mod typelist;
 ///
 /// - **`#[ts(rename_all = "..")]`**  
 ///   Rename all variants of this enum.  
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename_all_fieds = "..")]`**  
 ///   Renames the fields of all the struct variants of this enum. This is equivalent to using
 ///   `#[ts(rename_all = "..")]` on all of the enum's variants.
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///  
 /// ### enum variant attributes
@@ -362,7 +362,7 @@ pub mod typelist;
 ///
 /// - **`#[ts(rename_all = "..")]`**  
 ///   Renames all the fields of a struct variant.
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 pub trait TS {
     /// If this type does not have generic parameters, then `WithoutGenerics` should just be `Self`.
