@@ -24,6 +24,7 @@ pub enum Inflection {
     Pascal,
     ScreamingSnake,
     Kebab,
+    ScreamingKebab,
 }
 
 pub(super) trait Attr: Default {
@@ -55,8 +56,6 @@ where
 
 impl Inflection {
     pub fn apply(self, string: &str) -> String {
-        use inflector::Inflector;
-
         match self {
             Inflection::Lower => string.to_lowercase(),
             Inflection::Upper => string.to_uppercase(),
@@ -64,7 +63,18 @@ impl Inflection {
                 let pascal = Inflection::apply(Inflection::Pascal, string);
                 pascal[..1].to_ascii_lowercase() + &pascal[1..]
             }
-            Inflection::Snake => string.to_snake_case(),
+            Inflection::Snake => {
+                let mut s = String::new();
+
+                for (i, ch) in string.char_indices() {
+                    if ch.is_uppercase() && i != 0 {
+                        s.push('_');
+                    }
+                    s.push(ch.to_ascii_lowercase());
+                }
+
+                s
+            }
             Inflection::Pascal => {
                 let mut s = String::with_capacity(string.len());
 
@@ -83,26 +93,10 @@ impl Inflection {
 
                 s
             }
-            Inflection::ScreamingSnake => string.to_screaming_snake_case(),
-            Inflection::Kebab => string.to_kebab_case(),
+            Inflection::ScreamingSnake => Self::Snake.apply(string).to_ascii_uppercase(),
+            Inflection::Kebab => Self::Snake.apply(string).replace('_', "-"),
+            Inflection::ScreamingKebab => Self::Kebab.apply(string).to_ascii_uppercase(),
         }
-    }
-}
-
-impl TryFrom<String> for Inflection {
-    type Error = Error;
-
-    fn try_from(value: String) -> Result<Self> {
-        Ok(match &*value.to_lowercase().replace(['_', '-'], "") {
-            "lowercase" => Self::Lower,
-            "uppercase" => Self::Upper,
-            "camelcase" => Self::Camel,
-            "snakecase" => Self::Snake,
-            "pascalcase" => Self::Pascal,
-            "screamingsnakecase" => Self::ScreamingSnake,
-            "kebabcase" => Self::Kebab,
-            _ => syn_err!("invalid inflection: '{}'", value),
-        })
     }
 }
 
@@ -143,7 +137,25 @@ fn parse_concrete(input: ParseStream) -> Result<HashMap<syn::Ident, syn::Type>> 
 }
 
 fn parse_assign_inflection(input: ParseStream) -> Result<Inflection> {
-    parse_assign_str(input).and_then(Inflection::try_from)
+    let span = input.span();
+    let str = parse_assign_str(input)?;
+
+    Ok(match &*str {
+        "lowercase" => Inflection::Lower,
+        "UPPERCASE" => Inflection::Upper,
+        "camelCase" => Inflection::Camel,
+        "snake_case" => Inflection::Snake,
+        "PascalCase" => Inflection::Pascal,
+        "SCREAMING_SNAKE_CASE" => Inflection::ScreamingSnake,
+        "kebab-case" => Inflection::Kebab,
+        "SCREAMING-KEBAB-CASE" => Inflection::ScreamingKebab,
+        other => {
+            syn_err!(
+                span;
+                r#"Value "{other}" is not valid for "rename_all". Accepted values are: "lowercase", "UPPERCASE", "camelCase", "snake_case", "PascalCase", "SCREAMING_SNAKE_CASE", "kebab-case" and "SCREAMING-KEBAB-CASE""#
+            )
+        }
+    })
 }
 
 fn parse_assign_from_str<T>(input: ParseStream) -> Result<T>

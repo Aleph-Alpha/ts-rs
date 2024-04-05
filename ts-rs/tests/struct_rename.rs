@@ -46,6 +46,29 @@ fn rename_all_pascal_case() {
     );
 }
 
+#[derive(TS, Default, serde::Serialize)]
+#[ts(
+    export,
+    export_to = "struct_rename/",
+    rename_all = "SCREAMING-KEBAB-CASE"
+)]
+#[serde(rename_all = "SCREAMING-KEBAB-CASE")]
+struct RenameAllScreamingKebab {
+    crc32c_hash: i32,
+    some_field: i32,
+    some_other_field: i32,
+}
+
+#[test]
+fn rename_all_screaming_kebab_case() {
+    // let a = RenameAllScreamingKebab::default();
+    // assert_eq!(serde_json::to_string(&a).unwrap(), "");
+    assert_eq!(
+        RenameAllScreamingKebab::inline(),
+        r#"{ "CRC32C-HASH": number, "SOME-FIELD": number, "SOME-OTHER-FIELD": number, }"#
+    );
+}
+
 #[derive(serde::Serialize, TS)]
 #[ts(export, export_to = "struct_rename/", rename_all = "camelCase")]
 struct RenameSerdeSpecialChar {
