@@ -3,19 +3,19 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "imports/ts_rs_test_type_a.ts")]
+#[ts(export_to = "imports/ts_rs_test_type_a.ts")]
 pub struct TestTypeA<T> {
     value: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "imports/ts_rs_test_type_b.ts")]
+#[ts(export_to = "imports/ts_rs_test_type_b.ts")]
 pub struct TestTypeB<T> {
     value: T,
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "imports/")]
+#[ts(export_to = "imports/")]
 pub enum TestEnum {
     C { value: TestTypeB<i8> },
     A1 { value: TestTypeA<i32> },
