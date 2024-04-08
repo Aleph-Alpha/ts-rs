@@ -165,11 +165,7 @@ fn type_as_infer_angle_bracketed(
                     eq_token: assoc_ty.eq_token,
                     ty: type_as_infer(&assoc_ty.ty, original_type),
                 }),
-                GenericArgument::Constraint(_)
-                | GenericArgument::AssocConst(_)
-                | GenericArgument::Lifetime(_)
-                | GenericArgument::Const(_) => arg.clone(),
-                _ => todo!(),
+                _ => arg.clone(),
             })
             .collect(),
     }
