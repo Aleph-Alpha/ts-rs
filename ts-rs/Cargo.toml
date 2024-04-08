@@ -15,6 +15,7 @@ categories = [
   "web-programming",
 ]
 readme = "../README.md"
+rust-version = "1.75.0"
 
 [features]
 chrono-impl = ["chrono"]
