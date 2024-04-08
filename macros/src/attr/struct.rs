@@ -35,7 +35,7 @@ impl StructAttr {
 
         let docs = parse_docs(attrs)?;
         result.docs = docs;
-        
+
         Ok(result)
     }
 
