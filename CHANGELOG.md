@@ -2,6 +2,7 @@
 
 ### Breaking
 
+- `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]` ([#280](https://github.com/Aleph-Alpha/ts-rs/pull/280))
 - Fix incompatibility with serde for `snake_case`, `kebab-case` and `SCREAMING_SNAKE_CASE` ([#298](https://github.com/Aleph-Alpha/ts-rs/pull/298))
 - `#[ts(rename_all = "...")]` no longer accepts variations in the string's casing, dashes and underscores to make behavior consistent with serde ([#298](https://github.com/Aleph-Alpha/ts-rs/pull/298))
 

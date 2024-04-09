@@ -18,6 +18,7 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
         type_override,
         inline,
         skip,
+        docs: _,
         ..
     } = field_attr;
 
