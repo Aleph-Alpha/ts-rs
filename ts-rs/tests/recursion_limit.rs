@@ -7,7 +7,7 @@ use ts_rs::{
 
 #[rustfmt::skip]
 #[derive(Debug, ts_rs::TS)]
-#[ts(export, export_to = "very_big_types")]
+#[ts(export, export_to = "very_big_types/")]
 pub enum Iso4217CurrencyCode {
     AED, AFN, ALL, AMD, ANG, AOA, ARS, AUD, AWG, AZN, BAM, BBD, BDT, BGN, BHD, BIF, BMD, BND, BOB,
     BRL, BSD, BTN, BWP, BYN, BZD, CAD, CDF, CHF, CLP, CNY, COP, CRC, CUC, CUP, CVE, CZK, DJF, DKK,
