@@ -37,6 +37,7 @@ mod self_referential;
 mod semver;
 mod serde_json;
 mod serde_skip_with_default;
+mod serde_with;
 mod simple;
 mod skip;
 mod slices;
