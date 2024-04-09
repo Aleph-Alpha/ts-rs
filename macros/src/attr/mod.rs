@@ -137,25 +137,27 @@ fn parse_concrete(input: ParseStream) -> Result<HashMap<syn::Ident, syn::Type>> 
 }
 
 fn parse_assign_inflection(input: ParseStream) -> Result<Inflection> {
-    let span = input.span();
-    let str = parse_assign_str(input)?;
+    input.parse::<Token![=]>()?;
 
-    Ok(match &*str {
-        "lowercase" => Inflection::Lower,
-        "UPPERCASE" => Inflection::Upper,
-        "camelCase" => Inflection::Camel,
-        "snake_case" => Inflection::Snake,
-        "PascalCase" => Inflection::Pascal,
-        "SCREAMING_SNAKE_CASE" => Inflection::ScreamingSnake,
-        "kebab-case" => Inflection::Kebab,
-        "SCREAMING-KEBAB-CASE" => Inflection::ScreamingKebab,
-        other => {
-            syn_err!(
-                span;
-                r#"Value "{other}" is not valid for "rename_all". Accepted values are: "lowercase", "UPPERCASE", "camelCase", "snake_case", "PascalCase", "SCREAMING_SNAKE_CASE", "kebab-case" and "SCREAMING-KEBAB-CASE""#
-            )
-        }
-    })
+    match Lit::parse(input)? {
+        Lit::Str(string) => Ok(match &*string.value() {
+            "lowercase" => Inflection::Lower,
+            "UPPERCASE" => Inflection::Upper,
+            "camelCase" => Inflection::Camel,
+            "snake_case" => Inflection::Snake,
+            "PascalCase" => Inflection::Pascal,
+            "SCREAMING_SNAKE_CASE" => Inflection::ScreamingSnake,
+            "kebab-case" => Inflection::Kebab,
+            "SCREAMING-KEBAB-CASE" => Inflection::ScreamingKebab,
+            other => {
+                syn_err!(
+                    string.span();
+                    r#"Value "{other}" is not valid for "rename_all". Accepted values are: "lowercase", "UPPERCASE", "camelCase", "snake_case", "PascalCase", "SCREAMING_SNAKE_CASE", "kebab-case" and "SCREAMING-KEBAB-CASE""#
+                )
+            }
+        }),
+        other => Err(Error::new(other.span(), "expected string")),
+    }
 }
 
 fn parse_assign_from_str<T>(input: ParseStream) -> Result<T>
