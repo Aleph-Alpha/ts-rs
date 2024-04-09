@@ -58,6 +58,9 @@ fn format_field(
         optional: _,
         flatten: _,
         docs: _,
+
+        #[cfg(feature = "serde-compat")]
+            using_serde_with: _,
     } = field_attr;
 
     if skip {

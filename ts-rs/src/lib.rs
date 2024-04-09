@@ -4,7 +4,7 @@
 //! ts-rs
 //! </h1>
 //! <p align="center">
-//! generate typescript type declarations from rust types
+//! Generate typescript type declarations from rust types
 //! </p>
 //!
 //! <div align="center">
@@ -24,20 +24,20 @@
 //! </a>
 //! </div>
 //!
-//! ## why?
+//! ## Why?
 //! When building a web application in rust, data structures have to be shared between backend and frontend.
 //! Using this library, you can easily generate TypeScript bindings to your rust structs & enums so that you can keep your
 //! types in one place.
 //!
 //! ts-rs might also come in handy when working with webassembly.
 //!
-//! ## how?
+//! ## How?
 //! ts-rs exposes a single trait, `TS`. Using a derive macro, you can implement this interface for your types.
 //! Then, you can use this trait to obtain the TypeScript bindings.
 //! We recommend doing this in your tests.
 //! [See the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs) and [the docs](https://docs.rs/ts-rs/latest/ts_rs/).
 //!
-//! ## get started
+//! ## Get started
 //! ```toml
 //! [dependencies]
 //! ts-rs = "8.1"
@@ -56,7 +56,7 @@
 //! ```
 //! When running `cargo test`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
 //!
-//! ## features
+//! ## Features
 //! - generate type declarations from rust structs
 //! - generate union declarations from rust enums
 //! - inline types
@@ -90,7 +90,7 @@
 //! If there's a type you're dealing with which doesn't implement `TS`, use either
 //! `#[ts(as = "..")]` or `#[ts(type = "..")]`, or open a PR.
 //!
-//! ## serde compatability
+//! ## `serde` compatability
 //! With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
 //! Supported serde attributes:
 //! - `rename`
@@ -108,18 +108,13 @@
 //!
 //! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
 //!
-//! ## contributing
+//! ## Contributing
 //! Contributions are always welcome!
 //! Feel free to open an issue, discuss using GitHub discussions or open a PR.
 //! [See CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
 //!
-//! ## todo
-//! - [x] serde compatibility layer
-//! - [x] documentation
-//! - [x] use typescript types across files
-//! - [x] more enum representations
-//! - [x] generics
-//! - [x] don't require `'static`
+//! ## MSRV
+//! The Minimum Supported Rust Version for this crate is 1.75.0
 
 use std::{
     any::TypeId,
@@ -220,7 +215,7 @@ pub mod typelist;
 ///
 /// - **`#[ts(rename_all = "..")]`**  
 ///   Rename all fields/variants of the type.  
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///
 /// - **`#[ts(concrete(..)]`**  
@@ -336,13 +331,13 @@ pub mod typelist;
 ///
 /// - **`#[ts(rename_all = "..")]`**  
 ///   Rename all variants of this enum.  
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename_all_fieds = "..")]`**  
 ///   Renames the fields of all the struct variants of this enum. This is equivalent to using
 ///   `#[ts(rename_all = "..")]` on all of the enum's variants.
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///  
 /// ### enum variant attributes
@@ -362,7 +357,7 @@ pub mod typelist;
 ///
 /// - **`#[ts(rename_all = "..")]`**  
 ///   Renames all the fields of a struct variant.
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 pub trait TS {
     /// If this type does not have generic parameters, then `WithoutGenerics` should just be `Self`.
