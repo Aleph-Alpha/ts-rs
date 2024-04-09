@@ -2,13 +2,19 @@
 
 ### Breaking
 
+- `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]` ([#280](https://github.com/Aleph-Alpha/ts-rs/pull/280))
+- Fix incompatibility with serde for `snake_case`, `kebab-case` and `SCREAMING_SNAKE_CASE` ([#298](https://github.com/Aleph-Alpha/ts-rs/pull/298))
+- `#[ts(rename_all = "...")]` no longer accepts variations in the string's casing, dashes and underscores to make behavior consistent with serde ([#298](https://github.com/Aleph-Alpha/ts-rs/pull/298))
+
 ### Features
 
 - Add support for `#[ts(type = "..")]` directly on structs and enums ([#286](https://github.com/Aleph-Alpha/ts-rs/pull/286))
+- Add support for `#[ts(as = "..")]` directly on structs and enums ([#288](https://github.com/Aleph-Alpha/ts-rs/pull/288))
+- Add support for `#[ts(rename_all = "SCREAMING-KEBAB-CASE")]` ([#298](https://github.com/Aleph-Alpha/ts-rs/pull/298))
 
 ### Fixes
 
-Fix `#[ts(rename_all_fields = "...")]` on enums containing tuple or unit variants ([#287](https://github.com/Aleph-Alpha/ts-rs/pull/287))
+- Fix `#[ts(rename_all_fields = "...")]` on enums containing tuple or unit variants ([#287](https://github.com/Aleph-Alpha/ts-rs/pull/287))
 
 # 8.1.0
 
