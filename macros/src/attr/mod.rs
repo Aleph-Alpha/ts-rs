@@ -110,6 +110,7 @@ impl Inflection {
             Self::Snake => "snake_case",
             Self::Pascal => "PascalCase",
             Self::ScreamingSnake => "SCREAMING_SNAKE_CASE",
+            Self::ScreamingKebab => "SCREAMING-KEBAB-CASE",
         }
     }
 }

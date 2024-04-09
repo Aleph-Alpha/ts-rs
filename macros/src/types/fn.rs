@@ -1,6 +1,5 @@
 use std::{collections::HashMap, ops::Not};
 
-use inflector::Inflector;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, ToTokens};
 use syn::{
@@ -9,7 +8,7 @@ use syn::{
 };
 
 use crate::{
-    attr::{Args, FnAttr},
+    attr::{Args, FnAttr, Inflection},
     deps::Dependencies,
     utils::{parse_docs, to_ts_ident},
     DerivedTS,
@@ -27,7 +26,7 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
     let generics = &input.sig.generics;
     let (_, ty_generics, where_clause) = generics.split_for_impl();
 
-    let struct_ident = format_ident!("{}Args", ident.to_string().to_pascal_case());
+    let struct_ident = format_ident!("{}Args", Inflection::Pascal.apply(&ident.to_string()));
     let fields = input
         .sig
         .inputs
@@ -75,10 +74,7 @@ pub fn fn_def(input: &ItemFn, fn_attr: FnAttr) -> Result<ParsedFn> {
     ));
 
     let docs = parse_docs(&input.attrs)?;
-    let ts_name = rename
-        .clone()
-        .unwrap_or_else(|| to_ts_ident(ident))
-        .to_pascal_case();
+    let ts_name = Inflection::Pascal.apply(&rename.clone().unwrap_or_else(|| to_ts_ident(ident)));
     let is_async = input.sig.asyncness.is_some();
     let return_ty = match (is_async, input.sig.output.clone()) {
         (false, syn::ReturnType::Default) => quote!("void"),
