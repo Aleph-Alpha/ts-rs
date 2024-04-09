@@ -1,9 +1,8 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, rc::Rc};
 
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{Path, Type};
-use std::rc::Rc;
 
 pub struct Dependencies {
     crate_rename: Rc<Path>,
@@ -13,12 +12,18 @@ pub struct Dependencies {
 
 #[derive(Hash, Eq, PartialEq)]
 enum Dependency {
-    // A dependency on all dependencies of `ty`. 
+    // A dependency on all dependencies of `ty`.
     // This does not include a dependency on `ty` itself - only its dependencies!
-    Transitive { crate_rename: Rc<Path>, ty: Rc<Type> },
+    Transitive {
+        crate_rename: Rc<Path>,
+        ty: Rc<Type>,
+    },
     // A dependency on all type parameters of `ty`, as returned by `TS::generics()`.
     // This does not include a dependency on `ty` itself.
-    Generics { crate_rename: Rc<Path>, ty: Rc<Type> },
+    Generics {
+        crate_rename: Rc<Path>,
+        ty: Rc<Type>,
+    },
     Type(Rc<Type>),
 }
 
@@ -30,7 +35,7 @@ impl Dependencies {
             types: HashSet::new(),
         }
     }
-    
+
     pub fn used_types(&self) -> impl Iterator<Item = &Type> {
         self.types.iter().map(Rc::as_ref)
     }
@@ -58,7 +63,7 @@ impl Dependencies {
         self.dependencies.extend(other.dependencies);
         self.types.extend(other.types);
     }
-    
+
     fn push_type(&mut self, ty: &Type) -> Rc<Type> {
         // this can be replaces with `get_or_insert_owned` once #60896 is stabilized
         match self.types.get(ty) {
@@ -66,8 +71,8 @@ impl Dependencies {
                 let ty = Rc::new(ty.clone());
                 self.types.insert(ty.clone());
                 ty
-            },
-            Some(ty) => ty.clone()
+            }
+            Some(ty) => ty.clone(),
         }
     }
 }
