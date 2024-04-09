@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use syn::{parse_quote, Attribute, Fields, Ident, Path, Result, Type, WherePredicate};
 
-use super::{parse_assign_from_str, parse_bound, parse_concrete, Attr, ContainerAttr, Serde};
+use super::{
+    parse_assign_from_str, parse_assign_inflection, parse_bound, parse_concrete, Attr,
+    ContainerAttr, Serde,
+};
 use crate::{
     attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
     utils::{parse_attrs, parse_docs},
@@ -35,7 +38,7 @@ impl StructAttr {
 
         let docs = parse_docs(attrs)?;
         result.docs = docs;
-        
+
         Ok(result)
     }
 
@@ -133,7 +136,7 @@ impl_parse! {
         "as" => out.type_as = Some(parse_assign_from_str(input)?),
         "type" => out.type_override = Some(parse_assign_str(input)?),
         "rename" => out.rename = Some(parse_assign_str(input)?),
-        "rename_all" => out.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
+        "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
         "tag" => out.tag = Some(parse_assign_str(input)?),
         "export" => out.export = true,
         "export_to" => out.export_to = Some(parse_assign_str(input)?),
@@ -146,7 +149,7 @@ impl_parse! {
 impl_parse! {
     Serde<StructAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
-        "rename_all" => out.0.rename_all = Some(parse_assign_str(input).and_then(Inflection::try_from)?),
+        "rename_all" => out.0.rename_all = Some(parse_assign_inflection(input)?),
         "tag" => out.0.tag = Some(parse_assign_str(input)?),
         "bound" => out.0.bound = Some(parse_bound(input)?),
         // parse #[serde(default)] to not emit a warning
