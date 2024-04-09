@@ -368,7 +368,7 @@ fn generate_where_clause(
         let is_type_param = |id: &Ident| generics.type_params().any(|p| &p.ident == id);
 
         let mut used_types = HashSet::new();
-        for ty in &dependencies.types {
+        for ty in dependencies.used_types() {
             used_type_params(&mut used_types, ty, is_type_param);
         }
         used_types.into_iter()
