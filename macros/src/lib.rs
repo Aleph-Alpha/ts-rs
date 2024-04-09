@@ -3,8 +3,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use attr::FnAttr;
-use inflector::Inflector;
+use attr::{FnAttr, Inflection};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
@@ -463,7 +462,10 @@ fn entry_fn(attr: TokenStream, input: TokenStream) -> Result<TokenStream> {
         FnAttr::default()
     };
 
-    let ident = format_ident!("{}Fn", input.sig.ident.to_string().to_pascal_case());
+    let ident = format_ident!(
+        "{}Fn",
+        Inflection::Pascal.apply(&input.sig.ident.to_string())
+    );
 
     let ParsedFn {
         args_struct,
