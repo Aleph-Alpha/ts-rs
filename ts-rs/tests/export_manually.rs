@@ -36,7 +36,7 @@ fn export_manually() {
         )
     };
 
-    let actual_content = fs::read_to_string(User::output_path().unwrap()).unwrap();
+    let actual_content = fs::read_to_string(User::default_output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }
@@ -57,7 +57,7 @@ fn export_manually_dir() {
         )
     };
 
-    let actual_content = fs::read_to_string(UserDir::output_path().unwrap()).unwrap();
+    let actual_content = fs::read_to_string(UserDir::default_output_path().unwrap()).unwrap();
 
     assert_eq!(actual_content, expected_content);
 }

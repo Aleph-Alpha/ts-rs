@@ -1,11 +1,11 @@
-//! A simple zero-sized collection of types. 
+//! A simple zero-sized collection of types.
 
 use std::{any::TypeId, marker::PhantomData};
 
 use crate::TS;
 
 /// A visitor used to iterate over a [`TypeList`].  
-/// 
+///
 /// Example:
 /// ```
 /// # use ts_rs::TS;
@@ -33,10 +33,10 @@ pub trait TypeVisitor: Sized {
 }
 
 /// A list containing types implementing `TS + 'static + ?Sized`.  
-/// 
-/// To construct a [`TypeList`], start with the empty list, which is the unit type `()`, and 
+///
+/// To construct a [`TypeList`], start with the empty list, which is the unit type `()`, and
 /// repeatedly call [`TypeList::push`] or [`TypeList::extend`] on it.  
-/// 
+///
 /// Example:
 /// ```
 /// # use ts_rs::typelist::TypeList;
@@ -49,10 +49,10 @@ pub trait TypeVisitor: Sized {
 ///       .extend(unsigned)
 /// }
 /// ```
-/// 
-/// The only way to get access to the types contained in a [`TypeList`] is to iterate over it by 
+///
+/// The only way to get access to the types contained in a [`TypeList`] is to iterate over it by
 /// creating a visitor implementing [`TypeVisitor`] and calling [`TypeList::for_each`].
-/// 
+///
 /// Under the hood, [`TypeList`] is recursively defined as follows:
 /// - The unit type `()` is the empty [`TypeList`]
 /// - For every `T: TS`, `(PhantomData<T>,)` is a [`TypeList`]

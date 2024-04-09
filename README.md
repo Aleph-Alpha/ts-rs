@@ -6,7 +6,7 @@
 ts-rs
 </h1>
 <p align="center">
-generate typescript type declarations from rust types
+Generate typescript type declarations from rust types
 </p>
 
 <div align="center">
@@ -26,23 +26,23 @@ alt="Download" />
 </a>
 </div>
 
-### why?
+### Why?
 When building a web application in rust, data structures have to be shared between backend and frontend.
 Using this library, you can easily generate TypeScript bindings to your rust structs & enums so that you can keep your
 types in one place.
 
 ts-rs might also come in handy when working with webassembly.
 
-### how?
+### How?
 ts-rs exposes a single trait, `TS`. Using a derive macro, you can implement this interface for your types.
 Then, you can use this trait to obtain the TypeScript bindings.
 We recommend doing this in your tests.
 [See the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs) and [the docs](https://docs.rs/ts-rs/latest/ts_rs/).
 
-### get started
+### Get started
 ```toml
 [dependencies]
-ts-rs = "7.1"
+ts-rs = "8.1"
 ```
 
 ```rust
@@ -58,7 +58,7 @@ struct User {
 ```
 When running `cargo test`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
 
-### features
+### Features
 - generate type declarations from rust structs
 - generate union declarations from rust enums
 - inline types
@@ -75,6 +75,7 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
 | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
 | import-esm         | When enabled,`import` statements in the generated file will have the `.js` extension in the end of the path to conform to the ES Modules spec. <br/> Example: `import { MyStruct } from "./my_struct.js"` |
+| serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                                                                                |
 | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
 | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
 | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
@@ -91,7 +92,7 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 If there's a type you're dealing with which doesn't implement `TS`, use either
 `#[ts(as = "..")]` or `#[ts(type = "..")]`, or open a PR.
 
-### serde compatability
+### `serde` compatability
 With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
 Supported serde attributes:
 - `rename`
@@ -109,17 +110,12 @@ from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` inst
 
 When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
 
-### contributing
+### Contributing
 Contributions are always welcome!
 Feel free to open an issue, discuss using GitHub discussions or open a PR.
 [See CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
 
-### todo
-- [x] serde compatibility layer
-- [x] documentation
-- [x] use typescript types across files
-- [x] more enum representations
-- [x] generics
-- [x] don't require `'static`
+### MSRV
+The Minimum Supported Rust Version for this crate is 1.75.0
 
 License: MIT

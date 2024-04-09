@@ -4,7 +4,7 @@
 //! ts-rs
 //! </h1>
 //! <p align="center">
-//! generate typescript type declarations from rust types
+//! Generate typescript type declarations from rust types
 //! </p>
 //!
 //! <div align="center">
@@ -24,23 +24,23 @@
 //! </a>
 //! </div>
 //!
-//! ## why?
+//! ## Why?
 //! When building a web application in rust, data structures have to be shared between backend and frontend.
 //! Using this library, you can easily generate TypeScript bindings to your rust structs & enums so that you can keep your
 //! types in one place.
 //!
 //! ts-rs might also come in handy when working with webassembly.
 //!
-//! ## how?
+//! ## How?
 //! ts-rs exposes a single trait, `TS`. Using a derive macro, you can implement this interface for your types.
 //! Then, you can use this trait to obtain the TypeScript bindings.
 //! We recommend doing this in your tests.
 //! [See the example](https://github.com/Aleph-Alpha/ts-rs/blob/main/example/src/lib.rs) and [the docs](https://docs.rs/ts-rs/latest/ts_rs/).
 //!
-//! ## get started
+//! ## Get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "7.1"
+//! ts-rs = "8.1"
 //! ```
 //!
 //! ```rust
@@ -56,7 +56,7 @@
 //! ```
 //! When running `cargo test`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
 //!
-//! ## features
+//! ## Features
 //! - generate type declarations from rust structs
 //! - generate union declarations from rust enums
 //! - inline types
@@ -73,6 +73,7 @@
 //! | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
 //! | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
 //! | import-esm         | When enabled,`import` statements in the generated file will have the `.js` extension in the end of the path to conform to the ES Modules spec. <br/> Example: `import { MyStruct } from "./my_struct.js"` |
+//! | serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                                                                                |
 //! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
 //! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
 //! | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
@@ -89,7 +90,7 @@
 //! If there's a type you're dealing with which doesn't implement `TS`, use either
 //! `#[ts(as = "..")]` or `#[ts(type = "..")]`, or open a PR.
 //!
-//! ## serde compatability
+//! ## `serde` compatability
 //! With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
 //! Supported serde attributes:
 //! - `rename`
@@ -107,18 +108,13 @@
 //!
 //! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
 //!
-//! ## contributing
+//! ## Contributing
 //! Contributions are always welcome!
 //! Feel free to open an issue, discuss using GitHub discussions or open a PR.
 //! [See CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
 //!
-//! ## todo
-//! - [x] serde compatibility layer
-//! - [x] documentation
-//! - [x] use typescript types across files
-//! - [x] more enum representations
-//! - [x] generics
-//! - [x] don't require `'static`
+//! ## MSRV
+//! The Minimum Supported Rust Version for this crate is 1.75.0
 
 use std::{
     any::TypeId,
@@ -140,6 +136,8 @@ use crate::typelist::TypeList;
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
+#[cfg(feature = "serde-json-impl")]
+mod serde_json;
 pub mod typelist;
 
 /// A type which can be represented in TypeScript.  
@@ -149,14 +147,24 @@ pub mod typelist;
 ///
 /// ### exporting
 /// Because Rusts procedural macros are evaluated before other compilation steps, TypeScript
-/// bindings cannot be exported during compile time.
-/// Bindings can be exported within a test, which ts-rs generates for you by adding `#[ts(export)]`
-/// to a type you wish to export to a file.
-/// If, for some reason, you need to do this during runtime, you can call [`TS::export`] yourself.
+/// bindings __cannot__ be exported during compile time.
 ///
-/// **Note:**
-/// Annotating a type with `#[ts(export)]` (or exporting it during runtime using
-/// [`TS::export`]) will cause all of its dependencies to be exported as well.
+/// Bindings can be exported within a test, which ts-rs generates for you by adding `#[ts(export)]`
+/// to a type you wish to export to a file.  
+/// When `cargo test` is run, all types annotated with `#[ts(export)]` and all of their
+/// dependencies will be written to `TS_RS_EXPORT_DIR`, or `./bindings` by default.
+///
+/// For each individual type, path and filename within the output directory can be changed using
+/// `#[ts(export_to = "...")]`. By default, the filename will be derived from the name of the type.
+///
+/// If, for some reason, you need to do this during runtime or cannot use `#[ts(export)]`, bindings
+/// can be exported manually:
+///
+/// | Function              | Includes Dependencies | To                 |
+/// |-----------------------|-----------------------|--------------------|
+/// | [`TS::export`]        | ❌                    | `TS_RS_EXPORT_DIR` |
+/// | [`TS::export_all`]    | ✔️                    | `TS_RS_EXPORT_DIR` |
+/// | [`TS::export_all_to`] | ✔️                    | _custom_           |
 ///
 /// ### serde compatibility
 /// By default, the feature `serde-compat` is enabled.
@@ -166,6 +174,10 @@ pub mod typelist;
 ///
 /// ### container attributes
 /// attributes applicable for both structs and enums
+///
+/// - **`#[ts(crate = "..")]`**
+///   Generates code which references the module passed to it instead of defaulting to `::ts_rs`
+///   This is useful for cases where you have to re-export the crate.
 ///
 /// - **`#[ts(export)]`**  
 ///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
@@ -187,13 +199,78 @@ pub mod typelist;
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
 ///   <br/><br/>
 ///
+/// - **`#[ts(as = "..")]`**  
+///   Overrides the type used in Typescript, using the provided Rust type instead.
+///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
+///   <br/><br/>
+///
+/// - **`#[ts(type = "..")]`**  
+///   Overrides the type used in TypeScript.  
+///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
+///   <br/><br/>
+///
 /// - **`#[ts(rename = "..")]`**  
 ///   Sets the typescript name of the generated type
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename_all = "..")]`**  
-///   Rename all fields/variants of the type.
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   Rename all fields/variants of the type.  
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
+///   <br/><br/>
+///
+/// - **`#[ts(concrete(..)]`**  
+///   Disables one ore more generic type parameters by specifying a concrete type for them.  
+///   The resulting TypeScript definition will not be generic over these parameters and will use the
+///   provided type instead.  
+///   This is especially useful for generic types containing associated types. Since TypeScript does
+///   not have an equivalent construct to associated types, we cannot generate a generic definition
+///   for them. Using `#[ts(concrete(..)]`, we can however generate a non-generic definition.
+///   Example:
+///   ```
+///   # use ts_rs::TS;
+///   ##[derive(TS)]
+///   ##[ts(concrete(I = std::vec::IntoIter<String>))]
+///   struct SearchResult<I: Iterator>(Vec<I::Item>);
+///   // will always generate `type SearchResult = Array<String>`.
+///   ```
+///   <br/><br/>
+///
+/// - **`#[ts(bound)]`**
+///   Override the bounds generated on the `TS` implementation for this type. This is useful in
+///   combination with `#[ts(concrete)]`, when the type's generic parameters aren't directly used
+///   in a field or variant.
+///
+///   Example:
+///   ```
+///   # use ts_rs::TS;
+///
+///   trait Container {
+///       type Value: TS;
+///   }
+///
+///   struct MyContainer;
+///
+///   ##[derive(TS)]
+///   struct MyValue;
+///
+///   impl Container for MyContainer {
+///       type Value = MyValue;
+///   }
+///
+///   ##[derive(TS)]
+///   ##[ts(export, concrete(C = MyContainer))]
+///   struct Inner<C: Container> {
+///       value: C::Value,
+///   }
+///
+///   ##[derive(TS)]
+///   // Without `#[ts(bound)]`, `#[derive(TS)]` would generate an unnecessary
+///   // `C: TS` bound
+///   ##[ts(export, concrete(C = MyContainer), bound = "C::Value: TS")]
+///   struct Outer<C: Container> {
+///       inner: Inner<C>,
+///   }
+///   ```
 ///   <br/><br/>
 ///
 /// ### struct attributes
@@ -254,13 +331,13 @@ pub mod typelist;
 ///
 /// - **`#[ts(rename_all = "..")]`**  
 ///   Rename all variants of this enum.  
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename_all_fieds = "..")]`**  
 ///   Renames the fields of all the struct variants of this enum. This is equivalent to using
 ///   `#[ts(rename_all = "..")]` on all of the enum's variants.
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///  
 /// ### enum variant attributes
@@ -280,7 +357,7 @@ pub mod typelist;
 ///
 /// - **`#[ts(rename_all = "..")]`**  
 ///   Renames all the fields of a struct variant.
-///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case"
+///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 pub trait TS {
     /// If this type does not have generic parameters, then `WithoutGenerics` should just be `Self`.
@@ -380,50 +457,123 @@ pub trait TS {
         deps
     }
 
-    /// Manually export this type to a file.
-    /// The output file can be specified by annotating the type with `#[ts(export_to = ".."]`.
-    /// By default, the filename will be derived from the types name.
+    /// Manually export this type to the filesystem.
+    /// To export this type together with all of its dependencies, use [`TS::export_all`].
     ///
-    /// When a type is annotated with `#[ts(export)]`, it is exported automatically within a test.
-    /// This function is only usefull if you need to export the type outside of the context of a
-    /// test.
+    /// # Automatic Exporting
+    /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
+    /// exported automatically whenever `cargo test` is run.  
+    /// In that case, there is no need to manually call this function.
+    ///
+    /// # Target Directory
+    /// The target directory to which the type will be exported may be changed by setting the
+    /// `TS_RS_EXPORT_DIR` environment variable. By default, `./bindings` will be used.
+    ///
+    /// To specify a target directory manually, use [`TS::export_all_to`], which also exports all
+    /// dependencies.
+    ///
+    /// To alter the filename or path of the type within the target directory,
+    /// use `#[ts(export_to = "...")]`.
     fn export() -> Result<(), ExportError>
     where
         Self: 'static,
     {
-        export::export_type_with_dependencies::<Self>()
+        let path = Self::default_output_path()
+            .ok_or_else(std::any::type_name::<Self>)
+            .map_err(ExportError::CannotBeExported)?;
+
+        export::export_to::<Self, _>(path)
     }
 
-    /// Manually export this type to a file with a file with the specified path. This
-    /// function will ignore the `#[ts(export_to = "..)]` attribute.
-    fn export_to(path: impl AsRef<Path>) -> Result<(), ExportError>
+    /// Manually export this type to the filesystem, together with all of its dependencies.  
+    /// To export only this type, without its dependencies, use [`TS::export`].
+    ///
+    /// # Automatic Exporting
+    /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
+    /// exported automatically whenever `cargo test` is run.  
+    /// In that case, there is no need to manually call this function.
+    ///
+    /// # Target Directory
+    /// The target directory to which the types will be exported may be changed by setting the
+    /// `TS_RS_EXPORT_DIR` environment variable. By default, `./bindings` will be used.
+    ///
+    /// To specify a target directory manually, use [`TS::export_all_to`].
+    ///
+    /// To alter the filenames or paths of the types within the target directory,
+    /// use `#[ts(export_to = "...")]`.
+    fn export_all() -> Result<(), ExportError>
     where
         Self: 'static,
     {
-        export::export_type_to::<Self, _>(path)
+        export::export_all_into::<Self>(&*export::default_out_dir())
+    }
+
+    /// Manually export this type into the given directory, together with all of its dependencies.  
+    /// To export only this type, without its dependencies, use [`TS::export`].
+    ///
+    /// Unlike [`TS::export_all`], this function disregards `TS_RS_EXPORT_DIR`, using the provided
+    /// directory instead.
+    ///
+    /// To alter the filenames or paths of the types within the target directory,
+    /// use `#[ts(export_to = "...")]`.
+    ///
+    /// # Automatic Exporting
+    /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
+    /// exported automatically whenever `cargo test` is run.  
+    /// In that case, there is no need to manually call this function.
+    fn export_all_to(out_dir: impl AsRef<Path>) -> Result<(), ExportError>
+    where
+        Self: 'static,
+    {
+        export::export_all_into::<Self>(out_dir)
     }
 
     /// Manually generate bindings for this type, returning a [`String`].  
-    /// This function does not format the output, even if the `format` feature is enabled.
+    /// This function does not format the output, even if the `format` feature is enabled. TODO
+    ///
+    /// # Automatic Exporting
+    /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
+    /// exported automatically whenever `cargo test` is run.  
+    /// In that case, there is no need to manually call this function.
     fn export_to_string() -> Result<String, ExportError>
     where
         Self: 'static,
     {
-        export::export_type_to_string::<Self>()
+        export::export_to_string::<Self>()
     }
 
-    /// Returns the output path to where `T` should be exported.
+    /// Returns the output path to where `T` should be exported.  
+    /// The returned path does _not_ include the base directory from `TS_RS_EXPORT_DIR`.  
+    ///
+    /// To get the output path containing `TS_RS_EXPORT_DIR`, use [`TS::default_output_path`].
     ///
     /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.  
     /// See the documentation of [`TS`] for more details.
-    /// 
+    ///
     /// The output of this function depends on the environment variable `TS_RS_EXPORT_DIR`, which is
     /// used as base directory. If it is not set, `./bindings` is used as default directory.
     ///
     /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
     /// `None`.
-    fn output_path() -> Option<PathBuf> {
+    fn output_path() -> Option<&'static Path> {
         None
+    }
+
+    /// Returns the output path to where `T` should be exported.  
+    ///
+    /// The output of this function depends on the environment variable `TS_RS_EXPORT_DIR`, which is
+    /// used as base directory. If it is not set, `./bindings` is used as default directory.
+    ///
+    /// To get the output path relative to `TS_RS_EXPORT_DIR` and without reading the environment
+    /// variable, use [`TS::output_path`].
+    ///
+    /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.  
+    /// See the documentation of [`TS`] for more details.
+    ///
+    /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
+    /// `None`.
+    fn default_output_path() -> Option<PathBuf> {
+        Some(export::default_out_dir().join(Self::output_path()?))
     }
 }
 
@@ -436,8 +586,9 @@ pub struct Dependency {
     /// Name of the type in TypeScript
     pub ts_name: String,
     /// Path to where the type would be exported. By default a filename is derived from the types
-    /// name, which can be customized with `#[ts(export_to = "..")]`.
-    pub exported_to: String,
+    /// name, which can be customized with `#[ts(export_to = "..")]`.  
+    /// This path does _not_ include a base directory.
+    pub output_path: &'static Path,
 }
 
 impl Dependency {
@@ -445,11 +596,11 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
-        let exported_to = T::output_path()?.to_str()?.to_owned();
+        let output_path = T::output_path()?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
             ts_name: T::ident(),
-            exported_to,
+            output_path,
         })
     }
 }
@@ -543,8 +694,9 @@ macro_rules! impl_shadow {
             {
                 <$s>::generics()
             }
-            fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
-            fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
+            fn decl() -> String { <$s>::decl() }
+            fn decl_concrete() -> String { <$s>::decl_concrete() }
+            fn output_path() -> Option<&'static std::path::Path> { <$s>::output_path() }
         }
     };
 }
@@ -724,15 +876,15 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     type WithoutGenerics = HashMap<Dummy, Dummy>;
 
     fn ident() -> String {
-        "Record".to_owned()
+        panic!()
     }
 
     fn name() -> String {
-        format!("Record<{}, {}>", K::name(), V::name())
+        format!("{{ [key: {}]: {} }}", K::name(), V::name())
     }
 
     fn inline() -> String {
-        format!("Record<{}, {}>", K::inline(), V::inline())
+        format!("{{ [key: {}]: {} }}", K::inline(), V::inline())
     }
 
     fn dependency_types() -> impl TypeList
@@ -868,8 +1020,11 @@ impl_primitives! {
     Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr => "string",
     () => "null"
 }
+
 #[rustfmt::skip]
 pub(crate) use impl_primitives;
+#[rustfmt::skip]
+pub(crate) use impl_shadow;
 
 #[doc(hidden)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]

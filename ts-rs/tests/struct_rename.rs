@@ -4,11 +4,7 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(
-    export,
-    export_to = "struct_rename/",
-    rename_all = "UPPERCASE"
-)]
+#[ts(export, export_to = "struct_rename/", rename_all = "UPPERCASE")]
 struct RenameAllUpper {
     a: i32,
     b: i32,
@@ -20,11 +16,7 @@ fn rename_all() {
 }
 
 #[derive(TS)]
-#[ts(
-    export,
-    export_to = "struct_rename/",
-    rename_all = "camelCase"
-)]
+#[ts(export, export_to = "struct_rename/", rename_all = "camelCase")]
 struct RenameAllCamel {
     crc32c_hash: i32,
     b: i32,
@@ -40,11 +32,7 @@ fn rename_all_camel_case() {
 }
 
 #[derive(TS)]
-#[ts(
-    export,
-    export_to = "struct_rename/",
-    rename_all = "PascalCase"
-)]
+#[ts(export, export_to = "struct_rename/", rename_all = "PascalCase")]
 struct RenameAllPascal {
     crc32c_hash: i32,
     b: i32,
@@ -58,12 +46,31 @@ fn rename_all_pascal_case() {
     );
 }
 
+#[derive(TS, Default, serde::Serialize)]
+#[ts(export, export_to = "struct_rename/")]
+#[cfg_attr(feature = "serde-compat", serde(rename_all = "SCREAMING-KEBAB-CASE"))]
+#[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "SCREAMING-KEBAB-CASE"))]
+struct RenameAllScreamingKebab {
+    crc32c_hash: i32,
+    some_field: i32,
+    some_other_field: i32,
+}
+
+#[test]
+fn rename_all_screaming_kebab_case() {
+    let rename_all = RenameAllScreamingKebab::default();
+    assert_eq!(
+        serde_json::to_string(&rename_all).unwrap(),
+        r#"{"CRC32C-HASH":0,"SOME-FIELD":0,"SOME-OTHER-FIELD":0}"#
+    );
+    assert_eq!(
+        RenameAllScreamingKebab::inline(),
+        r#"{ "CRC32C-HASH": number, "SOME-FIELD": number, "SOME-OTHER-FIELD": number, }"#
+    );
+}
+
 #[derive(serde::Serialize, TS)]
-#[ts(
-    export,
-    export_to = "struct_rename/",
-    rename_all = "camelCase"
-)]
+#[ts(export, export_to = "struct_rename/", rename_all = "camelCase")]
 struct RenameSerdeSpecialChar {
     #[serde(rename = "a/b")]
     b: i32,

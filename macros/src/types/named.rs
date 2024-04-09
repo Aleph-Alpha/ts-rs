@@ -1,23 +1,23 @@
 use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
-use syn::{spanned::Spanned, Field, FieldsNamed, GenericArgument, Generics, PathArguments, Result, Type};
+use quote::quote;
+use syn::{
+    spanned::Spanned, Field, FieldsNamed, GenericArgument, Path, PathArguments, Result, Type,
+};
 
 use crate::{
-    attr::{FieldAttr, Inflection, Optional, StructAttr},
+    attr::{Attr, ContainerAttr, FieldAttr, Inflection, Optional, StructAttr},
     deps::Dependencies,
     utils::{raw_name_to_ts_field, to_ts_ident},
     DerivedTS,
 };
 
-pub(crate) fn named(
-    attr: &StructAttr,
-    name: &str,
-    fields: &FieldsNamed,
-    generics: &Generics,
-) -> Result<DerivedTS> {
+pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Result<DerivedTS> {
+    let crate_rename = attr.crate_rename();
+
     let mut formatted_fields = Vec::new();
     let mut flattened_fields = Vec::new();
-    let mut dependencies = Dependencies::default();
+    let mut dependencies = Dependencies::new(crate_rename.clone());
+
     if let Some(tag) = &attr.tag {
         let formatted = format!("{}: \"{}\",", tag, name);
         formatted_fields.push(quote! {
@@ -27,12 +27,12 @@ pub(crate) fn named(
 
     for field in &fields.named {
         format_field(
+            &crate_rename,
             &mut formatted_fields,
             &mut flattened_fields,
             &mut dependencies,
             field,
             &attr.rename_all,
-            generics,
         )?;
     }
 
@@ -47,19 +47,30 @@ pub(crate) fn named(
         (_, _) => quote!(format!("{{ {} }} & {}", #fields, #flattened)),
     };
 
+    let inline_flattened = match (formatted_fields.len(), flattened_fields.len()) {
+        (0, 0) => quote!("{  }".to_owned()),
+        (_, 0) => quote!(format!("{{ {} }}", #fields)),
+        (0, _) => quote!(#flattened),
+        (_, _) => quote!(format!("{{ {} }} & {}", #fields, #flattened)),
+    };
+
     Ok(DerivedTS {
-        generics: generics.clone(),
+        crate_rename,
+        // the `replace` combines `{ ... } & { ... }` into just one `{ ... }`. Not necessary, but it
+        // results in simpler type definitions.
         inline: quote!(#inline.replace(" } & { ", " ")),
-        inline_flattened: Some(quote!(format!("{{ {} }}", #fields))),
+        inline_flattened: Some(quote!(#inline_flattened.replace(" } & { ", " "))),
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name: name.to_owned(),
+        concrete: attr.concrete.clone(),
+        bound: attr.bound.clone(),
     })
 }
 
-// build an expresion which expands to a string, representing a single field of a struct.
+// build an expression which expands to a string, representing a single field of a struct.
 //
 // formatted_fields will contain all the fields that do not contain the flatten
 // attribute, in the format
@@ -70,13 +81,17 @@ pub(crate) fn named(
 // but for enums is
 // ({ /* variant data */ } | { /* variant data */ })
 fn format_field(
+    crate_rename: &Path,
     formatted_fields: &mut Vec<TokenStream>,
     flattened_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     field: &Field,
     rename_all: &Option<Inflection>,
-    _generics: &Generics,
 ) -> Result<()> {
+    let field_attr = FieldAttr::from_attrs(&field.attrs)?;
+
+    field_attr.assert_validity(field)?;
+
     let FieldAttr {
         type_as,
         type_override,
@@ -86,21 +101,16 @@ fn format_field(
         optional,
         flatten,
         docs,
-    } = FieldAttr::from_attrs(&field.attrs)?;
+
+        #[cfg(feature = "serde-compat")]
+            using_serde_with: _,
+    } = field_attr;
 
     if skip {
         return Ok(());
     }
 
-    if type_as.is_some() && type_override.is_some() {
-        syn_err_spanned!(field; "`type` is not compatible with `as`")
-    }
-
-    let parsed_ty = if let Some(ref type_as) = type_as {
-        syn::parse_str::<Type>(&type_as.to_token_stream().to_string())?
-    } else {
-        field.ty.clone()
-    };
+    let parsed_ty = type_as.as_ref().unwrap_or(&field.ty).clone();
 
     let (ty, optional_annotation) = match optional {
         Optional {
@@ -119,15 +129,7 @@ fn format_field(
     };
 
     if flatten {
-        match (&type_as, &type_override, &rename, inline) {
-            (Some(_), _, _, _) => syn_err_spanned!(field; "`as` is not compatible with `flatten`"),
-            (_, Some(_), _, _) => syn_err_spanned!(field; "`type` is not compatible with `flatten`"),
-            (_, _, Some(_), _) => syn_err_spanned!(field; "`rename` is not compatible with `flatten`"),
-            (_, _, _, true) => syn_err_spanned!(field; "`inline` is not compatible with `flatten`"),
-            _ => {}
-        }
-
-        flattened_fields.push(quote!(<#ty as ts_rs::TS>::inline_flattened()));
+        flattened_fields.push(quote!(<#ty as #crate_rename::TS>::inline_flattened()));
         dependencies.append_from(ty);
         return Ok(());
     }
@@ -135,12 +137,13 @@ fn format_field(
     let formatted_ty = type_override.map(|t| quote!(#t)).unwrap_or_else(|| {
         if inline {
             dependencies.append_from(ty);
-            quote!(<#ty as ts_rs::TS>::inline())
+            quote!(<#ty as #crate_rename::TS>::inline())
         } else {
             dependencies.push(ty);
-            quote!(<#ty as ts_rs::TS>::name())
+            quote!(<#ty as #crate_rename::TS>::name())
         }
     });
+
     let field_name = to_ts_ident(field.ident.as_ref().unwrap());
     let name = match (rename, rename_all) {
         (Some(rn), _) => rn,
@@ -178,7 +181,9 @@ fn extract_option_argument(ty: &Type) -> Result<&Type> {
                         other => syn_err!(other.span(); "`Option` argument must be a type"),
                     }
                 }
-                other => syn_err!(other.span(); "`Option` type must have a single generic argument"),
+                other => {
+                    syn_err!(other.span(); "`Option` type must have a single generic argument")
+                }
             }
         }
         other => syn_err!(other.span(); "`optional` can only be used on an Option<T> type"),

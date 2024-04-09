@@ -1,11 +1,13 @@
-use std::convert::TryFrom;
+use std::collections::HashMap;
 
 use proc_macro2::{Ident, TokenStream};
 use quote::quote;
 use syn::{
-    spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Result,
+    spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Meta, Path,
+    Result, Type,
 };
 
+use super::attr::{Attr, Serde};
 use crate::deps::Dependencies;
 
 macro_rules! syn_err {
@@ -24,16 +26,16 @@ macro_rules! syn_err_spanned {
 }
 
 macro_rules! impl_parse {
-    ($i:ident ($input:ident, $out:ident) { $($k:pat => $e:expr),* $(,)? }) => {
-        impl std::convert::TryFrom<&syn::Attribute> for $i {
+    ($i:ident $(<$inner: ident>)? ($input:ident, $out:ident) { $($k:pat => $e:expr),* $(,)? }) => {
+        impl std::convert::TryFrom<&syn::Attribute> for $i $(<$inner>)? {
             type Error = syn::Error;
 
             fn try_from(attr: &syn::Attribute) -> syn::Result<Self> { attr.parse_args() }
         }
 
-        impl syn::parse::Parse for $i {
+        impl syn::parse::Parse for $i $(<$inner>)? {
             fn parse($input: syn::parse::ParseStream) -> syn::Result<Self> {
-                let mut $out = $i::default();
+                let mut $out = Self::default();
                 loop {
                     let span = $input.span();
                     let key: Ident = $input.call(syn::ext::IdentExt::parse_any)?;
@@ -95,28 +97,33 @@ pub fn raw_name_to_ts_field(value: String) -> String {
 }
 
 /// Parse all `#[ts(..)]` attributes from the given slice.
-pub fn parse_attrs<'a, A>(attrs: &'a [Attribute]) -> Result<impl Iterator<Item = A>>
+pub fn parse_attrs<'a, A>(attrs: &'a [Attribute]) -> Result<A>
 where
-    A: TryFrom<&'a Attribute, Error = Error>,
+    A: TryFrom<&'a Attribute, Error = Error> + Attr,
 {
     Ok(attrs
         .iter()
         .filter(|a| a.path().is_ident("ts"))
         .map(A::try_from)
         .collect::<Result<Vec<A>>>()?
-        .into_iter())
+        .into_iter()
+        .fold(A::default(), |acc, cur| acc.merge(cur)))
 }
 
 /// Parse all `#[serde(..)]` attributes from the given slice.
 #[cfg(feature = "serde-compat")]
 #[allow(unused)]
-pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
-    attrs: &'a [Attribute],
-) -> impl Iterator<Item = A> {
+pub fn parse_serde_attrs<'a, A>(attrs: &'a [Attribute]) -> Serde<A>
+where
+    A: Attr,
+    Serde<A>: TryFrom<&'a Attribute, Error = Error>,
+{
+    use crate::attr::Serde;
+
     attrs
         .iter()
         .filter(|a| a.path().is_ident("serde"))
-        .flat_map(|attr| match A::try_from(attr) {
+        .flat_map(|attr| match Serde::<A>::try_from(attr) {
             Ok(attr) => Some(attr),
             Err(_) => {
                 #[cfg(not(feature = "no-serde-warnings"))]
@@ -132,8 +139,7 @@ pub fn parse_serde_attrs<'a, A: TryFrom<&'a Attribute, Error = Error>>(
                 None
             }
         })
-        .collect::<Vec<_>>()
-        .into_iter()
+        .fold(Serde::<A>::default(), |acc, cur| acc.merge(cur))
 }
 
 /// Return doc comments parsed and formatted as JSDoc.
@@ -223,20 +229,30 @@ mod warning {
 /// this expands to an expression which evaluates to a `String`.
 ///
 /// If a default type arg is encountered, it will be added to the dependencies.
-pub fn format_generics(deps: &mut Dependencies, generics: &Generics) -> TokenStream {
+pub fn format_generics(
+    deps: &mut Dependencies,
+    crate_rename: &Path,
+    generics: &Generics,
+    concrete: &HashMap<Ident, Type>,
+) -> TokenStream {
     let mut expanded_params = generics
         .params
         .iter()
         .filter_map(|param| match param {
-            GenericParam::Type(type_param) => Some({
+            GenericParam::Type(type_param) => {
+                if concrete.contains_key(&type_param.ident) {
+                    return None;
+                }
                 let ty = type_param.ident.to_string();
                 if let Some(default) = &type_param.default {
                     deps.push(default);
-                    quote!(format!("{} = {}", #ty, <#default as ts_rs::TS>::name()))
+                    Some(quote!(
+                        format!("{} = {}", #ty, <#default as #crate_rename::TS>::name())
+                    ))
                 } else {
-                    quote!(#ty.to_owned())
+                    Some(quote!(#ty.to_owned()))
                 }
-            }),
+            }
             _ => None,
         })
         .peekable();

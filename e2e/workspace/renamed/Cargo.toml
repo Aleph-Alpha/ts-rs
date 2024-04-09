@@ -1,0 +1,7 @@
+[package]
+name = "renamed"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ts-renamed = { package = "ts-rs", path = "../../../ts-rs" }
