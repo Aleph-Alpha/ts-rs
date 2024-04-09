@@ -60,7 +60,7 @@ fn format_field(
         docs: _,
 
         #[cfg(feature = "serde-compat")]
-            using_serde_with: _,
+        using_serde_with: _,
     } = field_attr;
 
     if skip {
