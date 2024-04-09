@@ -60,7 +60,7 @@ pub enum VeryBigEnum {
     V232(String), V233(String), V234(String), V235(String), V236(String), V237(String), V238(String),
     V239(String), V240(String), V241(String), V242(String), V243(String), V244(String), V245(String),
     V246(String), V247(String), V248(String), V249(String), V250(String), V251(String), V252(String),
-    V253(String), V254(String), V255(String), V256(String),
+    V253(String), V254(String), V255(String), V256(String), 
 }
 
 #[test]
@@ -76,7 +76,7 @@ fn very_big_enum() {
     }
 
     let mut visitor = Visitor(false);
-    VeryBigEnum::dependencies().for_each(&mut visitor);
+    VeryBigEnum::dependency_types().for_each(&mut visitor);
 
     assert!(visitor.0, "there must be at least one dependency");
 }
