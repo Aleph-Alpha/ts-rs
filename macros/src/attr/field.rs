@@ -1,11 +1,14 @@
 use syn::{Attribute, Field, Ident, Result, Type};
 
 use super::{parse_assign_from_str, parse_assign_str, Attr, Serde};
-use crate::utils::{parse_attrs, parse_docs};
+use crate::{
+    types::type_as_infer,
+    utils::{parse_attrs, parse_docs},
+};
 
 #[derive(Default)]
 pub struct FieldAttr {
-    pub type_as: Option<Type>,
+    type_as: Option<Type>,
     pub type_override: Option<String>,
     pub rename: Option<String>,
     pub inline: bool,
@@ -37,6 +40,13 @@ impl FieldAttr {
         result.docs = parse_docs(attrs)?;
 
         Ok(result)
+    }
+
+    pub fn type_as(&self, original_type: &Type) -> Type {
+        self.type_as
+            .as_ref()
+            .map(|x| type_as_infer(x, original_type))
+            .unwrap_or_else(|| original_type.clone())
     }
 }
 

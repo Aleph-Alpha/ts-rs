@@ -1,7 +1,6 @@
 use quote::quote;
 use syn::{FieldsUnnamed, Result};
 
-use super::type_as_infer;
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, StructAttr},
     deps::Dependencies,
@@ -14,36 +13,25 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
     let field_attr = FieldAttr::from_attrs(&inner.attrs)?;
     field_attr.assert_validity(inner)?;
 
-    let FieldAttr {
-        type_as,
-        type_override,
-        inline,
-        skip,
-        ..
-    } = field_attr;
-
     let crate_rename = attr.crate_rename();
 
-    if skip {
+    if field_attr.skip {
         return super::unit::null(attr, name);
     }
 
-    let inner_ty = type_as
-        .as_ref()
-        .map(|ty_as| type_as_infer(ty_as, &inner.ty))
-        .unwrap_or_else(|| inner.ty.clone());
+    let inner_ty = field_attr.type_as(&inner.ty);
 
     let mut dependencies = Dependencies::new(crate_rename.clone());
 
-    match (&type_override, inline) {
+    match (&field_attr.type_override, field_attr.inline) {
         (Some(_), _) => (),
         (None, true) => dependencies.append_from(&inner_ty),
         (None, false) => dependencies.push(&inner_ty),
     };
 
-    let inline_def = match type_override {
+    let inline_def = match field_attr.type_override {
         Some(ref o) => quote!(#o.to_owned()),
-        None if inline => quote!(<#inner_ty as #crate_rename::TS>::inline()),
+        None if field_attr.inline => quote!(<#inner_ty as #crate_rename::TS>::inline()),
         None => quote!(<#inner_ty as #crate_rename::TS>::name()),
     };
 

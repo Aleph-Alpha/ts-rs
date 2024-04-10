@@ -4,7 +4,6 @@ use syn::{
     spanned::Spanned, Field, FieldsNamed, GenericArgument, Path, PathArguments, Result, Type,
 };
 
-use super::type_as_infer;
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, Inflection, Optional, StructAttr},
     deps::Dependencies,
@@ -93,27 +92,13 @@ fn format_field(
 
     field_attr.assert_validity(field)?;
 
-    let FieldAttr {
-        type_as,
-        type_override,
-        rename,
-        inline,
-        skip,
-        optional,
-        flatten,
-        docs,
-    } = field_attr;
-
-    if skip {
+    if field_attr.skip {
         return Ok(());
     }
 
-    let parsed_ty = type_as
-        .as_ref()
-        .map(|ty_as| type_as_infer(ty_as, &field.ty))
-        .unwrap_or_else(|| field.ty.clone());
+    let parsed_ty = field_attr.type_as(&field.ty);
 
-    let (ty, optional_annotation) = match optional {
+    let (ty, optional_annotation) = match field_attr.optional {
         Optional {
             optional: true,
             nullable,
@@ -129,24 +114,27 @@ fn format_field(
         } => (&parsed_ty, ""),
     };
 
-    if flatten {
+    if field_attr.flatten {
         flattened_fields.push(quote!(<#ty as #crate_rename::TS>::inline_flattened()));
         dependencies.append_from(ty);
         return Ok(());
     }
 
-    let formatted_ty = type_override.map(|t| quote!(#t)).unwrap_or_else(|| {
-        if inline {
-            dependencies.append_from(ty);
-            quote!(<#ty as #crate_rename::TS>::inline())
-        } else {
-            dependencies.push(ty);
-            quote!(<#ty as #crate_rename::TS>::name())
-        }
-    });
+    let formatted_ty = field_attr
+        .type_override
+        .map(|t| quote!(#t))
+        .unwrap_or_else(|| {
+            if field_attr.inline {
+                dependencies.append_from(ty);
+                quote!(<#ty as #crate_rename::TS>::inline())
+            } else {
+                dependencies.push(ty);
+                quote!(<#ty as #crate_rename::TS>::name())
+            }
+        });
 
     let field_name = to_ts_ident(field.ident.as_ref().unwrap());
-    let name = match (rename, rename_all) {
+    let name = match (field_attr.rename, rename_all) {
         (Some(rn), _) => rn,
         (None, Some(rn)) => rn.apply(&field_name),
         (None, None) => field_name,
@@ -154,9 +142,9 @@ fn format_field(
     let valid_name = raw_name_to_ts_field(name);
 
     // Start every doc string with a newline, because when other characters are in front, it is not "understood" by VSCode
-    let docs = match docs.is_empty() {
+    let docs = match field_attr.docs.is_empty() {
         true => "".to_string(),
-        false => format!("\n{}", &docs),
+        false => format!("\n{}", &field_attr.docs),
     };
 
     formatted_fields.push(quote! {
