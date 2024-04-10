@@ -34,6 +34,7 @@ semver-impl = ["semver"]
 serde-json-impl = ["serde_json"]
 no-serde-warnings = ["ts-rs-macros/no-serde-warnings"]
 import-esm = []
+export = ["ts-rs-macros/export"]
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }

@@ -41,6 +41,8 @@ fn main() {
     cargo_invocation
         .arg("test")
         .arg("export_bindings_")
+        .arg("--features")
+        .arg("ts-rs/export")
         .env("TS_RS_EXPORT_DIR", args.output_directory);
 
     feature!(cargo_invocation, args, {
