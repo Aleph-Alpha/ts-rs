@@ -5,8 +5,8 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 struct Args {
     /// Defines where your TS bindings will be saved by setting TS_RS_EXPORT_DIR
-    #[arg(long, short, default_value = "./bindings")]
-    output_directory: PathBuf,
+    #[arg(long, short)]
+    output_directory: Option<PathBuf>,
 
     /// Disables warnings caused by using serde attributes that ts-rs cannot process
     #[arg(long)]
@@ -42,8 +42,11 @@ fn main() {
         .arg("test")
         .arg("export_bindings_")
         .arg("--features")
-        .arg("ts-rs/export")
-        .env("TS_RS_EXPORT_DIR", args.output_directory);
+        .arg("ts-rs/export");
+
+    if let Some(ref output_directory) = args.output_directory {
+        cargo_invocation.env("TS_RS_EXPORT_DIR", output_directory);
+    }
 
     feature!(cargo_invocation, args, {
         no_warnings => "no-serde-warnings",
