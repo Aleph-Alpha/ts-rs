@@ -2,9 +2,9 @@ use syn::{Attribute, Field, Ident, Result, Type};
 
 use super::{parse_assign_from_str, parse_assign_str, Attr, Serde};
 use crate::{
-    types::type_as_infer,
     utils::{parse_attrs, parse_docs},
 };
+use crate::types::replace_underscore;
 
 #[derive(Default)]
 pub struct FieldAttr {
@@ -46,10 +46,12 @@ impl FieldAttr {
     }
 
     pub fn type_as(&self, original_type: &Type) -> Type {
-        self.type_as
-            .as_ref()
-            .map(|x| type_as_infer(x, original_type))
-            .unwrap_or_else(|| original_type.clone())
+        if let Some(mut ty) = self.type_as.clone() {
+            replace_underscore(&mut ty, original_type);
+            ty
+        } else {
+            original_type.clone()
+        }
     }
 }
 

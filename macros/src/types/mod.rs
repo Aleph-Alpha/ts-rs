@@ -1,8 +1,7 @@
 use syn::{
-    parse_quote, AngleBracketedGenericArguments, AssocType, Fields, GenericArgument, Ident,
-    ItemStruct, ParenthesizedGenericArguments, Path, PathArguments, PathSegment, Result,
-    ReturnType, Type, TypeArray, TypeGroup, TypeParen, TypePath, TypePtr, TypeReference, TypeSlice,
-    TypeTuple,
+    AngleBracketedGenericArguments, Fields, GenericArgument, Ident, ItemStruct, PathArguments,
+    Result, ReturnType, Type, TypeArray, TypeGroup, TypeParen, TypePath, TypePtr, TypeReference,
+    TypeSlice, TypeTuple,
 };
 
 use crate::{
@@ -52,121 +51,57 @@ fn type_def(attr: &StructAttr, ident: &Ident, fields: &Fields) -> Result<Derived
     }
 }
 
-pub(super) fn type_as_infer(type_as: &Type, original_type: &Type) -> Type {
-    use PathArguments as P;
-
-    let recurse = |ty: &Type| -> Type { type_as_infer(ty, original_type) };
-
-    match type_as {
-        Type::Infer(_) => original_type.clone(),
-        Type::Array(TypeArray { elem, len, .. }) => {
-            let elem = recurse(elem);
-            parse_quote!([#elem; #len])
-        }
-        Type::Group(TypeGroup { elem, group_token }) => Type::Group(TypeGroup {
-            group_token: *group_token,
-            elem: Box::new(recurse(elem)),
-        }),
-        Type::Paren(TypeParen { elem, .. }) => {
-            let elem = recurse(elem);
-            parse_quote![(#elem)]
-        }
-        Type::Path(TypePath { path, qself: None }) => Type::Path(TypePath {
-            path: Path {
-                leading_colon: path.leading_colon,
-                segments: path
-                    .segments
-                    .iter()
-                    .map(|x| match x.arguments {
-                        P::None => x.clone(),
-                        P::Parenthesized(ParenthesizedGenericArguments {
-                            ref inputs,
-                            ref output,
-                            paren_token,
-                        }) => PathSegment {
-                            ident: x.ident.clone(),
-                            arguments: PathArguments::Parenthesized(
-                                ParenthesizedGenericArguments {
-                                    paren_token,
-                                    inputs: inputs.iter().map(recurse).collect(),
-                                    output: match output {
-                                        ReturnType::Default => ReturnType::Default,
-                                        ReturnType::Type(r_arrow, ty) => {
-                                            ReturnType::Type(*r_arrow, Box::new(recurse(ty)))
-                                        }
-                                    },
-                                },
-                            ),
-                        },
-                        P::AngleBracketed(ref angle_bracketed) => PathSegment {
-                            ident: x.ident.clone(),
-                            arguments: P::AngleBracketed(type_as_infer_angle_bracketed(
-                                angle_bracketed,
-                                original_type,
-                            )),
-                        },
-                    })
-                    .collect(),
-            },
-            qself: None,
-        }),
-        Type::Ptr(TypePtr {
-            elem,
-            star_token,
-            const_token,
-            mutability,
-        }) => {
-            let elem = recurse(elem);
-            parse_quote!(#star_token #const_token #mutability #elem)
-        }
-        Type::Reference(TypeReference {
-            elem,
-            lifetime,
-            and_token,
-            mutability,
-        }) => {
-            let elem = recurse(elem);
-            parse_quote!(#and_token #lifetime #mutability #elem)
-        }
-        Type::Slice(TypeSlice { elem, .. }) => {
-            let elem = recurse(elem);
-            parse_quote!([#elem])
+pub(super) fn replace_underscore(ty: &mut Type, with: &Type) {
+    match ty {
+        Type::Infer(_) => *ty = with.clone(),
+        Type::Array(TypeArray { elem, .. })
+        | Type::Group(TypeGroup { elem, .. })
+        | Type::Paren(TypeParen { elem, .. })
+        | Type::Ptr(TypePtr { elem, .. })
+        | Type::Reference(TypeReference { elem, .. })
+        | Type::Slice(TypeSlice { elem, .. }) => {
+            replace_underscore(elem, with);
         }
         Type::Tuple(TypeTuple { elems, .. }) => {
-            let elems = elems.iter().map(recurse).collect::<Vec<_>>();
-            parse_quote![(#(#elems),*)]
+            for elem in elems {
+                replace_underscore(elem, with);
+            }
         }
-        x => x.clone(),
+        Type::Path(TypePath { path, qself: None }) => {
+            for segment in &mut path.segments {
+                match &mut segment.arguments {
+                    PathArguments::None => (),
+                    PathArguments::AngleBracketed(a) => {
+                        replace_underscore_in_angle_bracketed(a, with);
+                    }
+                    PathArguments::Parenthesized(p) => {
+                        for input in &mut p.inputs {
+                            replace_underscore(input, with);
+                        }
+                        if let ReturnType::Type(_, output) = &mut p.output {
+                            replace_underscore(output, with);
+                        }
+                    }
+                }
+            }
+        }
+        _ => (),
     }
 }
 
-fn type_as_infer_angle_bracketed(
-    angle_bracketed: &AngleBracketedGenericArguments,
-    original_type: &Type,
-) -> AngleBracketedGenericArguments {
-    let recurse = |args: &AngleBracketedGenericArguments| -> AngleBracketedGenericArguments {
-        type_as_infer_angle_bracketed(args, original_type)
-    };
-
-    AngleBracketedGenericArguments {
-        colon2_token: angle_bracketed.colon2_token,
-        gt_token: angle_bracketed.gt_token,
-        lt_token: angle_bracketed.lt_token,
-        args: angle_bracketed
-            .args
-            .iter()
-            .map(|arg| match arg {
-                GenericArgument::Type(ty) => {
-                    GenericArgument::Type(type_as_infer(ty, original_type))
+fn replace_underscore_in_angle_bracketed(args: &mut AngleBracketedGenericArguments, with: &Type) {
+    for arg in &mut args.args {
+        match arg {
+            GenericArgument::Type(ty) => {
+                replace_underscore(ty, with);
+            }
+            GenericArgument::AssocType(assoc_ty) => {
+                replace_underscore(&mut assoc_ty.ty, with);
+                for g in &mut assoc_ty.generics {
+                    replace_underscore_in_angle_bracketed(g, with);
                 }
-                GenericArgument::AssocType(assoc_ty) => GenericArgument::AssocType(AssocType {
-                    ident: assoc_ty.ident.clone(),
-                    generics: assoc_ty.generics.as_ref().map(recurse),
-                    eq_token: assoc_ty.eq_token,
-                    ty: type_as_infer(&assoc_ty.ty, original_type),
-                }),
-                _ => arg.clone(),
-            })
-            .collect(),
+            }
+            _ => (),
+        }
     }
 }
