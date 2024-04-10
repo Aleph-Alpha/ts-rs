@@ -5,7 +5,7 @@ use syn::{Fields, ItemEnum, Variant};
 use crate::{
     attr::{Attr, EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
     deps::Dependencies,
-    types::{self, type_as, type_override},
+    types::{self, type_as, type_as_infer, type_override},
     DerivedTS,
 };
 
@@ -151,7 +151,8 @@ fn format_variant(
                         }
                         (Some(type_override), None) => quote! { #type_override },
                         (None, Some(type_as)) => {
-                            quote!(<#type_as as #crate_rename::TS>::name())
+                            let ty = type_as_infer(&type_as, &field.ty);
+                            quote!(<#ty as #crate_rename::TS>::name())
                         }
                         (None, None) => {
                             let ty = &unnamed.unnamed[0].ty;
@@ -207,7 +208,8 @@ fn format_variant(
                             }
                             (Some(type_override), None) => quote! { #type_override },
                             (None, Some(type_as)) => {
-                                quote!(<#type_as as #crate_rename::TS>::name())
+                                let ty = type_as_infer(&type_as, &field.ty);
+                                quote!(<#ty as #crate_rename::TS>::name())
                             }
                             (None, None) => {
                                 let ty = &unnamed.unnamed[0].ty;
