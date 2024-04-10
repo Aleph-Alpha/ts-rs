@@ -1,11 +1,15 @@
-use syn::{Attribute, Field, Ident, Result, Type};
+use syn::{
+    AngleBracketedGenericArguments, Attribute, Field, GenericArgument, Ident, PathArguments,
+    Result, ReturnType, Type, TypeArray, TypeGroup, TypeParen, TypePath, TypePtr, TypeReference,
+    TypeSlice, TypeTuple,
+};
 
 use super::{parse_assign_from_str, parse_assign_str, Attr, Serde};
 use crate::utils::{parse_attrs, parse_docs};
 
 #[derive(Default)]
 pub struct FieldAttr {
-    pub type_as: Option<Type>,
+    type_as: Option<Type>,
     pub type_override: Option<String>,
     pub rename: Option<String>,
     pub inline: bool,
@@ -40,6 +44,15 @@ impl FieldAttr {
         result.docs = parse_docs(attrs)?;
 
         Ok(result)
+    }
+
+    pub fn type_as(&self, original_type: &Type) -> Type {
+        if let Some(mut ty) = self.type_as.clone() {
+            replace_underscore(&mut ty, original_type);
+            ty
+        } else {
+            original_type.clone()
+        }
     }
 }
 
@@ -200,5 +213,60 @@ impl_parse! {
             parse_assign_str(input)?;
             out.0.using_serde_with = true;
         },
+    }
+}
+
+fn replace_underscore(ty: &mut Type, with: &Type) {
+    match ty {
+        Type::Infer(_) => *ty = with.clone(),
+        Type::Array(TypeArray { elem, .. })
+        | Type::Group(TypeGroup { elem, .. })
+        | Type::Paren(TypeParen { elem, .. })
+        | Type::Ptr(TypePtr { elem, .. })
+        | Type::Reference(TypeReference { elem, .. })
+        | Type::Slice(TypeSlice { elem, .. }) => {
+            replace_underscore(elem, with);
+        }
+        Type::Tuple(TypeTuple { elems, .. }) => {
+            for elem in elems {
+                replace_underscore(elem, with);
+            }
+        }
+        Type::Path(TypePath { path, qself: None }) => {
+            for segment in &mut path.segments {
+                match &mut segment.arguments {
+                    PathArguments::None => (),
+                    PathArguments::AngleBracketed(a) => {
+                        replace_underscore_in_angle_bracketed(a, with);
+                    }
+                    PathArguments::Parenthesized(p) => {
+                        for input in &mut p.inputs {
+                            replace_underscore(input, with);
+                        }
+                        if let ReturnType::Type(_, output) = &mut p.output {
+                            replace_underscore(output, with);
+                        }
+                    }
+                }
+            }
+        }
+        _ => (),
+    }
+}
+
+fn replace_underscore_in_angle_bracketed(args: &mut AngleBracketedGenericArguments, with: &Type) {
+    for arg in &mut args.args {
+        match arg {
+            GenericArgument::Type(ty) => {
+                replace_underscore(ty, with);
+            }
+            GenericArgument::AssocType(assoc_ty) => {
+                replace_underscore(&mut assoc_ty.ty, with);
+                for g in &mut assoc_ty.generics {
+                    replace_underscore_in_angle_bracketed(g, with);
+                }
+            }
+            _ => (),
+        }
     }
 }

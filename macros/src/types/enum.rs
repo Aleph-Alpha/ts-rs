@@ -135,30 +135,16 @@ fn format_variant(
 
                 field_attr.assert_validity(field)?;
 
-                let FieldAttr {
-                    type_as,
-                    type_override,
-                    skip,
-                    ..
-                } = field_attr;
-
-                if skip {
+                if field_attr.skip {
                     quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                 } else {
-                    let ty = match (type_override, type_as) {
-                        (Some(_), Some(_)) => {
-                            unreachable!("This has been handled by assert_validity")
-                        }
-                        (Some(type_override), None) => quote! { #type_override },
-                        (None, Some(type_as)) => {
-                            quote!(<#type_as as #crate_rename::TS>::name())
-                        }
-                        (None, None) => {
-                            let ty = &unnamed.unnamed[0].ty;
+                    let ty = match field_attr.type_override {
+                        Some(type_override) => quote!(#type_override),
+                        None => {
+                            let ty = field_attr.type_as(&field.ty);
                             quote!(<#ty as #crate_rename::TS>::name())
                         }
                     };
-
                     quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #ty))
                 }
             }
@@ -191,26 +177,13 @@ fn format_variant(
 
                     field_attr.assert_validity(field)?;
 
-                    let FieldAttr {
-                        type_as,
-                        skip,
-                        type_override,
-                        ..
-                    } = field_attr;
-
-                    if skip {
+                    if field_attr.skip {
                         quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
                     } else {
-                        let ty = match (type_override, type_as) {
-                            (Some(_), Some(_)) => {
-                                unreachable!("This has been handled by assert_validity")
-                            }
-                            (Some(type_override), None) => quote! { #type_override },
-                            (None, Some(type_as)) => {
-                                quote!(<#type_as as #crate_rename::TS>::name())
-                            }
-                            (None, None) => {
-                                let ty = &unnamed.unnamed[0].ty;
+                        let ty = match field_attr.type_override {
+                            Some(type_override) => quote! { #type_override },
+                            None => {
+                                let ty = field_attr.type_as(&field.ty);
                                 quote!(<#ty as #crate_rename::TS>::name())
                             }
                         };
