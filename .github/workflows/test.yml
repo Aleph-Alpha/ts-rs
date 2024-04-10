@@ -14,12 +14,12 @@ jobs:
       - name: dependencies e2e test
         working-directory: e2e/dependencies/consumer
         run: |
-          cargo t 
+          cargo t --features ts-rs/export
           tsc bindings/* --noEmit --noUnusedLocals --strict
       - name: dependencies e2e test with default export env
         working-directory: e2e/dependencies/consumer
         run: |
-          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          TS_RS_EXPORT_DIR=custom-bindings cargo t --features ts-rs/export
           shopt -s globstar
           tsc custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
   e2e-workspace:
@@ -35,14 +35,14 @@ jobs:
       - name: workspace e2e test
         working-directory: e2e/workspace
         run: |
-          cargo t 
+          cargo t --features ts-rs/export
           shopt -s globstar
           tsc parent/bindings/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf parent/bindings
       - name: workspace e2e with default export env
         working-directory: e2e/workspace
         run: |
-          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          TS_RS_EXPORT_DIR=custom-bindings cargo t --features ts-rs/export
           shopt -s globstar
           tsc parent/custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf parent/custom-bindings
@@ -59,12 +59,12 @@ jobs:
       - name: example e2e test
         working-directory: example
         run: |
-          cargo t 
+          cargo t --features ts-rs/export
           tsc bindings/* --noEmit
       - name: example e2e with default export env
         working-directory: example
         run: |
-          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          TS_RS_EXPORT_DIR=custom-bindings cargo t --features ts-rs/export
           shopt -s globstar
           tsc custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
 
@@ -113,7 +113,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Test
         run: |
-          TS_RS_EXPORT_DIR=output cargo test --no-default-features
+          TS_RS_EXPORT_DIR=output cargo test --no-default-features --features ts-rs/export
           shopt -s globstar
           tsc ts-rs/output/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf ts-rs/output
@@ -130,7 +130,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Test
         run: |
-          cargo test --no-default-features
+          cargo test --no-default-features --features ts-rs/export
           shopt -s globstar
           tsc ts-rs/bindings/**/*.ts --noEmit --noUnusedLocals
           rm -rf ts-rs/bindings
