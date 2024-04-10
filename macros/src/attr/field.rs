@@ -16,6 +16,9 @@ pub struct FieldAttr {
     pub optional: Optional,
     pub flatten: bool,
     pub docs: String,
+
+    #[cfg(feature = "serde-compat")]
+    pub using_serde_with: bool,
 }
 
 /// Indicates whether the field is marked with `#[ts(optional)]`.
@@ -65,6 +68,8 @@ impl Attr for FieldAttr {
                 nullable: self.optional.nullable || other.optional.nullable,
             },
             flatten: self.flatten || other.flatten,
+            #[cfg(feature = "serde-compat")]
+            using_serde_with: self.using_serde_with || other.using_serde_with,
 
             // We can't emit TSDoc for a flattened field
             // and we cant make this invalid in assert_validity because
@@ -78,6 +83,14 @@ impl Attr for FieldAttr {
     }
 
     fn assert_validity(&self, field: &Self::Item) -> Result<()> {
+        #[cfg(feature = "serde-compat")]
+        if self.using_serde_with && !(self.type_as.is_some() || self.type_override.is_some()) {
+            syn_err_spanned!(
+                field;
+                r#"using `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]`"#
+            )
+        }
+
         if self.type_override.is_some() {
             if self.type_as.is_some() {
                 syn_err_spanned!(field; "`type` is not compatible with `as`")
@@ -192,6 +205,10 @@ impl_parse! {
             if input.peek(Token![=]) {
                 parse_assign_str(input)?;
             }
+        },
+        "with" => {
+            parse_assign_str(input)?;
+            out.0.using_serde_with = true;
         },
     }
 }
