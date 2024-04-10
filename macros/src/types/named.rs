@@ -92,7 +92,6 @@ fn format_field(
 
     field_attr.assert_validity(field)?;
 
-
     if field_attr.skip {
         return Ok(());
     }
