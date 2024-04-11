@@ -79,12 +79,10 @@ impl Dependencies {
 
 impl ToTokens for Dependencies {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let crate_rename = &self.crate_rename;
         let lines = self.dependencies.iter();
 
         tokens.extend(quote![{
-            use #crate_rename::typelist::TypeList;
-            ()#(#lines)*
+            #(#lines;)*
         }]);
     }
 }
@@ -93,12 +91,12 @@ impl ToTokens for Dependency {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend(match self {
             Dependency::Transitive { crate_rename, ty } => {
-                quote![.extend(<#ty as #crate_rename::TS>::dependency_types())]
+                quote![<#ty as #crate_rename::TS>::visit_dependencies(v)]
             }
             Dependency::Generics { crate_rename, ty } => {
-                quote![.extend(<#ty as #crate_rename::TS>::generics())]
+                quote![<#ty as #crate_rename::TS>::visit_generics(v)]
             }
-            Dependency::Type(ty) => quote![.push::<#ty>()],
+            Dependency::Type(ty) => quote![v.visit::<#ty>()],
         });
     }
 }

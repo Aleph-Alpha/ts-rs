@@ -93,7 +93,7 @@ impl DerivedTS {
                 #output_path_fn
 
                 #[allow(clippy::unused_unit)]
-                fn dependency_types() -> impl #crate_rename::typelist::TypeList
+                fn visit_dependencies(v: &mut impl #crate_rename::TypeVisitor) 
                 where
                     Self: 'static,
                 {
@@ -195,15 +195,16 @@ impl DerivedTS {
         let generics = generics
             .type_params()
             .filter(|ty| !self.concrete.contains_key(&ty.ident))
-            .map(|TypeParam { ident, .. }| quote![.push::<#ident>().extend(<#ident as #crate_rename::TS>::generics())]);
+            .map(|TypeParam { ident, .. }| quote![
+                v.visit::<#ident>();
+                <#ident as #crate_rename::TS>::visit_generics(v);
+            ]);
         quote! {
-            #[allow(clippy::unused_unit)]
-            fn generics() -> impl #crate_rename::typelist::TypeList
+            fn visit_generics(v: &mut impl #crate_rename::TypeVisitor) 
             where
                 Self: 'static,
             {
-                use #crate_rename::typelist::TypeList;
-                ()#(#generics)*
+                #(#generics)*
             }
         }
     }

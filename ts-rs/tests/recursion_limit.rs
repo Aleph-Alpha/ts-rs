@@ -1,9 +1,6 @@
 use std::any::TypeId;
 
-use ts_rs::{
-    typelist::{TypeList, TypeVisitor},
-    TS,
-};
+use ts_rs::{TypeVisitor, TS};
 
 #[rustfmt::skip]
 #[derive(Debug, ts_rs::TS)]
@@ -76,7 +73,7 @@ fn very_big_enum() {
     }
 
     let mut visitor = Visitor(false);
-    VeryBigEnum::dependency_types().for_each(&mut visitor);
+    VeryBigEnum::visit_dependencies(&mut visitor);
 
     assert!(visitor.0, "there must be at least one dependency");
 }
@@ -96,19 +93,16 @@ macro_rules! generate_types {
 }
 
 // This generates
-// `#[derive(TS)] struct T000(T001)` 
+// `#[derive(TS)] struct T000(T001)`
 // `#[derive(TS)] struct T001(T002)`
 // ...
 // `#[derive(TS)] struct T082(T083)`
 // `#[derive(TS)] struct T083;`
 generate_types!(
-    T000, T001, T002, T003, T004, T005, T006, T007, T008, T009, 
-    T010, T011, T012, T013, T014, T015, T016, T017, T018, T019, 
-    T020, T021, T022, T023, T024, T025, T026, T027, T028, T029, 
-    T030, T031, T032, T033, T034, T035, T036, T037, T038, T039, 
-    T040, T041, T042, T043, T044, T045, T046, T047, T048, T049, 
-    T050, T051, T052, T053, T054, T055, T056, T057, T058, T059, 
-    T060, T061, T062, T063, T064, T065, T066, T067, T068, T069, 
-    T070, T071, T072, T073, T074, T075, T076, T077, T078, T079, 
+    T000, T001, T002, T003, T004, T005, T006, T007, T008, T009, T010, T011, T012, T013, T014, T015,
+    T016, T017, T018, T019, T020, T021, T022, T023, T024, T025, T026, T027, T028, T029, T030, T031,
+    T032, T033, T034, T035, T036, T037, T038, T039, T040, T041, T042, T043, T044, T045, T046, T047,
+    T048, T049, T050, T051, T052, T053, T054, T055, T056, T057, T058, T059, T060, T061, T062, T063,
+    T064, T065, T066, T067, T068, T069, T070, T071, T072, T073, T074, T075, T076, T077, T078, T079,
     T080, T081, T082, T083
 );

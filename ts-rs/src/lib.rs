@@ -131,14 +131,12 @@ use std::{
 pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
-use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
 #[cfg(feature = "serde-json-impl")]
 mod serde_json;
-pub mod typelist;
 
 /// A type which can be represented in TypeScript.  
 /// Most of the time, you'd want to derive this trait instead of implementing it manually.  
@@ -423,7 +421,7 @@ pub trait TS {
     fn inline_flattened() -> String;
 
     /// Returns a [`TypeList`] of all types on which this type depends.
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(_: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
@@ -431,7 +429,7 @@ pub trait TS {
 
     /// Returns a [`TypeList`] containing all generic parameters of this type.
     /// If this type is not generic, this will return an empty [`TypeList`].
-    fn generics() -> impl TypeList
+    fn visit_generics(_: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
@@ -442,8 +440,6 @@ pub trait TS {
     where
         Self: 'static,
     {
-        use crate::typelist::TypeVisitor;
-
         let mut deps: Vec<Dependency> = vec![];
         struct Visit<'a>(&'a mut Vec<Dependency>);
         impl<'a> TypeVisitor for Visit<'a> {
@@ -453,7 +449,7 @@ pub trait TS {
                 }
             }
         }
-        Self::dependency_types().for_each(&mut Visit(&mut deps));
+        Self::visit_dependencies(&mut Visit(&mut deps));
 
         deps
     }
@@ -578,6 +574,15 @@ pub trait TS {
     }
 }
 
+/// A visitor used to iterate over all dependencies or generics of a type.  
+/// When an instance of [`TypeVisitor`] is passed to [`TS::visit_dependencies`] or 
+/// [`TS::visit_generics`], the [`TypeVisitor::visit`] method will be invoked for every dependency
+/// or generic parameter respectively.  
+/// TODO: Improve docs, add example
+pub trait TypeVisitor: Sized {
+    fn visit<T: TS + 'static + ?Sized>(&mut self);
+}
+
 /// A typescript type which is depended upon by other types.
 /// This information is required for generating the correct import statements.
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -630,11 +635,13 @@ macro_rules! impl_tuples {
             fn inline() -> String {
                 panic!("tuple cannot be inlined!");
             }
-            fn dependency_types() -> impl TypeList
+            fn visit_dependencies(v: &mut impl TypeVisitor)
             where
                 Self: 'static
             {
-                ()$(.push::<$i>())*
+                $(
+                    v.visit::<$i>();
+                )*
             }
             fn inline_flattened() -> String { panic!("tuple cannot be flattened") }
             fn decl() -> String { panic!("tuple cannot be declared") }
@@ -656,17 +663,13 @@ macro_rules! impl_wrapper {
             fn name() -> String { T::name() }
             fn inline() -> String { T::inline() }
             fn inline_flattened() -> String { T::inline_flattened() }
-            fn dependency_types() -> impl $crate::typelist::TypeList
-            where
-                Self: 'static
-            {
-                T::dependency_types()
+            fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+                T::visit_dependencies(v);
             }
-            fn generics() -> impl $crate::typelist::TypeList
-            where
-                Self: 'static
-            {
-                ((std::marker::PhantomData::<T>,), T::generics())
+
+            fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+                T::visit_generics(v);
+                v.visit::<T>();
             }
             fn decl() -> String { panic!("wrapper type cannot be declared") }
             fn decl_concrete() -> String { panic!("wrapper type cannot be declared") }
@@ -683,17 +686,11 @@ macro_rules! impl_shadow {
             fn name() -> String { <$s>::name() }
             fn inline() -> String { <$s>::inline() }
             fn inline_flattened() -> String { <$s>::inline_flattened() }
-            fn dependency_types() -> impl $crate::typelist::TypeList
-            where
-                Self: 'static
-            {
-                <$s>::dependency_types()
+            fn visit_dependencies(v: &mut impl $crate::TypeVisitor) where Self: 'static {
+                <$s>::visit_dependencies(v);
             }
-            fn generics() -> impl $crate::typelist::TypeList
-            where
-                Self: 'static
-            {
-                <$s>::generics()
+            fn visit_generics(v: &mut impl $crate::TypeVisitor) where Self: 'static {
+                <$s>::visit_generics(v);
             }
             fn decl() -> String { <$s>::decl() }
             fn decl_concrete() -> String { <$s>::decl_concrete() }
@@ -713,18 +710,13 @@ impl<T: TS> TS for Option<T> {
         format!("{} | null", T::inline())
     }
 
-    fn dependency_types() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        T::dependency_types()
+    fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+        T::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        T::generics().push::<T>()
+    fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+        T::visit_generics(v);
+        v.visit::<T>();
     }
 
     fn decl() -> String {
@@ -751,18 +743,16 @@ impl<T: TS, E: TS> TS for Result<T, E> {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
     }
 
-    fn dependency_types() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        T::dependency_types().extend(E::dependency_types())
+    fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+        T::visit_dependencies(v);
+        E::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        T::generics().push::<T>().extend(E::generics()).push::<E>()
+    fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+        T::visit_generics(v);
+        v.visit::<T>();
+        E::visit_generics(v);
+        v.visit::<E>();
     }
 
     fn decl() -> String {
@@ -793,20 +783,15 @@ impl<T: TS> TS for Vec<T> {
         format!("Array<{}>", T::inline())
     }
 
-    fn dependency_types() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        T::dependency_types()
+    fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+        T::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        T::generics().push::<T>()
+    fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+        T::visit_generics(v);
+        v.visit::<T>();
     }
-
+    
     fn decl() -> String {
         panic!("{} cannot be declared", Self::name())
     }
@@ -846,18 +831,13 @@ impl<T: TS, const N: usize> TS for [T; N] {
         )
     }
 
-    fn dependency_types() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        T::dependency_types()
+    fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+        T::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        T::generics().push::<T>()
+    fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+        T::visit_generics(v);
+        v.visit::<T>();
     }
 
     fn decl() -> String {
@@ -888,20 +868,19 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
         format!("{{ [key: {}]: {} }}", K::inline(), V::inline())
     }
 
-    fn dependency_types() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        K::dependency_types().extend(V::dependency_types())
+    fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+        K::visit_dependencies(v);
+        V::visit_dependencies(v);
+        
     }
 
-    fn generics() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        K::generics().push::<K>().extend(V::generics()).push::<V>()
+    fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+        K::visit_generics(v);
+        v.visit::<K>();
+        V::visit_generics(v);
+        v.visit::<V>();
     }
-
+    
     fn decl() -> String {
         panic!("{} cannot be declared", Self::name())
     }
@@ -921,18 +900,13 @@ impl<I: TS> TS for Range<I> {
         format!("{{ start: {}, end: {}, }}", I::name(), I::name())
     }
 
-    fn dependency_types() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        I::dependency_types()
+    fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+        I::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
-    where
-        Self: 'static,
-    {
-        I::generics().push::<I>()
+    fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+        I::visit_generics(v);
+        v.visit::<I>();
     }
 
     fn decl() -> String {
