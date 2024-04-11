@@ -92,7 +92,6 @@ impl DerivedTS {
                 #generics_fn
                 #output_path_fn
 
-                #[allow(clippy::unused_unit)]
                 fn visit_dependencies(v: &mut impl #crate_rename::TypeVisitor) 
                 where
                     Self: 'static,

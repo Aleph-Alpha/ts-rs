@@ -81,9 +81,9 @@ impl ToTokens for Dependencies {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let lines = self.dependencies.iter();
 
-        tokens.extend(quote![{
+        tokens.extend(quote![
             #(#lines;)*
-        }]);
+        ]);
     }
 }
 
