@@ -420,15 +420,14 @@ pub trait TS {
     /// This function will panic if the type cannot be flattened.
     fn inline_flattened() -> String;
 
-    /// Returns a [`TypeList`] of all types on which this type depends.
+    /// Iterates over all dependency of this type.  
     fn visit_dependencies(_: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
     }
 
-    /// Returns a [`TypeList`] containing all generic parameters of this type.
-    /// If this type is not generic, this will return an empty [`TypeList`].
+    /// Iterates over all type parameters of this type.
     fn visit_generics(_: &mut impl TypeVisitor)
     where
         Self: 'static,
@@ -526,7 +525,7 @@ pub trait TS {
     }
 
     /// Manually generate bindings for this type, returning a [`String`].  
-    /// This function does not format the output, even if the `format` feature is enabled. TODO
+    /// This function does not format the output, even if the `format` feature is enabled.
     ///
     /// # Automatic Exporting
     /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
@@ -575,10 +574,9 @@ pub trait TS {
 }
 
 /// A visitor used to iterate over all dependencies or generics of a type.  
-/// When an instance of [`TypeVisitor`] is passed to [`TS::visit_dependencies`] or 
+/// When an instance of [`TypeVisitor`] is passed to [`TS::visit_dependencies`] or
 /// [`TS::visit_generics`], the [`TypeVisitor::visit`] method will be invoked for every dependency
 /// or generic parameter respectively.  
-/// TODO: Improve docs, add example
 pub trait TypeVisitor: Sized {
     fn visit<T: TS + 'static + ?Sized>(&mut self);
 }
@@ -635,12 +633,13 @@ macro_rules! impl_tuples {
             fn inline() -> String {
                 panic!("tuple cannot be inlined!");
             }
-            fn visit_dependencies(v: &mut impl TypeVisitor)
+            fn visit_generics(v: &mut impl TypeVisitor)
             where
                 Self: 'static
             {
                 $(
                     v.visit::<$i>();
+                    <$i>::visit_generics(v);
                 )*
             }
             fn inline_flattened() -> String { panic!("tuple cannot be flattened") }
@@ -663,11 +662,17 @@ macro_rules! impl_wrapper {
             fn name() -> String { T::name() }
             fn inline() -> String { T::inline() }
             fn inline_flattened() -> String { T::inline_flattened() }
-            fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+            fn visit_dependencies(v: &mut impl TypeVisitor)
+            where
+                Self: 'static,
+            {
                 T::visit_dependencies(v);
             }
 
-            fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+            fn visit_generics(v: &mut impl TypeVisitor)
+            where
+                Self: 'static,
+            {
                 T::visit_generics(v);
                 v.visit::<T>();
             }
@@ -686,10 +691,16 @@ macro_rules! impl_shadow {
             fn name() -> String { <$s>::name() }
             fn inline() -> String { <$s>::inline() }
             fn inline_flattened() -> String { <$s>::inline_flattened() }
-            fn visit_dependencies(v: &mut impl $crate::TypeVisitor) where Self: 'static {
+            fn visit_dependencies(v: &mut impl $crate::TypeVisitor)
+            where
+                Self: 'static,
+            {
                 <$s>::visit_dependencies(v);
             }
-            fn visit_generics(v: &mut impl $crate::TypeVisitor) where Self: 'static {
+            fn visit_generics(v: &mut impl $crate::TypeVisitor)
+            where
+                Self: 'static,
+            {
                 <$s>::visit_generics(v);
             }
             fn decl() -> String { <$s>::decl() }
@@ -710,11 +721,17 @@ impl<T: TS> TS for Option<T> {
         format!("{} | null", T::inline())
     }
 
-    fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+    fn visit_dependencies(v: &mut impl TypeVisitor)
+    where
+        Self: 'static,
+    {
         T::visit_dependencies(v);
     }
 
-    fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+    fn visit_generics(v: &mut impl TypeVisitor)
+    where
+        Self: 'static,
+    {
         T::visit_generics(v);
         v.visit::<T>();
     }
@@ -743,12 +760,18 @@ impl<T: TS, E: TS> TS for Result<T, E> {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
     }
 
-    fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+    fn visit_dependencies(v: &mut impl TypeVisitor)
+    where
+        Self: 'static,
+    {
         T::visit_dependencies(v);
         E::visit_dependencies(v);
     }
 
-    fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+    fn visit_generics(v: &mut impl TypeVisitor)
+    where
+        Self: 'static,
+    {
         T::visit_generics(v);
         v.visit::<T>();
         E::visit_generics(v);
@@ -783,15 +806,21 @@ impl<T: TS> TS for Vec<T> {
         format!("Array<{}>", T::inline())
     }
 
-    fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+    fn visit_dependencies(v: &mut impl TypeVisitor)
+    where
+        Self: 'static,
+    {
         T::visit_dependencies(v);
     }
 
-    fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+    fn visit_generics(v: &mut impl TypeVisitor)
+    where
+        Self: 'static,
+    {
         T::visit_generics(v);
         v.visit::<T>();
     }
-    
+
     fn decl() -> String {
         panic!("{} cannot be declared", Self::name())
     }
@@ -831,11 +860,17 @@ impl<T: TS, const N: usize> TS for [T; N] {
         )
     }
 
-    fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+    fn visit_dependencies(v: &mut impl TypeVisitor)
+    where
+        Self: 'static,
+    {
         T::visit_dependencies(v);
     }
 
-    fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+    fn visit_generics(v: &mut impl TypeVisitor)
+    where
+        Self: 'static,
+    {
         T::visit_generics(v);
         v.visit::<T>();
     }
@@ -868,19 +903,24 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
         format!("{{ [key: {}]: {} }}", K::inline(), V::inline())
     }
 
-    fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+    fn visit_dependencies(v: &mut impl TypeVisitor)
+    where
+        Self: 'static,
+    {
         K::visit_dependencies(v);
         V::visit_dependencies(v);
-        
     }
 
-    fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+    fn visit_generics(v: &mut impl TypeVisitor)
+    where
+        Self: 'static,
+    {
         K::visit_generics(v);
         v.visit::<K>();
         V::visit_generics(v);
         v.visit::<V>();
     }
-    
+
     fn decl() -> String {
         panic!("{} cannot be declared", Self::name())
     }
@@ -900,11 +940,17 @@ impl<I: TS> TS for Range<I> {
         format!("{{ start: {}, end: {}, }}", I::name(), I::name())
     }
 
-    fn visit_dependencies(v: &mut impl TypeVisitor) where Self: 'static {
+    fn visit_dependencies(v: &mut impl TypeVisitor)
+    where
+        Self: 'static,
+    {
         I::visit_dependencies(v);
     }
 
-    fn visit_generics(v: &mut impl TypeVisitor) where Self: 'static {
+    fn visit_generics(v: &mut impl TypeVisitor)
+    where
+        Self: 'static,
+    {
         I::visit_generics(v);
         v.visit::<I>();
     }
