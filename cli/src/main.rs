@@ -101,9 +101,9 @@ fn main() -> Result<()> {
                 .filter(|x| x.1.len() > 1)
                 .for_each(|(ty, paths)| {
                     eprintln!(
-                        "{} Multiple types named \"{}\" exported to different paths:",
+                        "{} Multiple types named \"{}\" exported to different paths",
                         "Warning:".yellow().bold(),
-                        ty.green()
+                        ty.green().bold()
                     );
 
                     for path in paths {
