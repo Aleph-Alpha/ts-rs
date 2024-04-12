@@ -4,6 +4,7 @@ use std::{
     collections::BTreeMap,
     fmt::Write,
     fs::File,
+    io::Read,
     path::{Component, Path, PathBuf},
     sync::Mutex,
 };
@@ -145,17 +146,17 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
         file.write_all(buffer.as_bytes())?;
         file.sync_data()?;
 
-        let bytes = path::absolute(path.as_ref())?
-            .to_string_lossy()
-            .bytes()
-            .chain([b'\n'])
-            .collect::<Box<[_]>>();
+        let relative_path = T::output_path()
+            .ok_or_else(std::any::type_name::<T>)
+            .map_err(ExportError::CannotBeExported)?
+            .to_string_lossy();
+
         std::fs::OpenOptions::new()
             .read(true)
             .append(true)
             .create(true)
             .open(default_out_dir().join("ts_rs.meta"))?
-            .write_all(&bytes)?;
+            .write_fmt(format_args!("./{relative_path}\n"))?;
     }
 
     drop(lock);
