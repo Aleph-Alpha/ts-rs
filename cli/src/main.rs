@@ -78,13 +78,14 @@ fn main() -> Result<()> {
             .collect::<HashSet<_>>()
             .into_iter()
             .fold(HashMap::<_, Vec<_>>::default(), |mut acc, cur| {
-                let (type_name, path) = cur.split_once(',').unwrap();
+                let columns = cur.splitn(3, ',').collect::<Vec<_>>();
 
-                let type_name = type_name.to_owned();
-                let path = Path::new(path).to_owned();
-                acc.entry(type_name)
-                    .and_modify(|v| v.push(path.clone()))
-                    .or_insert(vec![path]);
+                let type_ts_name = columns[0].to_owned();
+                let type_rs_name = columns[1].to_owned();
+                let path = Path::new(columns[2]).to_owned();
+                acc.entry(type_ts_name)
+                    .and_modify(|v| v.push((type_rs_name.clone(), path.clone())))
+                    .or_insert(vec![(type_rs_name, path)]);
 
                 acc
             });
@@ -101,13 +102,20 @@ fn main() -> Result<()> {
                 .filter(|x| x.1.len() > 1)
                 .for_each(|(ty, paths)| {
                     eprintln!(
-                        "{} Multiple types named \"{}\" exported to different paths",
+                        "{} Multiple types being exported with the name \"{}\"",
                         "Warning:".yellow().bold(),
                         ty.green().bold()
                     );
 
-                    for path in paths {
-                        eprintln!("  {} {}", "-".blue().bold(), path.to_string_lossy().bold());
+                    for (ty_rs, path) in paths {
+                        eprintln!(
+                            "  {} {} {}",
+                            "-".blue().bold(),
+                            "Type:".bold(),
+                            ty_rs.cyan(),
+                        );
+                        eprintln!("    {} {}", "Path:".bold(), path.to_string_lossy());
+                        eprintln!();
                     }
 
                     eprintln!();
