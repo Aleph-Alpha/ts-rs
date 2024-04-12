@@ -4,7 +4,6 @@ use std::{
     collections::BTreeMap,
     fmt::Write,
     fs::File,
-    io::Read,
     path::{Component, Path, PathBuf},
     sync::Mutex,
 };
