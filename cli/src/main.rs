@@ -64,7 +64,11 @@ fn main() -> Result<()> {
 
             index.write_all(NOTE)?;
 
-            for file in metadata.iter().map(|x| &x.1[0].export_path) {
+            for file in metadata
+                .into_iter()
+                .flat_map(|x| x.1)
+                .map(|x| x.export_path)
+            {
                 index.write_fmt(format_args!("\nexport * from {file:?};"))?;
             }
         }
