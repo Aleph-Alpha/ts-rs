@@ -3,7 +3,8 @@ use std::path::PathBuf;
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-pub(super) struct Args {
+#[allow(clippy::struct_excessive_bools)]
+pub struct Args {
     /// Defines where your TS bindings will be saved by setting TS_RS_EXPORT_DIR
     #[arg(long, short, default_value = "./bindings")]
     pub output_directory: PathBuf,

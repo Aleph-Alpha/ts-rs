@@ -1,10 +1,11 @@
+#![warn(clippy::pedantic, clippy::nursery)]
+
 use std::{
     collections::{HashMap, HashSet},
     fs,
     io::Write,
 };
 
-use cargo::invoke_cargo;
 use clap::Parser;
 use color_eyre::Result;
 
@@ -28,7 +29,7 @@ fn main() -> Result<()> {
         fs::remove_file(&metadata_path)?;
     }
 
-    invoke_cargo(&args)?;
+    cargo::invoke(&args)?;
 
     if args.generate_index_ts {
         let metadata_content = fs::read_to_string(&metadata_path)?;
@@ -64,11 +65,7 @@ fn main() -> Result<()> {
 
             index.write_all(NOTE)?;
 
-            for file in metadata
-                .into_iter()
-                .flat_map(|x| x.1)
-                .map(|x| x.export_path)
-            {
+            for file in metadata.iter().flat_map(|x| x.1).map(|x| x.export_path) {
                 index.write_fmt(format_args!("\nexport * from {file:?};"))?;
             }
         }

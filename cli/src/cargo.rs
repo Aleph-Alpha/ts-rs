@@ -16,7 +16,7 @@ macro_rules! feature {
     };
 }
 
-pub(super) fn invoke_cargo(args: &Args) -> Result<()> {
+pub fn invoke(args: &Args) -> Result<()> {
     let mut cargo_invocation = Command::new("cargo");
 
     cargo_invocation

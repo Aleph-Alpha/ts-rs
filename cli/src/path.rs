@@ -22,9 +22,9 @@ pub fn absolute<T: AsRef<Path>>(path: T) -> Result<PathBuf> {
         }
     }
 
-    Ok(if !out.is_empty() {
-        out.iter().collect()
-    } else {
+    Ok(if out.is_empty() {
         PathBuf::from(".")
+    } else {
+        out.iter().collect()
     })
 }

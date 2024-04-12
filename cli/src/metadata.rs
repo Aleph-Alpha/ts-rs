@@ -3,7 +3,7 @@ use std::path::Path;
 use color_eyre::{eyre::OptionExt, owo_colors::OwoColorize};
 
 #[derive(Clone)]
-pub(super) struct Metadata<'a> {
+pub struct Metadata<'a> {
     pub rust_name: &'a str,
     pub export_path: &'a Path,
 }
@@ -22,7 +22,7 @@ impl<'a> TryFrom<&'a str> for Metadata<'a> {
     }
 }
 
-pub(super) fn name_collision_warning(ts_type: &str, metadata: &[Metadata]) {
+pub fn name_collision_warning(ts_type: &str, metadata: &[Metadata]) {
     eprintln!(
         "{} Multiple types being exported with the name \"{}\"",
         "Warning:".yellow().bold(),
