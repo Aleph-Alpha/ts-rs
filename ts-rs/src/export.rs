@@ -151,7 +151,6 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
             .to_string_lossy();
 
         std::fs::OpenOptions::new()
-            .read(true)
             .append(true)
             .create(true)
             .open(default_out_dir().join("ts_rs.meta"))?
