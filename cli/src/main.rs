@@ -6,7 +6,7 @@ use std::{
 };
 
 use clap::Parser;
-use color_eyre::Result;
+use color_eyre::{owo_colors::OwoColorize, Result};
 
 mod path;
 
@@ -101,10 +101,12 @@ fn main() -> Result<()> {
                 .filter(|x| x.1.len() > 1)
                 .for_each(|(ty, paths)| {
                     eprintln!(
-                        r#"Warning: Multiple types named "{ty}" exported to different paths:"#
+                        "{} Multiple types named {ty:?} exported to different paths:",
+                        "Warning:".yellow().bold()
                     );
+
                     for path in paths {
-                        eprintln!("  - {:?}", path.to_string_lossy().to_string());
+                        eprintln!("  {} {}", "-".blue().bold(), path.to_string_lossy().bold());
                     }
 
                     eprintln!();
