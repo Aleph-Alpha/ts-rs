@@ -15,7 +15,7 @@ jobs:
         working-directory: e2e/dependencies/consumer
         run: |
           cargo t --features ts-rs/export
-          tsc bindings/* --noEmit --noUnusedLocals --strict
+          tsc bindings/*.ts --noEmit --noUnusedLocals --strict
       - name: dependencies e2e test with default export env
         working-directory: e2e/dependencies/consumer
         run: |
@@ -60,7 +60,7 @@ jobs:
         working-directory: example
         run: |
           cargo t --features ts-rs/export
-          tsc bindings/* --noEmit
+          tsc bindings/*.ts --noEmit
       - name: example e2e with default export env
         working-directory: example
         run: |
