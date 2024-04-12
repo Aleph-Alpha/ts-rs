@@ -1,4 +1,9 @@
-use std::{io::Write, path::PathBuf};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 use clap::Parser;
 use color_eyre::Result;
@@ -48,7 +53,7 @@ fn main() -> Result<()> {
 
     let metadata_path = args.output_directory.join("ts_rs.meta");
     if metadata_path.exists() {
-        std::fs::remove_file(&metadata_path)?;
+        fs::remove_file(&metadata_path)?;
     }
 
     cargo_invocation
@@ -67,30 +72,27 @@ fn main() -> Result<()> {
     cargo_invocation.spawn()?.wait()?;
 
     if args.generate_index_ts {
-        let metadata = std::fs::read_to_string(&metadata_path)?
+        let metadata = fs::read_to_string(&metadata_path)?
             .lines()
             .map(ToOwned::to_owned)
-            .collect::<std::collections::HashSet<_>>()
+            .collect::<HashSet<_>>()
             .into_iter()
-            .fold(
-                std::collections::HashMap::<_, Vec<_>>::default(),
-                |mut acc, cur| {
-                    let (type_name, path) = cur.split_once(',').unwrap();
+            .fold(HashMap::<_, Vec<_>>::default(), |mut acc, cur| {
+                let (type_name, path) = cur.split_once(',').unwrap();
 
-                    let type_name = type_name.to_owned();
-                    let path = std::path::Path::new(path).to_owned();
-                    acc.entry(type_name)
-                        .and_modify(|v| v.push(path.clone()))
-                        .or_insert(vec![path]);
+                let type_name = type_name.to_owned();
+                let path = Path::new(path).to_owned();
+                acc.entry(type_name)
+                    .and_modify(|v| v.push(path.clone()))
+                    .or_insert(vec![path]);
 
-                    acc
-                },
-            );
+                acc
+            });
 
         let index_path = args.output_directory.join("index.ts");
 
         if index_path.exists() {
-            std::fs::remove_file(&index_path)?;
+            fs::remove_file(&index_path)?;
         }
 
         if !metadata.is_empty() {
@@ -108,7 +110,7 @@ fn main() -> Result<()> {
                     eprintln!();
                 });
 
-            let mut index = std::fs::OpenOptions::new()
+            let mut index = fs::OpenOptions::new()
                 .create(true)
                 .append(true)
                 .open(index_path)?;
@@ -123,7 +125,7 @@ fn main() -> Result<()> {
         }
     }
 
-    std::fs::remove_file(&metadata_path)?;
+    fs::remove_file(&metadata_path)?;
 
     Ok(())
 }
