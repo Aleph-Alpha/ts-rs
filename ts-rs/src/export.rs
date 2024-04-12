@@ -135,14 +135,27 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     if let Some(parent) = path.as_ref().parent() {
         std::fs::create_dir_all(parent)?;
     }
+
     let lock = FILE_LOCK.lock().unwrap();
     {
         // Manually write to file & call `sync_data`. Otherwise, calling `fs::read(path)`
         // immediately after `T::export()` might result in an empty file.
         use std::io::Write;
-        let mut file = File::create(path)?;
+        let mut file = File::create(&path)?;
         file.write_all(buffer.as_bytes())?;
         file.sync_data()?;
+
+        let bytes = path::absolute(path.as_ref())?
+            .to_string_lossy()
+            .bytes()
+            .chain([b'\n'])
+            .collect::<Box<[_]>>();
+        std::fs::OpenOptions::new()
+            .read(true)
+            .append(true)
+            .create(true)
+            .open(default_out_dir().join("ts_rs.meta"))?
+            .write_all(&bytes)?;
     }
 
     drop(lock);
