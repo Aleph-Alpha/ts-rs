@@ -4,3 +4,4 @@ Cargo.lock
 *.ts
 
 /ts-rs/tests-out
+ts_rs.meta
