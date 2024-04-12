@@ -150,11 +150,13 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
             .map_err(ExportError::CannotBeExported)?
             .to_string_lossy();
 
+        let type_name = T::ident();
+
         std::fs::OpenOptions::new()
             .append(true)
             .create(true)
             .open(default_out_dir().join("ts_rs.meta"))?
-            .write_fmt(format_args!("./{relative_path}\n"))?;
+            .write_fmt(format_args!("{type_name},./{relative_path}\n"))?;
     }
 
     drop(lock);
