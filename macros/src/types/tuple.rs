@@ -49,33 +49,19 @@ fn format_field(
     let field_attr = FieldAttr::from_attrs(&field.attrs)?;
     field_attr.assert_validity(field)?;
 
-    let FieldAttr {
-        type_as,
-        type_override,
-        rename: _,
-        inline,
-        skip,
-        optional: _,
-        flatten: _,
-        docs: _,
-
-        #[cfg(feature = "serde-compat")]
-            using_serde_with: _,
-    } = field_attr;
-
-    if skip {
+    if field_attr.skip {
         return Ok(());
     }
 
-    let ty = type_as.as_ref().unwrap_or(&field.ty).clone();
+    let ty = field_attr.type_as(&field.ty);
 
-    formatted_fields.push(match type_override {
+    formatted_fields.push(match field_attr.type_override {
         Some(ref o) => quote!(#o.to_owned()),
-        None if inline => quote!(<#ty as #crate_rename::TS>::inline()),
+        None if field_attr.inline => quote!(<#ty as #crate_rename::TS>::inline()),
         None => quote!(<#ty as #crate_rename::TS>::name()),
     });
 
-    match (inline, type_override) {
+    match (field_attr.inline, field_attr.type_override) {
         (_, Some(_)) => (),
         (false, _) => dependencies.push(&ty),
         (true, _) => dependencies.append_from(&ty),
