@@ -19,6 +19,7 @@ mod hashmap;
 mod hashset;
 mod imports;
 mod indexmap;
+mod infer_as;
 mod issue_168;
 mod issue_232;
 mod issue_70;

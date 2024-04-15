@@ -92,7 +92,7 @@ impl DerivedTS {
                 #generics_fn
                 #output_path_fn
 
-                fn visit_dependencies(v: &mut impl #crate_rename::TypeVisitor) 
+                fn visit_dependencies(v: &mut impl #crate_rename::TypeVisitor)
                 where
                     Self: 'static,
                 {
@@ -194,12 +194,14 @@ impl DerivedTS {
         let generics = generics
             .type_params()
             .filter(|ty| !self.concrete.contains_key(&ty.ident))
-            .map(|TypeParam { ident, .. }| quote![
-                v.visit::<#ident>();
-                <#ident as #crate_rename::TS>::visit_generics(v);
-            ]);
+            .map(|TypeParam { ident, .. }| {
+                quote![
+                    v.visit::<#ident>();
+                    <#ident as #crate_rename::TS>::visit_generics(v);
+                ]
+            });
         quote! {
-            fn visit_generics(v: &mut impl #crate_rename::TypeVisitor) 
+            fn visit_generics(v: &mut impl #crate_rename::TypeVisitor)
             where
                 Self: 'static,
             {

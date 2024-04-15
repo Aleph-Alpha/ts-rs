@@ -35,9 +35,7 @@ mod recursive_export {
     use std::{any::TypeId, collections::HashSet, path::Path};
 
     use super::export_into;
-    use crate::{
-        ExportError, TS, TypeVisitor
-    };
+    use crate::{ExportError, TypeVisitor, TS};
 
     /// Exports `T` to the file specified by the `#[ts(export_to = ..)]` attribute within the given
     /// base directory.  
