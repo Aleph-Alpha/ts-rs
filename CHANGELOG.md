@@ -17,6 +17,7 @@
 
 - Fix `#[ts(rename_all_fields = "...")]` on enums containing tuple or unit variants ([#287](https://github.com/Aleph-Alpha/ts-rs/pull/287))
 - Fix "overflow evaluating the requirement" and "reached the recursion limit" errors in some cases ([#293](https://github.com/Aleph-Alpha/ts-rs/pull/293))
+- Fix ambiguity, causing "multiple applicable items in scope" errors in some cases ([#309](https://github.com/Aleph-Alpha/ts-rs/pull/309))
 
 # 8.1.0
 
