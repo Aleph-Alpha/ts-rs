@@ -281,7 +281,7 @@ impl DerivedTS {
         });
         quote! {
             fn decl_concrete() -> String {
-                format!("type {} = {};", #name, Self::inline())
+                format!("type {} = {};", #name, <Self as #crate_rename::TS>::inline())
             }
             fn decl() -> String {
                 #generic_types
