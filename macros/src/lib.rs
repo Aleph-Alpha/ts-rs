@@ -145,7 +145,7 @@ impl DerivedTS {
             .type_params()
             .filter(|ty| !self.concrete.contains_key(&ty.ident))
             .map(|ty| ty.ident.clone());
-
+        let name = quote![<Self as #crate_rename::TS>::name()];
         quote! {
             #(
                 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -158,10 +158,10 @@ impl DerivedTS {
                 impl #crate_rename::TS for #generics {
                     type WithoutGenerics = #generics;
                     fn name() -> String { stringify!(#generics).to_owned() }
-                    fn inline() -> String { panic!("{} cannot be inlined", Self::name()) }
-                    fn inline_flattened() -> String { panic!("{} cannot be flattened", Self::name()) }
-                    fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
-                    fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
+                    fn inline() -> String { panic!("{} cannot be inlined", #name) }
+                    fn inline_flattened() -> String { panic!("{} cannot be flattened", #name) }
+                    fn decl() -> String { panic!("{} cannot be declared", #name) }
+                    fn decl_concrete() -> String { panic!("{} cannot be declared", #name) }
                 }
             )*
         }
@@ -219,12 +219,13 @@ impl DerivedTS {
 
     fn generate_inline_fn(&self) -> TokenStream {
         let inline = &self.inline;
+        let crate_rename = &self.crate_rename;
 
         let inline_flattened = self.inline_flattened.as_ref().map_or_else(
             || {
                 quote! {
                     fn inline_flattened() -> String {
-                        panic!("{} cannot be flattened", Self::name())
+                        panic!("{} cannot be flattened", <Self as #crate_rename::TS>::name())
                     }
                 }
             },
