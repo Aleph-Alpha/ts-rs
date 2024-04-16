@@ -2,9 +2,9 @@ use ts_rs::TS;
 
 #[derive(TS)]
 #[ts(export, export_to = "issue_308/")]
-struct MyStruct;
+struct MyStruct<A, B>(A, B);
 
-impl MyStruct {
+impl<A, B> MyStruct<A, B> {
     fn name() -> String {
         unimplemented!()
     }
