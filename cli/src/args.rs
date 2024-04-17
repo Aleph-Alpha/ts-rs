@@ -6,7 +6,7 @@ use clap::Parser;
 #[allow(clippy::struct_excessive_bools)]
 pub struct Args {
     /// Defines where your TS bindings will be saved by setting TS_RS_EXPORT_DIR
-    #[arg(long, short, default_value = "./bindings")]
+    #[arg(long, short)]
     pub output_directory: PathBuf,
 
     /// Disables warnings caused by using serde attributes that ts-rs cannot process
@@ -27,6 +27,6 @@ pub struct Args {
     pub generate_index_ts: bool,
 
     /// Do not capture `cargo test`'s output, and pass --nocapture to the test binary
-    #[arg(long)]
+    #[arg(long = "nocapture")]
     pub no_capture: bool,
 }
