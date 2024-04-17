@@ -145,21 +145,23 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
         file.write_all(buffer.as_bytes())?;
         file.sync_data()?;
 
-        let relative_path = T::output_path()
-            .ok_or_else(std::any::type_name::<T>)
-            .map_err(ExportError::CannotBeExported)?
-            .to_string_lossy();
+        if cfg!(feature = "generate-metadata") {
+            let relative_path = T::output_path()
+                .ok_or_else(std::any::type_name::<T>)
+                .map_err(ExportError::CannotBeExported)?
+                .to_string_lossy();
 
-        let type_ts_name = T::ident();
-        let type_rs_name = std::any::type_name::<T>().split('<').next().unwrap();
+            let type_ts_name = T::ident();
+            let type_rs_name = std::any::type_name::<T>().split('<').next().unwrap();
 
-        std::fs::OpenOptions::new()
-            .append(true)
-            .create(true)
-            .open(default_out_dir().join("ts_rs.meta"))?
-            .write_fmt(format_args!(
-                "{type_ts_name},{type_rs_name},./{relative_path}\n"
-            ))?;
+            std::fs::OpenOptions::new()
+                .append(true)
+                .create(true)
+                .open(default_out_dir().join("ts_rs.meta"))?
+                .write_fmt(format_args!(
+                    "{type_ts_name},{type_rs_name},./{relative_path}\n"
+                ))?;
+        }
     }
 
     drop(lock);

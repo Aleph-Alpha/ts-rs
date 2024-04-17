@@ -24,6 +24,8 @@ pub fn invoke(args: &Args) -> Result<()> {
         .arg("export_bindings_")
         .arg("--features")
         .arg("ts-rs/export")
+        .arg("--features")
+        .arg("ts-rs/generate-metadata")
         .stdout(if args.no_capture {
             Stdio::inherit()
         } else {
