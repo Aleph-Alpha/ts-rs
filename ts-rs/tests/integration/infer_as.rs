@@ -2,10 +2,9 @@
 
 use ts_rs::TS;
 
-#[derive(TS, serde::Serialize)]
+#[derive(TS)]
 #[ts(export)]
 struct Foo {
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
     #[ts(optional, as = "Option<_>")]
     my_optional_bool: bool,
 }
