@@ -7,7 +7,7 @@ use std::{
 };
 
 use clap::Parser;
-use color_eyre::Result;
+use color_eyre::{owo_colors::OwoColorize, Result};
 
 mod args;
 mod cargo;
@@ -53,20 +53,28 @@ fn main() -> Result<()> {
         }
 
         if !metadata.is_empty() {
-            metadata
-                .iter()
-                .filter(|x| x.1.len() > 1)
-                .for_each(|(&ty, meta)| name_collision_warning(ty, meta));
+            let mut naming_collisions = metadata.iter().filter(|x| x.1.len() > 1).peekable();
 
-            let mut index = fs::OpenOptions::new()
-                .create(true)
-                .append(true)
-                .open(index_path)?;
+            let has_collisions = naming_collisions.peek().is_some();
 
-            index.write_all(NOTE)?;
+            naming_collisions.for_each(|(&ty, meta)| name_collision_warning(ty, meta));
 
-            for file in metadata.iter().flat_map(|x| x.1).map(|x| x.export_path) {
-                index.write_fmt(format_args!("\nexport * from {file:?};"))?;
+            if has_collisions {
+                eprintln!(
+                    "{} due to the naming collisions listed above, generating an index.ts file is not possible",
+                    "Error:".red().bold()
+                );
+            } else {
+                let mut index = fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(index_path)?;
+
+                index.write_all(NOTE)?;
+
+                for file in metadata.iter().flat_map(|x| x.1).map(|x| x.export_path) {
+                    index.write_fmt(format_args!("\nexport * from {file:?};"))?;
+                }
             }
         }
     }
