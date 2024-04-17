@@ -31,11 +31,6 @@ pub fn invoke(args: &Args) -> Result<()> {
         } else {
             Stdio::piped()
         })
-        .stderr(if args.no_capture {
-            Stdio::inherit()
-        } else {
-            Stdio::piped()
-        })
         .env("TS_RS_EXPORT_DIR", path::absolute(&args.output_directory)?);
 
     feature!(cargo_invocation, args, {
@@ -46,6 +41,8 @@ pub fn invoke(args: &Args) -> Result<()> {
 
     if args.no_capture {
         cargo_invocation.arg("--").arg("--nocapture");
+    } else {
+        cargo_invocation.arg("--quiet");
     }
 
     cargo_invocation.spawn()?.wait()?;
