@@ -3,6 +3,7 @@ use std::any::TypeId;
 use ts_rs::{TypeVisitor, TS};
 
 #[rustfmt::skip]
+#[allow(clippy::all)]
 #[derive(Debug, ts_rs::TS)]
 #[ts(export, export_to = "very_big_types/")]
 pub enum Iso4217CurrencyCode {

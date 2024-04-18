@@ -1,5 +1,5 @@
 use syn::{
-    AngleBracketedGenericArguments, Attribute, Field, GenericArgument, Ident, PathArguments,
+    AngleBracketedGenericArguments, Attribute, Field, GenericArgument, Ident, PathArguments, QSelf,
     Result, ReturnType, Type, TypeArray, TypeGroup, TypeParen, TypePath, TypePtr, TypeReference,
     TypeSlice, TypeTuple,
 };
@@ -232,7 +232,11 @@ fn replace_underscore(ty: &mut Type, with: &Type) {
                 replace_underscore(elem, with);
             }
         }
-        Type::Path(TypePath { path, qself: None }) => {
+        Type::Path(TypePath { path, qself }) => {
+            if let Some(QSelf { ty, .. }) = qself {
+                replace_underscore(ty, with);
+            }
+
             for segment in &mut path.segments {
                 match &mut segment.arguments {
                     PathArguments::None => (),
