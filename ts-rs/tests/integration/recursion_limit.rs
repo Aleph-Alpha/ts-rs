@@ -8,6 +8,7 @@ use ts_rs::{
 };
 
 #[rustfmt::skip]
+#[allow(clippy::all)]
 #[derive(Debug, ts_rs::TS)]
 #[ts(export, export_to = "very_big_types/")]
 pub enum Iso4217CurrencyCode {
