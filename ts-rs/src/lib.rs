@@ -287,7 +287,8 @@ pub mod typelist;
 ///
 /// - **`#[ts(as = "..")]`**  
 ///   Overrides the type of the annotated field, using the provided Rust type instead.
-///   This is useful when there's a type for which you cannot derive `TS`.
+///   This is useful when there's a type for which you cannot derive `TS`.  
+///   `_` may be used to refer to the type of the field, e.g `#[ts(as = "Option<_>")]`.
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename = "..")]`**  

@@ -11,10 +11,13 @@
 - Add support for `#[ts(type = "..")]` directly on structs and enums ([#286](https://github.com/Aleph-Alpha/ts-rs/pull/286))
 - Add support for `#[ts(as = "..")]` directly on structs and enums ([#288](https://github.com/Aleph-Alpha/ts-rs/pull/288))
 - Add support for `#[ts(rename_all = "SCREAMING-KEBAB-CASE")]` ([#298](https://github.com/Aleph-Alpha/ts-rs/pull/298))
+- Support `_` in `#[ts(type = "..")]` to refer to the type of the field ([#299](https://github.com/Aleph-Alpha/ts-rs/pull/299))
 
 ### Fixes
 
 - Fix `#[ts(rename_all_fields = "...")]` on enums containing tuple or unit variants ([#287](https://github.com/Aleph-Alpha/ts-rs/pull/287))
+- Fix "overflow evaluating the requirement" and "reached the recursion limit" errors in some cases ([#293](https://github.com/Aleph-Alpha/ts-rs/pull/293))
+- Fix ambiguity causing "multiple applicable items in scope" errors in some cases ([#309](https://github.com/Aleph-Alpha/ts-rs/pull/309))
 
 # 8.1.0
 
