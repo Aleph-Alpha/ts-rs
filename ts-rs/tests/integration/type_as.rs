@@ -4,6 +4,7 @@ use std::{
     cell::UnsafeCell, mem::MaybeUninit, ptr::NonNull, sync::atomic::AtomicPtr, time::Instant,
 };
 
+use serde::Serialize;
 use ts_rs::TS;
 
 type Unsupported = UnsafeCell<MaybeUninit<NonNull<AtomicPtr<i32>>>>;
@@ -58,14 +59,33 @@ enum OverrideEnum {
     },
 }
 
+mod deser {
+    use serde::{Serialize, Serializer};
+
+    use super::Instant;
+    pub fn serialize<S: Serializer>(field: &Instant, serializer: S) -> Result<S::Ok, S::Error> {
+        #[derive(Serialize)]
+        struct Foo {
+            x: i32,
+        }
+        Foo { x: 0 }.serialize(serializer)
+    }
+}
+
 #[derive(TS)]
+struct OverrideVariantDef {
+    x: i32,
+}
+
+#[derive(TS, Serialize)]
 #[ts(export, export_to = "type_as/")]
 enum OverrideVariant {
-    #[ts(as = "ExternalTypeDef")]
-    A(Instant),
+    #[ts(as = "OverrideVariantDef")]
+    #[serde(with = "deser")]
+    A {
+        x: Instant,
+    },
     B {
-        #[ts(as = "ExternalTypeDef")]
-        x: Unsupported,
         y: i32,
         z: i32,
     },
@@ -73,6 +93,8 @@ enum OverrideVariant {
 
 #[test]
 fn enum_variants() {
+    let a = OverrideVariant::A { x: Instant::now() };
+    assert_eq!(serde_json::to_string(&a).unwrap(), r#"{"A":{"x":0}}"#);
     assert_eq!(
         OverrideEnum::inline(),
         r#"{ "A": ExternalTypeDef } | { "B": { x: ExternalTypeDef, y: number, z: number, } }"#
@@ -80,7 +102,7 @@ fn enum_variants() {
 
     assert_eq!(
         OverrideVariant::inline(),
-        r#"{ "A": ExternalTypeDef } | { "B": { x: ExternalTypeDef, y: number, z: number, } }"#
+        r#"{ "A": OverrideVariantDef } | { "B": { y: number, z: number, } }"#
     );
 }
 

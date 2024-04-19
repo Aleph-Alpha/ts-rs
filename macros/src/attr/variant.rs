@@ -76,7 +76,7 @@ impl Attr for VariantAttr {
                 )
             }
         }
-      
+
         if !matches!(item.fields, Fields::Named(_)) && self.rename_all.is_some() {
             syn_err_spanned!(
                 item;
