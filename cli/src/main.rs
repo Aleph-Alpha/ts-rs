@@ -33,48 +33,47 @@ fn main() -> Result<()> {
 
     if args.generate_index_ts {
         let metadata_content = fs::read_to_string(&metadata_path)?;
-        let metadata = metadata_content
-            .lines()
-            .collect::<HashSet<_>>()
-            .into_iter()
-            .fold(HashMap::<_, Vec<_>>::default(), |mut acc, cur| {
-                let (key, value) = cur.split_once(',').unwrap();
+        let metadata =
+            metadata_content
+                .lines()
+                .fold(HashMap::<_, HashSet<_>>::default(), |mut acc, cur| {
+                    let (key, value) = cur.split_once(',').unwrap();
 
-                let value = Metadata::try_from(value).unwrap();
-                acc.entry(key).or_default().push(value);
+                    let value = Metadata::try_from(value).unwrap();
+                    acc.entry(key).or_default().insert(value);
 
-                acc
-            });
+                    acc
+                });
 
-        let index_path = args.output_directory.join("index.ts");
+        let mut naming_collisions = metadata.iter().filter(|x| x.1.len() > 1).peekable();
 
-        if index_path.exists() {
-            fs::remove_file(&index_path)?;
+        if naming_collisions.peek().is_some() {
+            naming_collisions.for_each(|(&ty, meta)| name_collision_warning(ty, meta));
+
+            eprintln!(
+                "{} due to the naming collisions listed above, generating an index.ts file is not possible",
+                "Error:".red().bold()
+            );
+
+            return Ok(());
         }
 
         if !metadata.is_empty() {
-            let mut naming_collisions = metadata.iter().filter(|x| x.1.len() > 1).peekable();
+            let index_path = args.output_directory.join("index.ts");
 
-            let has_collisions = naming_collisions.peek().is_some();
+            if index_path.exists() {
+                fs::remove_file(&index_path)?;
+            }
 
-            naming_collisions.for_each(|(&ty, meta)| name_collision_warning(ty, meta));
+            let mut index = fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(index_path)?;
 
-            if has_collisions {
-                eprintln!(
-                    "{} due to the naming collisions listed above, generating an index.ts file is not possible",
-                    "Error:".red().bold()
-                );
-            } else {
-                let mut index = fs::OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(index_path)?;
+            index.write_all(NOTE)?;
 
-                index.write_all(NOTE)?;
-
-                for file in metadata.iter().flat_map(|x| x.1).map(|x| x.export_path) {
-                    index.write_fmt(format_args!("\nexport * from {file:?};"))?;
-                }
+            for file in metadata.iter().flat_map(|x| x.1).map(|x| x.export_path) {
+                index.write_fmt(format_args!("\nexport * from {file:?};"))?;
             }
         }
     }

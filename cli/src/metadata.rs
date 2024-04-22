@@ -1,8 +1,8 @@
-use std::path::Path;
+use std::{collections::HashSet, path::Path};
 
 use color_eyre::{eyre::OptionExt, owo_colors::OwoColorize};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Metadata<'a> {
     pub rust_name: &'a str,
     pub export_path: &'a Path,
@@ -22,7 +22,7 @@ impl<'a> TryFrom<&'a str> for Metadata<'a> {
     }
 }
 
-pub fn name_collision_warning(ts_type: &str, metadata: &[Metadata]) {
+pub fn name_collision_warning(ts_type: &str, metadata: &HashSet<Metadata>) {
     eprintln!(
         "{} Multiple types being exported with the name \"{}\"",
         "Warning:".yellow().bold(),
