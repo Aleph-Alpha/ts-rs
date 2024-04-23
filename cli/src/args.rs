@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
+use crate::metadata::FILE_NAME;
+
 #[derive(Parser, Debug)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Args {
@@ -29,4 +31,13 @@ pub struct Args {
     /// Do not capture `cargo test`'s output, and pass --nocapture to the test binary
     #[arg(long = "nocapture")]
     pub no_capture: bool,
+}
+
+// Args is in scope for the entirety of the main function, so this will only
+// be executed when the program is finished running. This helps prevent us
+// from forgetting to do cleanup if some code branch early returns from main
+impl Drop for Args {
+    fn drop(&mut self) {
+        _ = std::fs::remove_file(self.output_directory.join(FILE_NAME));
+    }
 }

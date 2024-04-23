@@ -1,15 +1,65 @@
-use std::{collections::HashSet, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    path::Path,
+};
 
-use color_eyre::{eyre::OptionExt, owo_colors::OwoColorize};
+use color_eyre::{
+    eyre::{Error, OptionExt},
+    owo_colors::OwoColorize,
+    Result,
+};
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+pub const FILE_NAME: &str = "ts_rs.meta";
+
 pub struct Metadata<'a> {
-    pub rust_name: &'a str,
-    pub export_path: &'a Path,
+    entries: std::collections::HashMap<&'a str, HashSet<Entry<'a>>>,
 }
 
-impl<'a> TryFrom<&'a str> for Metadata<'a> {
-    type Error = color_eyre::eyre::Error;
+impl<'a> Metadata<'a> {
+    pub fn new(content: &'a str) -> Result<Self> {
+        Ok(Self {
+            entries: content.lines().try_fold(
+                HashMap::<&str, HashSet<_>>::default(),
+                |mut acc, cur| {
+                    let (key, value) = cur.split_once(',').ok_or_eyre("Invalid metadata file")?;
+                    let value = Entry::try_from(value)?;
+
+                    acc.entry(key).or_default().insert(value);
+
+                    Ok::<_, Error>(acc)
+                },
+            )?,
+        })
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
+    pub fn has_naming_collisions(&self) -> bool {
+        self.entries.values().any(|x| x.len() > 1)
+    }
+
+    pub fn report_naming_collisions(&self) {
+        self.entries
+            .iter()
+            .filter(|(_, x)| x.len() > 1)
+            .for_each(|(ty, entry)| name_collision_warning(ty, entry));
+    }
+
+    pub fn export_paths(&self) -> impl Iterator<Item = &Path> {
+        self.entries.values().flatten().map(|x| x.export_path)
+    }
+}
+
+#[derive(PartialEq, Eq, Hash)]
+struct Entry<'a> {
+    rust_name: &'a str,
+    export_path: &'a Path,
+}
+
+impl<'a> TryFrom<&'a str> for Entry<'a> {
+    type Error = Error;
 
     fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         let (rust_name, export_path) =
@@ -22,7 +72,7 @@ impl<'a> TryFrom<&'a str> for Metadata<'a> {
     }
 }
 
-pub fn name_collision_warning(ts_type: &str, metadata: &HashSet<Metadata>) {
+fn name_collision_warning(ts_type: &str, metadata: &HashSet<Entry>) {
     eprintln!(
         "{} Multiple types being exported with the name \"{}\"",
         "Warning:".yellow().bold(),
