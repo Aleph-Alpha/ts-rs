@@ -15,10 +15,12 @@ pub struct Metadata<'a> {
     entries: std::collections::HashMap<&'a str, HashSet<Entry<'a>>>,
 }
 
-impl<'a> Metadata<'a> {
-    pub fn new(content: &'a str) -> Result<Self> {
+impl<'a> TryFrom<&'a str> for Metadata<'a> {
+    type Error = Error;
+
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
         Ok(Self {
-            entries: content.lines().try_fold(
+            entries: value.lines().try_fold(
                 HashMap::<&str, HashSet<_>>::default(),
                 |mut acc, cur| {
                     let (key, value) = cur.split_once(',').ok_or_eyre("Invalid metadata file")?;
@@ -31,7 +33,9 @@ impl<'a> Metadata<'a> {
             )?,
         })
     }
+}
 
+impl<'a> Metadata<'a> {
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }

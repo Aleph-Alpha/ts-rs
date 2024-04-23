@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     cargo::invoke(&args)?;
 
     let metadata_content = fs::read_to_string(&metadata_path)?;
-    let metadata = Metadata::new(&metadata_content)?;
+    let metadata = Metadata::try_from(&*metadata_content)?;
 
     if args.generate_index_ts {
         if metadata.has_naming_collisions() {
