@@ -1,4 +1,8 @@
-use std::path::{Component as C, Path, PathBuf};
++use std::{
+    fs,
+    io::ErrorKind,
+    path::{Component as C, Path, PathBuf},
+};
 
 use color_eyre::{eyre::OptionExt, Result};
 
