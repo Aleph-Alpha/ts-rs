@@ -28,6 +28,11 @@ pub struct Args {
     #[arg(long = "index")]
     pub generate_index_ts: bool,
 
+    /// Generates only a single index.ts file in your --output-directory that
+    /// contains all exported types
+    #[arg(long = "merge")]
+    pub merge_files: bool,
+
     /// Do not capture `cargo test`'s output, and pass --nocapture to the test binary
     #[arg(long = "nocapture")]
     pub no_capture: bool,
