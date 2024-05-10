@@ -145,8 +145,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Re
                     .write(true)
                     .open(&path)?;
 
-                let mut buf = [0; NOTE.len()];
-                file.read_exact(&mut buf)?;
+                file.seek(SeekFrom::Start(NOTE.len().try_into().unwrap()))?;
 
                 let mut buf = String::new();
                 file.read_to_string(&mut buf)?;
