@@ -29,4 +29,5 @@ struct B {
 struct C {
     foo: DepA,
     bar: DepB,
+    biz: B,
 }
