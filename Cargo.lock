@@ -1191,6 +1191,7 @@ dependencies = [
  "dprint-plugin-typescript",
  "heapless",
  "indexmap",
+ "lazy_static",
  "ordered-float",
  "semver",
  "serde",
