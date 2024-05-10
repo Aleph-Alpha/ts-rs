@@ -104,7 +104,7 @@ pub(crate) fn export_into<T: TS + ?Sized + 'static>(
 /// Export `T` to the file specified by the `path` argument.
 pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Result<(), Error> {
     let path = path.as_ref().to_owned();
-    let type_name = std::any::type_name::<T>();
+    let type_name = T::ident();
 
     #[allow(unused_mut)]
     let mut buffer = export_to_string::<T>()?;
@@ -132,7 +132,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Re
         let mut lock = EXPORT_PATHS.lock().unwrap();
 
         if let Some(entry) = lock.get_mut(&path) {
-            if !entry.contains(type_name) {
+            if !entry.contains(&type_name) {
                 let (header, decl) = buffer.split_once("\n\n").unwrap();
                 let imports = if header.len() > NOTE.len() {
                     &header[NOTE.len()..]
