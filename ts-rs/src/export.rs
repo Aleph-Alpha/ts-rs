@@ -166,7 +166,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Re
                 file.write_all(b"\n\n")?;
                 file.write_all(decl.as_bytes())?;
 
-                entry.insert(type_name.to_owned());
+                entry.insert(type_name);
             }
         } else {
             let mut file = File::create(&path)?;
@@ -174,7 +174,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Re
             file.sync_data()?;
 
             let mut set = HashSet::new();
-            set.insert(type_name.to_owned());
+            set.insert(type_name);
             lock.insert(path, set);
         }
     }
