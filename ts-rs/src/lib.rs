@@ -130,7 +130,7 @@ use std::{
 
 pub use ts_rs_macros::TS;
 
-pub use crate::export::ExportError;
+pub use crate::export::Error;
 use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
@@ -475,13 +475,13 @@ pub trait TS {
     ///
     /// To alter the filename or path of the type within the target directory,
     /// use `#[ts(export_to = "...")]`.
-    fn export() -> Result<(), ExportError>
+    fn export() -> Result<(), Error>
     where
         Self: 'static,
     {
         let path = Self::default_output_path()
             .ok_or_else(std::any::type_name::<Self>)
-            .map_err(ExportError::CannotBeExported)?;
+            .map_err(Error::CannotBeExported)?;
 
         export::export_to::<Self, _>(path)
     }
@@ -502,7 +502,7 @@ pub trait TS {
     ///
     /// To alter the filenames or paths of the types within the target directory,
     /// use `#[ts(export_to = "...")]`.
-    fn export_all() -> Result<(), ExportError>
+    fn export_all() -> Result<(), Error>
     where
         Self: 'static,
     {
@@ -522,7 +522,7 @@ pub trait TS {
     /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
     /// exported automatically whenever `cargo test` is run.  
     /// In that case, there is no need to manually call this function.
-    fn export_all_to(out_dir: impl AsRef<Path>) -> Result<(), ExportError>
+    fn export_all_to(out_dir: impl AsRef<Path>) -> Result<(), Error>
     where
         Self: 'static,
     {
@@ -536,7 +536,7 @@ pub trait TS {
     /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
     /// exported automatically whenever `cargo test` is run.  
     /// In that case, there is no need to manually call this function.
-    fn export_to_string() -> Result<String, ExportError>
+    fn export_to_string() -> Result<String, Error>
     where
         Self: 'static,
     {
