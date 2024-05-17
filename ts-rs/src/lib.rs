@@ -420,7 +420,7 @@ pub trait TS {
     /// This function will panic if the type cannot be flattened.
     fn inline_flattened() -> String;
 
-    /// Iterates over all dependency of this type.  
+    /// Iterates over all dependency of this type.
     fn visit_dependencies(_: &mut impl TypeVisitor)
     where
         Self: 'static,
@@ -573,10 +573,10 @@ pub trait TS {
     }
 }
 
-/// A visitor used to iterate over all dependencies or generics of a type.  
+/// A visitor used to iterate over all dependencies or generics of a type.
 /// When an instance of [`TypeVisitor`] is passed to [`TS::visit_dependencies`] or
 /// [`TS::visit_generics`], the [`TypeVisitor::visit`] method will be invoked for every dependency
-/// or generic parameter respectively.  
+/// or generic parameter respectively.
 pub trait TypeVisitor: Sized {
     fn visit<T: TS + 'static + ?Sized>(&mut self);
 }
@@ -628,7 +628,7 @@ macro_rules! impl_tuples {
         impl<$($i: TS),*> TS for ($($i,)*) {
             type WithoutGenerics = (Dummy, );
             fn name() -> String {
-                format!("[{}]", [$($i::name()),*].join(", "))
+                format!("[{}]", [$(<$i as $crate::TS>::name()),*].join(", "))
             }
             fn inline() -> String {
                 panic!("tuple cannot be inlined!");
@@ -686,26 +686,26 @@ macro_rules! impl_wrapper {
 macro_rules! impl_shadow {
     (as $s:ty: $($impl:tt)*) => {
         $($impl)* {
-            type WithoutGenerics = <$s as TS>::WithoutGenerics;
-            fn ident() -> String { <$s>::ident() }
-            fn name() -> String { <$s>::name() }
-            fn inline() -> String { <$s>::inline() }
-            fn inline_flattened() -> String { <$s>::inline_flattened() }
+            type WithoutGenerics = <$s as $crate::TS>::WithoutGenerics;
+            fn ident() -> String { <$s as $crate::TS>::ident() }
+            fn name() -> String { <$s as $crate::TS>::name() }
+            fn inline() -> String { <$s as $crate::TS>::inline() }
+            fn inline_flattened() -> String { <$s as $crate::TS>::inline_flattened() }
             fn visit_dependencies(v: &mut impl $crate::TypeVisitor)
             where
                 Self: 'static,
             {
-                <$s>::visit_dependencies(v);
+                <$s as $crate::TS>::visit_dependencies(v);
             }
             fn visit_generics(v: &mut impl $crate::TypeVisitor)
             where
                 Self: 'static,
             {
-                <$s>::visit_generics(v);
+                <$s as $crate::TS>::visit_generics(v);
             }
-            fn decl() -> String { <$s>::decl() }
-            fn decl_concrete() -> String { <$s>::decl_concrete() }
-            fn output_path() -> Option<&'static std::path::Path> { <$s>::output_path() }
+            fn decl() -> String { <$s as $crate::TS>::decl() }
+            fn decl_concrete() -> String { <$s as $crate::TS>::decl_concrete() }
+            fn output_path() -> Option<&'static std::path::Path> { <$s as $crate::TS>::output_path() }
         }
     };
 }
