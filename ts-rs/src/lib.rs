@@ -625,7 +625,7 @@ macro_rules! impl_tuples {
         impl<$($i: TS),*> TS for ($($i,)*) {
             type WithoutGenerics = (Dummy, );
             fn name() -> String {
-                format!("[{}]", [$($i::name()),*].join(", "))
+                format!("[{}]", [$(<$i as $crate::TS>::name()),*].join(", "))
             }
             fn inline() -> String {
                 panic!("tuple cannot be inlined!");
@@ -678,26 +678,26 @@ macro_rules! impl_wrapper {
 macro_rules! impl_shadow {
     (as $s:ty: $($impl:tt)*) => {
         $($impl)* {
-            type WithoutGenerics = <$s as TS>::WithoutGenerics;
-            fn ident() -> String { <$s>::ident() }
-            fn name() -> String { <$s>::name() }
-            fn inline() -> String { <$s>::inline() }
-            fn inline_flattened() -> String { <$s>::inline_flattened() }
+            type WithoutGenerics = <$s as $crate::TS>::WithoutGenerics;
+            fn ident() -> String { <$s as $crate::TS>::ident() }
+            fn name() -> String { <$s as $crate::TS>::name() }
+            fn inline() -> String { <$s as $crate::TS>::inline() }
+            fn inline_flattened() -> String { <$s as $crate::TS>::inline_flattened() }
             fn dependency_types() -> impl $crate::typelist::TypeList
             where
                 Self: 'static
             {
-                <$s>::dependency_types()
+                <$s as $crate::TS>::dependency_types()
             }
             fn generics() -> impl $crate::typelist::TypeList
             where
                 Self: 'static
             {
-                <$s>::generics()
+                <$s as $crate::TS>::generics()
             }
-            fn decl() -> String { <$s>::decl() }
-            fn decl_concrete() -> String { <$s>::decl_concrete() }
-            fn output_path() -> Option<&'static std::path::Path> { <$s>::output_path() }
+            fn decl() -> String { <$s as $crate::TS>::decl() }
+            fn decl_concrete() -> String { <$s as $crate::TS>::decl_concrete() }
+            fn output_path() -> Option<&'static std::path::Path> { <$s as $crate::TS>::output_path() }
         }
     };
 }
