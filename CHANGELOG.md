@@ -5,6 +5,10 @@
 - `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]` ([#280](https://github.com/Aleph-Alpha/ts-rs/pull/280))
 - Fix incompatibility with serde for `snake_case`, `kebab-case` and `SCREAMING_SNAKE_CASE` ([#298](https://github.com/Aleph-Alpha/ts-rs/pull/298))
 - `#[ts(rename_all = "...")]` no longer accepts variations in the string's casing, dashes and underscores to make behavior consistent with serde ([#298](https://github.com/Aleph-Alpha/ts-rs/pull/298))
+- Remove `TypeList`, and replace `TS::dependency_types`/`TS::generics` with `TS::visit_dependencies`/`TS::visit_generics`.
+  This finally resolves "overflow evaluating the requirement", "reached the recursion limit" errors.
+  Also, compile times should benefit. This is a technically breaking change for those interacting with the `TS` trait
+  directly. For those just using `#[derive(TS)]` and `#[ts(...)]`, nothing changes!
 
 ### Features
 

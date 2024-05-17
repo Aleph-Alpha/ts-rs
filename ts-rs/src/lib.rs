@@ -416,7 +416,7 @@ pub trait TS {
     /// This function will panic if the type cannot be inlined.
     fn inline() -> String;
 
-    /// Flatten an type declaration.  
+    /// Flatten a type declaration.  
     /// This function will panic if the type cannot be flattened.
     fn inline_flattened() -> String;
 
