@@ -97,7 +97,7 @@ pub fn raw_name_to_ts_field(value: String) -> String {
 }
 
 /// Parse all `#[ts(..)]` attributes from the given slice.
-pub fn parse_attrs<'a, A>(attrs: &'a [Attribute]) -> Result<A>
+pub(crate) fn parse_attrs<'a, A>(attrs: &'a [Attribute]) -> Result<A>
 where
     A: TryFrom<&'a Attribute, Error = Error> + Attr,
 {
@@ -113,7 +113,7 @@ where
 /// Parse all `#[serde(..)]` attributes from the given slice.
 #[cfg(feature = "serde-compat")]
 #[allow(unused)]
-pub fn parse_serde_attrs<'a, A>(attrs: &'a [Attribute]) -> Serde<A>
+pub(crate) fn parse_serde_attrs<'a, A>(attrs: &'a [Attribute]) -> Serde<A>
 where
     A: Attr,
     Serde<A>: TryFrom<&'a Attribute, Error = Error>,
