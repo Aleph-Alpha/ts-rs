@@ -625,7 +625,7 @@ macro_rules! impl_tuples {
         impl<$($i: TS),*> TS for ($($i,)*) {
             type WithoutGenerics = (Dummy, );
             fn name() -> String {
-                format!("[{}]", [$($i::name()),*].join(", "))
+                format!("[{}]", [$(<$i as $crate::TS>::name()),*].join(", "))
             }
             fn inline() -> String {
                 panic!("tuple cannot be inlined!");
