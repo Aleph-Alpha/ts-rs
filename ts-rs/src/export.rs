@@ -29,10 +29,7 @@ mod recursive_export {
     use std::{any::TypeId, collections::HashSet, path::Path};
 
     use super::export_into;
-    use crate::{
-        typelist::{TypeList, TypeVisitor},
-        Error, TS,
-    };
+    use crate::{Error, TypeVisitor, TS};
 
     /// Exports `T` to the file specified by the `#[ts(export_to = ..)]` attribute within the given
     /// base directory.  
@@ -79,7 +76,7 @@ mod recursive_export {
             out_dir,
             error: None,
         };
-        T::dependency_types().for_each(&mut visitor);
+        T::visit_dependencies(&mut visitor);
 
         if let Some(e) = visitor.error {
             Err(e)

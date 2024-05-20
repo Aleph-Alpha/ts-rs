@@ -23,6 +23,7 @@ mod infer_as;
 mod issue_168;
 mod issue_232;
 mod issue_308;
+mod issue_317;
 mod issue_70;
 mod issue_80;
 mod leading_colon;

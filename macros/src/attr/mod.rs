@@ -38,13 +38,11 @@ pub(super) trait ContainerAttr: Attr {
     fn crate_rename(&self) -> Path;
 }
 
-#[cfg(feature = "serde-compat")]
 #[derive(Default)]
 pub(super) struct Serde<T>(pub T)
 where
     T: Attr;
 
-#[cfg(feature = "serde-compat")]
 impl<T> Serde<T>
 where
     T: Attr,
