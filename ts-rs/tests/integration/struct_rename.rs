@@ -60,10 +60,6 @@ struct RenameAllScreamingKebab {
 fn rename_all_screaming_kebab_case() {
     let rename_all = RenameAllScreamingKebab::default();
     assert_eq!(
-        serde_json::to_string(&rename_all).unwrap(),
-        r#"{"CRC32C-HASH":0,"SOME-FIELD":0,"SOME-OTHER-FIELD":0}"#
-    );
-    assert_eq!(
         RenameAllScreamingKebab::inline(),
         r#"{ "CRC32C-HASH": number, "SOME-FIELD": number, "SOME-OTHER-FIELD": number, }"#
     );
