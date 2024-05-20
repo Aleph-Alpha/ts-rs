@@ -1,3 +1,4 @@
+#![cfg(feature = "serde-compat")]
 #![allow(dead_code)]
 
 // from issue #107. This does now no longer generate a warning.

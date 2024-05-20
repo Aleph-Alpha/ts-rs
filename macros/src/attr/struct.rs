@@ -30,8 +30,7 @@ impl StructAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = parse_attrs::<Self>(attrs)?;
 
-        #[cfg(feature = "serde-compat")]
-        {
+        if cfg!(feature = "serde-compat") {
             let serde_attr = crate::utils::parse_serde_attrs::<StructAttr>(attrs);
             result = result.merge(serde_attr.0);
         }
@@ -145,7 +144,6 @@ impl_parse! {
     }
 }
 
-#[cfg(feature = "serde-compat")]
 impl_parse! {
     Serde<StructAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),

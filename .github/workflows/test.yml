@@ -100,11 +100,12 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@v2
       - name: Test
+        working-directory: ts-rs
         run: |
           cargo test --all-features
           shopt -s globstar
-          tsc ts-rs/bindings/**/*.ts --noEmit --noUnusedLocals --strict
-          rm -rf ts-rs/bindings
+          tsc bindings/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf bindings
 
   test-export-env:
     name: Test ts-rs with TS_RS_EXPORT_DIR
@@ -118,11 +119,12 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@v2
       - name: Test
+        working-directory: ts-rs
         run: |
           TS_RS_EXPORT_DIR=output cargo test --no-default-features --features ts-rs/export
           shopt -s globstar
-          tsc ts-rs/output/**/*.ts --noEmit --noUnusedLocals --strict
-          rm -rf ts-rs/output
+          tsc output/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf output
 
   test-no-features:
     name: Test ts-rs with --no-default-features
@@ -136,8 +138,9 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@v2
       - name: Test
+        working-directory: ts-rs
         run: |
           cargo test --no-default-features --features ts-rs/export
           shopt -s globstar
-          tsc ts-rs/bindings/**/*.ts --noEmit --noUnusedLocals
-          rm -rf ts-rs/bindings
+          tsc bindings/**/*.ts --noEmit --noUnusedLocals
+          rm -rf bindings

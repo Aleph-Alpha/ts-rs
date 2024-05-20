@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use ts_rs::{typelist::TypeList, Dependency, ExportError, TS};
+use ts_rs::{TypeVisitor, Dependency, ExportError, TS};
 
 #[rustfmt::skip]
 trait Malicious {
@@ -13,9 +13,9 @@ trait Malicious {
     fn name() -> String { unimplemented!() }
     fn inline() -> String { unimplemented!() }
     fn inline_flattened() -> String { unimplemented!() }
-    fn dependency_types() -> impl TypeList {}
-    fn generics() -> impl TypeList {}
     fn dependencies() -> Vec<Dependency> { unimplemented!() }
+    fn visit_dependencies(_: &mut impl TypeVisitor) { unimplemented!() }
+    fn visit_generics(_: &mut impl TypeVisitor) { unimplemented!() }
     fn export() -> Result<(), ExportError> { unimplemented!() }
     fn export_all() -> Result<(), ExportError> { unimplemented!() }
     fn export_all_to(out_dir: impl AsRef<Path>) -> Result<(), ExportError> { unimplemented!() }
