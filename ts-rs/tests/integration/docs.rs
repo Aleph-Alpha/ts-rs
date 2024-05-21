@@ -116,6 +116,7 @@ fn export_a() {
             "   */\n",
             "  name: string;\n",
             "};\n",
+            "\n",
         )
     } else {
         concat!(
@@ -132,7 +133,8 @@ fn export_a() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "name: string, };"
+            "name: string, };",
+            "\n",
         )
     };
 
@@ -162,6 +164,7 @@ fn export_b() {
             "   */\n",
             "  name: string;\n",
             "};\n",
+            "\n",
         )
     } else {
         concat!(
@@ -179,6 +182,7 @@ fn export_b() {
             " * Testing\n",
             " */\n",
             "name: string, };",
+            "\n",
         )
     };
 
@@ -200,7 +204,8 @@ fn export_c() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type C = Record<string, never>;\n"
+            "export type C = Record<string, never>;\n",
+            "\n",
         )
     } else {
         concat!(
@@ -211,7 +216,8 @@ fn export_c() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type C = Record<string, never>;"
+            "export type C = Record<string, never>;",
+            "\n",
         )
     };
 
@@ -233,7 +239,8 @@ fn export_d() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type D = null;\n"
+            "export type D = null;\n",
+            "\n",
         )
     } else {
         concat!(
@@ -244,7 +251,8 @@ fn export_d() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type D = null;"
+            "export type D = null;",
+            "\n",
         )
     };
     let actual_content = fs::read_to_string(D::default_output_path().unwrap()).unwrap();
@@ -265,7 +273,8 @@ fn export_e() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type E = never;\n"
+            "export type E = never;\n",
+            "\n",
         )
     } else {
         concat!(
@@ -276,7 +285,8 @@ fn export_e() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type E = never;"
+            "export type E = never;",
+            "\n",
         )
     };
 
@@ -307,7 +317,8 @@ fn export_f() {
             "     */\n",
             "    variant_field: number;\n",
             "  };\n",
-            "};\n"
+            "};\n",
+            "\n",
         )
     } else {
         concat!(
@@ -324,7 +335,8 @@ fn export_f() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "variant_field: number, } };"
+            "variant_field: number, } };",
+            "\n",
         )
     };
 
@@ -356,7 +368,8 @@ fn export_g() {
             "       */\n",
             "      variant_field: number;\n",
             "    };\n",
-            "  });\n"
+            "  });\n",
+            "\n",
         )
     } else {
         concat!(
@@ -373,6 +386,7 @@ fn export_g() {
             " * Testing\n",
             " */\n",
             "variant_field: number, } });",
+            "\n",
         )
     };
 

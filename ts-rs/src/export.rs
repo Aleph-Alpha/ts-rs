@@ -139,6 +139,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
         use std::io::Write;
         let mut file = File::create(path)?;
         file.write_all(buffer.as_bytes())?;
+        file.write_all(b"\n")?;
         file.sync_data()?;
     }
 
