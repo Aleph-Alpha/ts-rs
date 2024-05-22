@@ -53,7 +53,7 @@ fn issue_232() {
         export type StateInlined = { \
             a: { Ok : { name: string, inner: Enum, } } | { Err : string }, \
             b: { Ok : { name: string, inner: Enum, } } | { Err : string }, \
-        };"
+        };\n"
     );
     assert_eq!(
         State::export_to_string().unwrap(),
@@ -63,6 +63,6 @@ fn issue_232() {
         export type State = { \
             a: { Ok : EnumWithName } | { Err : string }, \
             b: { Ok : EnumWithName } | { Err : string }, \
-        };"
+        };\n"
     );
 }

@@ -139,7 +139,6 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
         use std::io::Write;
         let mut file = File::create(path)?;
         file.write_all(buffer.as_bytes())?;
-        file.write_all(b"\n")?;
         file.sync_data()?;
     }
 
@@ -153,6 +152,7 @@ pub(crate) fn export_to_string<T: TS + ?Sized + 'static>() -> Result<String, Exp
     buffer.push_str(NOTE);
     generate_imports::<T::WithoutGenerics>(&mut buffer, default_out_dir())?;
     generate_decl::<T>(&mut buffer);
+    buffer.push('\n');
     Ok(buffer)
 }
 
