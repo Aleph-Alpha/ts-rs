@@ -163,7 +163,6 @@ fn export_b() {
             "   */\n",
             "  name: string;\n",
             "};\n",
-            "\n",
         )
     } else {
         concat!(
@@ -204,7 +203,6 @@ fn export_c() {
             " * Testing\n",
             " */\n",
             "export type C = Record<string, never>;\n",
-            "\n",
         )
     } else {
         concat!(
@@ -239,7 +237,6 @@ fn export_d() {
             " * Testing\n",
             " */\n",
             "export type D = null;\n",
-            "\n",
         )
     } else {
         concat!(
@@ -273,7 +270,6 @@ fn export_e() {
             " * Testing\n",
             " */\n",
             "export type E = never;\n",
-            "\n",
         )
     } else {
         concat!(
@@ -317,7 +313,6 @@ fn export_f() {
             "    variant_field: number;\n",
             "  };\n",
             "};\n",
-            "\n",
         )
     } else {
         concat!(
@@ -368,7 +363,6 @@ fn export_g() {
             "      variant_field: number;\n",
             "    };\n",
             "  });\n",
-            "\n",
         )
     } else {
         concat!(
