@@ -116,7 +116,6 @@ fn export_a() {
             "   */\n",
             "  name: string;\n",
             "};\n",
-            "\n",
         )
     } else {
         concat!(
