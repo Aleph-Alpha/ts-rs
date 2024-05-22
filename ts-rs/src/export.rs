@@ -144,24 +144,31 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Re
 
                 file.seek(SeekFrom::Start(NOTE.len().try_into().unwrap()))?;
 
-                let mut buf = String::new();
-                file.read_to_string(&mut buf)?;
+                let content_len = usize::try_from(file.metadata()?.len()).unwrap() - NOTE.len();
+                let mut original_contents = String::with_capacity(content_len);
+                file.read_to_string(&mut original_contents)?;
 
                 let imports = imports
                     .lines()
-                    .filter(|x| !buf.contains(x))
+                    .filter(|x| !original_contents.contains(x))
                     .collect::<String>();
 
                 file.seek(SeekFrom::Start(NOTE.len().try_into().unwrap()))?;
 
-                file.write_all(imports.as_bytes())?;
-                if !imports.is_empty() {
-                    file.write_all(b"\n")?;
-                }
-                file.write_all(buf.as_bytes())?;
+                let buffer_size =
+                    imports.as_bytes().len() + decl.as_bytes().len() + content_len + 3;
 
-                file.write_all(b"\n\n")?;
-                file.write_all(decl.as_bytes())?;
+                let mut buffer = String::with_capacity(buffer_size);
+
+                buffer.push_str(&imports);
+                if !imports.is_empty() {
+                    buffer.push('\n');
+                }
+                buffer.push_str(&original_contents);
+                buffer.push_str("\n\n");
+                buffer.push_str(decl);
+
+                file.write_all(buffer.as_bytes())?;
 
                 entry.insert(type_name);
             }
