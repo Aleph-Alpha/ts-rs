@@ -129,49 +129,50 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Re
         let mut lock = EXPORT_PATHS.lock().unwrap();
 
         if let Some(entry) = lock.get_mut(&path) {
-            if !entry.contains(&type_name) {
-                let (header, decl) = buffer.split_once("\n\n").unwrap();
-                let imports = if header.len() > NOTE.len() {
-                    &header[NOTE.len()..]
-                } else {
-                    ""
-                };
-
-                let mut file = std::fs::OpenOptions::new()
-                    .read(true)
-                    .write(true)
-                    .open(&path)?;
-
-                file.seek(SeekFrom::Start(NOTE.len().try_into().unwrap()))?;
-
-                let content_len = usize::try_from(file.metadata()?.len()).unwrap() - NOTE.len();
-                let mut original_contents = String::with_capacity(content_len);
-                file.read_to_string(&mut original_contents)?;
-
-                let imports = imports
-                    .lines()
-                    .filter(|x| !original_contents.contains(x))
-                    .collect::<String>();
-
-                file.seek(SeekFrom::Start(NOTE.len().try_into().unwrap()))?;
-
-                let buffer_size =
-                    imports.as_bytes().len() + decl.as_bytes().len() + content_len + 3;
-
-                let mut buffer = String::with_capacity(buffer_size);
-
-                buffer.push_str(&imports);
-                if !imports.is_empty() {
-                    buffer.push('\n');
-                }
-                buffer.push_str(&original_contents);
-                buffer.push_str("\n\n");
-                buffer.push_str(decl);
-
-                file.write_all(buffer.as_bytes())?;
-
-                entry.insert(type_name);
+            if entry.contains(&type_name) {
+                return Ok(());
             }
+
+            let (header, decl) = buffer.split_once("\n\n").unwrap();
+            let imports = if header.len() > NOTE.len() {
+                &header[NOTE.len()..]
+            } else {
+                ""
+            };
+
+            let mut file = std::fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(&path)?;
+
+            file.seek(SeekFrom::Start(NOTE.len().try_into().unwrap()))?;
+
+            let content_len = usize::try_from(file.metadata()?.len()).unwrap() - NOTE.len();
+            let mut original_contents = String::with_capacity(content_len);
+            file.read_to_string(&mut original_contents)?;
+
+            let imports = imports
+                .lines()
+                .filter(|x| !original_contents.contains(x))
+                .collect::<String>();
+
+            file.seek(SeekFrom::Start(NOTE.len().try_into().unwrap()))?;
+
+            let buffer_size = imports.as_bytes().len() + decl.as_bytes().len() + content_len + 3;
+
+            let mut buffer = String::with_capacity(buffer_size);
+
+            buffer.push_str(&imports);
+            if !imports.is_empty() {
+                buffer.push('\n');
+            }
+            buffer.push_str(&original_contents);
+            buffer.push_str("\n\n");
+            buffer.push_str(decl);
+
+            file.write_all(buffer.as_bytes())?;
+
+            entry.insert(type_name);
         } else {
             let mut file = File::create(&path)?;
             file.write_all(buffer.as_bytes())?;
