@@ -127,7 +127,7 @@ jobs:
           rm -rf output
 
   test-absolute-export-env:
-    name: Test ts-rs with TS_RS_EXPORT_DIR
+    name: Test ts-rs with absolute TS_RS_EXPORT_DIR
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     steps:
