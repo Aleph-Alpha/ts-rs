@@ -126,6 +126,25 @@ jobs:
           tsc output/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf output
 
+  test-absolute-export-env:
+    name: Test ts-rs with TS_RS_EXPORT_DIR
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        working-directory: ts-rs
+        run: |
+          TS_RS_EXPORT_DIR=$(pwd)/output cargo test --no-default-features
+          shopt -s globstar
+          tsc output/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf output
+
   test-no-features:
     name: Test ts-rs with --no-default-features
     runs-on: ubuntu-latest
