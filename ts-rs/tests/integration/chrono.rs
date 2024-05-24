@@ -25,8 +25,9 @@ struct Chrono {
 
 #[test]
 fn chrono() {
+    let month = Month::January;
     assert_eq!(
         Chrono::decl(),
-        "type Chrono = { date: [string, string, string, string], time: string, date_time: [string, string, string, string], duration: string, month: string, weekday: string, };"
+        "type Chrono = { date: [string, Date, Date, Date], time: string, date_time: [string, Date, Date, Date], duration: string, month: number, weekday: number, };"
     )
 }

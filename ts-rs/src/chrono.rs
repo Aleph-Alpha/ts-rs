@@ -21,19 +21,20 @@ macro_rules! impl_dummy {
     )*};
 }
 
-impl_primitives!(NaiveDateTime, NaiveDate, NaiveTime, Month, Weekday, Duration => "string");
+impl_primitives!(NaiveDateTime, NaiveDate, NaiveTime, Duration => "string");
+impl_primitives!(Month, Weekday => "number");
 impl_dummy!(Utc, Local, FixedOffset);
 
 impl<T: TimeZone + 'static> TS for DateTime<T> {
     type WithoutGenerics = Self;
     fn ident() -> String {
-        "string".to_owned()
+        "Date".to_owned()
     }
     fn name() -> String {
-        "string".to_owned()
+        "Date".to_owned()
     }
     fn inline() -> String {
-        "string".to_owned()
+        "Date".to_owned()
     }
     fn inline_flattened() -> String {
         panic!("{} cannot be flattened", Self::name())
@@ -49,13 +50,13 @@ impl<T: TimeZone + 'static> TS for DateTime<T> {
 impl<T: TimeZone + 'static> TS for Date<T> {
     type WithoutGenerics = Self;
     fn ident() -> String {
-        "string".to_owned()
+        "Date".to_owned()
     }
     fn name() -> String {
-        "string".to_owned()
+        "Date".to_owned()
     }
     fn inline() -> String {
-        "string".to_owned()
+        "Date".to_owned()
     }
     fn inline_flattened() -> String {
         panic!("{} cannot be flattened", Self::name())
