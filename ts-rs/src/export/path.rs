@@ -4,13 +4,7 @@ use super::ExportError as E;
 
 const ERROR_MESSAGE: &str = r#"The path provided with `#[ts(export_to = "..")]` is not valid"#;
 pub fn absolute<T: AsRef<Path>>(path: T) -> Result<PathBuf, E> {
-    let path = path.as_ref();
-
-    if path.is_absolute() {
-        return Ok(path.to_owned());
-    }
-
-    let path = std::env::current_dir()?.join(path);
+    let path = std::env::current_dir()?.join(path.as_ref());
 
     let mut out = Vec::new();
     for comp in path.components() {
