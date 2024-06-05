@@ -4,7 +4,7 @@ use super::Error;
 
 const ERROR_MESSAGE: &str = r#"The path provided with `#[ts(export_to = "..")]` is not valid"#;
 
-pub fn absolute<T: AsRef<Path>>(path: T) -> Result<PathBuf, E> {
+pub fn absolute<T: AsRef<Path>>(path: T) -> Result<PathBuf, Error> {
     let path = std::env::current_dir()?.join(path.as_ref());
 
 
