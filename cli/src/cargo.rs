@@ -2,7 +2,8 @@ use std::process::{Command, Stdio};
 
 use color_eyre::Result;
 
-use crate::{args::Args, path};
+use crate::config::Config;
+use crate::path;
 
 macro_rules! feature {
     ($cargo_invocation: expr, $args: expr, { $($field: ident => $feature: literal),* $(,)? }) => {
@@ -16,7 +17,7 @@ macro_rules! feature {
     };
 }
 
-pub fn invoke(args: &Args) -> Result<()> {
+pub fn invoke(cfg: &Config) -> Result<()> {
     let mut cargo_invocation = Command::new("cargo");
 
     cargo_invocation
@@ -26,20 +27,25 @@ pub fn invoke(args: &Args) -> Result<()> {
         .arg("ts-rs/export")
         .arg("--features")
         .arg("ts-rs/generate-metadata")
-        .stdout(if args.no_capture {
+        .stdout(if cfg.no_capture {
             Stdio::inherit()
         } else {
             Stdio::piped()
         })
-        .env("TS_RS_EXPORT_DIR", path::absolute(&args.output_directory)?);
+        .env("TS_RS_EXPORT_DIR", path::absolute(&cfg.output_directory)?);
 
-    feature!(cargo_invocation, args, {
+    for (rust, ts) in &cfg.overrides {
+        let env = format!("TS_RS_INTERNAL_OVERRIDE_{rust}");
+        cargo_invocation.env(env, ts);
+    }
+
+    feature!(cargo_invocation, cfg, {
         no_warnings => "no-serde-warnings",
         esm_imports => "import-esm",
         format => "format",
     });
 
-    if args.no_capture {
+    if cfg.no_capture {
         cargo_invocation.arg("--").arg("--nocapture");
     } else {
         cargo_invocation.arg("--quiet");

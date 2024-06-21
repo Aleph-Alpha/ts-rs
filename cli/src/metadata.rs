@@ -12,7 +12,7 @@ use color_eyre::{
 pub const FILE_NAME: &str = "ts_rs.meta";
 
 pub struct Metadata<'a> {
-    entries: std::collections::HashMap<&'a str, HashSet<Entry<'a>>>,
+    entries: HashMap<&'a str, HashSet<Entry<'a>>>,
 }
 
 impl<'a> TryFrom<&'a str> for Metadata<'a> {

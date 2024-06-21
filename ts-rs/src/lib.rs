@@ -135,6 +135,7 @@ use std::{
     ops::{Range, RangeInclusive},
     path::{Path, PathBuf},
 };
+use std::sync::OnceLock;
 
 pub use ts_rs_macros::TS;
 
@@ -636,6 +637,7 @@ impl Dependency {
     }
 }
 
+<<<<<<< HEAD
 #[doc(hidden)]
 #[diagnostic::on_unimplemented(
     message = "`#[ts(optional)]` can only be used on fields of type `Option`",
@@ -645,14 +647,37 @@ impl Dependency {
 pub trait IsOption {}
 
 impl<T> IsOption for Option<T> {}
+=======
+static OVERRIDES: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+
+fn get_override(rust_type: &str) -> Option<&'static str> {
+    let overrides = OVERRIDES.get_or_init(|| {
+        const PREFIX: &str = "TS_RS_INTERNAL_OVERRIDE_";
+        std::env::vars_os()
+            .flat_map(|(key, value)| Some((key.into_string().ok()?, value.into_string().ok()?)))
+            .filter(|(key, _)| key.starts_with(PREFIX))
+            .map(|(key, value)| (&key.leak()[PREFIX.len()..], &*value.leak()))
+            .collect()
+    });
+    overrides.get(rust_type).copied()
+}
+>>>>>>> 4fc25b5 (proof-of-concept of type overrides using the CLI)
 
 // generate impls for primitive types
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
         impl TS for $ty {
             type WithoutGenerics = Self;
+<<<<<<< HEAD
             type OptionInnerType = Self;
             fn name() -> String { $l.to_owned() }
+=======
+            fn name() -> String {
+                $crate::get_override(stringify!($ty))
+                    .unwrap_or($l)
+                    .to_owned()
+            }
+>>>>>>> 4fc25b5 (proof-of-concept of type overrides using the CLI)
             fn inline() -> String { <Self as $crate::TS>::name() }
             fn inline_flattened() -> String { panic!("{} cannot be flattened", <Self as $crate::TS>::name()) }
             fn decl() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
