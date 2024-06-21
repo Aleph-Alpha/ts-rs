@@ -253,7 +253,7 @@ where
         match (ita.next(), itb.next()) {
             (Some(C::ParentDir | C::CurDir), _) | (_, Some(C::ParentDir | C::CurDir)) => {
                 unreachable!(
-                    "The paths have been cleaned, no no '.' or '..' components are present"
+                    "The paths have been cleaned, no no '.' or '..' components should present\n path: {path:?}\nbase: {base:?}"
                 )
             }
             (None, None) => break,
