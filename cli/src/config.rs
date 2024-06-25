@@ -42,6 +42,7 @@ pub struct Args {
 // keeping this separate from `Args` for now :shrug:
 #[derive(Default, Deserialize)]
 #[serde(deny_unknown_fields, default)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct Config {
     // type overrides for types implemented inside ts-rs.
     pub overrides: HashMap<String, String>,
@@ -69,7 +70,7 @@ impl Config {
             return Ok(Self::default());
         }
         let content = std::fs::read_to_string(path)?;
-        Ok(toml::from_str::<Config>(&content)?)
+        Ok(toml::from_str::<Self>(&content)?)
     }
 
     fn verify(&self) -> Result<()> {

@@ -15,7 +15,11 @@ categories = [
     "web-programming",
 ]
 readme = "../README.md"
+<<<<<<< HEAD
 rust-version = "1.78.0"
+=======
+rust-version = "1.72.0"
+>>>>>>> ff49be6 (Fix clippy warnings)
 
 [features]
 chrono-impl = ["chrono"]
