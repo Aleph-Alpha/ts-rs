@@ -124,7 +124,6 @@
 //! ## MSRV
 //! The Minimum Supported Rust Version for this crate is 1.78.0
 
-use std::sync::OnceLock;
 use std::{
     any::TypeId,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
@@ -135,6 +134,7 @@ use std::{
     },
     ops::{Range, RangeInclusive},
     path::{Path, PathBuf},
+    sync::OnceLock,
 };
 
 pub use ts_rs_macros::TS;
@@ -637,7 +637,6 @@ impl Dependency {
     }
 }
 
-<<<<<<< HEAD
 #[doc(hidden)]
 #[diagnostic::on_unimplemented(
     message = "`#[ts(optional)]` can only be used on fields of type `Option`",
@@ -647,7 +646,7 @@ impl Dependency {
 pub trait IsOption {}
 
 impl<T> IsOption for Option<T> {}
-=======
+
 static OVERRIDES: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
 
 fn get_override(rust_type: &str) -> Option<&'static str> {
@@ -661,23 +660,18 @@ fn get_override(rust_type: &str) -> Option<&'static str> {
     });
     overrides.get(rust_type).copied()
 }
->>>>>>> 4fc25b5 (proof-of-concept of type overrides using the CLI)
 
 // generate impls for primitive types
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
         impl TS for $ty {
             type WithoutGenerics = Self;
-<<<<<<< HEAD
             type OptionInnerType = Self;
-            fn name() -> String { $l.to_owned() }
-=======
             fn name() -> String {
                 $crate::get_override(stringify!($ty))
                     .unwrap_or($l)
                     .to_owned()
             }
->>>>>>> 4fc25b5 (proof-of-concept of type overrides using the CLI)
             fn inline() -> String { <Self as $crate::TS>::name() }
             fn inline_flattened() -> String { panic!("{} cannot be flattened", <Self as $crate::TS>::name()) }
             fn decl() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
