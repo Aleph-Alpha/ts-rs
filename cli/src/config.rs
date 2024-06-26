@@ -10,6 +10,9 @@ use serde::Deserialize;
 #[derive(Parser, Debug)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Args {
+    #[clap(skip)]
+    pub overrides: HashMap<String, String>,
+
     /// Path to the `ts-rs` config file
     #[arg(long)]
     pub config: Option<PathBuf>,
@@ -50,7 +53,7 @@ pub struct Args {
 #[serde(deny_unknown_fields, default, rename_all = "kebab-case")]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Config {
-    // type overrides for types implemented inside ts-rs.
+    /// Type overrides for types implemented inside ts-rs.
     pub overrides: HashMap<String, String>,
     pub output_directory: Option<PathBuf>,
     pub no_warnings: bool,
@@ -67,38 +70,22 @@ pub struct Config {
     pub no_capture: bool,
 }
 
-impl Config {
+impl Args {
     pub fn load() -> Result<Self> {
-        let args = Args::parse();
+        let mut args = Self::parse();
 
-        let cfg = Self::load_from_file(args.config.as_deref())?.merge(args);
-        cfg.verify()?;
-        Ok(cfg)
+        let cfg = Config::load_from_file(args.config.as_deref())?;
+
+        args.merge(cfg);
+        args.verify()?;
+
+        Ok(args)
     }
 
     pub fn output_directory(&self) -> &Path {
         self.output_directory
             .as_deref()
             .expect("Output directory must not be `None`")
-    }
-
-    fn load_from_file(path: Option<&Path>) -> Result<Self> {
-        if let Some(path) = path {
-            if !path.is_file() {
-                bail!("The provided path doesn't exist");
-            }
-
-            let content = std::fs::read_to_string(path)?;
-            return Ok(toml::from_str(&content)?);
-        }
-
-        // TODO: from where do we actually load the config?
-        let path = Path::new("./ts-rs.toml");
-        if !path.is_file() {
-            return Ok(Self::default());
-        }
-        let content = std::fs::read_to_string(path)?;
-        Ok(toml::from_str(&content)?)
     }
 
     fn verify(&self) -> Result<()> {
@@ -117,9 +104,9 @@ impl Config {
     }
 
     fn merge(
-        mut self,
-        Args {
-            config: _,
+        &mut self,
+        Config {
+            overrides,
             output_directory,
             no_warnings,
             esm_imports,
@@ -127,18 +114,40 @@ impl Config {
             generate_index_ts,
             merge_files,
             no_capture,
-        }: Args,
-    ) -> Self {
+        }: Config,
+    ) {
         // QUESTION: This gives the CLI flag priority over the config file's value,
         // is this the correct order?
-        self.output_directory = output_directory.or(self.output_directory);
+        self.output_directory = output_directory.or_else(|| self.output_directory.clone());
 
+        self.overrides = overrides;
         self.no_warnings |= no_warnings;
         self.esm_imports |= esm_imports;
         self.format |= format;
         self.generate_index_ts |= generate_index_ts;
         self.merge_files |= merge_files;
         self.no_capture |= no_capture;
-        self
+    }
+}
+
+impl Config {
+    fn load_from_file(path: Option<&Path>) -> Result<Self> {
+        if let Some(path) = path {
+            if !path.is_file() {
+                bail!("The provided path doesn't exist");
+            }
+
+            let content = std::fs::read_to_string(path)?;
+            return Ok(toml::from_str(&content)?);
+        }
+
+        // TODO: from where do we actually load the config?
+        let path = Path::new("./ts-rs.toml");
+        if !path.is_file() {
+            return Ok(Self::default());
+        }
+
+        let content = std::fs::read_to_string(path)?;
+        Ok(toml::from_str(&content)?)
     }
 }

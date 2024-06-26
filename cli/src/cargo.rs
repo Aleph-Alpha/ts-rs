@@ -2,7 +2,7 @@ use std::process::{Command, Stdio};
 
 use color_eyre::Result;
 
-use crate::{config::Config, path};
+use crate::{config::Args, path};
 
 macro_rules! feature {
     ($cargo_invocation: expr, $args: expr, { $($field: ident => $feature: literal),* $(,)? }) => {
@@ -16,7 +16,7 @@ macro_rules! feature {
     };
 }
 
-pub fn invoke(cfg: &Config) -> Result<()> {
+pub fn invoke(cfg: &Args) -> Result<()> {
     let mut cargo_invocation = Command::new("cargo");
 
     cargo_invocation
@@ -31,7 +31,7 @@ pub fn invoke(cfg: &Config) -> Result<()> {
         } else {
             Stdio::piped()
         })
-        .env("TS_RS_EXPORT_DIR", path::absolute(&cfg.output_directory())?);
+        .env("TS_RS_EXPORT_DIR", path::absolute(cfg.output_directory())?);
 
     for (rust, ts) in &cfg.overrides {
         let env = format!("TS_RS_INTERNAL_OVERRIDE_{rust}");
