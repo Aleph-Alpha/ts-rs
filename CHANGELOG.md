@@ -3,6 +3,11 @@
 ### Features
 ### Fixes
 
+# 9.1.0
+### Features
+- Allow using `#[ts(flatten)]` on fields using generic parameters ([#336](https://github.com/Aleph-Alpha/ts-rs/pull/336))
+
+
 # 9.0.0
 
 ### Breaking
