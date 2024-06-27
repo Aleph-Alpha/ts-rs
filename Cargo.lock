@@ -1163,7 +1163,7 @@ dependencies = [
 
 [[package]]
 name = "ts-rs-macros"
-version = "9.1.0"
+version = "9.0.1"
 dependencies = [
  "proc-macro2",
  "quote",
