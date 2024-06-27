@@ -15,6 +15,7 @@ mod flatten;
 mod generic_fields;
 mod generic_without_import;
 mod generics;
+mod generics_flatten;
 mod hashmap;
 mod hashset;
 mod imports;

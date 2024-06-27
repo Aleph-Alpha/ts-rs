@@ -158,7 +158,7 @@ impl DerivedTS {
                     type WithoutGenerics = #generics;
                     fn name() -> String { stringify!(#generics).to_owned() }
                     fn inline() -> String { panic!("{} cannot be inlined", #name) }
-                    fn inline_flattened() -> String { panic!("{} cannot be flattened", #name) }
+                    fn inline_flattened() -> String { stringify!(#generics).to_owned() }
                     fn decl() -> String { panic!("{} cannot be declared", #name) }
                     fn decl_concrete() -> String { panic!("{} cannot be declared", #name) }
                 }
