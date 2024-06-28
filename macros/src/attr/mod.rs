@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 pub use field::*;
 pub use r#enum::*;
+pub use r#fn::*;
 pub use r#struct::*;
 use syn::{
     parse::{Parse, ParseStream},
@@ -12,6 +13,7 @@ pub use variant::*;
 
 mod r#enum;
 mod field;
+mod r#fn;
 mod r#struct;
 mod variant;
 
@@ -94,6 +96,19 @@ impl Inflection {
             Inflection::ScreamingSnake => Self::Snake.apply(string).to_ascii_uppercase(),
             Inflection::Kebab => Self::Snake.apply(string).replace('_', "-"),
             Inflection::ScreamingKebab => Self::Kebab.apply(string).to_ascii_uppercase(),
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Lower => "lowercase",
+            Self::Upper => "UPPERCASE",
+            Self::Kebab => "kebab-case",
+            Self::Camel => "camelCase",
+            Self::Snake => "snake_case",
+            Self::Pascal => "PascalCase",
+            Self::ScreamingSnake => "SCREAMING_SNAKE_CASE",
+            Self::ScreamingKebab => "SCREAMING-KEBAB-CASE",
         }
     }
 }

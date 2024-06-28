@@ -7,6 +7,7 @@ use crate::{
 };
 
 mod r#enum;
+mod r#fn;
 mod named;
 mod newtype;
 mod tuple;
@@ -15,6 +16,7 @@ mod type_override;
 mod unit;
 
 pub(crate) use r#enum::r#enum_def;
+pub(crate) use r#fn::*;
 
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     let attr = StructAttr::from_attrs(&s.attrs)?;
