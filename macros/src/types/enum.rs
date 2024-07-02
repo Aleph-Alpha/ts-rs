@@ -110,8 +110,21 @@ fn format_variant(
     let variant_dependencies = variant_type.dependencies;
     let inline_type = variant_type.inline;
 
+    let parsed_ty = match (&variant_attr.type_as, &variant_attr.type_override) {
+        (Some(_), Some(_)) => syn_err_spanned!(variant; "`type` is not compatible with `as`"),
+        (Some(ty), None) => {
+            dependencies.push(ty);
+            quote!(<#ty as #crate_rename::TS>::name())
+        }
+        (None, Some(ty)) => quote!(#ty.to_owned()),
+        (None, None) => {
+            dependencies.append(variant_dependencies);
+            inline_type
+        }
+    };
+
     let formatted = match (untagged_variant, enum_attr.tagged()?) {
-        (true, _) | (_, Tagged::Untagged) => quote!(#inline_type),
+        (true, _) | (_, Tagged::Untagged) => quote!(#parsed_ty),
         (false, Tagged::Externally) => match &variant.fields {
             Fields::Unit => quote!(format!("\"{}\"", #name)),
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
@@ -123,10 +136,10 @@ fn format_variant(
                 if field_attr.skip {
                     quote!(format!("\"{}\"", #name))
                 } else {
-                    quote!(format!("{{ \"{}\": {} }}", #name, #inline_type))
+                    quote!(format!("{{ \"{}\": {} }}", #name, #parsed_ty))
                 }
             }
-            _ => quote!(format!("{{ \"{}\": {} }}", #name, #inline_type)),
+            _ => quote!(format!("{{ \"{}\": {} }}", #name, #parsed_ty)),
         },
         (false, Tagged::Adjacently { tag, content }) => match &variant.fields {
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
@@ -150,7 +163,7 @@ fn format_variant(
             }
             Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name)),
             _ => quote!(
-                format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #inline_type)
+                format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #parsed_ty)
             ),
         },
         (false, Tagged::Internally { tag }) => match variant_type.inline_flattened {
@@ -193,13 +206,12 @@ fn format_variant(
                 }
                 Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name)),
                 _ => {
-                    quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #inline_type))
+                    quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #parsed_ty))
                 }
             },
         },
     };
 
-    dependencies.append(variant_dependencies);
     formatted_variants.push(formatted);
     Ok(())
 }
