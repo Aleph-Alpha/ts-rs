@@ -15,6 +15,6 @@ struct Indexes {
 fn indexmap() {
     assert_eq!(
         Indexes::decl(),
-        "type Indexes = { map: { [key: string]: string }, set: Array<string>, };"
+        "type Indexes = { map: { [key in string]?: string }, set: Array<string>, };"
     )
 }
