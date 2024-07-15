@@ -1006,6 +1006,9 @@ impl_primitives! { ordered_float::OrderedFloat<f32> => "number" }
 #[cfg(feature = "ordered-float-impl")]
 impl_primitives! { ordered_float::OrderedFloat<f64> => "number" }
 
+#[cfg(feature = "bson")]
+impl_primitives! { bson::oid::ObjectId => "string" }
+
 #[cfg(feature = "bson-uuid-impl")]
 impl_primitives! { bson::Uuid => "string" }
 
