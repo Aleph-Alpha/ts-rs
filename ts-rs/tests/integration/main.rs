@@ -2,6 +2,7 @@
 
 mod arrays;
 mod bound;
+mod bson;
 mod chrono;
 mod concrete_generic;
 mod docs;
