@@ -210,7 +210,7 @@ fn merge(original_contents: String, new_contents: String) -> String {
 
     let new_decl_name = new_decl
         .split(DECLARATION_START)
-        .nth(1)
+        .last()
         .unwrap()
         .split_whitespace()
         .next()
@@ -222,7 +222,7 @@ fn merge(original_contents: String, new_contents: String) -> String {
     for decl in original_decls {
         let decl_name = decl
             .split(DECLARATION_START)
-            .nth(1)
+            .last()
             .unwrap()
             .split_whitespace()
             .next()
