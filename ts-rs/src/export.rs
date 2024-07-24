@@ -158,7 +158,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Re
 
             file.seek(SeekFrom::Start(NOTE.len().try_into().unwrap()))?;
 
-            let buffer_size = imports.as_bytes().len() + decl.as_bytes().len() + content_len + 3;
+            let buffer_size = imports.len() + decl.len() + content_len + 3;
 
             let mut buffer = String::with_capacity(buffer_size);
 
@@ -167,7 +167,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Re
                 buffer.push('\n');
             }
             buffer.push_str(&original_contents);
-            buffer.push_str("\n\n");
+            buffer.push('\n');
             buffer.push_str(decl);
 
             file.write_all(buffer.as_bytes())?;
