@@ -40,7 +40,7 @@
 //! ## Get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "8.1"
+//! ts-rs = "9.0"
 //! ```
 //!
 //! ```rust
@@ -896,11 +896,11 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     }
 
     fn name() -> String {
-        format!("{{ [key: {}]: {} }}", K::name(), V::name())
+        format!("{{ [key in {}]?: {} }}", K::name(), V::name())
     }
 
     fn inline() -> String {
-        format!("{{ [key: {}]: {} }}", K::inline(), V::inline())
+        format!("{{ [key in {}]?: {} }}", K::inline(), V::inline())
     }
 
     fn visit_dependencies(v: &mut impl TypeVisitor)

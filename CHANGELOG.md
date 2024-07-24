@@ -1,4 +1,14 @@
 # master
+### Breaking
+### Features
+### Fixes
+
+# 9.0.1
+### Fixes
+- Allow using `#[ts(flatten)]` on fields using generic parameters ([#336](https://github.com/Aleph-Alpha/ts-rs/pull/336))
+
+
+# 9.0.0
 
 ### Breaking
 
@@ -22,6 +32,8 @@
 - Fix `#[ts(rename_all_fields = "...")]` on enums containing tuple or unit variants ([#287](https://github.com/Aleph-Alpha/ts-rs/pull/287))
 - Fix "overflow evaluating the requirement" and "reached the recursion limit" errors in some cases ([#293](https://github.com/Aleph-Alpha/ts-rs/pull/293))
 - Fix ambiguity causing "multiple applicable items in scope" errors in some cases ([#309](https://github.com/Aleph-Alpha/ts-rs/pull/309))
+- Fix issues with absolute `TS_RS_EXPORT_DIR` paths ([#323](https://github.com/Aleph-Alpha/ts-rs/pull/323))
+- Add newlines to the end of exported files ([#321](https://github.com/Aleph-Alpha/ts-rs/pull/321))
 
 # 8.1.0
 
