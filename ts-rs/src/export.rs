@@ -1,7 +1,7 @@
 use std::{
     any::TypeId,
     borrow::Cow,
-    collections::{BTreeMap, HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     fmt::Write,
     fs::File,
     io::{Seek, SeekFrom},
@@ -123,68 +123,114 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Re
         std::fs::create_dir_all(parent)?;
     }
 
-    {
-        use std::io::{Read, Write};
+    export_and_merge(path, type_name, buffer)?;
 
-        let mut lock = EXPORT_PATHS.lock().unwrap();
+    Ok(())
+}
 
-        if let Some(entry) = lock.get_mut(&path) {
-            if entry.contains(&type_name) {
-                return Ok(());
-            }
+/// Exports the type to a new file if the file hasn't yet been written to.
+/// Otherwise, finds its place in the already existing file and inserts it.
+fn export_and_merge(path: PathBuf, type_name: String, generated_type: String) -> Result<(), Error> {
+    use std::io::{Read, Write};
 
-            let (header, decl) = buffer.split_once("\n\n").unwrap();
-            let imports = if header.len() > NOTE.len() {
-                &header[NOTE.len()..]
-            } else {
-                ""
-            };
+    let mut lock = EXPORT_PATHS.lock().unwrap();
 
-            let mut file = std::fs::OpenOptions::new()
-                .read(true)
-                .write(true)
-                .open(&path)?;
+    let Some(entry) = lock.get_mut(&path) else {
+        // The file hasn't been written to yet, so it must be
+        // overwritten
+        let mut file = File::create(&path)?;
+        file.write_all(generated_type.as_bytes())?;
+        file.sync_all()?;
 
-            file.seek(SeekFrom::Start(NOTE.len().try_into().unwrap()))?;
+        let mut set = HashSet::new();
+        set.insert(type_name);
+        lock.insert(path, set);
 
-            let content_len = usize::try_from(file.metadata()?.len()).unwrap() - NOTE.len();
-            let mut original_contents = String::with_capacity(content_len);
-            file.read_to_string(&mut original_contents)?;
+        return Ok(());
+    };
 
-            let imports = imports
-                .lines()
-                .filter(|x| !original_contents.contains(x))
-                .collect::<String>();
+    if entry.contains(&type_name) {
+        return Ok(());
+    }
 
-            file.seek(SeekFrom::Start(NOTE.len().try_into().unwrap()))?;
+    let mut file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(&path)?;
 
-            let buffer_size = imports.len() + decl.len() + content_len + 3;
+    let file_len = file.metadata()?.len() as usize;
 
-            let mut buffer = String::with_capacity(buffer_size);
+    let mut original_contents = String::with_capacity(file_len);
+    file.read_to_string(&mut original_contents)?;
 
-            buffer.push_str(&imports);
-            if !imports.is_empty() {
-                buffer.push('\n');
-            }
-            buffer.push_str(&original_contents);
+    let buffer = merge(original_contents, generated_type);
+
+    file.seek(SeekFrom::Start(NOTE.len() as u64))?;
+
+    file.write_all(buffer.as_bytes())?;
+    file.sync_all()?;
+
+    entry.insert(type_name);
+
+    Ok(())
+}
+
+const HEADER_ERROR_MESSAGE: &'static str = "The generated strings must have their NOTE and imports separated from their type declarations by a new line";
+
+/// Inserts the imports and declaration from the newly generated type
+/// into the contents of the file, removimg duplicate imports and organazing
+/// both imports and declarations alphabetically
+fn merge(original_contents: String, new_contents: String) -> String {
+    let (original_header, original_decls) = original_contents
+        .split_once("\n\n")
+        .expect(HEADER_ERROR_MESSAGE);
+    let (new_header, new_decl) = new_contents.split_once("\n\n").expect(HEADER_ERROR_MESSAGE);
+
+    let imports = original_header
+        .trim_start_matches(NOTE)
+        .lines()
+        .chain(new_header.trim_start_matches(NOTE).lines())
+        .collect::<BTreeSet<_>>();
+
+    let import_len = imports.iter().map(|&x| x.len()).sum::<usize>() + imports.len();
+    let capacity = import_len + original_decls.len() + new_decl.len() + 2;
+
+    let mut buffer = String::with_capacity(capacity);
+
+    for import in imports {
+        buffer.push_str(import);
+        buffer.push('\n')
+    }
+
+    let new_decl = new_decl.trim_matches('\n');
+    let original_decls = original_decls.split("\n\n").map(|x| x.trim_matches('\n'));
+
+    let mut inserted = false;
+    for decl in original_decls {
+        if inserted || decl < new_decl {
             buffer.push('\n');
             buffer.push_str(decl);
-
-            file.write_all(buffer.as_bytes())?;
-
-            entry.insert(type_name);
+            buffer.push('\n');
         } else {
-            let mut file = File::create(&path)?;
-            file.write_all(buffer.as_bytes())?;
-            file.sync_data()?;
+            buffer.push('\n');
+            buffer.push_str(new_decl);
+            buffer.push('\n');
 
-            let mut set = HashSet::new();
-            set.insert(type_name);
-            lock.insert(path, set);
+            buffer.push('\n');
+            buffer.push_str(decl);
+            buffer.push('\n');
+
+            inserted = true;
         }
     }
 
-    Ok(())
+    if !inserted {
+        buffer.push('\n');
+        buffer.push_str(new_decl);
+        buffer.push('\n');
+    }
+
+    buffer
 }
 
 /// Returns the generated definition for `T`.
