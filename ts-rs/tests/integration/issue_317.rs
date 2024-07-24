@@ -8,7 +8,7 @@ struct VariantId(u32);
 #[ts(export_to = "issue_317/")]
 struct VariantOverview {
     id: u32,
-    name: String
+    name: String,
 }
 
 #[derive(TS)]

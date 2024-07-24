@@ -171,6 +171,7 @@ pub(crate) fn export_to_string<T: TS + ?Sized + 'static>() -> Result<String, Exp
     buffer.push_str(NOTE);
     generate_imports::<T::WithoutGenerics>(&mut buffer, default_out_dir())?;
     generate_decl::<T>(&mut buffer);
+    buffer.push('\n');
     Ok(buffer)
 }
 
