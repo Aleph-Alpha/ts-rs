@@ -77,8 +77,8 @@
 //! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
 //! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
 //! | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
-//! | uuid-impl          | Implement `TS` for types from *uuid*                                                                                                                                                                      |
-//! | bson-uuid-impl     | Implement `TS` for types from *bson*                                                                                                                                                                      |
+//! | uuid-impl          | Implement `TS` for types from *uuid*    
+//! | bson-uuid-impl     | Implement `TS` for *bson::oid::ObjectId* and *bson::uuid*                                                                                                                                                 |
 //! | bytes-impl         | Implement `TS` for types from *bytes*                                                                                                                                                                     |
 //! | indexmap-impl      | Implement `TS` for types from *indexmap*                                                                                                                                                                  |
 //! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
@@ -1005,6 +1005,9 @@ impl_primitives! { ordered_float::OrderedFloat<f32> => "number" }
 
 #[cfg(feature = "ordered-float-impl")]
 impl_primitives! { ordered_float::OrderedFloat<f64> => "number" }
+
+#[cfg(feature = "bson-uuid-impl")]
+impl_primitives! { bson::oid::ObjectId => "string" }
 
 #[cfg(feature = "bson-uuid-impl")]
 impl_primitives! { bson::Uuid => "string" }
