@@ -1,6 +1,9 @@
 # master
 ### Breaking
 ### Features
+
+- The `bson-uuid-impl` feature now supports `bson::oid::ObjectId` as well
+
 ### Fixes
 
 # 9.0.1
