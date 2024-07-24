@@ -203,11 +203,13 @@ fn merge(original_contents: String, new_contents: String) -> String {
     }
 
     let new_decl = new_decl.trim_matches('\n');
+    let new_decl_name = &new_decl[new_decl.find("export type").unwrap()..];
     let original_decls = original_decls.split("\n\n").map(|x| x.trim_matches('\n'));
 
     let mut inserted = false;
     for decl in original_decls {
-        if inserted || decl < new_decl {
+        let decl_name = &decl[decl.find("export type").unwrap()..];
+        if inserted || decl_name < new_decl_name {
             buffer.push('\n');
             buffer.push_str(decl);
             buffer.push('\n');
