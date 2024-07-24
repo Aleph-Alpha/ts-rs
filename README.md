@@ -80,7 +80,7 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
 | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
 | uuid-impl          | Implement `TS` for types from *uuid*
-| bson-uuid-impl     | Implement `TS` for *bson::oid::ObjectId* and *bson::Uuid*                                                                                                                                                 |
+| bson-uuid-impl     | Implement `TS` for *bson::oid::ObjectId* and *bson::uuid*                                                                                                                                                 |
 | bytes-impl         | Implement `TS` for types from *bytes*                                                                                                                                                                     |
 | indexmap-impl      | Implement `TS` for types from *indexmap*                                                                                                                                                                  |
 | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
