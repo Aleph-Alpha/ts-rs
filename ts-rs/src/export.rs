@@ -207,7 +207,7 @@ fn merge(original_contents: String, new_contents: String) -> String {
     let new_decl = new_decl.trim_matches('\n');
 
     let new_decl_start = new_decl.find(DECLARATION_START).unwrap() + DECLARATION_START.len();
-    let new_decl_end = new_decl[new_decl_start..].find(' ').unwrap();
+    let new_decl_end = new_decl_start + new_decl[new_decl_start..].find(' ').unwrap();
     let new_decl_name = &new_decl[new_decl_start..new_decl_end];
 
     let original_decls = original_decls.split("\n\n").map(|x| x.trim_matches('\n'));
@@ -215,7 +215,7 @@ fn merge(original_contents: String, new_contents: String) -> String {
     let mut inserted = false;
     for decl in original_decls {
         let decl_start = decl.find(DECLARATION_START).unwrap() + DECLARATION_START.len();
-        let decl_end = decl[decl_start..].find(' ').unwrap();
+        let decl_end = decl_start + decl[decl_start..].find(' ').unwrap();
         let decl_name = &decl[decl_start..decl_end];
 
         if inserted || decl_name < new_decl_name {
