@@ -40,7 +40,7 @@ fn test() {
 
     let contents = std::fs::read_to_string(&A::default_output_path().unwrap()).unwrap();
 
-    assert!(contents.contains(&A::decl()));
-    assert!(contents.contains(&B::decl()));
-    assert!(contents.contains(&C::decl()));
+    assert!(contents.contains(&A::decl()), "{contents}");
+    assert!(contents.contains(&B::decl()), "{contents}");
+    assert!(contents.contains(&C::decl()), "{contents}");
 }
