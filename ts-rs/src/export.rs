@@ -165,7 +165,7 @@ fn export_and_merge(path: PathBuf, type_name: String, generated_type: String) ->
 
     let buffer = merge(original_contents, generated_type);
 
-    file.seek(SeekFrom::Start(NOTE.len() as u64))?;
+    file.seek(SeekFrom::Start(0))?;
 
     file.write_all(buffer.as_bytes())?;
     file.sync_all()?;
@@ -195,9 +195,11 @@ fn merge(original_contents: String, new_contents: String) -> String {
         .collect::<BTreeSet<_>>();
 
     let import_len = imports.iter().map(|&x| x.len()).sum::<usize>() + imports.len();
-    let capacity = import_len + original_decls.len() + new_decl.len() + 2;
+    let capacity = NOTE.len() + import_len + original_decls.len() + new_decl.len() + 2;
 
     let mut buffer = String::with_capacity(capacity);
+
+    buffer.push_str(NOTE);
 
     for import in imports {
         buffer.push_str(import);
