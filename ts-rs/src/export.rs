@@ -158,9 +158,9 @@ fn export_and_merge(path: PathBuf, type_name: String, generated_type: String) ->
         .write(true)
         .open(&path)?;
 
-    let file_len = file.metadata()?.len() as usize;
+    let file_len = file.metadata()?.len();
 
-    let mut original_contents = String::with_capacity(file_len);
+    let mut original_contents = String::with_capacity(file_len as usize);
     file.read_to_string(&mut original_contents)?;
 
     let buffer = merge(original_contents, generated_type);
@@ -189,9 +189,9 @@ fn merge(original_contents: String, new_contents: String) -> String {
     let (new_header, new_decl) = new_contents.split_once("\n\n").expect(HEADER_ERROR_MESSAGE);
 
     let imports = original_header
-        .trim_start_matches(NOTE)
         .lines()
-        .chain(new_header.trim_start_matches(NOTE).lines())
+        .skip(1)
+        .chain(new_header.lines().skip(1))
         .collect::<BTreeSet<_>>();
 
     let import_len = imports.iter().map(|&x| x.len()).sum::<usize>() + imports.len();
