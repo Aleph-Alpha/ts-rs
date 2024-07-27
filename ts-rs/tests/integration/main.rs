@@ -4,6 +4,7 @@ mod arrays;
 mod bound;
 mod bson;
 mod chrono;
+mod complex_flattened_type;
 mod concrete_generic;
 mod docs;
 mod enum_flattening;

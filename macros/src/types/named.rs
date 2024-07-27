@@ -19,7 +19,7 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
     let mut dependencies = Dependencies::new(crate_rename.clone());
 
     if let Some(tag) = &attr.tag {
-        let formatted = format!("{}: \"{}\",", tag, name);
+        let formatted = format!("\"{}\": \"{}\",", tag, name);
         formatted_fields.push(quote! {
             #formatted.to_string()
         });
@@ -42,7 +42,13 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
     let inline = match (formatted_fields.len(), flattened_fields.len()) {
         (0, 0) => quote!("{  }".to_owned()),
         (_, 0) => quote!(format!("{{ {} }}", #fields)),
-        (0, 1) => quote!(#flattened.trim_matches(|c| c == '(' || c == ')').to_owned()),
+        (0, 1) => quote! {{
+            if #flattened.starts_with('(') && #flattened.ends_with(')') {
+                #flattened[1..#flattened.len() - 1].trim().to_owned()
+            } else {
+                #flattened.trim().to_owned()
+            }
+        }},
         (0, _) => quote!(#flattened),
         (_, _) => quote!(format!("{{ {} }} & {}", #fields, #flattened)),
     };
