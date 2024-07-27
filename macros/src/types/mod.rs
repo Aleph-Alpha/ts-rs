@@ -1,8 +1,7 @@
-use syn::{Fields, Ident, ItemStruct, Result};
+use syn::{Fields, ItemStruct, Result};
 
 use crate::{
     attr::{Attr, StructAttr},
-    utils::to_ts_ident,
     DerivedTS,
 };
 
@@ -19,13 +18,16 @@ pub(crate) use r#enum::r#enum_def;
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     let attr = StructAttr::from_attrs(&s.attrs)?;
 
-    type_def(&attr, &s.ident, &s.fields)
+    type_def(&attr, &s.ident.to_string(), &s.fields)
 }
 
-fn type_def(attr: &StructAttr, ident: &Ident, fields: &Fields) -> Result<DerivedTS> {
+fn type_def(attr: &StructAttr, ident: &str, fields: &Fields) -> Result<DerivedTS> {
     attr.assert_validity(fields)?;
 
-    let name = attr.rename.clone().unwrap_or_else(|| to_ts_ident(ident));
+    let name = attr
+        .rename
+        .clone()
+        .unwrap_or_else(|| ident.trim_start_matches("r#").to_owned());
     if let Some(attr_type_override) = &attr.type_override {
         return type_override::type_override_struct(attr, &name, attr_type_override);
     }
