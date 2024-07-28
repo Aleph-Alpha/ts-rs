@@ -7,28 +7,28 @@ use ts_rs::TS;
 #[derive(TS)]
 #[ts(export, export_to = "issue_168/")]
 pub struct Foo {
-    map: HashMap<usize, Bar>,
+    map: HashMap<u32, Bar>,
 }
 
 #[derive(TS)]
 #[ts(export, export_to = "issue_168/")]
 pub struct FooInlined {
     #[ts(inline)]
-    map: HashMap<usize, Bar>,
+    map: HashMap<u32, Bar>,
 }
 
 #[derive(TS)]
 #[ts(export, export_to = "issue_168/")]
 struct Bar {
     #[ts(inline)]
-    map: HashMap<usize, Baz>,
+    map: HashMap<u32, Baz>,
 }
 
 #[derive(TS)]
 #[ts(export, export_to = "issue_168/")]
 struct Baz {
     #[ts(inline)]
-    map: HashMap<usize, String>,
+    map: HashMap<u32, String>,
 }
 
 #[test]
