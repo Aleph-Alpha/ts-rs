@@ -9,7 +9,7 @@ use std::{
     sync::Mutex,
 };
 
-pub use error::Error;
+pub use error::ExportError;
 use lazy_static::lazy_static;
 use path::diff_paths;
 pub(crate) use recursive_export::export_all_into;
@@ -29,14 +29,14 @@ mod recursive_export {
     use std::{any::TypeId, collections::HashSet, path::Path};
 
     use super::export_into;
-    use crate::{Error, TypeVisitor, TS};
+    use crate::{ExportError, TypeVisitor, TS};
 
     /// Exports `T` to the file specified by the `#[ts(export_to = ..)]` attribute within the given
     /// base directory.  
     /// Additionally, all dependencies of `T` will be exported as well.
     pub(crate) fn export_all_into<T: TS + ?Sized + 'static>(
         out_dir: impl AsRef<Path>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ExportError> {
         let mut seen = HashSet::new();
         export_recursive::<T>(&mut seen, out_dir)
     }
@@ -44,7 +44,7 @@ mod recursive_export {
     struct Visit<'a> {
         seen: &'a mut HashSet<TypeId>,
         out_dir: &'a Path,
-        error: Option<Error>,
+        error: Option<ExportError>,
     }
 
     impl<'a> TypeVisitor for Visit<'a> {
@@ -63,7 +63,7 @@ mod recursive_export {
     fn export_recursive<T: TS + ?Sized + 'static>(
         seen: &mut HashSet<TypeId>,
         out_dir: impl AsRef<Path>,
-    ) -> Result<(), Error> {
+    ) -> Result<(), ExportError> {
         if !seen.insert(TypeId::of::<T>()) {
             return Ok(());
         }
@@ -89,17 +89,19 @@ mod recursive_export {
 /// Export `T` to the file specified by the `#[ts(export_to = ..)]` attribute
 pub(crate) fn export_into<T: TS + ?Sized + 'static>(
     out_dir: impl AsRef<Path>,
-) -> Result<(), Error> {
+) -> Result<(), ExportError> {
     let path = T::output_path()
         .ok_or_else(std::any::type_name::<T>)
-        .map_err(Error::CannotBeExported)?;
+        .map_err(ExportError::CannotBeExported)?;
     let path = out_dir.as_ref().join(path);
 
     export_to::<T, _>(path::absolute(path)?)
 }
 
 /// Export `T` to the file specified by the `path` argument.
-pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Result<(), Error> {
+pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
+    path: P,
+) -> Result<(), ExportError> {
     let path = path.as_ref().to_owned();
     let type_name = T::ident();
 
@@ -113,7 +115,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Re
 
         let fmt_cfg = ConfigurationBuilder::new().deno().build();
         if let Some(formatted) = format_text(path.as_ref(), &buffer, &fmt_cfg)
-            .map_err(|e| Error::Formatting(e.to_string()))?
+            .map_err(|e| ExportError::Formatting(e.to_string()))?
         {
             buffer = formatted;
         }
@@ -130,7 +132,11 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(path: P) -> Re
 
 /// Exports the type to a new file if the file hasn't yet been written to.
 /// Otherwise, finds its place in the already existing file and inserts it.
-fn export_and_merge(path: PathBuf, type_name: String, generated_type: String) -> Result<(), Error> {
+fn export_and_merge(
+    path: PathBuf,
+    type_name: String,
+    generated_type: String,
+) -> Result<(), ExportError> {
     use std::io::{Read, Write};
 
     let mut lock = EXPORT_PATHS.lock().unwrap();
@@ -253,7 +259,7 @@ fn merge(original_contents: String, new_contents: String) -> String {
 }
 
 /// Returns the generated definition for `T`.
-pub(crate) fn export_to_string<T: TS + ?Sized + 'static>() -> Result<String, Error> {
+pub(crate) fn export_to_string<T: TS + ?Sized + 'static>() -> Result<String, ExportError> {
     let mut buffer = String::with_capacity(1024);
     buffer.push_str(NOTE);
     generate_imports::<T::WithoutGenerics>(&mut buffer, default_out_dir())?;
@@ -286,11 +292,11 @@ fn generate_decl<T: TS + ?Sized>(out: &mut String) {
 fn generate_imports<T: TS + ?Sized + 'static>(
     out: &mut String,
     out_dir: impl AsRef<Path>,
-) -> Result<(), Error> {
+) -> Result<(), ExportError> {
     let path = T::output_path()
         .ok_or_else(std::any::type_name::<T>)
         .map(|x| out_dir.as_ref().join(x))
-        .map_err(Error::CannotBeExported)?;
+        .map_err(ExportError::CannotBeExported)?;
 
     let deps = T::dependencies();
     let deduplicated_deps = deps
@@ -326,7 +332,7 @@ fn generate_imports<T: TS + ?Sized + 'static>(
 }
 
 /// Returns the required import path for importing `import` from the file `from`
-fn import_path(from: &Path, import: &Path) -> Result<String, Error> {
+fn import_path(from: &Path, import: &Path) -> Result<String, ExportError> {
     let rel_path = diff_paths(import, from.parent().unwrap())?;
     let path = match rel_path.components().next() {
         Some(Component::Normal(_)) => format!("./{}", rel_path.to_string_lossy()),

@@ -1,6 +1,6 @@
 /// An error which may occur when exporting a type
 #[derive(thiserror::Error, Debug)]
-pub enum Error {
+pub enum ExportError {
     #[error("this type cannot be exported")]
     CannotBeExported(&'static str),
     #[cfg(feature = "format")]

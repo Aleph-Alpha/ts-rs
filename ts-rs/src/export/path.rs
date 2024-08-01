@@ -1,19 +1,18 @@
 use std::path::{Component as C, Path, PathBuf};
 
-use super::Error;
+use super::ExportError as E;
 
 const ERROR_MESSAGE: &str = r#"The path provided with `#[ts(export_to = "..")]` is not valid"#;
 
-pub fn absolute<T: AsRef<Path>>(path: T) -> Result<PathBuf, Error> {
+pub fn absolute<T: AsRef<Path>>(path: T) -> Result<PathBuf, E> {
     let path = std::env::current_dir()?.join(path.as_ref());
-
 
     let mut out = Vec::new();
     for comp in path.components() {
         match comp {
             C::CurDir => (),
             C::ParentDir => {
-                out.pop().ok_or(Error::CannotBeExported(ERROR_MESSAGE))?;
+                out.pop().ok_or(E::CannotBeExported(ERROR_MESSAGE))?;
             }
             comp => out.push(comp),
         }
@@ -38,7 +37,7 @@ pub fn absolute<T: AsRef<Path>>(path: T) -> Result<PathBuf, Error> {
 //
 // Adapted from rustc's path_relative_from
 // https://github.com/rust-lang/rust/blob/e1d0de82cc40b666b88d4a6d2c9dcbc81d7ed27f/src/librustc_back/rpath.rs#L116-L158
-pub(super) fn diff_paths<P, B>(path: P, base: B) -> Result<PathBuf, Error>
+pub(super) fn diff_paths<P, B>(path: P, base: B) -> Result<PathBuf, E>
 where
     P: AsRef<Path>,
     B: AsRef<Path>,
