@@ -3,6 +3,7 @@
 ### Features
 
 - The `bson-uuid-impl` feature now supports `bson::oid::ObjectId` as well ([#340](https://github.com/Aleph-Alpha/ts-rs/pull/340))
+- Allow multile types to have the same `#[ts(export_to = "...")]` attribute and be exported to the same file ([#316](https://github.com/Aleph-Alpha/ts-rs/pull/316))
 
 ### Fixes
 
