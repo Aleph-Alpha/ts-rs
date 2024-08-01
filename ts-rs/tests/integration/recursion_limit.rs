@@ -1,3 +1,5 @@
+#![allow(clippy::upper_case_acronyms)]
+
 use std::any::TypeId;
 
 use ts_rs::{TypeVisitor, TS};
