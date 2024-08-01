@@ -44,6 +44,12 @@ fn flattened_generic_parameters() {
     }
 
     assert_eq!(Item::<()>::decl(), "type Item<D> = { id: string, } & D;");
-    assert_eq!(TwoParameters::<(), ()>::decl(), "type TwoParameters<A, B> = { id: string, ab: [A, B], } & A & B;");
-    assert_eq!(Enum::<(), ()>::decl(), "type Enum<A, B> = { \"A\": A } | { \"B\": B } | { \"AB\": [A, B] };");
+    assert_eq!(
+        TwoParameters::<(), ()>::decl(),
+        "type TwoParameters<A, B> = { id: string, ab: [A, B], } & A & B;"
+    );
+    assert_eq!(
+        Enum::<(), ()>::decl(),
+        "type Enum<A, B> = { \"A\": A } | { \"B\": B } | { \"AB\": [A, B] };"
+    );
 }

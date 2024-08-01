@@ -81,6 +81,6 @@ fn test() {
 
     assert_eq!(
         TestInternally::decl(),
-        r#"type TestInternally = { "type": "A" } | { "type": "B" } | { "type": "C",  };"#
+        r#"type TestInternally = { "type": "A" } | { "type": "B" } | { "type": "C", };"#
     );
 }

@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::quote;
 use syn::{Fields, ItemEnum, Variant};
 
 use crate::{
@@ -103,8 +103,8 @@ fn format_variant(
     let struct_attr = StructAttr::from_variant(enum_attr, &variant_attr, &variant.fields);
     let variant_type = types::type_def(
         &struct_attr,
-        // since we are generating the variant as a struct, it doesn't have a name
-        &format_ident!("_"),
+        // In internally tagged enums, we can tag the struct
+        &name,
         &variant.fields,
     )?;
     let variant_dependencies = variant_type.dependencies;
@@ -154,22 +154,9 @@ fn format_variant(
             ),
         },
         (false, Tagged::Internally { tag }) => match variant_type.inline_flattened {
-            Some(inline_flattened) => quote! {
-                format!(
-                    "{{ \"{}\": \"{}\", {} }}",
-                    #tag,
-                    #name,
-                    // At this point inline_flattened looks like
-                    // { /* ...data */ }
-                    //
-                    // To be flattened, an internally tagged enum must not be
-                    // surrounded by braces, otherwise each variant will look like
-                    // { "tag": "name", { /* ...data */ } }
-                    // when we want it to look like
-                    // { "tag": "name", /* ...data */ }
-                    #inline_flattened.trim_matches(&['{', '}', ' '])
-                )
-            },
+            Some(_) => {
+                quote! { #inline_type }
+            }
             None => match &variant.fields {
                 Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                     let field = &unnamed.unnamed[0];

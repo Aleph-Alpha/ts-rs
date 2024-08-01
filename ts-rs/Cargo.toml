@@ -59,4 +59,5 @@ thiserror = "1"
 indexmap = { version = "2", optional = true }
 ordered-float = { version = ">= 3, < 5", optional = true }
 serde_json = { version = "1", optional = true }
+lazy_static = { version = "1", default-features = false }
 

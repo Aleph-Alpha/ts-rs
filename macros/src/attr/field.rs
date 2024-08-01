@@ -265,7 +265,7 @@ fn replace_underscore_in_angle_bracketed(args: &mut AngleBracketedGenericArgumen
             }
             GenericArgument::AssocType(assoc_ty) => {
                 replace_underscore(&mut assoc_ty.ty, with);
-                for g in &mut assoc_ty.generics {
+                if let Some(g) = &mut assoc_ty.generics {
                     replace_underscore_in_angle_bracketed(g, with);
                 }
             }
