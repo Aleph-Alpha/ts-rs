@@ -323,7 +323,7 @@ fn generate_imports<T: TS + ?Sized + 'static>(
 
         writeln!(
             out,
-            "import type {{ {} }} from {:?};",
+            r#"import type {{ {} }} from "{}";"#,
             &dep.ts_name, rel_path
         )?;
     }
@@ -334,9 +334,17 @@ fn generate_imports<T: TS + ?Sized + 'static>(
 /// Returns the required import path for importing `import` from the file `from`
 fn import_path(from: &Path, import: &Path) -> Result<String, ExportError> {
     let rel_path = diff_paths(import, from.parent().unwrap())?;
-    let path = match rel_path.components().next() {
-        Some(Component::Normal(_)) => format!("./{}", rel_path.to_string_lossy()),
+    let str_path = match rel_path.components().next() {
+        Some(Component::Normal(_)) => {
+            format!("./{}", rel_path.to_string_lossy())
+        }
         _ => rel_path.to_string_lossy().into(),
+    };
+
+    let path = if cfg!(target_os = "windows") {
+        str_path.replace('\\', "/")
+    } else {
+        str_path
     };
 
     let path_without_extension = path.trim_end_matches(".ts");

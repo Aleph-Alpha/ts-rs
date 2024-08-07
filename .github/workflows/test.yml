@@ -163,3 +163,26 @@ jobs:
           shopt -s globstar
           tsc bindings/**/*.ts --noEmit --noUnusedLocals
           rm -rf bindings
+
+  test-windows:
+    name: Test ts-rs with --all-features on Windows
+    runs-on: windows-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        working-directory: ts-rs
+        # Create empty tsconfig and cd into bindings to make tsc
+        # compile every ts file in the directory
+        run: |
+          cargo test --all-features
+          "{}" | Out-File bindings/tsconfig.json
+          cd bindings
+          tsc --noEmit --noUnusedLocals --strict
+          cd ..
+          rm -r -fo bindings
