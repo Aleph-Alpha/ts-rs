@@ -183,6 +183,7 @@ jobs:
           cargo test --all-features
           "{}" | Out-File bindings/tsconfig.json
           cd bindings
+          npm -i -g typescript
           tsc --noEmit --noUnusedLocals --strict
           cd ..
           rm -r -fo bindings
