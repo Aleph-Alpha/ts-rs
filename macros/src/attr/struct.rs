@@ -9,6 +9,7 @@ use super::{
 use crate::{
     attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
     utils::{parse_attrs, parse_docs},
+    path::CustomPath,
 };
 
 #[derive(Default, Clone)]
@@ -18,7 +19,7 @@ pub struct StructAttr {
     pub type_override: Option<String>,
     pub rename_all: Option<Inflection>,
     pub rename: Option<String>,
-    pub export_to: Option<String>,
+    pub export_to: Option<CustomPath>,
     pub export: bool,
     pub tag: Option<String>,
     pub docs: String,
@@ -149,7 +150,7 @@ impl_parse! {
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
         "tag" => out.tag = Some(parse_assign_str(input)?),
         "export" => out.export = true,
-        "export_to" => out.export_to = Some(parse_assign_str(input)?),
+        "export_to" => out.export_to = Some(CustomPath::parse(input)?),
         "concrete" => out.concrete = parse_concrete(input)?,
         "bound" => out.bound = Some(parse_bound(input)?),
     }

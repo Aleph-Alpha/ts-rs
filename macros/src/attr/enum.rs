@@ -6,6 +6,7 @@ use super::{parse_assign_from_str, parse_bound, Attr, ContainerAttr, Serde};
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
     utils::{parse_attrs, parse_docs},
+    path::CustomPath,
 };
 
 #[derive(Default)]
@@ -16,7 +17,7 @@ pub struct EnumAttr {
     pub rename_all: Option<Inflection>,
     pub rename_all_fields: Option<Inflection>,
     pub rename: Option<String>,
-    pub export_to: Option<String>,
+    pub export_to: Option<CustomPath>,
     pub export: bool,
     pub docs: String,
     pub concrete: HashMap<Ident, Type>,
@@ -212,7 +213,7 @@ impl_parse! {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
         "rename_all_fields" => out.rename_all_fields = Some(parse_assign_inflection(input)?),
-        "export_to" => out.export_to = Some(parse_assign_str(input)?),
+        "export_to" => out.export_to = Some(CustomPath::parse(input)?),
         "export" => out.export = true,
         "tag" => out.tag = Some(parse_assign_str(input)?),
         "content" => out.content = Some(parse_assign_str(input)?),
