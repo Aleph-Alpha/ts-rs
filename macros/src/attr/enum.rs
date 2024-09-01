@@ -5,8 +5,8 @@ use syn::{parse_quote, Attribute, Ident, ItemEnum, Path, Result, Type, WherePred
 use super::{parse_assign_from_str, parse_bound, Attr, ContainerAttr, Serde};
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
-    utils::{parse_attrs, parse_docs},
     path::CustomPath,
+    utils::{parse_attrs, parse_docs},
 };
 
 #[derive(Default)]

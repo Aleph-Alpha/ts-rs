@@ -8,8 +8,8 @@ use super::{
 };
 use crate::{
     attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
-    utils::{parse_attrs, parse_docs},
     path::CustomPath,
+    utils::{parse_attrs, parse_docs},
 };
 
 #[derive(Default, Clone)]
