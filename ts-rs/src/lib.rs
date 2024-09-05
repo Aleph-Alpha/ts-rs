@@ -84,6 +84,7 @@
 //! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
 //! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 //! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
+//! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
 //!
 //! <br/>
 //!
@@ -993,6 +994,9 @@ impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
 
 #[cfg(feature = "bigdecimal-impl")]
 impl_primitives! { bigdecimal::BigDecimal => "string" }
+
+#[cfg(feature = "smolstr-impl")]
+impl_primitives! { smol_str::SmolStr => "string" }
 
 #[cfg(feature = "uuid-impl")]
 impl_primitives! { uuid::Uuid => "string" }
