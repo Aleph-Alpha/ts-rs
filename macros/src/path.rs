@@ -204,15 +204,21 @@ impl Parse for CustomPath {
         }
 
         // environment variable
-        if input.peek(Ident) && input.peek2(syn::token::Paren) && input.peek3(LitStr) {
+        if input.peek(Ident) {
+
             // needs a check for the ident
             let ident = input.parse::<Ident>()?;
-
             if ident == "env" {
-                let content;
-                syn::parenthesized!(content in input);
-                let env_str = content.parse::<LitStr>()?;
-                return Ok(CustomPath::Env(env_str));
+                if input.peek(syn::token::Paren){
+
+                    let content;
+                    syn::parenthesized!(content in input);
+                    let env_str = content.parse::<LitStr>()?;
+                    return Ok(CustomPath::Env(env_str));
+
+                } else {
+                    return Err(Error::new(span, PARSING_ERROR_MSG));
+                }
             } else {
                 some_ident = Some(ident);
             }
@@ -265,4 +271,90 @@ fn is_snake_case(s: &str) -> bool {
         }
     }
     true
+}
+
+
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use syn::parse_str;
+
+    #[test]
+    fn test_str_literal() {
+        let input = r#"= "my/path""#;
+        let parsed: CustomPath = parse_str(input).unwrap();
+
+        if let CustomPath::Str(path) = parsed {
+            assert_eq!(path, "my/path");
+        } else {
+            panic!("Expected CustomPath::Str variant");
+        }
+    }
+
+    #[test]
+    fn test_static_variable_single() {
+        let input = "= MY_STATIC_PATH";
+        let parsed: CustomPath = parse_str(input).unwrap();
+
+        if let CustomPath::Static(path) = parsed {
+            assert_eq!(path.segments.last().unwrap().ident, "MY_STATIC_PATH");
+        } else {
+            panic!("Expected CustomPath::Static variant");
+        }
+    }
+
+    #[test]
+    fn test_static_variable_full_path() {
+        let input = "= crate::MY_STATIC_PATH";
+        let parsed: CustomPath = parse_str(input).unwrap();
+
+        if let CustomPath::Static(path) = parsed {
+            assert_eq!(path.segments.len(), 2);
+            assert_eq!(path.segments[0].ident, "crate");
+            assert_eq!(path.segments[1].ident, "MY_STATIC_PATH");
+        } else {
+            panic!("Expected CustomPath::Static variant");
+        }
+    }
+
+    #[test]
+    fn test_function_name_single() {
+        let input = "= my_func_get_path";
+        let parsed: CustomPath = parse_str(input).unwrap();
+
+        if let CustomPath::Fn(path) = parsed {
+            assert_eq!(path.segments.last().unwrap().ident, "my_func_get_path");
+        } else {
+            panic!("Expected CustomPath::Fn variant");
+        }
+    }
+
+    #[test]
+    fn test_function_name_full_path() {
+        let input = "= crate::my_func_get_path";
+        let parsed: CustomPath = parse_str(input).unwrap();
+
+        if let CustomPath::Fn(path) = parsed {
+            assert_eq!(path.segments.len(), 2);
+            assert_eq!(path.segments[0].ident, "crate");
+            assert_eq!(path.segments[1].ident, "my_func_get_path");
+        } else {
+            panic!("Expected CustomPath::Fn variant");
+        }
+    }
+
+    #[test]
+    fn test_env_variable() {
+        let input = r#"= env("MY_ENV_VAR_PATH")"#;
+        let parsed: CustomPath = parse_str(input).unwrap();
+
+        if let CustomPath::Env(lit) = parsed {
+            assert_eq!(lit.value(), "MY_ENV_VAR_PATH");
+        } else {
+            panic!("Expected CustomPath::Env variant");
+        }
+    }
 }
