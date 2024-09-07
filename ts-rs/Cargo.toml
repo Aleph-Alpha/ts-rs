@@ -31,6 +31,7 @@ indexmap-impl = ["indexmap"]
 ordered-float-impl = ["ordered-float"]
 heapless-impl = ["heapless"]
 semver-impl = ["semver"]
+smolstr-impl = ["smol_str"]
 serde-json-impl = ["serde_json"]
 no-serde-warnings = ["ts-rs-macros/no-serde-warnings"]
 import-esm = []
@@ -53,6 +54,7 @@ bson = { version = "2", optional = true }
 bytes = { version = "1", optional = true }
 url = { version = "2", optional = true }
 semver = { version = "1", optional = true }
+smol_str = { version = "0.3", optional = true  }
 thiserror = "1"
 indexmap = { version = "2", optional = true }
 ordered-float = { version = ">= 3, < 5", optional = true }

@@ -20,6 +20,7 @@ mod generics;
 mod generics_flatten;
 mod hashmap;
 mod hashset;
+mod impl_primitive;
 mod imports;
 mod indexmap;
 mod infer_as;
