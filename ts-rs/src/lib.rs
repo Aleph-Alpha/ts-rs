@@ -85,6 +85,7 @@
 //! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 //! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
 //! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
+//! | rust_decimal-impl  | Implement `TS` for types from *rust_decimal*                                                                                                                                                                    |
 //!
 //! <br/>
 //!
@@ -995,7 +996,10 @@ impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
 #[cfg(feature = "bigdecimal-impl")]
 impl_primitives! { bigdecimal::BigDecimal => "string" }
 
-#[cfg(feature = "smolstr-impl")]
+#[cfg(feature = "rust_decimal-impl")]
+impl_primitives! { rust_decimal::Decimal => "string" }
+
+#[cfg(feature = "smol_str-impl")]
 impl_primitives! { smol_str::SmolStr => "string" }
 
 #[cfg(feature = "uuid-impl")]

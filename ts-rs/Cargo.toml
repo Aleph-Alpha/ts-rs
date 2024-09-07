@@ -20,6 +20,7 @@ rust-version = "1.63.0"
 [features]
 chrono-impl = ["chrono"]
 bigdecimal-impl = ["bigdecimal"]
+rust_decimal-impl = ["rust_decimal"]
 uuid-impl = ["uuid"]
 bson-uuid-impl = ["bson"]
 bytes-impl = ["bytes"]
@@ -31,7 +32,7 @@ indexmap-impl = ["indexmap"]
 ordered-float-impl = ["ordered-float"]
 heapless-impl = ["heapless"]
 semver-impl = ["semver"]
-smolstr-impl = ["smol_str"]
+smol_str-impl = ["smol_str"]
 serde-json-impl = ["serde_json"]
 no-serde-warnings = ["ts-rs-macros/no-serde-warnings"]
 import-esm = []
@@ -46,9 +47,8 @@ heapless = { version = ">= 0.7, < 0.9", optional = true }
 ts-rs-macros = { version = "=9.0.1", path = "../macros" }
 dprint-plugin-typescript = { version = "0.90", optional = true }
 chrono = { version = "0.4", optional = true }
-bigdecimal = { version = ">= 0.0.13, < 0.5", features = [
-  "serde",
-], optional = true }
+bigdecimal = { version = ">= 0.0.13, < 0.5", optional = true }
+rust_decimal = { version = "1",default-features = false, optional = true }
 uuid = { version = "1", optional = true }
 bson = { version = "2", optional = true }
 bytes = { version = "1", optional = true }

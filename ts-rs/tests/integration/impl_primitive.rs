@@ -10,8 +10,19 @@ fn impl_primitive_bigdecimal() {
         <String as ts_rs::TS>::inline()
     )
 }
-
-#[cfg(feature = "smolstr-impl")]
+#[cfg(feature = "rust_decimal-impl")]
+#[test]
+fn impl_primitive_rustdecimal() {
+    assert_eq!(
+        <rust_decimal::Decimal as ts_rs::TS>::name(),
+        <String as ts_rs::TS>::name()
+    );
+    assert_eq!(
+        <rust_decimal::Decimal as ts_rs::TS>::inline(),
+        <String as ts_rs::TS>::inline()
+    )
+}
+#[cfg(feature = "smol_str-impl")]
 #[test]
 fn impl_primitive_smolstr() {
     assert_eq!(
