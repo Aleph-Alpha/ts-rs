@@ -11,7 +11,7 @@ fn impl_primitive_bigdecimal() {
     )
 }
 
-#[cfg(feature = "smolstr-impl")]
+#[cfg(feature = "smol_str-impl")]
 #[test]
 fn impl_primitive_smolstr() {
     assert_eq!(
