@@ -10,6 +10,7 @@ fn impl_primitive_bigdecimal() {
         <String as ts_rs::TS>::inline()
     )
 }
+
 #[cfg(feature = "rust_decimal-impl")]
 #[test]
 fn impl_primitive_rustdecimal() {
@@ -22,6 +23,7 @@ fn impl_primitive_rustdecimal() {
         <String as ts_rs::TS>::inline()
     )
 }
+
 #[cfg(feature = "smol_str-impl")]
 #[test]
 fn impl_primitive_smolstr() {
