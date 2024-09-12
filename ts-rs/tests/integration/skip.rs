@@ -88,7 +88,7 @@ enum Internally {
 fn internally_tagged() {
     assert_eq!(
         Internally::decl(),
-        r#"type Internally = { "t": "A" } | { "t": "B",  } | { "t": "C", y: number, };"#
+        r#"type Internally = { "t": "A" } | { "t": "B", } | { "t": "C", y: number, };"#
     );
 }
 

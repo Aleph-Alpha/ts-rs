@@ -42,7 +42,7 @@ We recommend doing this in your tests.
 ### Get started
 ```toml
 [dependencies]
-ts-rs = "8.1"
+ts-rs = "9.0"
 ```
 
 ```rust
@@ -80,12 +80,13 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
 | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
 | uuid-impl          | Implement `TS` for types from *uuid*                                                                                                                                                                      |
-| bson-uuid-impl     | Implement `TS` for types from *bson*                                                                                                                                                                      |
+| bson-uuid-impl     | Implement `TS` for *bson::oid::ObjectId* and *bson::uuid*                                                                                                                                                 |
 | bytes-impl         | Implement `TS` for types from *bytes*                                                                                                                                                                     |
 | indexmap-impl      | Implement `TS` for types from *indexmap*                                                                                                                                                                  |
 | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
 | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
+| smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
 
 <br/>
 
@@ -116,6 +117,6 @@ Feel free to open an issue, discuss using GitHub discussions or open a PR.
 [See CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
 
 ### MSRV
-The Minimum Supported Rust Version for this crate is 1.75.0
+The Minimum Supported Rust Version for this crate is 1.63.0
 
 License: MIT

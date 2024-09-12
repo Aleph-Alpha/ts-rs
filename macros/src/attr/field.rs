@@ -18,7 +18,6 @@ pub struct FieldAttr {
     pub flatten: bool,
     pub docs: String,
 
-    #[cfg(feature = "serde-compat")]
     pub using_serde_with: bool,
 }
 
@@ -35,8 +34,7 @@ impl FieldAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = parse_attrs::<Self>(attrs)?;
 
-        #[cfg(feature = "serde-compat")]
-        if !result.skip {
+        if cfg!(feature = "serde-compat") && !result.skip {
             let serde_attr = crate::utils::parse_serde_attrs::<FieldAttr>(attrs);
             result = result.merge(serde_attr.0);
         }
@@ -71,7 +69,7 @@ impl Attr for FieldAttr {
                 nullable: self.optional.nullable || other.optional.nullable,
             },
             flatten: self.flatten || other.flatten,
-            #[cfg(feature = "serde-compat")]
+
             using_serde_with: self.using_serde_with || other.using_serde_with,
 
             // We can't emit TSDoc for a flattened field
@@ -86,8 +84,10 @@ impl Attr for FieldAttr {
     }
 
     fn assert_validity(&self, field: &Self::Item) -> Result<()> {
-        #[cfg(feature = "serde-compat")]
-        if self.using_serde_with && !(self.type_as.is_some() || self.type_override.is_some()) {
+        if cfg!(feature = "serde-compat")
+            && self.using_serde_with
+            && !(self.type_as.is_some() || self.type_override.is_some())
+        {
             syn_err_spanned!(
                 field;
                 r#"using `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]`"#
@@ -196,7 +196,6 @@ impl_parse! {
     }
 }
 
-#[cfg(feature = "serde-compat")]
 impl_parse! {
     Serde<FieldAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
@@ -266,7 +265,7 @@ fn replace_underscore_in_angle_bracketed(args: &mut AngleBracketedGenericArgumen
             }
             GenericArgument::AssocType(assoc_ty) => {
                 replace_underscore(&mut assoc_ty.ty, with);
-                for g in &mut assoc_ty.generics {
+                if let Some(g) = &mut assoc_ty.generics {
                     replace_underscore_in_angle_bracketed(g, with);
                 }
             }

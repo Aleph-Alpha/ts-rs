@@ -4,7 +4,7 @@ use syn::{parse_quote, Attribute, Fields, Ident, Path, Result, Type, WherePredic
 
 use super::{
     parse_assign_from_str, parse_assign_inflection, parse_bound, parse_concrete, Attr,
-    ContainerAttr, Serde,
+    ContainerAttr, Serde, Tagged,
 };
 use crate::{
     attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
@@ -30,8 +30,7 @@ impl StructAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = parse_attrs::<Self>(attrs)?;
 
-        #[cfg(feature = "serde-compat")]
-        {
+        if cfg!(feature = "serde-compat") {
             let serde_attr = crate::utils::parse_serde_attrs::<StructAttr>(attrs);
             result = result.merge(serde_attr.0);
         }
@@ -54,6 +53,17 @@ impl StructAttr {
                 Fields::Named(_) => enum_attr.rename_all_fields,
                 Fields::Unnamed(_) | Fields::Unit => None,
             }),
+            tag: match variant_fields {
+                Fields::Named(_) => match enum_attr
+                    .tagged()
+                    .expect("The variant attribute is known to be valid at this point")
+                {
+                    Tagged::Internally { tag } => Some(tag.to_owned()),
+                    _ => None,
+                },
+                _ => None,
+            },
+
             // inline and skip are not supported on StructAttr
             ..Self::default()
         }
@@ -145,7 +155,6 @@ impl_parse! {
     }
 }
 
-#[cfg(feature = "serde-compat")]
 impl_parse! {
     Serde<StructAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),

@@ -40,7 +40,7 @@
 //! ## Get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "8.1"
+//! ts-rs = "9.0"
 //! ```
 //!
 //! ```rust
@@ -78,12 +78,13 @@
 //! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
 //! | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
 //! | uuid-impl          | Implement `TS` for types from *uuid*                                                                                                                                                                      |
-//! | bson-uuid-impl     | Implement `TS` for types from *bson*                                                                                                                                                                      |
+//! | bson-uuid-impl     | Implement `TS` for *bson::oid::ObjectId* and *bson::uuid*                                                                                                                                                 |
 //! | bytes-impl         | Implement `TS` for types from *bytes*                                                                                                                                                                     |
 //! | indexmap-impl      | Implement `TS` for types from *indexmap*                                                                                                                                                                  |
 //! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
 //! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 //! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
+//! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
 //!
 //! <br/>
 //!
@@ -114,7 +115,7 @@
 //! [See CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
 //!
 //! ## MSRV
-//! The Minimum Supported Rust Version for this crate is 1.75.0
+//! The Minimum Supported Rust Version for this crate is 1.63.0
 
 use std::{
     any::TypeId,
@@ -131,14 +132,12 @@ use std::{
 pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
-use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
 #[cfg(feature = "serde-json-impl")]
 mod serde_json;
-pub mod typelist;
 
 /// A type which can be represented in TypeScript.  
 /// Most of the time, you'd want to derive this trait instead of implementing it manually.  
@@ -418,20 +417,19 @@ pub trait TS {
     /// This function will panic if the type cannot be inlined.
     fn inline() -> String;
 
-    /// Flatten an type declaration.  
+    /// Flatten a type declaration.  
     /// This function will panic if the type cannot be flattened.
     fn inline_flattened() -> String;
 
-    /// Returns a [`TypeList`] of all types on which this type depends.
-    fn dependency_types() -> impl TypeList
+    /// Iterates over all dependency of this type.
+    fn visit_dependencies(_: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
     }
 
-    /// Returns a [`TypeList`] containing all generic parameters of this type.
-    /// If this type is not generic, this will return an empty [`TypeList`].
-    fn generics() -> impl TypeList
+    /// Iterates over all type parameters of this type.
+    fn visit_generics(_: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
@@ -442,8 +440,6 @@ pub trait TS {
     where
         Self: 'static,
     {
-        use crate::typelist::TypeVisitor;
-
         let mut deps: Vec<Dependency> = vec![];
         struct Visit<'a>(&'a mut Vec<Dependency>);
         impl<'a> TypeVisitor for Visit<'a> {
@@ -453,7 +449,7 @@ pub trait TS {
                 }
             }
         }
-        Self::dependency_types().for_each(&mut Visit(&mut deps));
+        Self::visit_dependencies(&mut Visit(&mut deps));
 
         deps
     }
@@ -530,7 +526,7 @@ pub trait TS {
     }
 
     /// Manually generate bindings for this type, returning a [`String`].  
-    /// This function does not format the output, even if the `format` feature is enabled. TODO
+    /// This function does not format the output, even if the `format` feature is enabled.
     ///
     /// # Automatic Exporting
     /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
@@ -576,6 +572,14 @@ pub trait TS {
     fn default_output_path() -> Option<PathBuf> {
         Some(export::default_out_dir().join(Self::output_path()?))
     }
+}
+
+/// A visitor used to iterate over all dependencies or generics of a type.
+/// When an instance of [`TypeVisitor`] is passed to [`TS::visit_dependencies`] or
+/// [`TS::visit_generics`], the [`TypeVisitor::visit`] method will be invoked for every dependency
+/// or generic parameter respectively.
+pub trait TypeVisitor: Sized {
+    fn visit<T: TS + 'static + ?Sized>(&mut self);
 }
 
 /// A typescript type which is depended upon by other types.
@@ -625,16 +629,19 @@ macro_rules! impl_tuples {
         impl<$($i: TS),*> TS for ($($i,)*) {
             type WithoutGenerics = (Dummy, );
             fn name() -> String {
-                format!("[{}]", [$($i::name()),*].join(", "))
+                format!("[{}]", [$(<$i as $crate::TS>::name()),*].join(", "))
             }
             fn inline() -> String {
                 panic!("tuple cannot be inlined!");
             }
-            fn dependency_types() -> impl TypeList
+            fn visit_generics(v: &mut impl TypeVisitor)
             where
                 Self: 'static
             {
-                ()$(.push::<$i>())*
+                $(
+                    v.visit::<$i>();
+                    <$i>::visit_generics(v);
+                )*
             }
             fn inline_flattened() -> String { panic!("tuple cannot be flattened") }
             fn decl() -> String { panic!("tuple cannot be declared") }
@@ -656,17 +663,19 @@ macro_rules! impl_wrapper {
             fn name() -> String { T::name() }
             fn inline() -> String { T::inline() }
             fn inline_flattened() -> String { T::inline_flattened() }
-            fn dependency_types() -> impl $crate::typelist::TypeList
+            fn visit_dependencies(v: &mut impl TypeVisitor)
             where
-                Self: 'static
+                Self: 'static,
             {
-                T::dependency_types()
+                T::visit_dependencies(v);
             }
-            fn generics() -> impl $crate::typelist::TypeList
+
+            fn visit_generics(v: &mut impl TypeVisitor)
             where
-                Self: 'static
+                Self: 'static,
             {
-                ((std::marker::PhantomData::<T>,), T::generics())
+                T::visit_generics(v);
+                v.visit::<T>();
             }
             fn decl() -> String { panic!("wrapper type cannot be declared") }
             fn decl_concrete() -> String { panic!("wrapper type cannot be declared") }
@@ -678,26 +687,26 @@ macro_rules! impl_wrapper {
 macro_rules! impl_shadow {
     (as $s:ty: $($impl:tt)*) => {
         $($impl)* {
-            type WithoutGenerics = <$s as TS>::WithoutGenerics;
-            fn ident() -> String { <$s>::ident() }
-            fn name() -> String { <$s>::name() }
-            fn inline() -> String { <$s>::inline() }
-            fn inline_flattened() -> String { <$s>::inline_flattened() }
-            fn dependency_types() -> impl $crate::typelist::TypeList
+            type WithoutGenerics = <$s as $crate::TS>::WithoutGenerics;
+            fn ident() -> String { <$s as $crate::TS>::ident() }
+            fn name() -> String { <$s as $crate::TS>::name() }
+            fn inline() -> String { <$s as $crate::TS>::inline() }
+            fn inline_flattened() -> String { <$s as $crate::TS>::inline_flattened() }
+            fn visit_dependencies(v: &mut impl $crate::TypeVisitor)
             where
-                Self: 'static
+                Self: 'static,
             {
-                <$s>::dependency_types()
+                <$s as $crate::TS>::visit_dependencies(v);
             }
-            fn generics() -> impl $crate::typelist::TypeList
+            fn visit_generics(v: &mut impl $crate::TypeVisitor)
             where
-                Self: 'static
+                Self: 'static,
             {
-                <$s>::generics()
+                <$s as $crate::TS>::visit_generics(v);
             }
-            fn decl() -> String { <$s>::decl() }
-            fn decl_concrete() -> String { <$s>::decl_concrete() }
-            fn output_path() -> Option<&'static std::path::Path> { <$s>::output_path() }
+            fn decl() -> String { <$s as $crate::TS>::decl() }
+            fn decl_concrete() -> String { <$s as $crate::TS>::decl_concrete() }
+            fn output_path() -> Option<&'static std::path::Path> { <$s as $crate::TS>::output_path() }
         }
     };
 }
@@ -713,18 +722,19 @@ impl<T: TS> TS for Option<T> {
         format!("{} | null", T::inline())
     }
 
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::dependency_types()
+        T::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
+    fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::generics().push::<T>()
+        T::visit_generics(v);
+        v.visit::<T>();
     }
 
     fn decl() -> String {
@@ -751,18 +761,22 @@ impl<T: TS, E: TS> TS for Result<T, E> {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
     }
 
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::dependency_types().extend(E::dependency_types())
+        T::visit_dependencies(v);
+        E::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
+    fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::generics().push::<T>().extend(E::generics()).push::<E>()
+        T::visit_generics(v);
+        v.visit::<T>();
+        E::visit_generics(v);
+        v.visit::<E>();
     }
 
     fn decl() -> String {
@@ -793,18 +807,19 @@ impl<T: TS> TS for Vec<T> {
         format!("Array<{}>", T::inline())
     }
 
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::dependency_types()
+        T::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
+    fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::generics().push::<T>()
+        T::visit_generics(v);
+        v.visit::<T>();
     }
 
     fn decl() -> String {
@@ -846,18 +861,19 @@ impl<T: TS, const N: usize> TS for [T; N] {
         )
     }
 
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::dependency_types()
+        T::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
+    fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::generics().push::<T>()
+        T::visit_generics(v);
+        v.visit::<T>();
     }
 
     fn decl() -> String {
@@ -881,25 +897,29 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     }
 
     fn name() -> String {
-        format!("{{ [key: {}]: {} }}", K::name(), V::name())
+        format!("{{ [key in {}]?: {} }}", K::name(), V::name())
     }
 
     fn inline() -> String {
-        format!("{{ [key: {}]: {} }}", K::inline(), V::inline())
+        format!("{{ [key in {}]?: {} }}", K::inline(), V::inline())
     }
 
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        K::dependency_types().extend(V::dependency_types())
+        K::visit_dependencies(v);
+        V::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
+    fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        K::generics().push::<K>().extend(V::generics()).push::<V>()
+        K::visit_generics(v);
+        v.visit::<K>();
+        V::visit_generics(v);
+        v.visit::<V>();
     }
 
     fn decl() -> String {
@@ -921,18 +941,19 @@ impl<I: TS> TS for Range<I> {
         format!("{{ start: {}, end: {}, }}", I::name(), I::name())
     }
 
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        I::dependency_types()
+        I::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
+    fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        I::generics().push::<I>()
+        I::visit_generics(v);
+        v.visit::<I>();
     }
 
     fn decl() -> String {
@@ -974,6 +995,9 @@ impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
 #[cfg(feature = "bigdecimal-impl")]
 impl_primitives! { bigdecimal::BigDecimal => "string" }
 
+#[cfg(feature = "smol_str-impl")]
+impl_primitives! { smol_str::SmolStr => "string" }
+
 #[cfg(feature = "uuid-impl")]
 impl_primitives! { uuid::Uuid => "string" }
 
@@ -985,6 +1009,9 @@ impl_primitives! { ordered_float::OrderedFloat<f32> => "number" }
 
 #[cfg(feature = "ordered-float-impl")]
 impl_primitives! { ordered_float::OrderedFloat<f64> => "number" }
+
+#[cfg(feature = "bson-uuid-impl")]
+impl_primitives! { bson::oid::ObjectId => "string" }
 
 #[cfg(feature = "bson-uuid-impl")]
 impl_primitives! { bson::Uuid => "string" }

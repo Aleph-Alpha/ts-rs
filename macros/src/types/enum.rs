@@ -24,6 +24,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     if let Some(attr_type_override) = &enum_attr.type_override {
         return type_override::type_override_enum(&enum_attr, &name, attr_type_override);
     }
+ 
     if let Some(attr_type_as) = &enum_attr.type_as {
         return type_as::type_as_enum(&enum_attr, &name, attr_type_as);
     }
@@ -32,23 +33,9 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         return Ok(empty_enum(name, enum_attr));
     }
 
-    if s.variants.is_empty() {
-        return Ok(DerivedTS {
-            crate_rename: crate_rename.clone(),
-            ts_name: name,
-            docs: enum_attr.docs,
-            inline: quote!("never".to_owned()),
-            inline_flattened: None,
-            dependencies: Dependencies::new(crate_rename),
-            export: enum_attr.export,
-            export_to: enum_attr.export_to,
-            concrete: enum_attr.concrete,
-            bound: enum_attr.bound,
-        });
-    }
-
     let mut formatted_variants = Vec::new();
     let mut dependencies = Dependencies::new(crate_rename.clone());
+
     for variant in &s.variants {
         format_variant(
             &mut formatted_variants,
@@ -103,10 +90,11 @@ fn format_variant(
     let struct_attr = StructAttr::from_variant(enum_attr, &variant_attr, &variant.fields);
     let variant_type = types::type_def(
         &struct_attr,
-        // since we are generating the variant as a struct, it doesn't have a name
-        &format_ident!("_"),
+        // In internally tagged enums, we can tag the struct
+        &name,
         &variant.fields,
     )?;
+
     let variant_dependencies = variant_type.dependencies;
     let inline_type = variant_type.inline;
 
@@ -167,22 +155,9 @@ fn format_variant(
             ),
         },
         (false, Tagged::Internally { tag }) => match variant_type.inline_flattened {
-            Some(inline_flattened) => quote! {
-                format!(
-                    "{{ \"{}\": \"{}\", {} }}",
-                    #tag,
-                    #name,
-                    // At this point inline_flattened looks like
-                    // { /* ...data */ }
-                    //
-                    // To be flattened, an internally tagged enum must not be
-                    // surrounded by braces, otherwise each variant will look like
-                    // { "tag": "name", { /* ...data */ } }
-                    // when we want it to look like
-                    // { "tag": "name", /* ...data */ }
-                    #inline_flattened.trim_matches(&['{', '}', ' '])
-                )
-            },
+            Some(_) => {
+                quote! { #parsed_ty }
+            }
             None => match &variant.fields {
                 Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                     let field = &unnamed.unnamed[0];
@@ -212,6 +187,7 @@ fn format_variant(
         },
     };
 
+    dependencies.append(variant_dependencies);
     formatted_variants.push(formatted);
     Ok(())
 }
