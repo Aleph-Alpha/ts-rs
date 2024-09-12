@@ -187,7 +187,6 @@ fn format_variant(
         },
     };
 
-    dependencies.append(variant_dependencies);
     formatted_variants.push(formatted);
     Ok(())
 }
