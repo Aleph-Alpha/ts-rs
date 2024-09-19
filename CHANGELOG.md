@@ -1,14 +1,19 @@
 # master
 ### Breaking
+- Change how `HashMap<K, V>` is represented in TypeScript. The resulting bindings (`{ [key in K]?: V }` instead of `{ [key: K]: V }`) are more accurate and flexible.
+
 ### Features
 
-- The `bson-uuid-impl` feature now supports `bson::oid::ObjectId` as well ([#340](https://github.com/Aleph-Alpha/ts-rs/pull/340))
 - Allow multile types to have the same `#[ts(export_to = "...")]` attribute and be exported to the same file ([#316](https://github.com/Aleph-Alpha/ts-rs/pull/316))
-- Add support for types from `smol_str` behind cargo feature `smol_str-impl`
+- The `bson-uuid-impl` feature now supports `bson::oid::ObjectId` as well ([#340](https://github.com/Aleph-Alpha/ts-rs/pull/340))
+- Add support for types from `smol_str` behind cargo feature `smol_str-impl` ([#350](https://github.com/Aleph-Alpha/ts-rs/pull/350))
+- Support `#[ts(as = "...")]` and `#[ts(type = "...")]` on enum variants ([#384](https://github.com/Aleph-Alpha/ts-rs/pull/384))
 
 ### Fixes
 
 - Properly handle block doc comments ([#342](https://github.com/Aleph-Alpha/ts-rs/pull/342))
+- Fix error in internally tagged enums with flattened fields ([#344](https://github.com/Aleph-Alpha/ts-rs/pull/344))
+- Always use forward slash on import paths ([#346](https://github.com/Aleph-Alpha/ts-rs/pull/346))
 
 # 9.0.1
 ### Fixes
