@@ -85,6 +85,7 @@
 //! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 //! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
 //! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
+//! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                    |
 //!
 //! <br/>
 //!
@@ -138,6 +139,8 @@ mod chrono;
 mod export;
 #[cfg(feature = "serde-json-impl")]
 mod serde_json;
+#[cfg(feature = "tokio-impl")]
+mod tokio;
 
 /// A type which can be represented in TypeScript.  
 /// Most of the time, you'd want to derive this trait instead of implementing it manually.  
@@ -987,6 +990,7 @@ impl_wrapper!(impl<'a, T: TS + ToOwned + ?Sized> TS for std::borrow::Cow<'a, T>)
 impl_wrapper!(impl<T: TS> TS for std::cell::Cell<T>);
 impl_wrapper!(impl<T: TS> TS for std::cell::RefCell<T>);
 impl_wrapper!(impl<T: TS> TS for std::sync::Mutex<T>);
+impl_wrapper!(impl<T: TS> TS for std::sync::RwLock<T>);
 impl_wrapper!(impl<T: TS + ?Sized> TS for std::sync::Weak<T>);
 impl_wrapper!(impl<T: TS> TS for std::marker::PhantomData<T>);
 
@@ -1053,6 +1057,8 @@ impl_primitives! {
 pub(crate) use impl_primitives;
 #[rustfmt::skip]
 pub(crate) use impl_shadow;
+#[rustfmt::skip]
+pub(crate) use impl_wrapper;
 
 #[doc(hidden)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]

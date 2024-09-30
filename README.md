@@ -87,6 +87,7 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
 | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
+| tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                    |
 
 <br/>
 
