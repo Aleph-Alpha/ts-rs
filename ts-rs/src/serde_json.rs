@@ -12,6 +12,7 @@ use super::{impl_primitives, impl_shadow, TS};
 pub enum TsJsonValue {
     Number(i32),
     String(String),
+    Boolean(bool),
     Array(Vec<TsJsonValue>),
     Object(HashMap<String, TsJsonValue>),
 }
