@@ -24,7 +24,7 @@ fn using_serde_json() {
     );
     assert_eq!(
         serde_json::Value::decl(),
-        "type JsonValue = number | string | boolean | Array<JsonValue> | { [key in string]?: JsonValue };",
+        "type JsonValue = number | string | boolean | Array<JsonValue> | { [key in string]?: JsonValue } | null;",
     );
 
     assert_eq!(
@@ -53,7 +53,7 @@ fn inlined_value() {
     assert_eq!(
         InlinedValue::decl(),
         "type InlinedValue = { \
-            any: number | string | boolean | Array<JsonValue> | { [key in string]?: JsonValue }, \
+            any: number | string | boolean | Array<JsonValue> | { [key in string]?: JsonValue } | null, \
          };"
     );
 }

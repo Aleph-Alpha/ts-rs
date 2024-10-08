@@ -15,6 +15,7 @@ pub enum TsJsonValue {
     Boolean(bool),
     Array(Vec<TsJsonValue>),
     Object(HashMap<String, TsJsonValue>),
+    Null(()),
 }
 
 impl_shadow!(as TsJsonValue: impl TS for serde_json::Value);
