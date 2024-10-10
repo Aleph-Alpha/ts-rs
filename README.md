@@ -42,7 +42,7 @@ We recommend doing this in your tests.
 ### Get started
 ```toml
 [dependencies]
-ts-rs = "9.0"
+ts-rs = "10.0"
 ```
 
 ```rust
@@ -86,6 +86,8 @@ When running `cargo test`, the TypeScript bindings will be exported to the file 
 | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
 | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
+| smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
+| tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                    |
 
 <br/>
 

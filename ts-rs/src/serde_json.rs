@@ -12,8 +12,10 @@ use super::{impl_primitives, impl_shadow, TS};
 pub enum TsJsonValue {
     Number(i32),
     String(String),
+    Boolean(bool),
     Array(Vec<TsJsonValue>),
     Object(HashMap<String, TsJsonValue>),
+    Null(()),
 }
 
 impl_shadow!(as TsJsonValue: impl TS for serde_json::Value);
