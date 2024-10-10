@@ -52,6 +52,7 @@ mod skip;
 mod slices;
 mod struct_rename;
 mod struct_tag;
+mod tokio;
 mod top_level_type_as;
 mod top_level_type_override;
 mod tuple;
