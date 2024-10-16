@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use ts_rs::{TypeVisitor, Dependency, ExportError, TS};
+use ts_rs::{Dependency, ExportError, TypeVisitor, TS};
 
 #[rustfmt::skip]
 trait Malicious {
