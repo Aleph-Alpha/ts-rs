@@ -54,7 +54,7 @@
 //!     last_name: String,
 //! }
 //! ```
-//! When running `cargo test`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
+//! When running `cargo test` or `cargo test export_bindings`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
 //!
 //! ## Features
 //! - generate type declarations from rust structs
