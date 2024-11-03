@@ -54,7 +54,13 @@
 //!     last_name: String,
 //! }
 //! ```
-//! When running `cargo test` or `cargo test export_bindings`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
+//!
+//! When running `cargo test` or `cargo test export_bindings`, the TypeScript bindings will be exported to the file `bindings/User.ts`
+//! and will contain the following code:
+//!
+//! ```ts
+//! export type User = { user_id: number, first_name: string, last_name: string, };
+//! ```
 //!
 //! ## Features
 //! - generate type declarations from rust structs
