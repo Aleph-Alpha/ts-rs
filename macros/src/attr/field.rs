@@ -4,7 +4,7 @@ use syn::{
     TypeSlice, TypeTuple,
 };
 
-use super::{parse_assign_from_str, parse_assign_str, Attr, Serde};
+use super::{parse_assign_from_str, parse_assign_str, parse_optional, Attr, Optional, Serde};
 use crate::utils::{parse_attrs, parse_docs};
 
 #[derive(Default)]
@@ -19,15 +19,6 @@ pub struct FieldAttr {
     pub docs: String,
 
     pub using_serde_with: bool,
-}
-
-/// Indicates whether the field is marked with `#[ts(optional)]`.
-/// `#[ts(optional)]` turns an `t: Option<T>` into `t?: T`, while
-/// `#[ts(optional = nullable)]` turns it into `t?: T | null`.
-#[derive(Default)]
-pub struct Optional {
-    pub optional: bool,
-    pub nullable: bool,
 }
 
 impl FieldAttr {
@@ -175,23 +166,7 @@ impl_parse! {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "inline" => out.inline = true,
         "skip" => out.skip = true,
-        "optional" => {
-            use syn::{Token, Error};
-            let nullable = if input.peek(Token![=]) {
-                input.parse::<Token![=]>()?;
-                let span = input.span();
-                match Ident::parse(input)?.to_string().as_str() {
-                    "nullable" => true,
-                    _ => Err(Error::new(span, "expected 'nullable'"))?
-                }
-            } else {
-                false
-            };
-            out.optional = Optional {
-                optional: true,
-                nullable,
-            }
-        },
+        "optional" => out.optional = parse_optional(input)?,
         "flatten" => out.flatten = true,
     }
 }

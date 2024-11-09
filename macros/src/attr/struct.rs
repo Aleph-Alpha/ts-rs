@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use syn::{parse_quote, Attribute, Fields, Ident, Path, Result, Type, WherePredicate};
 
 use super::{
-    parse_assign_from_str, parse_assign_inflection, parse_bound, parse_concrete, Attr,
-    ContainerAttr, Serde, Tagged,
+    parse_assign_from_str, parse_assign_inflection, parse_bound, parse_concrete, parse_optional,
+    Attr, ContainerAttr, Optional, Serde, Tagged,
 };
 use crate::{
     attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
@@ -24,6 +24,7 @@ pub struct StructAttr {
     pub docs: String,
     pub concrete: HashMap<Ident, Type>,
     pub bound: Option<Vec<WherePredicate>>,
+    pub optional: Optional,
 }
 
 impl StructAttr {
@@ -90,6 +91,10 @@ impl Attr for StructAttr {
                 (Some(bound), None) | (None, Some(bound)) => Some(bound),
                 (None, None) => None,
             },
+            optional: Optional {
+                optional: self.optional.optional || other.optional.optional,
+                nullable: self.optional.nullable || other.optional.nullable,
+            },
         }
     }
 
@@ -152,6 +157,7 @@ impl_parse! {
         "export_to" => out.export_to = Some(parse_assign_str(input)?),
         "concrete" => out.concrete = parse_concrete(input)?,
         "bound" => out.bound = Some(parse_bound(input)?),
+        "optional" => out.optional = parse_optional(input)?,
     }
 }
 

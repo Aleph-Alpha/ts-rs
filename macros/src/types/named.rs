@@ -33,6 +33,7 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
             &mut dependencies,
             field,
             &attr.rename_all,
+            attr.optional,
         )?;
     }
 
@@ -93,6 +94,7 @@ fn format_field(
     dependencies: &mut Dependencies,
     field: &Field,
     rename_all: &Option<Inflection>,
+    struct_optional: Optional,
 ) -> Result<()> {
     let field_attr = FieldAttr::from_attrs(&field.attrs)?;
 
@@ -104,20 +106,37 @@ fn format_field(
 
     let parsed_ty = field_attr.type_as(&field.ty);
 
-    let (ty, optional_annotation) = match field_attr.optional {
-        Optional {
-            optional: true,
-            nullable,
-        } => {
+    let (ty, optional_annotation) = match (struct_optional, field_attr.optional) {
+        (
+            Optional {
+                optional: true,
+                nullable,
+            },
+            Optional {
+                optional: false, ..
+            },
+        )
+        | (
+            _,
+            Optional {
+                optional: true,
+                nullable,
+            },
+        ) => {
             let inner_type = extract_option_argument(&parsed_ty)?; // inner type of the optional
             match nullable {
                 true => (&parsed_ty, "?"),  // if it's nullable, we keep the original type
                 false => (inner_type, "?"), // if not, we use the Option's inner type
             }
         }
-        Optional {
-            optional: false, ..
-        } => (&parsed_ty, ""),
+        (
+            Optional {
+                optional: false, ..
+            },
+            Optional {
+                optional: false, ..
+            },
+        ) => (&parsed_ty, ""),
     };
 
     if field_attr.flatten {
