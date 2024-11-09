@@ -181,9 +181,9 @@ fn export_and_merge(
     Ok(())
 }
 
-const HEADER_ERROR_MESSAGE: &'static str = "The generated strings must have their NOTE and imports separated from their type declarations by a new line";
+const HEADER_ERROR_MESSAGE: &str = "The generated strings must have their NOTE and imports separated from their type declarations by a new line";
 
-const DECLARATION_START: &'static str = "export type ";
+const DECLARATION_START: &str = "export type ";
 
 /// Inserts the imports and declaration from the newly generated type
 /// into the contents of the file, removimg duplicate imports and organazing
