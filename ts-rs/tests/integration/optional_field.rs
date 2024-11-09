@@ -87,3 +87,21 @@ fn inline() {
     let c = "c: number | null";
     assert_eq!(Inline::inline(), format!("{{ x: {{ {a}, {b}, {c}, }}, }}"));
 }
+
+#[derive(TS)]
+#[ts(export, export_to = "optional_field/", optional)]
+struct OptionalStruct {
+    a: Option<i32>,
+    b: Option<i32>,
+
+    #[ts(optional = nullable)]
+    c: Option<i32>,
+}
+
+#[test]
+fn struct_optional() {
+    assert_eq!(
+        OptionalStruct::inline(),
+        format!("{{ a?: number, b?: number, c?: number | null, }}")
+    )
+}
