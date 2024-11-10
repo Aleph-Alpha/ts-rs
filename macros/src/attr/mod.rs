@@ -19,9 +19,28 @@ mod variant;
 /// `#[ts(optional)]` turns an `t: Option<T>` into `t?: T`, while
 /// `#[ts(optional = nullable)]` turns it into `t?: T | null`.
 #[derive(Default, Clone, Copy)]
-pub struct Optional {
-    pub optional: bool,
-    pub nullable: bool,
+pub enum Optional {
+    Optional {
+        nullable: bool,
+    },
+
+    #[default]
+    NotOptional,
+}
+
+impl Optional {
+    pub fn or(self, other: Optional) -> Self {
+        match (self, other) {
+            (Self::NotOptional, Self::NotOptional) => Self::NotOptional,
+
+            (Self::Optional { nullable }, Self::NotOptional)
+            | (Self::NotOptional, Self::Optional { nullable }) => Self::Optional { nullable },
+
+            (Self::Optional { nullable: a }, Self::Optional { nullable: b }) => {
+                Self::Optional { nullable: a || b }
+            }
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -202,8 +221,5 @@ fn parse_optional(input: ParseStream) -> Result<Optional> {
         false
     };
 
-    Ok(Optional {
-        optional: true,
-        nullable,
-    })
+    Ok(Optional::Optional { nullable })
 }

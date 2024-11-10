@@ -91,10 +91,7 @@ impl Attr for StructAttr {
                 (Some(bound), None) | (None, Some(bound)) => Some(bound),
                 (None, None) => None,
             },
-            optional: Optional {
-                optional: self.optional.optional || other.optional.optional,
-                nullable: self.optional.nullable || other.optional.nullable,
-            },
+            optional: self.optional.or(other.optional),
         }
     }
 

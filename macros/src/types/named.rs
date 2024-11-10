@@ -105,30 +105,18 @@ fn format_field(
     let ty = field_attr.type_as(&field.ty);
 
     let opt = match (struct_optional, field_attr.optional) {
-        (
-            opt @ Optional { optional: true, .. },
-            Optional {
-                optional: false, ..
-            },
-        ) => opt,
-        (_, opt @ Optional { optional: true, .. }) => opt,
-        (
-            opt @ Optional {
-                optional: false, ..
-            },
-            Optional {
-                optional: false, ..
-            },
-        ) => opt,
+        (opt @ Optional::Optional { .. }, Optional::NotOptional) => opt,
+        (_, opt @ Optional::Optional { .. }) => opt,
+        (opt @ Optional::NotOptional, Optional::NotOptional) => opt,
     };
 
-    let optional_annotation = if opt.optional {
+    let optional_annotation = if let Optional::Optional { .. } = opt {
         quote! { if <#ty as #crate_rename::TS>::IS_OPTION { "?" } else { "" } }
     } else {
         quote! { "" }
     };
 
-    let optional_annotation = if field_attr.optional.optional {
+    let optional_annotation = if let Optional::Optional { .. } = field_attr.optional {
         quote! {
             if <#ty as #crate_rename::TS>::IS_OPTION {
                 #optional_annotation
@@ -153,7 +141,7 @@ fn format_field(
             if field_attr.inline {
                 dependencies.append_from(&ty);
 
-                if opt.optional && !opt.nullable {
+                if let Optional::Optional { nullable: false } = opt {
                     quote! {
                         if <#ty as #crate_rename::TS>::IS_OPTION {
                             <#ty as #crate_rename::TS>::option_inner_inline().unwrap()
@@ -166,7 +154,7 @@ fn format_field(
                 }
             } else {
                 dependencies.push(&ty);
-                if opt.optional && !opt.nullable {
+                if let Optional::Optional { nullable: false } = opt {
                     quote! {
                         if <#ty as #crate_rename::TS>::IS_OPTION {
                             <#ty as #crate_rename::TS>::option_inner_name().unwrap()

@@ -55,10 +55,7 @@ impl Attr for FieldAttr {
             rename: self.rename.or(other.rename),
             inline: self.inline || other.inline,
             skip: self.skip || other.skip,
-            optional: Optional {
-                optional: self.optional.optional || other.optional.optional,
-                nullable: self.optional.nullable || other.optional.nullable,
-            },
+            optional: self.optional.or(other.optional),
             flatten: self.flatten || other.flatten,
 
             using_serde_with: self.using_serde_with || other.using_serde_with,
@@ -124,7 +121,7 @@ impl Attr for FieldAttr {
                 );
             }
 
-            if self.optional.optional {
+            if let Optional::Optional { .. } = self.optional {
                 syn_err_spanned!(
                     field;
                     "`optional` is not compatible with `flatten`"
@@ -147,7 +144,7 @@ impl Attr for FieldAttr {
                 );
             }
 
-            if self.optional.optional {
+            if let Optional::Optional { .. } = self.optional {
                 syn_err_spanned!(
                     field;
                     "`optional` cannot with tuple struct fields"
