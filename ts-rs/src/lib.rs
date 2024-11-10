@@ -397,16 +397,6 @@ pub trait TS {
     #[doc(hidden)]
     const IS_OPTION: bool = false;
 
-    #[doc(hidden)]
-    fn option_inner_name() -> Option<String> {
-        None
-    }
-
-    #[doc(hidden)]
-    fn option_inner_inline() -> Option<String> {
-        None
-    }
-
     /// Identifier of this type, excluding generic parameters.
     fn ident() -> String {
         // by default, fall back to `TS::name()`.
@@ -743,14 +733,6 @@ impl<T: TS> TS for Option<T> {
 
     fn inline() -> String {
         format!("{} | null", T::inline())
-    }
-
-    fn option_inner_name() -> Option<String> {
-        Some(T::name())
-    }
-
-    fn option_inner_inline() -> Option<String> {
-        Some(T::inline())
     }
 
     fn visit_dependencies(v: &mut impl TypeVisitor)

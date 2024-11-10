@@ -144,7 +144,7 @@ fn format_field(
                 if let Optional::Optional { nullable: false } = opt {
                     quote! {
                         if <#ty as #crate_rename::TS>::IS_OPTION {
-                            <#ty as #crate_rename::TS>::option_inner_inline().unwrap()
+                            <#ty as #crate_rename::TS>::name().trim_end_matches(" | null").to_owned()
                         } else {
                             <#ty as #crate_rename::TS>::inline()
                         }
@@ -157,7 +157,7 @@ fn format_field(
                 if let Optional::Optional { nullable: false } = opt {
                     quote! {
                         if <#ty as #crate_rename::TS>::IS_OPTION {
-                            <#ty as #crate_rename::TS>::option_inner_name().unwrap()
+                            <#ty as #crate_rename::TS>::name().trim_end_matches(" | null").to_owned()
                         } else {
                             <#ty as #crate_rename::TS>::name()
                         }
