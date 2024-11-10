@@ -115,8 +115,17 @@ fn format_field(
             Optional {
                 optional: false, ..
             },
-        )
-        | (
+        ) => match extract_option_argument(&parsed_ty) {
+            Ok(inner_type) => {
+                if nullable {
+                    (&parsed_ty, "?")
+                } else {
+                    (inner_type, "?")
+                }
+            }
+            Err(_) => (&parsed_ty, ""),
+        },
+        (
             _,
             Optional {
                 optional: true,
