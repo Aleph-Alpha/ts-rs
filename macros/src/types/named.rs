@@ -116,18 +116,6 @@ fn format_field(
         quote! { "" }
     };
 
-    let optional_annotation = if let Optional::Optional { .. } = field_attr.optional {
-        quote! {
-            if <#ty as #crate_rename::TS>::IS_OPTION {
-                #optional_annotation
-            } else {
-                panic!("`#[ts(optional)]` can only be used with the Option type")
-            }
-        }
-    } else {
-        optional_annotation
-    };
-
     if field_attr.flatten {
         flattened_fields.push(quote!(<#ty as #crate_rename::TS>::inline_flattened()));
         dependencies.append_from(&ty);
