@@ -1,8 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{
-    spanned::Spanned, Field, FieldsNamed, GenericArgument, Path, PathArguments, Result, Type,
-};
+use syn::{Field, FieldsNamed, Path, Result};
 
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, Inflection, Optional, StructAttr},
@@ -104,53 +102,47 @@ fn format_field(
         return Ok(());
     }
 
-    let parsed_ty = field_attr.type_as(&field.ty);
+    let ty = field_attr.type_as(&field.ty);
 
-    let (ty, optional_annotation) = match (struct_optional, field_attr.optional) {
+    let opt = match (struct_optional, field_attr.optional) {
         (
+            opt @ Optional { optional: true, .. },
             Optional {
-                optional: true,
-                nullable,
+                optional: false, ..
+            },
+        ) => opt,
+        (_, opt @ Optional { optional: true, .. }) => opt,
+        (
+            opt @ Optional {
+                optional: false, ..
             },
             Optional {
                 optional: false, ..
             },
-        ) => match extract_option_argument(&parsed_ty) {
-            Ok(inner_type) => {
-                if nullable {
-                    (&parsed_ty, "?")
-                } else {
-                    (inner_type, "?")
-                }
-            }
-            Err(_) => (&parsed_ty, ""),
-        },
-        (
-            _,
-            Optional {
-                optional: true,
-                nullable,
-            },
-        ) => {
-            let inner_type = extract_option_argument(&parsed_ty)?; // inner type of the optional
-            match nullable {
-                true => (&parsed_ty, "?"),  // if it's nullable, we keep the original type
-                false => (inner_type, "?"), // if not, we use the Option's inner type
+        ) => opt,
+    };
+
+    let optional_annotation = if opt.optional {
+        quote! { if <#ty as #crate_rename::TS>::IS_OPTION { "?" } else { "" } }
+    } else {
+        quote! { "" }
+    };
+
+    let optional_annotation = if field_attr.optional.optional {
+        quote! {
+            if <#ty as #crate_rename::TS>::IS_OPTION {
+                #optional_annotation
+            } else {
+                panic!("`#[ts(optional)]` can only be used with the Option type")
             }
         }
-        (
-            Optional {
-                optional: false, ..
-            },
-            Optional {
-                optional: false, ..
-            },
-        ) => (&parsed_ty, ""),
+    } else {
+        optional_annotation
     };
 
     if field_attr.flatten {
         flattened_fields.push(quote!(<#ty as #crate_rename::TS>::inline_flattened()));
-        dependencies.append_from(ty);
+        dependencies.append_from(&ty);
         return Ok(());
     }
 
@@ -159,11 +151,32 @@ fn format_field(
         .map(|t| quote!(#t))
         .unwrap_or_else(|| {
             if field_attr.inline {
-                dependencies.append_from(ty);
-                quote!(<#ty as #crate_rename::TS>::inline())
+                dependencies.append_from(&ty);
+
+                if opt.optional && !opt.nullable {
+                    quote! {
+                        if <#ty as #crate_rename::TS>::IS_OPTION {
+                            <#ty as #crate_rename::TS>::option_inner_inline().unwrap()
+                        } else {
+                            <#ty as #crate_rename::TS>::inline()
+                        }
+                    }
+                } else {
+                    quote!(<#ty as #crate_rename::TS>::inline())
+                }
             } else {
-                dependencies.push(ty);
-                quote!(<#ty as #crate_rename::TS>::name())
+                dependencies.push(&ty);
+                if opt.optional && !opt.nullable {
+                    quote! {
+                        if <#ty as #crate_rename::TS>::IS_OPTION {
+                            <#ty as #crate_rename::TS>::option_inner_name().unwrap()
+                        } else {
+                            <#ty as #crate_rename::TS>::name()
+                        }
+                    }
+                } else {
+                    quote!(<#ty as #crate_rename::TS>::name())
+                }
             }
         });
 
@@ -186,29 +199,4 @@ fn format_field(
     });
 
     Ok(())
-}
-
-fn extract_option_argument(ty: &Type) -> Result<&Type> {
-    match ty {
-        Type::Path(type_path)
-            if type_path.qself.is_none()
-                && type_path.path.leading_colon.is_none()
-                && type_path.path.segments.len() == 1
-                && type_path.path.segments[0].ident == "Option" =>
-        {
-            let segment = &type_path.path.segments[0];
-            match &segment.arguments {
-                PathArguments::AngleBracketed(args) if args.args.len() == 1 => {
-                    match &args.args[0] {
-                        GenericArgument::Type(inner_ty) => Ok(inner_ty),
-                        other => syn_err!(other.span(); "`Option` argument must be a type"),
-                    }
-                }
-                other => {
-                    syn_err!(other.span(); "`Option` type must have a single generic argument")
-                }
-            }
-        }
-        other => syn_err!(other.span(); "`optional` can only be used on an Option<T> type"),
-    }
 }

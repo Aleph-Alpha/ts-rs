@@ -88,6 +88,9 @@ fn inline() {
     assert_eq!(Inline::inline(), format!("{{ x: {{ {a}, {b}, {c}, }}, }}"));
 }
 
+type Foo = Option<i32>;
+type Bar<T> = Option<T>;
+
 #[derive(TS)]
 #[ts(export, export_to = "optional_field/", optional)]
 struct OptionalStruct {
@@ -97,13 +100,19 @@ struct OptionalStruct {
     #[ts(optional = nullable)]
     c: Option<i32>,
 
+    #[ts(optional = nullable)]
     d: i32,
+
+    e: Foo,
+    f: Bar<i32>,
 }
 
 #[test]
 fn struct_optional() {
     assert_eq!(
         OptionalStruct::inline(),
-        format!("{{ a?: number, b?: number, c?: number | null, d: number, }}")
+        format!(
+            "{{ a?: number, b?: number, c?: number | null, d: number, e?: number, f?: number, }}"
+        )
     )
 }
