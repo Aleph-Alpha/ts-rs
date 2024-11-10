@@ -96,12 +96,14 @@ struct OptionalStruct {
 
     #[ts(optional = nullable)]
     c: Option<i32>,
+
+    d: i32,
 }
 
 #[test]
 fn struct_optional() {
     assert_eq!(
         OptionalStruct::inline(),
-        format!("{{ a?: number, b?: number, c?: number | null, }}")
+        format!("{{ a?: number, b?: number, c?: number | null, d: number, }}")
     )
 }
