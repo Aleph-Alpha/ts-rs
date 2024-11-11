@@ -100,8 +100,6 @@ struct OptionalStruct {
     #[ts(optional = nullable)]
     c: Option<i32>,
 
-    // `#[ts(optional)]` on a type that isn't `Option<T>` does nothing
-    #[ts(optional = nullable)]
     d: i32,
 
     e: Foo,
