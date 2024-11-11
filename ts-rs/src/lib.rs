@@ -380,6 +380,7 @@ pub trait TS {
     /// struct GenericType<A, B>(A, B);
     /// impl<A, B> TS for GenericType<A, B> {
     ///     type WithoutGenerics = GenericType<ts_rs::Dummy, ts_rs::Dummy>;
+    ///     type OptionInnerType = Self;
     ///     // ...
     ///     # fn decl() -> String { todo!() }
     ///     # fn decl_concrete() -> String { todo!() }
