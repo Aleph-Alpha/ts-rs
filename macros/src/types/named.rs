@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Field, FieldsNamed, Path, Result};
+use syn::{parse_quote, Field, FieldsNamed, Path, Result};
 
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, Inflection, Optional, StructAttr},
@@ -104,16 +104,33 @@ fn format_field(
 
     let ty = field_attr.type_as(&field.ty);
 
-    let opt = match (struct_optional, field_attr.optional) {
-        (opt @ Optional::Optional { .. }, Optional::NotOptional) => opt,
-        (_, opt @ Optional::Optional { .. }) => opt,
-        (opt @ Optional::NotOptional, Optional::NotOptional) => opt,
+    let (optional_annotation, nullable) = match (struct_optional, field_attr.optional) {
+        // `#[ts(optional)]` on field takes precedence, and is enforced **AT COMPILE TIME**
+        (_, Optional::Optional { nullable }) => (
+            // expression that evaluates to the string "?", but fails to compile if `ty` is not an `Option`.
+            quote! {{
+                use std::marker::PhantomData;
+                let actual: PhantomData<#ty> = PhantomData;
+                let must: PhantomData<Option<_>> = actual;
+                "?"
+            }},
+            nullable,
+        ),
+        // `#[ts(optional)]` on the struct acts as `#[ts(optional)]` on a field, but does not error on non-`Option`
+        // fields. Instead, it is a no-op.
+        (Optional::Optional { nullable }, _) => (
+            quote! {
+                if <#ty as #crate_rename::TS>::IS_OPTION { "?" } else { "" }
+            },
+            nullable,
+        ),
+        _ => (quote!(""), true),
     };
 
-    let optional_annotation = if let Optional::Optional { .. } = opt {
-        quote! { if <#ty as #crate_rename::TS>::IS_OPTION { "?" } else { "" } }
+    let ty = if nullable {
+        ty
     } else {
-        quote! { "" }
+        parse_quote! {<#ty as #crate_rename::TS>::OptionInnerType}
     };
 
     if field_attr.flatten {
@@ -128,31 +145,10 @@ fn format_field(
         .unwrap_or_else(|| {
             if field_attr.inline {
                 dependencies.append_from(&ty);
-
-                if let Optional::Optional { nullable: false } = opt {
-                    quote! {
-                        if <#ty as #crate_rename::TS>::IS_OPTION {
-                            <#ty as #crate_rename::TS>::name().trim_end_matches(" | null").to_owned()
-                        } else {
-                            <#ty as #crate_rename::TS>::inline()
-                        }
-                    }
-                } else {
-                    quote!(<#ty as #crate_rename::TS>::inline())
-                }
+                quote!(<#ty as #crate_rename::TS>::inline())
             } else {
                 dependencies.push(&ty);
-                if let Optional::Optional { nullable: false } = opt {
-                    quote! {
-                        if <#ty as #crate_rename::TS>::IS_OPTION {
-                            <#ty as #crate_rename::TS>::name().trim_end_matches(" | null").to_owned()
-                        } else {
-                            <#ty as #crate_rename::TS>::name()
-                        }
-                    }
-                } else {
-                    quote!(<#ty as #crate_rename::TS>::name())
-                }
+                quote!(<#ty as #crate_rename::TS>::name())
             }
         });
 
