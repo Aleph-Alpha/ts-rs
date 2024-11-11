@@ -108,6 +108,10 @@ impl Attr for StructAttr {
             if self.tag.is_some() {
                 syn_err!("`tag` is not compatible with `type`");
             }
+
+            if let Optional::Optional { .. } = self.optional_fields {
+                syn_err!("`optional_fields` is not compatible with `type`");
+            }
         }
 
         if self.type_as.is_some() {
@@ -118,6 +122,10 @@ impl Attr for StructAttr {
             if self.rename_all.is_some() {
                 syn_err!("`rename_all` is not compatible with `as`");
             }
+
+            if let Optional::Optional { .. } = self.optional_fields {
+                syn_err!("`optional_fields` is not compatible with `as`");
+            }
         }
 
         if !matches!(item, Fields::Named(_)) {
@@ -127,6 +135,10 @@ impl Attr for StructAttr {
 
             if self.rename_all.is_some() {
                 syn_err!("`rename_all` cannot be used with unit or tuple structs");
+            }
+
+            if let Optional::Optional { .. } = self.optional_fields {
+                syn_err!("`optional_fields` cannot be used with unit or tuple structs");
             }
         }
 
