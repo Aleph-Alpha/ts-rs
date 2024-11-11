@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, quote_spanned};
 use syn::{parse_quote, Field, FieldsNamed, Path, Result};
-
+use syn::spanned::Spanned;
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, Inflection, Optional, StructAttr},
     deps::Dependencies,
@@ -108,10 +108,10 @@ fn format_field(
         // `#[ts(optional)]` on field takes precedence, and is enforced **AT COMPILE TIME**
         (_, Optional::Optional { nullable }) => (
             // expression that evaluates to the string "?", but fails to compile if `ty` is not an `Option`.
-            quote! {{
-                use std::marker::PhantomData;
-                let actual: PhantomData<#ty> = PhantomData;
-                let must: PhantomData<std::option::Option<_>> = actual;
+            quote_spanned! { field.span() => {
+                fn check_that_field_is_option<T: #crate_rename::IsOption>(_: std::marker::PhantomData<T>) {}
+                let x: std::marker::PhantomData<#ty> = std::marker::PhantomData;
+                check_that_field_is_option(x);
                 "?"
             }},
             nullable,

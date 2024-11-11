@@ -626,6 +626,16 @@ impl Dependency {
     }
 }
 
+#[doc(hidden)]
+#[diagnostic::on_unimplemented(
+    message = "`#[ts(optional)]` can only be used on fields of type `Option`",
+    note = "`#[ts(optional)]` was used on a field of type {Self}, which is not permitted",
+    label = ""
+)]
+pub trait IsOption {}
+
+impl<T> IsOption for Option<T> {}
+
 // generate impls for primitive types
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
