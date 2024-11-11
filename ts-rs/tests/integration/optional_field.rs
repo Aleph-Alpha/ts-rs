@@ -92,7 +92,7 @@ type Foo = Option<i32>;
 type Bar<T> = Option<T>;
 
 #[derive(TS)]
-#[ts(export, export_to = "optional_field/", optional)]
+#[ts(export, export_to = "optional_field/", optional_fields)]
 struct OptionalStruct {
     a: Option<i32>,
     b: Option<i32>,

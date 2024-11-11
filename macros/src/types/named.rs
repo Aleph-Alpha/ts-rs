@@ -1,13 +1,13 @@
-use proc_macro2::TokenStream;
-use quote::{quote, quote_spanned};
-use syn::{parse_quote, Field, FieldsNamed, Path, Result};
-use syn::spanned::Spanned;
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, Inflection, Optional, StructAttr},
     deps::Dependencies,
     utils::{raw_name_to_ts_field, to_ts_ident},
     DerivedTS,
 };
+use proc_macro2::TokenStream;
+use quote::{quote, quote_spanned};
+use syn::spanned::Spanned;
+use syn::{parse_quote, Field, FieldsNamed, Path, Result};
 
 pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Result<DerivedTS> {
     let crate_rename = attr.crate_rename();
@@ -31,7 +31,7 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
             &mut dependencies,
             field,
             &attr.rename_all,
-            attr.optional,
+            attr.optional_fields,
         )?;
     }
 

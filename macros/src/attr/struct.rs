@@ -24,7 +24,7 @@ pub struct StructAttr {
     pub docs: String,
     pub concrete: HashMap<Ident, Type>,
     pub bound: Option<Vec<WherePredicate>>,
-    pub optional: Optional,
+    pub optional_fields: Optional,
 }
 
 impl StructAttr {
@@ -91,7 +91,7 @@ impl Attr for StructAttr {
                 (Some(bound), None) | (None, Some(bound)) => Some(bound),
                 (None, None) => None,
             },
-            optional: self.optional.or(other.optional),
+            optional_fields: self.optional_fields.or(other.optional_fields),
         }
     }
 
@@ -154,7 +154,7 @@ impl_parse! {
         "export_to" => out.export_to = Some(parse_assign_str(input)?),
         "concrete" => out.concrete = parse_concrete(input)?,
         "bound" => out.bound = Some(parse_bound(input)?),
-        "optional" => out.optional = parse_optional(input)?,
+        "optional_fields" => out.optional_fields = parse_optional(input)?,
     }
 }
 
