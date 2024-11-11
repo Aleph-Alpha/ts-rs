@@ -111,7 +111,7 @@ fn format_field(
             quote! {{
                 use std::marker::PhantomData;
                 let actual: PhantomData<#ty> = PhantomData;
-                let must: PhantomData<Option<_>> = actual;
+                let must: PhantomData<std::option::Option<_>> = actual;
                 "?"
             }},
             nullable,
