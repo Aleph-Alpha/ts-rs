@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
-use quote::quote;
-use syn::{Field, FieldsNamed, Path, Result};
-
+use quote::{quote, quote_spanned};
+use syn::{parse_quote, Field, FieldsNamed, Path, Result};
+use syn::spanned::Spanned;
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, Inflection, Optional, StructAttr},
     deps::Dependencies,
@@ -104,16 +104,33 @@ fn format_field(
 
     let ty = field_attr.type_as(&field.ty);
 
-    let opt = match (struct_optional, field_attr.optional) {
-        (opt @ Optional::Optional { .. }, Optional::NotOptional) => opt,
-        (_, opt @ Optional::Optional { .. }) => opt,
-        (opt @ Optional::NotOptional, Optional::NotOptional) => opt,
+    let (optional_annotation, nullable) = match (struct_optional, field_attr.optional) {
+        // `#[ts(optional)]` on field takes precedence, and is enforced **AT COMPILE TIME**
+        (_, Optional::Optional { nullable }) => (
+            // expression that evaluates to the string "?", but fails to compile if `ty` is not an `Option`.
+            quote_spanned! { field.span() => {
+                fn check_that_field_is_option<T: #crate_rename::IsOption>(_: std::marker::PhantomData<T>) {}
+                let x: std::marker::PhantomData<#ty> = std::marker::PhantomData;
+                check_that_field_is_option(x);
+                "?"
+            }},
+            nullable,
+        ),
+        // `#[ts(optional)]` on the struct acts as `#[ts(optional)]` on a field, but does not error on non-`Option`
+        // fields. Instead, it is a no-op.
+        (Optional::Optional { nullable }, _) => (
+            quote! {
+                if <#ty as #crate_rename::TS>::IS_OPTION { "?" } else { "" }
+            },
+            nullable,
+        ),
+        _ => (quote!(""), true),
     };
 
-    let optional_annotation = if let Optional::Optional { .. } = opt {
-        quote! { if <#ty as #crate_rename::TS>::IS_OPTION { "?" } else { "" } }
+    let ty = if nullable {
+        ty
     } else {
-        quote! { "" }
+        parse_quote! {<#ty as #crate_rename::TS>::OptionInnerType}
     };
 
     if field_attr.flatten {
@@ -128,31 +145,10 @@ fn format_field(
         .unwrap_or_else(|| {
             if field_attr.inline {
                 dependencies.append_from(&ty);
-
-                if let Optional::Optional { nullable: false } = opt {
-                    quote! {
-                        if <#ty as #crate_rename::TS>::IS_OPTION {
-                            <#ty as #crate_rename::TS>::name().trim_end_matches(" | null").to_owned()
-                        } else {
-                            <#ty as #crate_rename::TS>::inline()
-                        }
-                    }
-                } else {
-                    quote!(<#ty as #crate_rename::TS>::inline())
-                }
+                quote!(<#ty as #crate_rename::TS>::inline())
             } else {
                 dependencies.push(&ty);
-                if let Optional::Optional { nullable: false } = opt {
-                    quote! {
-                        if <#ty as #crate_rename::TS>::IS_OPTION {
-                            <#ty as #crate_rename::TS>::name().trim_end_matches(" | null").to_owned()
-                        } else {
-                            <#ty as #crate_rename::TS>::name()
-                        }
-                    }
-                } else {
-                    quote!(<#ty as #crate_rename::TS>::name())
-                }
+                quote!(<#ty as #crate_rename::TS>::name())
             }
         });
 
