@@ -631,7 +631,7 @@ impl Dependency {
 #[diagnostic::on_unimplemented(
     message = "`#[ts(optional)]` can only be used on fields of type `Option`",
     note = "`#[ts(optional)]` was used on a field of type {Self}, which is not permitted",
-    label = ""
+    label = "`#[ts(optional)]` is not allowed on field of type {Self}"
 )]
 pub trait IsOption {}
 
