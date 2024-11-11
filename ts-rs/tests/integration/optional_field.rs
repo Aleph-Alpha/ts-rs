@@ -100,7 +100,6 @@ struct OptionalStruct {
     #[ts(optional = nullable)]
     c: Option<i32>,
 
-    #[ts(optional)]
     d: i32,
 
     e: Foo,
