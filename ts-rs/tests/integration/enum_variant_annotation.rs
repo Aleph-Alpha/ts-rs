@@ -99,3 +99,25 @@ fn test_variant_quoted() {
     }
     assert_eq!(E::inline(), r#"{ "variant-name": { f: string, } }"#)
 }
+
+#[derive(TS)]
+#[ts(export, export_to = "enum_variant_anotation/")]
+enum D {
+    Foo {},
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "enum_variant_anotation/", tag = "type")]
+enum E {
+    Foo {},
+    Bar {},
+    Biz { x: i32 },
+}
+
+#[test]
+fn test_empty_struct_variant_with_tag() {
+    assert_eq!(
+        E::inline(),
+        r#"{ "type": "Foo", } | { "type": "Bar", } | { "type": "Biz", x: number, }"#
+    )
+}
