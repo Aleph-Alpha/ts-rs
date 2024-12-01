@@ -286,6 +286,12 @@ mod tokio;
 ///   Include the structs name (or value of `#[ts(rename = "..")]`) as a field with the given key.
 ///   <br/><br/>
 ///
+/// - **`#[ts(optional_fields)]`**  
+///   Makes all `Option<T>` fields in a struct optional.
+///   If `#[ts(optional_fields)]` is present, `t?: T` is generated for every `Option<T>` field of the struct.  
+///   If `#[ts(optional_fields = nullable)]` is present, `t?: T | null` is generated for every `Option<T>` field of the struct.  
+///   <br/><br/>
+///
 /// ### struct field attributes
 ///
 /// - **`#[ts(type = "..")]`**  
