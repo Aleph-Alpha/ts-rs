@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs"
-version = "10.0.0"
+version = "10.1.0"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -45,7 +45,7 @@ tokio = { version = "1.40", features = ["sync", "rt"] }
 
 [dependencies]
 heapless = { version = ">= 0.7, < 0.9", optional = true }
-ts-rs-macros = { version = "=10.0.0", path = "../macros" }
+ts-rs-macros = { version = "=10.1.0", path = "../macros" }
 dprint-plugin-typescript = { version = "0.90", optional = true }
 chrono = { version = "0.4", optional = true }
 bigdecimal = { version = ">= 0.0.13, < 0.5", features = [
