@@ -115,3 +115,28 @@ fn struct_optional() {
         )
     )
 }
+
+#[derive(TS)]
+#[ts(export, export_to = "optional_field/", optional_fields = nullable)]
+struct NullableStruct {
+    a: Option<i32>,
+    b: Option<i32>,
+
+    #[ts(optional = nullable)]
+    c: Option<i32>,
+
+    d: i32,
+
+    e: Foo,
+    f: Bar<i32>,
+}
+
+#[test]
+fn struct_nullable() {
+    assert_eq!(
+        NullableStruct::inline(),
+        format!(
+            "{{ a?: number | null, b?: number | null, c?: number | null, d: number, e?: number | null, f?: number | null, }}"
+        )
+    )
+}
