@@ -12,6 +12,8 @@ macro_rules! impl_dummy {
     ($($t:ty),*) => {$(
         impl TS for $t {
             type WithoutGenerics = $t;
+            type OptionInnerType = Self;
+
             fn name() -> String { String::new() }
             fn inline() -> String { String::new() }
             fn inline_flattened() -> String { panic!("{} cannot be flattened", Self::name()) }
@@ -26,6 +28,8 @@ impl_dummy!(Utc, Local, FixedOffset);
 
 impl<T: TimeZone + 'static> TS for DateTime<T> {
     type WithoutGenerics = Self;
+    type OptionInnerType = Self;
+
     fn ident() -> String {
         "string".to_owned()
     }
@@ -48,6 +52,8 @@ impl<T: TimeZone + 'static> TS for DateTime<T> {
 
 impl<T: TimeZone + 'static> TS for Date<T> {
     type WithoutGenerics = Self;
+    type OptionInnerType = Self;
+
     fn ident() -> String {
         "string".to_owned()
     }
