@@ -104,6 +104,12 @@ struct OptionalStruct {
 
     e: Foo,
     f: Bar<i32>,
+
+    #[ts(type = "string")]
+    g: Option<i32>,
+
+    #[ts(as = "String")]
+    h: Option<i32>,
 }
 
 #[test]
@@ -111,7 +117,7 @@ fn struct_optional() {
     assert_eq!(
         OptionalStruct::inline(),
         format!(
-            "{{ a?: number, b?: number, c?: number | null, d: number, e?: number, f?: number, }}"
+            "{{ a?: number, b?: number, c?: number | null, d: number, e?: number, f?: number, g: string, h: string, }}"
         )
     )
 }
@@ -129,6 +135,12 @@ struct NullableStruct {
 
     e: Foo,
     f: Bar<i32>,
+
+    #[ts(type = "string")]
+    g: Option<i32>,
+
+    #[ts(as = "String")]
+    h: Option<i32>,
 }
 
 #[test]
@@ -136,7 +148,7 @@ fn struct_nullable() {
     assert_eq!(
         NullableStruct::inline(),
         format!(
-            "{{ a?: number | null, b?: number | null, c?: number | null, d: number, e?: number | null, f?: number | null, }}"
+            "{{ a?: number | null, b?: number | null, c?: number | null, d: number, e?: number | null, f?: number | null, g: string, h: string, }}"
         )
     )
 }

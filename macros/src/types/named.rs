@@ -102,6 +102,28 @@ fn format_field(
         return Ok(());
     }
 
+    if let Some(ref type_override) = field_attr.type_override {
+        let field_name = to_ts_ident(field.ident.as_ref().unwrap());
+        let name = match (field_attr.rename.as_ref(), rename_all) {
+            (Some(rn), _) => rn.to_owned(),
+            (None, Some(rn)) => rn.apply(&field_name),
+            (None, None) => field_name,
+        };
+        let valid_name = raw_name_to_ts_field(name);
+
+        // Start every doc string with a newline, because when other characters are in front, it is not "understood" by VSCode
+        let docs = match field_attr.docs.is_empty() {
+            true => "".to_string(),
+            false => format!("\n{}", &field_attr.docs),
+        };
+
+        formatted_fields.push(quote! {
+            format!("{}{}: {},", #docs, #valid_name, #type_override)
+        });
+
+        return Ok(());
+    }
+
     let ty = field_attr.type_as(&field.ty);
 
     let (optional_annotation, nullable) = match (struct_optional, field_attr.optional) {
@@ -139,18 +161,13 @@ fn format_field(
         return Ok(());
     }
 
-    let formatted_ty = field_attr
-        .type_override
-        .map(|t| quote!(#t))
-        .unwrap_or_else(|| {
-            if field_attr.inline {
-                dependencies.append_from(&ty);
-                quote!(<#ty as #crate_rename::TS>::inline())
-            } else {
-                dependencies.push(&ty);
-                quote!(<#ty as #crate_rename::TS>::name())
-            }
-        });
+    let formatted_ty = if field_attr.inline {
+        dependencies.append_from(&ty);
+        quote!(<#ty as #crate_rename::TS>::inline())
+    } else {
+        dependencies.push(&ty);
+        quote!(<#ty as #crate_rename::TS>::name())
+    };
 
     let field_name = to_ts_ident(field.ident.as_ref().unwrap());
     let name = match (field_attr.rename, rename_all) {
