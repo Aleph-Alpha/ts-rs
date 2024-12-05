@@ -11,12 +11,13 @@ use syn::{
     WhereClause, WherePredicate,
 };
 
-use crate::{deps::Dependencies, utils::format_generics};
+use crate::{deps::Dependencies, path::CustomPath, utils::format_generics};
 
 #[macro_use]
 mod utils;
 mod attr;
 mod deps;
+mod path;
 mod types;
 
 struct DerivedTS {
@@ -30,7 +31,7 @@ struct DerivedTS {
     bound: Option<Vec<WherePredicate>>,
 
     export: bool,
-    export_to: Option<String>,
+    export_to: Option<CustomPath>,
 }
 
 impl DerivedTS {
@@ -40,16 +41,16 @@ impl DerivedTS {
             .then(|| self.generate_export_test(&rust_ty, &generics));
 
         let output_path_fn = {
-            let path = match self.export_to.as_deref() {
-                Some(dirname) if dirname.ends_with('/') => {
-                    format!("{}{}.ts", dirname, self.ts_name)
-                }
-                Some(filename) => filename.to_owned(),
-                None => format!("{}.ts", self.ts_name),
+            let (path, path_decl) = if let Some(cust_path) = &self.export_to {
+                cust_path.get_path_and_some_decl(&self.ts_name)
+            } else {
+                let path = format!("{}.ts", self.ts_name);
+                (quote!( #path ), None)
             };
 
             quote! {
                 fn output_path() -> Option<&'static std::path::Path> {
+                    #path_decl
                     Some(std::path::Path::new(#path))
                 }
             }
