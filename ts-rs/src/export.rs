@@ -347,6 +347,10 @@ fn import_path(from: &Path, import: &Path) -> Result<String, ExportError> {
         str_path
     };
 
+    if cfg!(feature = "import-deno") {
+        return Ok(path);
+    }
+
     let path_without_extension = path.trim_end_matches(".ts");
 
     Ok(if cfg!(feature = "import-esm") {
