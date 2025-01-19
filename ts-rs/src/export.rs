@@ -309,13 +309,21 @@ fn generate_imports<T: TS + ?Sized + 'static>(
         let dep_path = out_dir.as_ref().join(dep.output_path);
         let rel_path = import_path(&path, &dep_path)?;
 
+        // Determine the appropriate extension to trim based on the active feature
+        let trimmed_rel_path = if cfg!(feature = "import-deno") {
+            rel_path.trim_end_matches(".ts")
+        } else if cfg!(feature = "import-esm") {
+            rel_path.trim_end_matches(".js")
+        } else {
+            &rel_path
+        };
+
+        // Check if the file is importing itself
         let is_same_file = path
-            .file_name()
+            .file_stem()
             .and_then(std::ffi::OsStr::to_str)
-            .map(|x| x.trim_end_matches(".ts"))
-            .map(|x| format!("./{x}"))
-            .map(|x| x == rel_path.trim_end_matches(".js").trim_end_matches(".ts"))
-            .unwrap_or(false);
+            .map(|stem| format!("./{stem}"))
+            .map_or(false, |formatted_stem| formatted_stem == trimmed_rel_path);
 
         if is_same_file {
             continue;
