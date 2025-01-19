@@ -314,7 +314,7 @@ fn generate_imports<T: TS + ?Sized + 'static>(
             .and_then(std::ffi::OsStr::to_str)
             .map(|x| x.trim_end_matches(".ts"))
             .map(|x| format!("./{x}"))
-            .map(|x| x == rel_path.trim_end_matches(".js"))
+            .map(|x| x == rel_path.trim_end_matches(".js").trim_end_matches(".ts"))
             .unwrap_or(false);
 
         if is_same_file {
