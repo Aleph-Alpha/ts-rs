@@ -465,7 +465,7 @@ pub trait TS {
     {
         let mut deps: Vec<Dependency> = vec![];
         struct Visit<'a>(&'a mut Vec<Dependency>);
-        impl<'a> TypeVisitor for Visit<'a> {
+        impl TypeVisitor for Visit<'_> {
             fn visit<T: TS + 'static + ?Sized>(&mut self) {
                 if let Some(dep) = Dependency::from_ty::<T>() {
                     self.0.push(dep);
