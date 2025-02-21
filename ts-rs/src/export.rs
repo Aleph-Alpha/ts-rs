@@ -47,7 +47,7 @@ mod recursive_export {
         error: Option<ExportError>,
     }
 
-    impl<'a> TypeVisitor for Visit<'a> {
+    impl TypeVisitor for Visit<'_> {
         fn visit<T: TS + 'static + ?Sized>(&mut self) {
             // if an error occurred previously, or the type cannot be exported (it's a primitive),
             // we return
