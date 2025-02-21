@@ -1,4 +1,11 @@
-# master
+# 10.1.0
+### Features
+- Add support for synchronization primitives from `tokio` (feature `tokio-impl`)
+### Fixes
+- Fix incorrect behavior of the tag attribute for structs without any fields declared with braces
+- Fix representation of `serde_json::Value`
+
+# 10.0.0
 ### Breaking
 - Change how `HashMap<K, V>` is represented in TypeScript. The resulting bindings (`{ [key in K]?: V }` instead of `{ [key: K]: V }`) are more accurate and flexible.
 - Added `OptionInnerType` associated type to the `TS` trait. If you manually implement `TS`, you must set this associated type to `Self` in all of your implementations.
