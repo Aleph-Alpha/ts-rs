@@ -122,7 +122,7 @@
 //! [See CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
 //!
 //! ## MSRV
-//! The Minimum Supported Rust Version for this crate is 1.63.0
+//! The Minimum Supported Rust Version for this crate is 1.78.0
 
 use std::{
     any::TypeId,
