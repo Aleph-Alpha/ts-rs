@@ -1,6 +1,7 @@
 # master
 ### Breaking
 - Change how `HashMap<K, V>` is represented in TypeScript. The resulting bindings (`{ [key in K]?: V }` instead of `{ [key: K]: V }`) are more accurate and flexible.
+- Added `OptionInnerType` associated type to the `TS` trait. If you manually implement `TS`, you must set this associated type to `Self` in all of your implementations.
 
 ### Features
 
@@ -8,12 +9,14 @@
 - The `bson-uuid-impl` feature now supports `bson::oid::ObjectId` as well ([#340](https://github.com/Aleph-Alpha/ts-rs/pull/340))
 - Add support for types from `smol_str` behind cargo feature `smol_str-impl` ([#350](https://github.com/Aleph-Alpha/ts-rs/pull/350))
 - Support `#[ts(as = "...")]` and `#[ts(type = "...")]` on enum variants ([#384](https://github.com/Aleph-Alpha/ts-rs/pull/384))
+- Added `#[ts(optional_fields)]` and `#[ts(optional_fields = nullable)]` attribute to structs, this attribute is equivalent to using the corresponding `#[ts(optional)]` or `#[ts(optional = nullable)]` on every field of the struct. ([#366](https://github.com/Aleph-Alpha/ts-rs/pull/366))
 
 ### Fixes
 
 - Properly handle block doc comments ([#342](https://github.com/Aleph-Alpha/ts-rs/pull/342))
 - Fix error in internally tagged enums with flattened fields ([#344](https://github.com/Aleph-Alpha/ts-rs/pull/344))
 - Always use forward slash on import paths ([#346](https://github.com/Aleph-Alpha/ts-rs/pull/346))
+- Fix `#[ts(optional)]` error when using a type alias for `Option` or fully qqualifying it as `core::option::Option` ([#366](https://github.com/Aleph-Alpha/ts-rs/pull/366))
 
 # 9.0.1
 ### Fixes
