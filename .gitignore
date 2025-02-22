@@ -1,5 +1,6 @@
 target/
 /.idea
 *.ts
+tsconfig.json
 
 /ts-rs/tests-out

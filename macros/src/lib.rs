@@ -80,6 +80,7 @@ impl DerivedTS {
         quote! {
             #impl_start {
                 #assoc_type
+                type OptionInnerType = Self;
 
                 fn ident() -> String {
                     #ident.to_owned()
@@ -92,8 +93,7 @@ impl DerivedTS {
                 #generics_fn
                 #output_path_fn
 
-                #[allow(clippy::unused_unit)]
-                fn dependency_types() -> impl #crate_rename::typelist::TypeList
+                fn visit_dependencies(v: &mut impl #crate_rename::TypeVisitor)
                 where
                     Self: 'static,
                 {
@@ -157,9 +157,10 @@ impl DerivedTS {
                 }
                 impl #crate_rename::TS for #generics {
                     type WithoutGenerics = #generics;
+                    type OptionInnerType = Self;
                     fn name() -> String { stringify!(#generics).to_owned() }
                     fn inline() -> String { panic!("{} cannot be inlined", #name) }
-                    fn inline_flattened() -> String { panic!("{} cannot be flattened", #name) }
+                    fn inline_flattened() -> String { stringify!(#generics).to_owned() }
                     fn decl() -> String { panic!("{} cannot be declared", #name) }
                     fn decl_concrete() -> String { panic!("{} cannot be declared", #name) }
                 }
@@ -195,15 +196,18 @@ impl DerivedTS {
         let generics = generics
             .type_params()
             .filter(|ty| !self.concrete.contains_key(&ty.ident))
-            .map(|TypeParam { ident, .. }| quote![.push::<#ident>().extend(<#ident as #crate_rename::TS>::generics())]);
+            .map(|TypeParam { ident, .. }| {
+                quote![
+                    v.visit::<#ident>();
+                    <#ident as #crate_rename::TS>::visit_generics(v);
+                ]
+            });
         quote! {
-            #[allow(clippy::unused_unit)]
-            fn generics() -> impl #crate_rename::typelist::TypeList
+            fn visit_generics(v: &mut impl #crate_rename::TypeVisitor)
             where
                 Self: 'static,
             {
-                use #crate_rename::typelist::TypeList;
-                ()#(#generics)*
+                #(#generics)*
             }
         }
     }

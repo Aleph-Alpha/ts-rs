@@ -40,7 +40,7 @@
 //! ## Get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "8.1"
+//! ts-rs = "10.1"
 //! ```
 //!
 //! ```rust
@@ -54,7 +54,13 @@
 //!     last_name: String,
 //! }
 //! ```
-//! When running `cargo test`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
+//!
+//! When running `cargo test` or `cargo test export_bindings`, the TypeScript bindings will be exported to the file `bindings/User.ts`
+//! and will contain the following code:
+//!
+//! ```ts
+//! export type User = { user_id: number, first_name: string, last_name: string, };
+//! ```
 //!
 //! ## Features
 //! - generate type declarations from rust structs
@@ -78,12 +84,14 @@
 //! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
 //! | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
 //! | uuid-impl          | Implement `TS` for types from *uuid*                                                                                                                                                                      |
-//! | bson-uuid-impl     | Implement `TS` for types from *bson*                                                                                                                                                                      |
+//! | bson-uuid-impl     | Implement `TS` for *bson::oid::ObjectId* and *bson::uuid*                                                                                                                                                 |
 //! | bytes-impl         | Implement `TS` for types from *bytes*                                                                                                                                                                     |
 //! | indexmap-impl      | Implement `TS` for types from *indexmap*                                                                                                                                                                  |
 //! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
 //! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 //! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
+//! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
+//! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                    |
 //!
 //! <br/>
 //!
@@ -114,7 +122,7 @@
 //! [See CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
 //!
 //! ## MSRV
-//! The Minimum Supported Rust Version for this crate is 1.75.0
+//! The Minimum Supported Rust Version for this crate is 1.78.0
 
 use std::{
     any::TypeId,
@@ -131,14 +139,14 @@ use std::{
 pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
-use crate::typelist::TypeList;
 
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
 #[cfg(feature = "serde-json-impl")]
 mod serde_json;
-pub mod typelist;
+#[cfg(feature = "tokio-impl")]
+mod tokio;
 
 /// A type which can be represented in TypeScript.  
 /// Most of the time, you'd want to derive this trait instead of implementing it manually.  
@@ -278,6 +286,12 @@ pub mod typelist;
 ///   Include the structs name (or value of `#[ts(rename = "..")]`) as a field with the given key.
 ///   <br/><br/>
 ///
+/// - **`#[ts(optional_fields)]`**  
+///   Makes all `Option<T>` fields in a struct optional.
+///   If `#[ts(optional_fields)]` is present, `t?: T` is generated for every `Option<T>` field of the struct.  
+///   If `#[ts(optional_fields = nullable)]` is present, `t?: T | null` is generated for every `Option<T>` field of the struct.  
+///   <br/><br/>
+///
 /// ### struct field attributes
 ///
 /// - **`#[ts(type = "..")]`**  
@@ -335,7 +349,7 @@ pub mod typelist;
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///
-/// - **`#[ts(rename_all_fieds = "..")]`**  
+/// - **`#[ts(rename_all_fields = "..")]`**  
 ///   Renames the fields of all the struct variants of this enum. This is equivalent to using
 ///   `#[ts(rename_all = "..")]` on all of the enum's variants.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
@@ -372,6 +386,7 @@ pub trait TS {
     /// struct GenericType<A, B>(A, B);
     /// impl<A, B> TS for GenericType<A, B> {
     ///     type WithoutGenerics = GenericType<ts_rs::Dummy, ts_rs::Dummy>;
+    ///     type OptionInnerType = Self;
     ///     // ...
     ///     # fn decl() -> String { todo!() }
     ///     # fn decl_concrete() -> String { todo!() }
@@ -382,9 +397,16 @@ pub trait TS {
     /// ```
     type WithoutGenerics: TS + ?Sized;
 
+    /// If the implementing type is `std::option::Option<T>`, then this associated type is set to `T`.
+    /// All other implementations of `TS` should set this type to `Self` instead.
+    type OptionInnerType: ?Sized;
+
     /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
     /// automatically read from your doc comments or `#[doc = ".."]` attributes
     const DOCS: Option<&'static str> = None;
+
+    #[doc(hidden)]
+    const IS_OPTION: bool = false;
 
     /// Identifier of this type, excluding generic parameters.
     fn ident() -> String {
@@ -418,20 +440,19 @@ pub trait TS {
     /// This function will panic if the type cannot be inlined.
     fn inline() -> String;
 
-    /// Flatten an type declaration.  
+    /// Flatten a type declaration.  
     /// This function will panic if the type cannot be flattened.
     fn inline_flattened() -> String;
 
-    /// Returns a [`TypeList`] of all types on which this type depends.
-    fn dependency_types() -> impl TypeList
+    /// Iterates over all dependency of this type.
+    fn visit_dependencies(_: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
     }
 
-    /// Returns a [`TypeList`] containing all generic parameters of this type.
-    /// If this type is not generic, this will return an empty [`TypeList`].
-    fn generics() -> impl TypeList
+    /// Iterates over all type parameters of this type.
+    fn visit_generics(_: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
@@ -442,18 +463,16 @@ pub trait TS {
     where
         Self: 'static,
     {
-        use crate::typelist::TypeVisitor;
-
         let mut deps: Vec<Dependency> = vec![];
         struct Visit<'a>(&'a mut Vec<Dependency>);
-        impl<'a> TypeVisitor for Visit<'a> {
+        impl TypeVisitor for Visit<'_> {
             fn visit<T: TS + 'static + ?Sized>(&mut self) {
                 if let Some(dep) = Dependency::from_ty::<T>() {
                     self.0.push(dep);
                 }
             }
         }
-        Self::dependency_types().for_each(&mut Visit(&mut deps));
+        Self::visit_dependencies(&mut Visit(&mut deps));
 
         deps
     }
@@ -530,7 +549,7 @@ pub trait TS {
     }
 
     /// Manually generate bindings for this type, returning a [`String`].  
-    /// This function does not format the output, even if the `format` feature is enabled. TODO
+    /// This function does not format the output, even if the `format` feature is enabled.
     ///
     /// # Automatic Exporting
     /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
@@ -578,6 +597,14 @@ pub trait TS {
     }
 }
 
+/// A visitor used to iterate over all dependencies or generics of a type.
+/// When an instance of [`TypeVisitor`] is passed to [`TS::visit_dependencies`] or
+/// [`TS::visit_generics`], the [`TypeVisitor::visit`] method will be invoked for every dependency
+/// or generic parameter respectively.
+pub trait TypeVisitor: Sized {
+    fn visit<T: TS + 'static + ?Sized>(&mut self);
+}
+
 /// A typescript type which is depended upon by other types.
 /// This information is required for generating the correct import statements.
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -606,11 +633,22 @@ impl Dependency {
     }
 }
 
+#[doc(hidden)]
+#[diagnostic::on_unimplemented(
+    message = "`#[ts(optional)]` can only be used on fields of type `Option`",
+    note = "`#[ts(optional)]` was used on a field of type {Self}, which is not permitted",
+    label = "`#[ts(optional)]` is not allowed on field of type {Self}"
+)]
+pub trait IsOption {}
+
+impl<T> IsOption for Option<T> {}
+
 // generate impls for primitive types
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
         impl TS for $ty {
             type WithoutGenerics = Self;
+            type OptionInnerType = Self;
             fn name() -> String { $l.to_owned() }
             fn inline() -> String { <Self as $crate::TS>::name() }
             fn inline_flattened() -> String { panic!("{} cannot be flattened", <Self as $crate::TS>::name()) }
@@ -624,17 +662,21 @@ macro_rules! impl_tuples {
     ( impl $($i:ident),* ) => {
         impl<$($i: TS),*> TS for ($($i,)*) {
             type WithoutGenerics = (Dummy, );
+            type OptionInnerType = Self;
             fn name() -> String {
-                format!("[{}]", [$($i::name()),*].join(", "))
+                format!("[{}]", [$(<$i as $crate::TS>::name()),*].join(", "))
             }
             fn inline() -> String {
                 panic!("tuple cannot be inlined!");
             }
-            fn dependency_types() -> impl TypeList
+            fn visit_generics(v: &mut impl TypeVisitor)
             where
                 Self: 'static
             {
-                ()$(.push::<$i>())*
+                $(
+                    v.visit::<$i>();
+                    <$i>::visit_generics(v);
+                )*
             }
             fn inline_flattened() -> String { panic!("tuple cannot be flattened") }
             fn decl() -> String { panic!("tuple cannot be declared") }
@@ -653,20 +695,23 @@ macro_rules! impl_wrapper {
     ($($t:tt)*) => {
         $($t)* {
             type WithoutGenerics = Self;
+            type OptionInnerType = Self;
             fn name() -> String { T::name() }
             fn inline() -> String { T::inline() }
             fn inline_flattened() -> String { T::inline_flattened() }
-            fn dependency_types() -> impl $crate::typelist::TypeList
+            fn visit_dependencies(v: &mut impl TypeVisitor)
             where
-                Self: 'static
+                Self: 'static,
             {
-                T::dependency_types()
+                T::visit_dependencies(v);
             }
-            fn generics() -> impl $crate::typelist::TypeList
+
+            fn visit_generics(v: &mut impl TypeVisitor)
             where
-                Self: 'static
+                Self: 'static,
             {
-                ((std::marker::PhantomData::<T>,), T::generics())
+                T::visit_generics(v);
+                v.visit::<T>();
             }
             fn decl() -> String { panic!("wrapper type cannot be declared") }
             fn decl_concrete() -> String { panic!("wrapper type cannot be declared") }
@@ -678,32 +723,35 @@ macro_rules! impl_wrapper {
 macro_rules! impl_shadow {
     (as $s:ty: $($impl:tt)*) => {
         $($impl)* {
-            type WithoutGenerics = <$s as TS>::WithoutGenerics;
-            fn ident() -> String { <$s>::ident() }
-            fn name() -> String { <$s>::name() }
-            fn inline() -> String { <$s>::inline() }
-            fn inline_flattened() -> String { <$s>::inline_flattened() }
-            fn dependency_types() -> impl $crate::typelist::TypeList
+            type WithoutGenerics = <$s as $crate::TS>::WithoutGenerics;
+            type OptionInnerType = <$s as $crate::TS>::OptionInnerType;
+            fn ident() -> String { <$s as $crate::TS>::ident() }
+            fn name() -> String { <$s as $crate::TS>::name() }
+            fn inline() -> String { <$s as $crate::TS>::inline() }
+            fn inline_flattened() -> String { <$s as $crate::TS>::inline_flattened() }
+            fn visit_dependencies(v: &mut impl $crate::TypeVisitor)
             where
-                Self: 'static
+                Self: 'static,
             {
-                <$s>::dependency_types()
+                <$s as $crate::TS>::visit_dependencies(v);
             }
-            fn generics() -> impl $crate::typelist::TypeList
+            fn visit_generics(v: &mut impl $crate::TypeVisitor)
             where
-                Self: 'static
+                Self: 'static,
             {
-                <$s>::generics()
+                <$s as $crate::TS>::visit_generics(v);
             }
-            fn decl() -> String { <$s>::decl() }
-            fn decl_concrete() -> String { <$s>::decl_concrete() }
-            fn output_path() -> Option<&'static std::path::Path> { <$s>::output_path() }
+            fn decl() -> String { <$s as $crate::TS>::decl() }
+            fn decl_concrete() -> String { <$s as $crate::TS>::decl_concrete() }
+            fn output_path() -> Option<&'static std::path::Path> { <$s as $crate::TS>::output_path() }
         }
     };
 }
 
 impl<T: TS> TS for Option<T> {
     type WithoutGenerics = Self;
+    type OptionInnerType = T;
+    const IS_OPTION: bool = true;
 
     fn name() -> String {
         format!("{} | null", T::name())
@@ -713,18 +761,19 @@ impl<T: TS> TS for Option<T> {
         format!("{} | null", T::inline())
     }
 
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::dependency_types()
+        T::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
+    fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::generics().push::<T>()
+        T::visit_generics(v);
+        v.visit::<T>();
     }
 
     fn decl() -> String {
@@ -742,6 +791,7 @@ impl<T: TS> TS for Option<T> {
 
 impl<T: TS, E: TS> TS for Result<T, E> {
     type WithoutGenerics = Result<Dummy, Dummy>;
+    type OptionInnerType = Self;
 
     fn name() -> String {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::name(), E::name())
@@ -751,18 +801,22 @@ impl<T: TS, E: TS> TS for Result<T, E> {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
     }
 
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::dependency_types().extend(E::dependency_types())
+        T::visit_dependencies(v);
+        E::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
+    fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::generics().push::<T>().extend(E::generics()).push::<E>()
+        T::visit_generics(v);
+        v.visit::<T>();
+        E::visit_generics(v);
+        v.visit::<E>();
     }
 
     fn decl() -> String {
@@ -780,6 +834,7 @@ impl<T: TS, E: TS> TS for Result<T, E> {
 
 impl<T: TS> TS for Vec<T> {
     type WithoutGenerics = Vec<Dummy>;
+    type OptionInnerType = Self;
 
     fn ident() -> String {
         "Array".to_owned()
@@ -793,18 +848,19 @@ impl<T: TS> TS for Vec<T> {
         format!("Array<{}>", T::inline())
     }
 
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::dependency_types()
+        T::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
+    fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::generics().push::<T>()
+        T::visit_generics(v);
+        v.visit::<T>();
     }
 
     fn decl() -> String {
@@ -824,6 +880,8 @@ impl<T: TS> TS for Vec<T> {
 const ARRAY_TUPLE_LIMIT: usize = 64;
 impl<T: TS, const N: usize> TS for [T; N] {
     type WithoutGenerics = [Dummy; N];
+    type OptionInnerType = Self;
+
     fn name() -> String {
         if N > ARRAY_TUPLE_LIMIT {
             return Vec::<T>::name();
@@ -846,18 +904,19 @@ impl<T: TS, const N: usize> TS for [T; N] {
         )
     }
 
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::dependency_types()
+        T::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
+    fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::generics().push::<T>()
+        T::visit_generics(v);
+        v.visit::<T>();
     }
 
     fn decl() -> String {
@@ -875,31 +934,36 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     type WithoutGenerics = HashMap<Dummy, Dummy>;
+    type OptionInnerType = Self;
 
     fn ident() -> String {
         panic!()
     }
 
     fn name() -> String {
-        format!("{{ [key: {}]: {} }}", K::name(), V::name())
+        format!("{{ [key in {}]?: {} }}", K::name(), V::name())
     }
 
     fn inline() -> String {
-        format!("{{ [key: {}]: {} }}", K::inline(), V::inline())
+        format!("{{ [key in {}]?: {} }}", K::inline(), V::inline())
     }
 
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        K::dependency_types().extend(V::dependency_types())
+        K::visit_dependencies(v);
+        V::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
+    fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        K::generics().push::<K>().extend(V::generics()).push::<V>()
+        K::visit_generics(v);
+        v.visit::<K>();
+        V::visit_generics(v);
+        v.visit::<V>();
     }
 
     fn decl() -> String {
@@ -917,22 +981,25 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
 
 impl<I: TS> TS for Range<I> {
     type WithoutGenerics = Range<Dummy>;
+    type OptionInnerType = Self;
+
     fn name() -> String {
         format!("{{ start: {}, end: {}, }}", I::name(), I::name())
     }
 
-    fn dependency_types() -> impl TypeList
+    fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        I::dependency_types()
+        I::visit_dependencies(v);
     }
 
-    fn generics() -> impl TypeList
+    fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        I::generics().push::<I>()
+        I::visit_generics(v);
+        v.visit::<I>();
     }
 
     fn decl() -> String {
@@ -966,6 +1033,7 @@ impl_wrapper!(impl<'a, T: TS + ToOwned + ?Sized> TS for std::borrow::Cow<'a, T>)
 impl_wrapper!(impl<T: TS> TS for std::cell::Cell<T>);
 impl_wrapper!(impl<T: TS> TS for std::cell::RefCell<T>);
 impl_wrapper!(impl<T: TS> TS for std::sync::Mutex<T>);
+impl_wrapper!(impl<T: TS> TS for std::sync::RwLock<T>);
 impl_wrapper!(impl<T: TS + ?Sized> TS for std::sync::Weak<T>);
 impl_wrapper!(impl<T: TS> TS for std::marker::PhantomData<T>);
 
@@ -973,6 +1041,9 @@ impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
 
 #[cfg(feature = "bigdecimal-impl")]
 impl_primitives! { bigdecimal::BigDecimal => "string" }
+
+#[cfg(feature = "smol_str-impl")]
+impl_primitives! { smol_str::SmolStr => "string" }
 
 #[cfg(feature = "uuid-impl")]
 impl_primitives! { uuid::Uuid => "string" }
@@ -985,6 +1056,9 @@ impl_primitives! { ordered_float::OrderedFloat<f32> => "number" }
 
 #[cfg(feature = "ordered-float-impl")]
 impl_primitives! { ordered_float::OrderedFloat<f64> => "number" }
+
+#[cfg(feature = "bson-uuid-impl")]
+impl_primitives! { bson::oid::ObjectId => "string" }
 
 #[cfg(feature = "bson-uuid-impl")]
 impl_primitives! { bson::Uuid => "string" }
@@ -1041,6 +1115,8 @@ impl_primitives! {
 pub(crate) use impl_primitives;
 #[rustfmt::skip]
 pub(crate) use impl_shadow;
+#[rustfmt::skip]
+pub(crate) use impl_wrapper;
 
 #[doc(hidden)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -1054,6 +1130,8 @@ impl std::fmt::Display for Dummy {
 
 impl TS for Dummy {
     type WithoutGenerics = Self;
+    type OptionInnerType = Self;
+
     fn name() -> String {
         "Dummy".to_owned()
     }

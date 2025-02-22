@@ -4,7 +4,7 @@ use syn::{
     TypeSlice, TypeTuple,
 };
 
-use super::{parse_assign_from_str, parse_assign_str, Attr, Serde};
+use super::{parse_assign_from_str, parse_assign_str, parse_optional, Attr, Optional, Serde};
 use crate::utils::{parse_attrs, parse_docs};
 
 #[derive(Default)]
@@ -18,25 +18,14 @@ pub struct FieldAttr {
     pub flatten: bool,
     pub docs: String,
 
-    #[cfg(feature = "serde-compat")]
     pub using_serde_with: bool,
-}
-
-/// Indicates whether the field is marked with `#[ts(optional)]`.
-/// `#[ts(optional)]` turns an `t: Option<T>` into `t?: T`, while
-/// `#[ts(optional = nullable)]` turns it into `t?: T | null`.
-#[derive(Default)]
-pub struct Optional {
-    pub optional: bool,
-    pub nullable: bool,
 }
 
 impl FieldAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = parse_attrs::<Self>(attrs)?;
 
-        #[cfg(feature = "serde-compat")]
-        if !result.skip {
+        if cfg!(feature = "serde-compat") && !result.skip {
             let serde_attr = crate::utils::parse_serde_attrs::<FieldAttr>(attrs);
             result = result.merge(serde_attr.0);
         }
@@ -66,12 +55,9 @@ impl Attr for FieldAttr {
             rename: self.rename.or(other.rename),
             inline: self.inline || other.inline,
             skip: self.skip || other.skip,
-            optional: Optional {
-                optional: self.optional.optional || other.optional.optional,
-                nullable: self.optional.nullable || other.optional.nullable,
-            },
+            optional: self.optional.or(other.optional),
             flatten: self.flatten || other.flatten,
-            #[cfg(feature = "serde-compat")]
+
             using_serde_with: self.using_serde_with || other.using_serde_with,
 
             // We can't emit TSDoc for a flattened field
@@ -86,8 +72,10 @@ impl Attr for FieldAttr {
     }
 
     fn assert_validity(&self, field: &Self::Item) -> Result<()> {
-        #[cfg(feature = "serde-compat")]
-        if self.using_serde_with && !(self.type_as.is_some() || self.type_override.is_some()) {
+        if cfg!(feature = "serde-compat")
+            && self.using_serde_with
+            && !(self.type_as.is_some() || self.type_override.is_some())
+        {
             syn_err_spanned!(
                 field;
                 r#"using `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]`"#
@@ -107,6 +95,13 @@ impl Attr for FieldAttr {
                 syn_err_spanned!(
                     field;
                     "`type` is not compatible with `flatten`"
+                );
+            }
+
+            if let Optional::Optional { .. } = self.optional {
+                syn_err_spanned!(
+                    field;
+                    "`type` is not compatible with `optional`"
                 );
             }
         }
@@ -133,7 +128,7 @@ impl Attr for FieldAttr {
                 );
             }
 
-            if self.optional.optional {
+            if let Optional::Optional { .. } = self.optional {
                 syn_err_spanned!(
                     field;
                     "`optional` is not compatible with `flatten`"
@@ -156,7 +151,7 @@ impl Attr for FieldAttr {
                 );
             }
 
-            if self.optional.optional {
+            if let Optional::Optional { .. } = self.optional {
                 syn_err_spanned!(
                     field;
                     "`optional` cannot with tuple struct fields"
@@ -175,28 +170,11 @@ impl_parse! {
         "rename" => out.rename = Some(parse_assign_str(input)?),
         "inline" => out.inline = true,
         "skip" => out.skip = true,
-        "optional" => {
-            use syn::{Token, Error};
-            let nullable = if input.peek(Token![=]) {
-                input.parse::<Token![=]>()?;
-                let span = input.span();
-                match Ident::parse(input)?.to_string().as_str() {
-                    "nullable" => true,
-                    _ => Err(Error::new(span, "expected 'nullable'"))?
-                }
-            } else {
-                false
-            };
-            out.optional = Optional {
-                optional: true,
-                nullable,
-            }
-        },
+        "optional" => out.optional = parse_optional(input)?,
         "flatten" => out.flatten = true,
     }
 }
 
-#[cfg(feature = "serde-compat")]
 impl_parse! {
     Serde<FieldAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
@@ -266,7 +244,7 @@ fn replace_underscore_in_angle_bracketed(args: &mut AngleBracketedGenericArgumen
             }
             GenericArgument::AssocType(assoc_ty) => {
                 replace_underscore(&mut assoc_ty.ty, with);
-                for g in &mut assoc_ty.generics {
+                if let Some(g) = &mut assoc_ty.generics {
                     replace_underscore_in_angle_bracketed(g, with);
                 }
             }

@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use syn::{parse_quote, Attribute, Fields, Ident, Path, Result, Type, WherePredicate};
 
 use super::{
-    parse_assign_from_str, parse_assign_inflection, parse_bound, parse_concrete, Attr,
-    ContainerAttr, Serde,
+    parse_assign_from_str, parse_assign_inflection, parse_bound, parse_concrete, parse_optional,
+    Attr, ContainerAttr, Optional, Serde, Tagged,
 };
 use crate::{
     attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
@@ -24,14 +24,14 @@ pub struct StructAttr {
     pub docs: String,
     pub concrete: HashMap<Ident, Type>,
     pub bound: Option<Vec<WherePredicate>>,
+    pub optional_fields: Optional,
 }
 
 impl StructAttr {
     pub fn from_attrs(attrs: &[Attribute]) -> Result<Self> {
         let mut result = parse_attrs::<Self>(attrs)?;
 
-        #[cfg(feature = "serde-compat")]
-        {
+        if cfg!(feature = "serde-compat") {
             let serde_attr = crate::utils::parse_serde_attrs::<StructAttr>(attrs);
             result = result.merge(serde_attr.0);
         }
@@ -54,6 +54,17 @@ impl StructAttr {
                 Fields::Named(_) => enum_attr.rename_all_fields,
                 Fields::Unnamed(_) | Fields::Unit => None,
             }),
+            tag: match variant_fields {
+                Fields::Named(_) => match enum_attr
+                    .tagged()
+                    .expect("The variant attribute is known to be valid at this point")
+                {
+                    Tagged::Internally { tag } => Some(tag.to_owned()),
+                    _ => None,
+                },
+                _ => None,
+            },
+
             // inline and skip are not supported on StructAttr
             ..Self::default()
         }
@@ -80,6 +91,7 @@ impl Attr for StructAttr {
                 (Some(bound), None) | (None, Some(bound)) => Some(bound),
                 (None, None) => None,
             },
+            optional_fields: self.optional_fields.or(other.optional_fields),
         }
     }
 
@@ -96,6 +108,10 @@ impl Attr for StructAttr {
             if self.tag.is_some() {
                 syn_err!("`tag` is not compatible with `type`");
             }
+
+            if let Optional::Optional { .. } = self.optional_fields {
+                syn_err!("`optional_fields` is not compatible with `type`");
+            }
         }
 
         if self.type_as.is_some() {
@@ -106,6 +122,10 @@ impl Attr for StructAttr {
             if self.rename_all.is_some() {
                 syn_err!("`rename_all` is not compatible with `as`");
             }
+
+            if let Optional::Optional { .. } = self.optional_fields {
+                syn_err!("`optional_fields` is not compatible with `as`");
+            }
         }
 
         if !matches!(item, Fields::Named(_)) {
@@ -115,6 +135,10 @@ impl Attr for StructAttr {
 
             if self.rename_all.is_some() {
                 syn_err!("`rename_all` cannot be used with unit or tuple structs");
+            }
+
+            if let Optional::Optional { .. } = self.optional_fields {
+                syn_err!("`optional_fields` cannot be used with unit or tuple structs");
             }
         }
 
@@ -142,10 +166,10 @@ impl_parse! {
         "export_to" => out.export_to = Some(parse_assign_str(input)?),
         "concrete" => out.concrete = parse_concrete(input)?,
         "bound" => out.bound = Some(parse_bound(input)?),
+        "optional_fields" => out.optional_fields = parse_optional(input)?,
     }
 }
 
-#[cfg(feature = "serde-compat")]
 impl_parse! {
     Serde<StructAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),

@@ -88,6 +88,28 @@ jobs:
           cargo install cargo-readme 
           diff -u ../README.md <(cargo readme)
 
+  msrv-valid:
+    name: Check that the MSRV is valid
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Check that README.md is up-to-date
+        working-directory: ts-rs
+        run: |
+          set +e
+          cargo install cargo-msrv 
+          cargo msrv verify --all-features
+          if [[ $? -eq 1 ]]; then
+            cargo msrv find --all-features
+            exit 1
+          fi
+
   test-all-features:
     name: Test ts-rs with --all-features
     runs-on: ubuntu-latest
@@ -100,11 +122,12 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@v2
       - name: Test
+        working-directory: ts-rs
         run: |
           cargo test --all-features
           shopt -s globstar
-          tsc ts-rs/bindings/**/*.ts --noEmit --noUnusedLocals --strict
-          rm -rf ts-rs/bindings
+          tsc bindings/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf bindings
 
   test-export-env:
     name: Test ts-rs with TS_RS_EXPORT_DIR
@@ -118,11 +141,31 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@v2
       - name: Test
+        working-directory: ts-rs
         run: |
           TS_RS_EXPORT_DIR=output cargo test --no-default-features
           shopt -s globstar
-          tsc ts-rs/output/**/*.ts --noEmit --noUnusedLocals --strict
-          rm -rf ts-rs/output
+          tsc output/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf output
+
+  test-absolute-export-env:
+    name: Test ts-rs with absolute TS_RS_EXPORT_DIR
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        working-directory: ts-rs
+        run: |
+          TS_RS_EXPORT_DIR=$(pwd)/output cargo test --no-default-features
+          shopt -s globstar
+          tsc output/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf output
 
   test-no-features:
     name: Test ts-rs with --no-default-features
@@ -136,8 +179,33 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@v2
       - name: Test
+        working-directory: ts-rs
         run: |
           cargo test --no-default-features
           shopt -s globstar
-          tsc ts-rs/bindings/**/*.ts --noEmit --noUnusedLocals
-          rm -rf ts-rs/bindings
+          tsc bindings/**/*.ts --noEmit --noUnusedLocals
+          rm -rf bindings
+
+  test-windows:
+    name: Test ts-rs with --all-features on Windows
+    runs-on: windows-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        working-directory: ts-rs
+        # Create empty tsconfig and cd into bindings to make tsc
+        # compile every ts file in the directory
+        run: |
+          cargo test --all-features
+          "{}" | Out-File bindings/tsconfig.json
+          cd bindings
+          npm i -g typescript
+          tsc --noEmit --noUnusedLocals --strict
+          cd ..
+          rm -r -fo bindings

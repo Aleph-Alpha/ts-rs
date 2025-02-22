@@ -83,8 +83,8 @@ fn enum_externally_tagged() {
                  { \"C\": E } | \
                  { \"D\": E } | \
                  { \"E\": [E, E, E, E] } | \
-                 { \"F\": { a: E, b: E, c: { [key: string]: E }, d: E | null, e?: E | null, f?: E, } } | \
-                 { \"G\": [Array<E>, Array<E>, { [key: string]: E }] };"
+                 { \"F\": { a: E, b: E, c: { [key in string]?: E }, d: E | null, e?: E | null, f?: E, } } | \
+                 { \"G\": [Array<E>, Array<E>, { [key in string]?: E }] };"
     );
 }
 
@@ -122,7 +122,7 @@ fn enum_internally_tagged() {
                   { \"tag\": \"C\" } & I | \
                   { \"tag\": \"D\" } & I | \
                   { \"tag\": \"E\" } & Array<I> | \
-                  { \"tag\": \"F\", a: I, b: I, c: { [key: I]: I }, d: I | null, e?: I | null, f?: I, };"
+                  { \"tag\": \"F\", a: I, b: I, c: { [key in I]?: I }, d: I | null, e?: I | null, f?: I, };"
     );
 }
 
@@ -170,7 +170,7 @@ fn enum_adjacently_tagged() {
                      \"content\": { \
                          a: A, \
                          b: A, \
-                         c: { [key: string]: A }, \
+                         c: { [key in string]?: A }, \
                          d: A | null, \
                          e?: A | null, \
                          f?: A, \
@@ -181,7 +181,7 @@ fn enum_adjacently_tagged() {
                      \"content\": [\
                         Array<A>, \
                         [A, A, A, A], \
-                        { [key: string]: A }\
+                        { [key in string]?: A }\
                      ] \
                   };"
     );

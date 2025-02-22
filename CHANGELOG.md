@@ -1,10 +1,54 @@
 # master
+### Breaking
+- Added `OptionInnerType` associated type to the `TS` trait. If you manually implement `TS`, you must set this associated type to `Self` in all of your implementations.
+- Raised MSRV to `1.78.0` due to use of `#[diagnostic::on_unimplemented]` and `let ... else { ... }`
+
+### Features
+- Added `#[ts(optional_fields)]` and `#[ts(optional_fields = nullable)]` attribute to structs, this attribute is equivalent to using the corresponding `#[ts(optional)]` or `#[ts(optional = nullable)]` on every field of the struct. ([#366](https://github.com/Aleph-Alpha/ts-rs/pull/366))
+
+### Fixes
+- Fix `#[ts(optional)]` error when using a type alias for `Option` or fully qqualifying it as `core::option::Option` ([#366](https://github.com/Aleph-Alpha/ts-rs/pull/366))
+
+# 10.1.0
+### Features
+- Add support for synchronization primitives from `tokio` (feature `tokio-impl`)
+### Fixes
+- Fix incorrect behavior of the tag attribute for structs without any fields declared with braces
+- Fix representation of `serde_json::Value`
+
+# 10.0.0
+### Breaking
+- Change how `HashMap<K, V>` is represented in TypeScript. The resulting bindings (`{ [key in K]?: V }` instead of `{ [key: K]: V }`) are more accurate and flexible.
+
+### Features
+
+- Allow multile types to have the same `#[ts(export_to = "...")]` attribute and be exported to the same file ([#316](https://github.com/Aleph-Alpha/ts-rs/pull/316))
+- The `bson-uuid-impl` feature now supports `bson::oid::ObjectId` as well ([#340](https://github.com/Aleph-Alpha/ts-rs/pull/340))
+- Add support for types from `smol_str` behind cargo feature `smol_str-impl` ([#350](https://github.com/Aleph-Alpha/ts-rs/pull/350))
+- Support `#[ts(as = "...")]` and `#[ts(type = "...")]` on enum variants ([#384](https://github.com/Aleph-Alpha/ts-rs/pull/384))
+
+### Fixes
+
+- Properly handle block doc comments ([#342](https://github.com/Aleph-Alpha/ts-rs/pull/342))
+- Fix error in internally tagged enums with flattened fields ([#344](https://github.com/Aleph-Alpha/ts-rs/pull/344))
+- Always use forward slash on import paths ([#346](https://github.com/Aleph-Alpha/ts-rs/pull/346))
+
+# 9.0.1
+### Fixes
+- Allow using `#[ts(flatten)]` on fields using generic parameters ([#336](https://github.com/Aleph-Alpha/ts-rs/pull/336))
+
+
+# 9.0.0
 
 ### Breaking
 
 - `#[serde(with = "...")]` requires the use of `#[ts(as = "...")]` or `#[ts(type = "...")]` ([#280](https://github.com/Aleph-Alpha/ts-rs/pull/280))
 - Fix incompatibility with serde for `snake_case`, `kebab-case` and `SCREAMING_SNAKE_CASE` ([#298](https://github.com/Aleph-Alpha/ts-rs/pull/298))
 - `#[ts(rename_all = "...")]` no longer accepts variations in the string's casing, dashes and underscores to make behavior consistent with serde ([#298](https://github.com/Aleph-Alpha/ts-rs/pull/298))
+- Remove `TypeList`, and replace `TS::dependency_types`/`TS::generics` with `TS::visit_dependencies`/`TS::visit_generics`.
+  This finally resolves "overflow evaluating the requirement", "reached the recursion limit" errors.
+  Also, compile times should benefit. This is a technically breaking change for those interacting with the `TS` trait
+  directly. For those just using `#[derive(TS)]` and `#[ts(...)]`, nothing changes!
 
 ### Features
 
@@ -18,6 +62,8 @@
 - Fix `#[ts(rename_all_fields = "...")]` on enums containing tuple or unit variants ([#287](https://github.com/Aleph-Alpha/ts-rs/pull/287))
 - Fix "overflow evaluating the requirement" and "reached the recursion limit" errors in some cases ([#293](https://github.com/Aleph-Alpha/ts-rs/pull/293))
 - Fix ambiguity causing "multiple applicable items in scope" errors in some cases ([#309](https://github.com/Aleph-Alpha/ts-rs/pull/309))
+- Fix issues with absolute `TS_RS_EXPORT_DIR` paths ([#323](https://github.com/Aleph-Alpha/ts-rs/pull/323))
+- Add newlines to the end of exported files ([#321](https://github.com/Aleph-Alpha/ts-rs/pull/321))
 
 # 8.1.0
 
