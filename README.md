@@ -42,7 +42,7 @@ We recommend doing this in your tests.
 ### Get started
 ```toml
 [dependencies]
-ts-rs = "10.0"
+ts-rs = "10.1"
 ```
 
 ```rust
@@ -56,7 +56,13 @@ struct User {
     last_name: String,
 }
 ```
-When running `cargo test`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
+
+When running `cargo test` or `cargo test export_bindings`, the TypeScript bindings will be exported to the file `bindings/User.ts`
+and will contain the following code:
+
+```ts
+export type User = { user_id: number, first_name: string, last_name: string, };
+```
 
 ### Features
 - generate type declarations from rust structs
@@ -118,6 +124,6 @@ Feel free to open an issue, discuss using GitHub discussions or open a PR.
 [See CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
 
 ### MSRV
-The Minimum Supported Rust Version for this crate is 1.63.0
+The Minimum Supported Rust Version for this crate is 1.78.0
 
 License: MIT

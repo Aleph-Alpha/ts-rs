@@ -40,7 +40,7 @@
 //! ## Get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "10.0"
+//! ts-rs = "10.1"
 //! ```
 //!
 //! ```rust
@@ -54,7 +54,13 @@
 //!     last_name: String,
 //! }
 //! ```
-//! When running `cargo test`, the TypeScript bindings will be exported to the file `bindings/User.ts`.
+//!
+//! When running `cargo test` or `cargo test export_bindings`, the TypeScript bindings will be exported to the file `bindings/User.ts`
+//! and will contain the following code:
+//!
+//! ```ts
+//! export type User = { user_id: number, first_name: string, last_name: string, };
+//! ```
 //!
 //! ## Features
 //! - generate type declarations from rust structs
@@ -116,7 +122,7 @@
 //! [See CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
 //!
 //! ## MSRV
-//! The Minimum Supported Rust Version for this crate is 1.63.0
+//! The Minimum Supported Rust Version for this crate is 1.78.0
 
 use std::{
     any::TypeId,
@@ -280,6 +286,12 @@ mod tokio;
 ///   Include the structs name (or value of `#[ts(rename = "..")]`) as a field with the given key.
 ///   <br/><br/>
 ///
+/// - **`#[ts(optional_fields)]`**  
+///   Makes all `Option<T>` fields in a struct optional.
+///   If `#[ts(optional_fields)]` is present, `t?: T` is generated for every `Option<T>` field of the struct.  
+///   If `#[ts(optional_fields = nullable)]` is present, `t?: T | null` is generated for every `Option<T>` field of the struct.  
+///   <br/><br/>
+///
 /// ### struct field attributes
 ///
 /// - **`#[ts(type = "..")]`**  
@@ -337,7 +349,7 @@ mod tokio;
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///
-/// - **`#[ts(rename_all_fieds = "..")]`**  
+/// - **`#[ts(rename_all_fields = "..")]`**  
 ///   Renames the fields of all the struct variants of this enum. This is equivalent to using
 ///   `#[ts(rename_all = "..")]` on all of the enum's variants.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
@@ -374,6 +386,7 @@ pub trait TS {
     /// struct GenericType<A, B>(A, B);
     /// impl<A, B> TS for GenericType<A, B> {
     ///     type WithoutGenerics = GenericType<ts_rs::Dummy, ts_rs::Dummy>;
+    ///     type OptionInnerType = Self;
     ///     // ...
     ///     # fn decl() -> String { todo!() }
     ///     # fn decl_concrete() -> String { todo!() }
@@ -384,9 +397,16 @@ pub trait TS {
     /// ```
     type WithoutGenerics: TS + ?Sized;
 
+    /// If the implementing type is `std::option::Option<T>`, then this associated type is set to `T`.
+    /// All other implementations of `TS` should set this type to `Self` instead.
+    type OptionInnerType: ?Sized;
+
     /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
     /// automatically read from your doc comments or `#[doc = ".."]` attributes
     const DOCS: Option<&'static str> = None;
+
+    #[doc(hidden)]
+    const IS_OPTION: bool = false;
 
     /// Identifier of this type, excluding generic parameters.
     fn ident() -> String {
@@ -445,7 +465,7 @@ pub trait TS {
     {
         let mut deps: Vec<Dependency> = vec![];
         struct Visit<'a>(&'a mut Vec<Dependency>);
-        impl<'a> TypeVisitor for Visit<'a> {
+        impl TypeVisitor for Visit<'_> {
             fn visit<T: TS + 'static + ?Sized>(&mut self) {
                 if let Some(dep) = Dependency::from_ty::<T>() {
                     self.0.push(dep);
@@ -613,11 +633,22 @@ impl Dependency {
     }
 }
 
+#[doc(hidden)]
+#[diagnostic::on_unimplemented(
+    message = "`#[ts(optional)]` can only be used on fields of type `Option`",
+    note = "`#[ts(optional)]` was used on a field of type {Self}, which is not permitted",
+    label = "`#[ts(optional)]` is not allowed on field of type {Self}"
+)]
+pub trait IsOption {}
+
+impl<T> IsOption for Option<T> {}
+
 // generate impls for primitive types
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:literal),*) => { $($(
         impl TS for $ty {
             type WithoutGenerics = Self;
+            type OptionInnerType = Self;
             fn name() -> String { $l.to_owned() }
             fn inline() -> String { <Self as $crate::TS>::name() }
             fn inline_flattened() -> String { panic!("{} cannot be flattened", <Self as $crate::TS>::name()) }
@@ -631,6 +662,7 @@ macro_rules! impl_tuples {
     ( impl $($i:ident),* ) => {
         impl<$($i: TS),*> TS for ($($i,)*) {
             type WithoutGenerics = (Dummy, );
+            type OptionInnerType = Self;
             fn name() -> String {
                 format!("[{}]", [$(<$i as $crate::TS>::name()),*].join(", "))
             }
@@ -663,6 +695,7 @@ macro_rules! impl_wrapper {
     ($($t:tt)*) => {
         $($t)* {
             type WithoutGenerics = Self;
+            type OptionInnerType = Self;
             fn name() -> String { T::name() }
             fn inline() -> String { T::inline() }
             fn inline_flattened() -> String { T::inline_flattened() }
@@ -691,6 +724,7 @@ macro_rules! impl_shadow {
     (as $s:ty: $($impl:tt)*) => {
         $($impl)* {
             type WithoutGenerics = <$s as $crate::TS>::WithoutGenerics;
+            type OptionInnerType = <$s as $crate::TS>::OptionInnerType;
             fn ident() -> String { <$s as $crate::TS>::ident() }
             fn name() -> String { <$s as $crate::TS>::name() }
             fn inline() -> String { <$s as $crate::TS>::inline() }
@@ -716,6 +750,8 @@ macro_rules! impl_shadow {
 
 impl<T: TS> TS for Option<T> {
     type WithoutGenerics = Self;
+    type OptionInnerType = T;
+    const IS_OPTION: bool = true;
 
     fn name() -> String {
         format!("{} | null", T::name())
@@ -755,6 +791,7 @@ impl<T: TS> TS for Option<T> {
 
 impl<T: TS, E: TS> TS for Result<T, E> {
     type WithoutGenerics = Result<Dummy, Dummy>;
+    type OptionInnerType = Self;
 
     fn name() -> String {
         format!("{{ Ok : {} }} | {{ Err : {} }}", T::name(), E::name())
@@ -797,6 +834,7 @@ impl<T: TS, E: TS> TS for Result<T, E> {
 
 impl<T: TS> TS for Vec<T> {
     type WithoutGenerics = Vec<Dummy>;
+    type OptionInnerType = Self;
 
     fn ident() -> String {
         "Array".to_owned()
@@ -842,6 +880,8 @@ impl<T: TS> TS for Vec<T> {
 const ARRAY_TUPLE_LIMIT: usize = 64;
 impl<T: TS, const N: usize> TS for [T; N] {
     type WithoutGenerics = [Dummy; N];
+    type OptionInnerType = Self;
+
     fn name() -> String {
         if N > ARRAY_TUPLE_LIMIT {
             return Vec::<T>::name();
@@ -894,6 +934,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     type WithoutGenerics = HashMap<Dummy, Dummy>;
+    type OptionInnerType = Self;
 
     fn ident() -> String {
         panic!()
@@ -940,6 +981,8 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
 
 impl<I: TS> TS for Range<I> {
     type WithoutGenerics = Range<Dummy>;
+    type OptionInnerType = Self;
+
     fn name() -> String {
         format!("{{ start: {}, end: {}, }}", I::name(), I::name())
     }
@@ -1072,6 +1115,8 @@ impl std::fmt::Display for Dummy {
 
 impl TS for Dummy {
     type WithoutGenerics = Self;
+    type OptionInnerType = Self;
+
     fn name() -> String {
         "Dummy".to_owned()
     }

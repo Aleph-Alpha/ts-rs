@@ -37,7 +37,7 @@ fn type_def(attr: &StructAttr, ident: &str, fields: &Fields) -> Result<DerivedTS
 
     match fields {
         Fields::Named(named) => match named.named.len() {
-            0 => unit::empty_object(attr, &name),
+            0 if attr.tag.is_none() => unit::empty_object(attr, &name),
             _ => named::named(attr, &name, named),
         },
         Fields::Unnamed(unnamed) => match unnamed.unnamed.len() {

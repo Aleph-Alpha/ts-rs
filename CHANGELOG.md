@@ -1,5 +1,23 @@
 # master
 ### Breaking
+- Added `OptionInnerType` associated type to the `TS` trait. If you manually implement `TS`, you must set this associated type to `Self` in all of your implementations.
+- Raised MSRV to `1.78.0` due to use of `#[diagnostic::on_unimplemented]` and `let ... else { ... }`
+
+### Features
+- Added `#[ts(optional_fields)]` and `#[ts(optional_fields = nullable)]` attribute to structs, this attribute is equivalent to using the corresponding `#[ts(optional)]` or `#[ts(optional = nullable)]` on every field of the struct. ([#366](https://github.com/Aleph-Alpha/ts-rs/pull/366))
+
+### Fixes
+- Fix `#[ts(optional)]` error when using a type alias for `Option` or fully qqualifying it as `core::option::Option` ([#366](https://github.com/Aleph-Alpha/ts-rs/pull/366))
+
+# 10.1.0
+### Features
+- Add support for synchronization primitives from `tokio` (feature `tokio-impl`)
+### Fixes
+- Fix incorrect behavior of the tag attribute for structs without any fields declared with braces
+- Fix representation of `serde_json::Value`
+
+# 10.0.0
+### Breaking
 - Change how `HashMap<K, V>` is represented in TypeScript. The resulting bindings (`{ [key in K]?: V }` instead of `{ [key: K]: V }`) are more accurate and flexible.
 
 ### Features
