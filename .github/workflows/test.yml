@@ -103,7 +103,7 @@ jobs:
         working-directory: ts-rs
         run: |
           cargo install cargo-msrv 
-          cargo msrv verify
+          cargo msrv verify --all-features
 
   test-all-features:
     name: Test ts-rs with --all-features
