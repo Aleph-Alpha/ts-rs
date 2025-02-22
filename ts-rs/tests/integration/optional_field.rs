@@ -87,3 +87,68 @@ fn inline() {
     let c = "c: number | null";
     assert_eq!(Inline::inline(), format!("{{ x: {{ {a}, {b}, {c}, }}, }}"));
 }
+
+type Foo = Option<i32>;
+type Bar<T> = Option<T>;
+
+#[derive(TS)]
+#[ts(export, export_to = "optional_field/", optional_fields)]
+struct OptionalStruct {
+    a: Option<i32>,
+    b: Option<i32>,
+
+    #[ts(optional = nullable)]
+    c: Option<i32>,
+
+    d: i32,
+
+    e: Foo,
+    f: Bar<i32>,
+
+    #[ts(type = "string")]
+    g: Option<i32>,
+
+    #[ts(as = "String")]
+    h: Option<i32>,
+}
+
+#[test]
+fn struct_optional() {
+    assert_eq!(
+        OptionalStruct::inline(),
+        format!(
+            "{{ a?: number, b?: number, c?: number | null, d: number, e?: number, f?: number, g: string, h: string, }}"
+        )
+    )
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "optional_field/", optional_fields = nullable)]
+struct NullableStruct {
+    a: Option<i32>,
+    b: Option<i32>,
+
+    #[ts(optional = nullable)]
+    c: Option<i32>,
+
+    d: i32,
+
+    e: Foo,
+    f: Bar<i32>,
+
+    #[ts(type = "string")]
+    g: Option<i32>,
+
+    #[ts(as = "String")]
+    h: Option<i32>,
+}
+
+#[test]
+fn struct_nullable() {
+    assert_eq!(
+        NullableStruct::inline(),
+        format!(
+            "{{ a?: number | null, b?: number | null, c?: number | null, d: number, e?: number | null, f?: number | null, g: string, h: string, }}"
+        )
+    )
+}

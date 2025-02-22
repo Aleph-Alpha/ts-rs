@@ -79,6 +79,7 @@ impl DerivedTS {
         quote! {
             #impl_start {
                 #assoc_type
+                type OptionInnerType = Self;
 
                 fn ident() -> String {
                     #ident.to_owned()
@@ -155,6 +156,7 @@ impl DerivedTS {
                 }
                 impl #crate_rename::TS for #generics {
                     type WithoutGenerics = #generics;
+                    type OptionInnerType = Self;
                     fn name() -> String { stringify!(#generics).to_owned() }
                     fn inline() -> String { panic!("{} cannot be inlined", #name) }
                     fn inline_flattened() -> String { stringify!(#generics).to_owned() }
