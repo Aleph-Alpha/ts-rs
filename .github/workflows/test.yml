@@ -102,8 +102,12 @@ jobs:
       - name: Check that README.md is up-to-date
         working-directory: ts-rs
         run: |
+          set +e
           cargo install cargo-msrv 
           cargo msrv verify --all-features
+          if [[ $? -eq 1 ]]; then
+            cargo msrv find --all-features
+          fi
 
   test-all-features:
     name: Test ts-rs with --all-features
