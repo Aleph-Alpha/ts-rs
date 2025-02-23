@@ -79,6 +79,7 @@
 //! | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
 //! | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
 //! | import-esm         | When enabled,`import` statements in the generated file will have the `.js` extension in the end of the path to conform to the ES Modules spec. <br/> Example: `import { MyStruct } from "./my_struct.js"` |
+//! | import-deno        | When enabled,`import` statements in the generated file will have the `.ts` extension in the end of the path to conform to the Deno spec. <br/> Example: `import { MyStruct } from "./my_struct.ts"`       |
 //! | serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                                                                                |
 //! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
 //! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
@@ -90,8 +91,8 @@
 //! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
 //! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 //! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
-//! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
-//! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                    |
+//! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                  |
+//! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
 //!
 //! <br/>
 //!

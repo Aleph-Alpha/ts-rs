@@ -42,7 +42,7 @@ enum Enum {
 }
 
 #[test]
-#[cfg(not(feature = "import-esm"))]
+#[cfg(not(any(feature = "import-esm", feature = "import-deno")))]
 fn issue_232() {
     println!("{}", StateInlinedVec::export_to_string().unwrap());
     assert_eq!(
