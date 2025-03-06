@@ -18,8 +18,7 @@ use crate::TS;
 mod error;
 mod path;
 
-static EXPORT_PATHS: OnceLock<Mutex<HashMap<PathBuf, HashSet<String>>>> =
-    OnceLock::new();
+static EXPORT_PATHS: OnceLock<Mutex<HashMap<PathBuf, HashSet<String>>>> = OnceLock::new();
 
 fn get_export_paths<'a>() -> &'a Mutex<HashMap<PathBuf, HashSet<String>>> {
     EXPORT_PATHS.get_or_init(|| Default::default())
@@ -53,7 +52,7 @@ mod recursive_export {
         fn visit<T: TS + 'static + ?Sized>(&mut self) {
             // if an error occurred previously, or the type cannot be exported (it's a primitive),
             // we return
-            if self.error.is_some() || T::output_path().is_none() {
+            if self.error.is_some() || <T as crate::TS>::output_path().is_none() {
                 return;
             }
 
@@ -78,7 +77,7 @@ mod recursive_export {
             out_dir,
             error: None,
         };
-        T::visit_dependencies(&mut visitor);
+        <T as crate::TS>::visit_dependencies(&mut visitor);
 
         if let Some(e) = visitor.error {
             Err(e)
@@ -92,7 +91,7 @@ mod recursive_export {
 pub(crate) fn export_into<T: TS + ?Sized + 'static>(
     out_dir: impl AsRef<Path>,
 ) -> Result<(), ExportError> {
-    let path = T::output_path()
+    let path = <T as crate::TS>::output_path()
         .ok_or_else(std::any::type_name::<T>)
         .map_err(ExportError::CannotBeExported)?;
     let path = out_dir.as_ref().join(path);
@@ -105,7 +104,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     path: P,
 ) -> Result<(), ExportError> {
     let path = path.as_ref().to_owned();
-    let type_name = T::ident();
+    let type_name = <T as crate::TS>::ident();
 
     #[allow(unused_mut)]
     let mut buffer = export_to_string::<T>()?;
@@ -264,7 +263,7 @@ fn merge(original_contents: String, new_contents: String) -> String {
 pub(crate) fn export_to_string<T: TS + ?Sized + 'static>() -> Result<String, ExportError> {
     let mut buffer = String::with_capacity(1024);
     buffer.push_str(NOTE);
-    generate_imports::<T::WithoutGenerics>(&mut buffer, default_out_dir())?;
+    generate_imports::<<T as crate::TS>::WithoutGenerics>(&mut buffer, default_out_dir())?;
     generate_decl::<T>(&mut buffer);
     buffer.push('\n');
     Ok(buffer)
@@ -280,14 +279,14 @@ pub(crate) fn default_out_dir() -> Cow<'static, Path> {
 /// Push the declaration of `T`
 fn generate_decl<T: TS + ?Sized>(out: &mut String) {
     // Type Docs
-    let docs = &T::DOCS;
+    let docs = &<T as crate::TS>::DOCS;
     if let Some(docs) = docs {
         out.push_str(docs);
     }
 
     // Type Definition
     out.push_str("export ");
-    out.push_str(&T::decl());
+    out.push_str(&<T as crate::TS>::decl());
 }
 
 /// Push an import statement for all dependencies of `T`.
@@ -295,12 +294,12 @@ fn generate_imports<T: TS + ?Sized + 'static>(
     out: &mut String,
     out_dir: impl AsRef<Path>,
 ) -> Result<(), ExportError> {
-    let path = T::output_path()
+    let path = <T as crate::TS>::output_path()
         .ok_or_else(std::any::type_name::<T>)
         .map(|x| out_dir.as_ref().join(x))
         .map_err(ExportError::CannotBeExported)?;
 
-    let deps = T::dependencies();
+    let deps = <T as crate::TS>::dependencies();
     let deduplicated_deps = deps
         .iter()
         .filter(|dep| dep.type_id != TypeId::of::<T>())
