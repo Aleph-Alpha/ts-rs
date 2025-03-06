@@ -8,6 +8,7 @@
 
 ### Fixes
 - Fix `#[ts(optional)]` error when using a type alias for `Option` or fully qqualifying it as `core::option::Option` ([#366](https://github.com/Aleph-Alpha/ts-rs/pull/366))
+- Fix missing import statements when using `#[ts(as = "...")]` at the top level of a struct/enum ([#385](https://github.com/Aleph-Alpha/ts-rs/pull/385))
 
 # 10.1.0
 ### Features
