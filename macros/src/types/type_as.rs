@@ -14,8 +14,8 @@ pub(crate) fn type_as_struct(attr: &StructAttr, name: &str, type_as: &Type) -> R
     dependencies.append_from(type_as);
 
     Ok(DerivedTS {
-        crate_rename,
-        inline: quote!(#type_as::inline()),
+        crate_rename: crate_rename.clone(),
+        inline: quote!(<#type_as as #crate_rename::TS>::inline()),
         inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies,
@@ -34,8 +34,8 @@ pub(crate) fn type_as_enum(attr: &EnumAttr, name: &str, type_as: &Type) -> Resul
     dependencies.append_from(type_as);
 
     Ok(DerivedTS {
-        crate_rename,
-        inline: quote!(#type_as::inline()),
+        crate_rename: crate_rename.clone(),
+        inline: quote!(<#type_as as #crate_rename::TS>::inline()),
         inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies,

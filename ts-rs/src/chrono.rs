@@ -16,9 +16,9 @@ macro_rules! impl_dummy {
 
             fn name() -> String { String::new() }
             fn inline() -> String { String::new() }
-            fn inline_flattened() -> String { panic!("{} cannot be flattened", Self::name()) }
-            fn decl() -> String { panic!("{} cannot be declared", Self::name()) }
-            fn decl_concrete() -> String { panic!("{} cannot be declared", Self::name()) }
+            fn inline_flattened() -> String { panic!("{} cannot be flattened", <Self as $crate::TS>::name()) }
+            fn decl() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
+            fn decl_concrete() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
         }
     )*};
 }
@@ -40,13 +40,13 @@ impl<T: TimeZone + 'static> TS for DateTime<T> {
         "string".to_owned()
     }
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", Self::name())
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
     fn decl() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
     fn decl_concrete() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 }
 
@@ -64,12 +64,12 @@ impl<T: TimeZone + 'static> TS for Date<T> {
         "string".to_owned()
     }
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", Self::name())
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
     fn decl() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
     fn decl_concrete() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 }
