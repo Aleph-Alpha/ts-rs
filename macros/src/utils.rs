@@ -257,7 +257,7 @@ pub(crate) mod warning {
     }
 }
 #[cfg(not(feature = "serde-compat"))]
-mod warning {
+pub(crate) mod warning {
     use std::fmt::Display;
 
     // Just a stub!
