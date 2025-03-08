@@ -76,16 +76,17 @@ macro_rules! impl_parse {
                     match &*key.to_string() {
                         $($k => $e,)*
                         #[allow(unreachable_patterns)]
-                        _ => {
-                            let tokens = crate::attr::skip_until_next_comma($input);
+                        x => {
+                            if cfg!(not(feature = "no-serde-warnings")) {
+                                let tokens = crate::attr::skip_until_next_comma($input);
 
-                            #[cfg(not(feature = "no-serde-warnings"))]
-                            crate::utils::warning::print_warning(
-                                "failed to parse serde attribute",
-                                format!("{} {tokens}", key.to_string()),
-                                "ts-rs failed to parse this attribute. It will be ignored.",
-                            )
-                            .unwrap();
+                                crate::utils::warning::print_warning(
+                                    "failed to parse serde attribute",
+                                    format!("{x} {tokens}"),
+                                    "ts-rs failed to parse this attribute. It will be ignored.",
+                                )
+                                .unwrap();
+                            }
                         }
                     }
 
