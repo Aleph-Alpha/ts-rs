@@ -86,6 +86,8 @@ macro_rules! impl_parse {
                                     "ts-rs failed to parse this attribute. It will be ignored.",
                                 )
                                 .unwrap();
+                            } else {
+                                crate::attr::skip_until_next_comma($input);
                             }
                         }
                     }
