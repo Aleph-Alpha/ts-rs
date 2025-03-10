@@ -39,12 +39,22 @@ pub struct InputField {
 
 #[test]
 fn complex_flattened_type() {
+    let number_type = if cfg!(target_pointer_width = "64") {
+        "bigint"
+    } else {
+        "number"
+    };
+
     assert_eq!(
         InputFieldElement::decl(),
-        r#"type InputFieldElement = { "type": "Label", text: string, } | { "type": "Input", name: string | null, placeholder: string | null, default: string | null, } & ({ "input_type": "Text" } | { "input_type": "Expression" } | { "input_type": "Number", min: number | null, max: number | null, } | { "input_type": "Dropdown", options: Array<[string, string]>, });"#
+        format!(
+            r#"type InputFieldElement = {{ "type": "Label", text: string, }} | {{ "type": "Input", name: string | null, placeholder: string | null, default: string | null, }} & ({{ "input_type": "Text" }} | {{ "input_type": "Expression" }} | {{ "input_type": "Number", min: {number_type} | null, max: {number_type} | null, }} | {{ "input_type": "Dropdown", options: Array<[string, string]>, }});"#
+        )
     );
     assert_eq!(
         InputField::decl(),
-        r#"type InputField = { "type": "Label", text: string, } | { "type": "Input", name: string | null, placeholder: string | null, default: string | null, } & ({ "input_type": "Text" } | { "input_type": "Expression" } | { "input_type": "Number", min: number | null, max: number | null, } | { "input_type": "Dropdown", options: Array<[string, string]>, });"#
+        format!(
+            r#"type InputField = {{ "type": "Label", text: string, }} | {{ "type": "Input", name: string | null, placeholder: string | null, default: string | null, }} & ({{ "input_type": "Text" }} | {{ "input_type": "Expression" }} | {{ "input_type": "Number", min: {number_type} | null, max: {number_type} | null, }} | {{ "input_type": "Dropdown", options: Array<[string, string]>, }});"#
+        )
     )
 }
