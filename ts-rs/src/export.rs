@@ -195,21 +195,54 @@ fn merge(original_contents: String, new_contents: String) -> String {
         .expect(HEADER_ERROR_MESSAGE);
     let (new_header, new_decl) = new_contents.split_once("\n\n").expect(HEADER_ERROR_MESSAGE);
 
-    let imports = original_header
+    let import_lines = original_header
         .lines()
         .skip(1)
         .chain(new_header.lines().skip(1))
-        .collect::<BTreeSet<_>>();
+        .map(|line| {
+            let (import, from) = line.split_once(" from ").unwrap();
+            let path = from.trim_start_matches('"').trim_end_matches(&['"', ';']);
 
-    let import_len = imports.iter().map(|&x| x.len()).sum::<usize>() + imports.len();
-    let capacity = import_len + original_decls.len() + new_decl.len() + 2;
+            let types = import
+                .trim_start_matches("import type { ")
+                .trim_end_matches(" }")
+                .split(", ");
+
+            (path, types)
+        });
+
+    let mut imports_map: BTreeMap<&str, BTreeSet<&str>> = Default::default();
+
+    for (path, types) in import_lines {
+        let entry = imports_map.entry(path).or_default();
+
+        for ty in types {
+            entry.insert(ty);
+        }
+    }
+
+    let mut imports = String::new();
+    for (path, types) in imports_map {
+        imports.push_str("import type {");
+
+        let mut types = types.iter().peekable();
+        while let Some(ty) = types.next() {
+            imports.push_str(ty);
+
+            if types.peek().is_some() {
+                imports.push_str(", ");
+            }
+        }
+
+        imports.push_str(" } from \"");
+        imports.push_str(path);
+        imports.push_str("\";\n");
+    }
+
+    let capacity = imports.len() + original_decls.len() + new_decl.len() + 2;
 
     let mut buffer = String::with_capacity(capacity);
-
-    for import in imports {
-        buffer.push_str(import);
-        buffer.push('\n')
-    }
+    buffer.push_str(&imports);
 
     let new_decl = new_decl.trim_matches('\n');
 
@@ -306,6 +339,8 @@ fn generate_imports<T: TS + ?Sized + 'static>(
         .map(|dep| (&dep.ts_name, dep))
         .collect::<BTreeMap<_, _>>();
 
+    let mut imports: BTreeMap<String, BTreeSet<&str>> = Default::default();
+
     for (_, dep) in deduplicated_deps {
         let dep_path = out_dir.as_ref().join(dep.output_path);
         let rel_path = import_path(&path, &dep_path)?;
@@ -322,12 +357,25 @@ fn generate_imports<T: TS + ?Sized + 'static>(
             continue;
         }
 
-        writeln!(
-            out,
-            r#"import type {{ {} }} from "{}";"#,
-            &dep.ts_name, rel_path
-        )?;
+        imports.entry(rel_path).or_default().insert(&dep.ts_name);
     }
+
+    for (path, types) in imports {
+        write!(out, "import type {{ ")?;
+
+        let mut types = types.iter().peekable();
+
+        while let Some(ty) = types.next() {
+            write!(out, "{ty}")?;
+
+            if types.peek().is_some() {
+                write!(out, ", ")?;
+            }
+        }
+
+        writeln!(out, r#" }} from "{path}";"#)?;
+    }
+
     writeln!(out)?;
     Ok(())
 }
