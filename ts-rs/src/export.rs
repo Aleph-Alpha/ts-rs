@@ -223,7 +223,7 @@ fn merge(original_contents: String, new_contents: String) -> String {
 
     let mut imports = String::new();
     for (path, types) in imports_map {
-        imports.push_str("import type {");
+        imports.push_str("import type { ");
 
         let mut types = types.iter().peekable();
         while let Some(ty) = types.next() {
