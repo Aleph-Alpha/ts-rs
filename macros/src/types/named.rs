@@ -126,9 +126,9 @@ fn format_field(
 
     let ty = field_attr.type_as(&field.ty);
 
-    let (optional_annotation, nullable) = match (struct_optional, field_attr.optional) {
+    let (optional_annotation, nullable) = match (struct_optional, field_attr.optional, field_attr.skip_serializing_if) {
         // `#[ts(optional)]` on field takes precedence, and is enforced **AT COMPILE TIME**
-        (_, Optional::Optional { nullable }) => (
+        (_, Optional::Optional { nullable }, _) => (
             // expression that evaluates to the string "?", but fails to compile if `ty` is not an `Option`.
             quote_spanned! { field.span() => {
                 fn check_that_field_is_option<T: #crate_rename::IsOption>(_: std::marker::PhantomData<T>) {}
@@ -140,12 +140,13 @@ fn format_field(
         ),
         // `#[ts(optional)]` on the struct acts as `#[ts(optional)]` on a field, but does not error on non-`Option`
         // fields. Instead, it is a no-op.
-        (Optional::Optional { nullable }, _) => (
+        (Optional::Optional { nullable }, _, _) => (
             quote! {
                 if <#ty as #crate_rename::TS>::IS_OPTION { "?" } else { "" }
             },
             nullable,
         ),
+        (_, _, true) => (quote!("?"), false),
         _ => (quote!(""), true),
     };
 

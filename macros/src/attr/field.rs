@@ -14,6 +14,7 @@ pub struct FieldAttr {
     pub rename: Option<String>,
     pub inline: bool,
     pub skip: bool,
+    pub skip_serializing_if: bool,
     pub optional: Optional,
     pub flatten: bool,
     pub docs: String,
@@ -55,6 +56,7 @@ impl Attr for FieldAttr {
             rename: self.rename.or(other.rename),
             inline: self.inline || other.inline,
             skip: self.skip || other.skip,
+            skip_serializing_if: self.skip_serializing_if || other.skip_serializing_if,
             optional: self.optional.or(other.optional),
             flatten: self.flatten || other.flatten,
 
@@ -179,6 +181,10 @@ impl_parse! {
     Serde<FieldAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "skip" => out.0.skip = true,
+        "skip_serializing_if" => {
+            let _ = parse_assign_str(input)?;
+            out.0.skip_serializing_if = true;
+        },
         "flatten" => out.0.flatten = true,
         // parse #[serde(default)] to not emit a warning
         "default" => {
