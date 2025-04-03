@@ -34,6 +34,7 @@ mod issue_80;
 mod leading_colon;
 mod lifetimes;
 mod list;
+mod merge_same_file_imports;
 mod nested;
 mod optional_field;
 mod path_bug;
