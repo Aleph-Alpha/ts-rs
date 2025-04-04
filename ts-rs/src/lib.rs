@@ -208,7 +208,7 @@ mod tokio;
 ///   <br/><br/>
 ///
 /// - **`#[ts(as = "..")]`**  
-///   Overrides the type used in Typescript, using the provided Rust type instead.
+///   Overrides the type used in Typescript, using the provided Rust type instead.  
 ///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
 ///   <br/><br/>
 ///
@@ -218,7 +218,8 @@ mod tokio;
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename = "..")]`**  
-///   Sets the typescript name of the generated type
+///   Sets the typescript name of the generated type.  
+///   Also accepts expressions, e.g `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`.
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename_all = "..")]`**  
@@ -358,7 +359,8 @@ mod tokio;
 /// ### enum variant attributes
 ///
 /// - **`#[ts(rename = "..")]`**  
-///   Renames this variant. To rename all variants of an enum, see the container attribute `#[ts(rename_all = "..")]`.
+///   Renames this variant. To rename all variants of an enum, see the container attribute `#[ts(rename_all = "..")]`.  
+///   This attribute also accepts expressions, e.g `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`.
 ///   <br/><br/>
 ///
 /// - **`#[ts(skip)]`**  
