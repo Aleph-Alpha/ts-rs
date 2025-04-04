@@ -203,7 +203,8 @@ mod tokio;
 ///   Specifies where the type should be exported to. Defaults to `<name>.ts`.  
 ///   The path given to the `export_to` attribute is relative to the `TS_RS_EXPORT_DIR` environment variable,
 ///   or, if `TS_RS_EXPORT_DIR` is not set, to `./bindings`  
-///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
+///   If the provided path ends in a trailing `/`, it is interpreted as a directory.  
+///   This attribute also accepts arbitrary expressions.  
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
 ///   <br/><br/>
 ///
