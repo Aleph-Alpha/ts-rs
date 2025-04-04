@@ -44,7 +44,7 @@ impl DerivedTS {
             // expression of type `String` containing the file path
             let path_string = match &self.export_to {
                 Some(dir_or_file) => quote![{
-                    let dir_or_file = #dir_or_file;
+                    let dir_or_file = format!("{}", #dir_or_file);
                     if dir_or_file.ends_with('/') {
                         // export into directory
                         format!("{dir_or_file}{}.ts", #ts_name)
