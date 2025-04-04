@@ -12,6 +12,7 @@ mod enum_flattening_nested;
 mod enum_struct_rename_all;
 mod enum_variant_annotation;
 mod export_manually;
+mod export_to;
 mod field_rename;
 mod flatten;
 mod generic_fields;
