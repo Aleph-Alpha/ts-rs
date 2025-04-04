@@ -342,7 +342,7 @@ fn generate_imports<T: TS + ?Sized + 'static>(
     let mut imports: BTreeMap<String, BTreeSet<&str>> = Default::default();
 
     for (_, dep) in deduplicated_deps {
-        let dep_path = out_dir.as_ref().join(dep.output_path);
+        let dep_path = out_dir.as_ref().join(&dep.output_path);
         let rel_path = import_path(&path, &dep_path)?;
 
         let is_same_file = path

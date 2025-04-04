@@ -20,7 +20,7 @@ trait Malicious {
     fn export_all() -> Result<(), ExportError> { unimplemented!() }
     fn export_all_to(out_dir: impl AsRef<Path>) -> Result<(), ExportError> { unimplemented!() }
     fn export_to_string() -> Result<String, ExportError> { unimplemented!() }
-    fn output_path() -> Option<&'static Path> { unimplemented!() }
+    fn output_path() -> Option<PathBuf> { unimplemented!() }
     fn default_output_path() -> Option<PathBuf> { unimplemented!() }
 }
 

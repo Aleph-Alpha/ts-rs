@@ -1,5 +1,6 @@
-use serde::de::Expected;
 use std::fmt::Write;
+
+use serde::de::Expected;
 use ts_rs::TS;
 
 #[derive(TS)]

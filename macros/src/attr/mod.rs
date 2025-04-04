@@ -2,13 +2,13 @@ use std::collections::HashMap;
 
 pub use field::*;
 use proc_macro2::TokenTree;
+use quote::quote;
 pub use r#enum::*;
 pub use r#struct::*;
-use quote::quote;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Error, Ident, Lit, Path, Result, Token, WherePredicate,
+    Error, Expr, Ident, Lit, Path, Result, Token, WherePredicate,
 };
 pub use variant::*;
 
@@ -147,6 +147,11 @@ fn skip_until_next_comma(input: ParseStream) -> proc_macro2::TokenStream {
             Ok((stuff, rest))
         })
         .unwrap()
+}
+
+fn parse_assign_expr(input: ParseStream) -> Result<Expr> {
+    input.parse::<Token![=]>()?;
+    Expr::parse(input)
 }
 
 fn parse_assign_str(input: ParseStream) -> Result<String> {

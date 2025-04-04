@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use syn::{parse_quote, Attribute, Ident, ItemEnum, Path, Result, Type, WherePredicate};
+use syn::{parse_quote, Attribute, Expr, Ident, ItemEnum, Path, Result, Type, WherePredicate};
 
-use super::{parse_assign_from_str, parse_bound, Attr, ContainerAttr, Serde};
+use super::{parse_assign_expr, parse_assign_from_str, parse_bound, Attr, ContainerAttr, Serde};
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
     utils::{parse_attrs, parse_docs},
@@ -15,7 +15,7 @@ pub struct EnumAttr {
     pub type_override: Option<String>,
     pub rename_all: Option<Inflection>,
     pub rename_all_fields: Option<Inflection>,
-    pub rename: Option<String>,
+    pub rename: Option<Expr>,
     pub export_to: Option<String>,
     pub export: bool,
     pub docs: String,
@@ -209,7 +209,7 @@ impl_parse! {
         "crate" => out.crate_rename = Some(parse_assign_from_str(input)?),
         "as" => out.type_as = Some(parse_assign_from_str(input)?),
         "type" => out.type_override = Some(parse_assign_str(input)?),
-        "rename" => out.rename = Some(parse_assign_str(input)?),
+        "rename" => out.rename = Some(parse_assign_expr(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
         "rename_all_fields" => out.rename_all_fields = Some(parse_assign_inflection(input)?),
         "export_to" => out.export_to = Some(parse_assign_str(input)?),
@@ -224,7 +224,7 @@ impl_parse! {
 
 impl_parse! {
     Serde<EnumAttr>(input, out) {
-        "rename" => out.0.rename = Some(parse_assign_str(input)?),
+        "rename" => out.0.rename = Some(parse_assign_expr(input)?),
         "rename_all" => out.0.rename_all = Some(parse_assign_inflection(input)?),
         "rename_all_fields" => out.0.rename_all_fields = Some(parse_assign_inflection(input)?),
         "tag" => out.0.tag = Some(parse_assign_str(input)?),

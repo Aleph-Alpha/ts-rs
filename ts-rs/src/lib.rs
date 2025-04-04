@@ -208,7 +208,7 @@ mod tokio;
 ///   <br/><br/>
 ///
 /// - **`#[ts(as = "..")]`**  
-///   Overrides the type used in Typescript, using the provided Rust type instead.
+///   Overrides the type used in Typescript, using the provided Rust type instead.  
 ///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
 ///   <br/><br/>
 ///
@@ -218,7 +218,8 @@ mod tokio;
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename = "..")]`**  
-///   Sets the typescript name of the generated type
+///   Sets the typescript name of the generated type.  
+///   Also accepts expressions, e.g `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`.
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename_all = "..")]`**  
@@ -358,7 +359,8 @@ mod tokio;
 /// ### enum variant attributes
 ///
 /// - **`#[ts(rename = "..")]`**  
-///   Renames this variant. To rename all variants of an enum, see the container attribute `#[ts(rename_all = "..")]`.
+///   Renames this variant. To rename all variants of an enum, see the container attribute `#[ts(rename_all = "..")]`.  
+///   This attribute also accepts expressions, e.g `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`.
 ///   <br/><br/>
 ///
 /// - **`#[ts(skip)]`**  
@@ -575,7 +577,7 @@ pub trait TS {
     ///
     /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
     /// `None`.
-    fn output_path() -> Option<&'static Path> {
+    fn output_path() -> Option<PathBuf> {
         None
     }
 
@@ -613,10 +615,10 @@ pub struct Dependency {
     pub type_id: TypeId,
     /// Name of the type in TypeScript
     pub ts_name: String,
-    /// Path to where the type would be exported. By default a filename is derived from the types
+    /// Path to where the type would be exported. By default, a filename is derived from the types
     /// name, which can be customized with `#[ts(export_to = "..")]`.  
     /// This path does _not_ include a base directory.
-    pub output_path: &'static Path,
+    pub output_path: PathBuf,
 }
 
 impl Dependency {
@@ -743,7 +745,7 @@ macro_rules! impl_shadow {
             }
             fn decl() -> String { <$s as $crate::TS>::decl() }
             fn decl_concrete() -> String { <$s as $crate::TS>::decl_concrete() }
-            fn output_path() -> Option<&'static std::path::Path> { <$s as $crate::TS>::output_path() }
+            fn output_path() -> Option<std::path::PathBuf> { <$s as $crate::TS>::output_path() }
         }
     };
 }
