@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use syn::{parse_quote, Attribute, Expr, Fields, Ident, Path, Result, Type, WherePredicate};
 
-use super::{parse_assign_expr, parse_assign_from_str, parse_assign_inflection, parse_bound, parse_concrete, parse_optional, Attr, ContainerAttr, Optional, Serde, Tagged};
+use super::{
+    parse_assign_expr, parse_assign_from_str, parse_assign_inflection, parse_bound, parse_concrete,
+    parse_optional, Attr, ContainerAttr, Optional, Serde, Tagged,
+};
 use crate::{
     attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
     utils::{parse_attrs, parse_docs},

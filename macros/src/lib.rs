@@ -5,7 +5,11 @@ use std::collections::{HashMap, HashSet};
 
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
-use syn::{parse_quote, spanned::Spanned, ConstParam, Expr, GenericParam, Generics, Item, LifetimeParam, Path, Result, Type, TypeArray, TypeParam, TypeParen, TypePath, TypeReference, TypeSlice, TypeTuple, WhereClause, WherePredicate};
+use syn::{
+    parse_quote, spanned::Spanned, ConstParam, Expr, GenericParam, Generics, Item, LifetimeParam,
+    Path, Result, Type, TypeArray, TypeParam, TypeParen, TypePath, TypeReference, TypeSlice,
+    TypeTuple, WhereClause, WherePredicate,
+};
 
 use crate::{deps::Dependencies, utils::format_generics};
 
@@ -37,7 +41,7 @@ impl DerivedTS {
 
         let output_path_fn = {
             let ts_name = &self.ts_name;
-            // expression of type `String` containing the file path 
+            // expression of type `String` containing the file path
             let path_string = match self.export_to.as_deref() {
                 Some(dirname) if dirname.ends_with('/') => {
                     quote![format!("{}{}.ts", #dirname, #ts_name)]
@@ -45,7 +49,7 @@ impl DerivedTS {
                 Some(filename) => quote![#filename.to_owned()],
                 None => {
                     quote![format!("{}.ts", #ts_name)]
-                },
+                }
             };
 
             quote! {

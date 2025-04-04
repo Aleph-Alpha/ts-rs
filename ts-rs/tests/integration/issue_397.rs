@@ -1,9 +1,9 @@
 #[macro_export]
 macro_rules! get_model_name {
-    () => {{ 
+    () => {{
         let mut module = module_path!().rsplit_once("::").unwrap().1.to_owned();
         module[0..1].make_ascii_uppercase();
-        format!("{module}Model")  
+        format!("{module}Model")
     }};
 }
 
@@ -21,7 +21,7 @@ mod entities {
         })]
         struct Model;
     }
-    
+
     mod posts {
         use ts_rs::TS;
 

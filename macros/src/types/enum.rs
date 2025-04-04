@@ -1,14 +1,14 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Expr, Fields, ItemEnum, Variant};
+use syn::{ext::IdentExt, Expr, Fields, ItemEnum, Variant};
 
 use crate::{
     attr::{Attr, EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
     deps::Dependencies,
     types::{self, type_as, type_override},
+    utils::make_string_literal,
     DerivedTS,
 };
-use crate::utils::make_string_literal;
 
 pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     let enum_attr: EnumAttr = EnumAttr::from_attrs(&s.attrs)?;
@@ -19,7 +19,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 
     let name = match &enum_attr.rename {
         Some(existing) => existing.clone(),
-        None => make_string_literal(&s.ident.to_string(), s.ident.span())
+        None => make_string_literal(&s.ident.unraw().to_string(), s.ident.span()),
     };
 
     if let Some(attr_type_override) = &enum_attr.type_override {
@@ -84,8 +84,13 @@ fn format_variant(
     let untagged_variant = variant_attr.untagged;
     let ts_name = match (variant_attr.rename.clone(), &enum_attr.rename_all) {
         (Some(rn), _) => rn,
-        (None, None) => make_string_literal(&variant.ident.to_string(), variant.ident.span()),
-        (None, Some(rn)) => make_string_literal(&rn.apply(&variant.ident.to_string()), variant.ident.span()),
+        (None, None) => {
+            make_string_literal(&variant.ident.unraw().to_string(), variant.ident.span())
+        }
+        (None, Some(rn)) => make_string_literal(
+            &rn.apply(&variant.ident.unraw().to_string()),
+            variant.ident.span(),
+        ),
     };
 
     let struct_attr = StructAttr::from_variant(enum_attr, &variant_attr, &variant.fields);
@@ -147,7 +152,9 @@ fn format_variant(
                             quote!(<#ty as #crate_rename::TS>::name())
                         }
                     };
-                    quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #ts_name, #content, #ty))
+                    quote!(
+                        format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #ts_name, #content, #ty)
+                    )
                 }
             }
             Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name)),

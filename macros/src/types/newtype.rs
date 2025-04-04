@@ -7,7 +7,11 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn newtype(attr: &StructAttr, ts_name: Expr, fields: &FieldsUnnamed) -> Result<DerivedTS> {
+pub(crate) fn newtype(
+    attr: &StructAttr,
+    ts_name: Expr,
+    fields: &FieldsUnnamed,
+) -> Result<DerivedTS> {
     let inner = fields.unnamed.first().unwrap();
 
     let field_attr = FieldAttr::from_attrs(&inner.attrs)?;

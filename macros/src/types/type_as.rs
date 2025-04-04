@@ -7,7 +7,11 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn type_as_struct(attr: &StructAttr, ts_name: Expr, type_as: &Type) -> Result<DerivedTS> {
+pub(crate) fn type_as_struct(
+    attr: &StructAttr,
+    ts_name: Expr,
+    type_as: &Type,
+) -> Result<DerivedTS> {
     let crate_rename = attr.crate_rename();
 
     let mut dependencies = Dependencies::new(crate_rename.clone());

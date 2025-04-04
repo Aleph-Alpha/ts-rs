@@ -1,4 +1,4 @@
-use syn::{Expr, Fields, ItemStruct, Result};
+use syn::{ext::IdentExt, Expr, Fields, ItemStruct, Result};
 
 use crate::{
     attr::{Attr, StructAttr},
@@ -14,18 +14,22 @@ mod type_override;
 mod unit;
 
 pub(crate) use r#enum::r#enum_def;
+
 use crate::utils::make_string_literal;
 
 pub(crate) fn struct_def(s: &ItemStruct) -> Result<DerivedTS> {
     let attr = StructAttr::from_attrs(&s.attrs)?;
 
-    let ts_name = attr.rename.clone().unwrap_or_else(|| make_string_literal(s.ident.to_string().trim_start_matches("r#"), s.ident.span()));
+    let ts_name = attr
+        .rename
+        .clone()
+        .unwrap_or_else(|| make_string_literal(&s.ident.unraw().to_string(), s.ident.span()));
     type_def(&attr, ts_name, &s.fields)
 }
 
 fn type_def(attr: &StructAttr, ts_name: Expr, fields: &Fields) -> Result<DerivedTS> {
     attr.assert_validity(fields)?;
-    
+
     if let Some(attr_type_override) = &attr.type_override {
         return type_override::type_override_struct(attr, ts_name, attr_type_override);
     }
