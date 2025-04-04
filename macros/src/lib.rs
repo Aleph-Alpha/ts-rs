@@ -30,7 +30,7 @@ struct DerivedTS {
     bound: Option<Vec<WherePredicate>>,
 
     export: bool,
-    export_to: Option<String>,
+    export_to: Option<Expr>,
 }
 
 impl DerivedTS {
@@ -42,14 +42,18 @@ impl DerivedTS {
         let output_path_fn = {
             let ts_name = &self.ts_name;
             // expression of type `String` containing the file path
-            let path_string = match self.export_to.as_deref() {
-                Some(dirname) if dirname.ends_with('/') => {
-                    quote![format!("{}{}.ts", #dirname, #ts_name)]
-                }
-                Some(filename) => quote![#filename.to_owned()],
-                None => {
-                    quote![format!("{}.ts", #ts_name)]
-                }
+            let path_string = match &self.export_to {
+                Some(dir_or_file) => quote![{
+                    let dir_or_file = format!("{}", #dir_or_file);
+                    if dir_or_file.ends_with('/') {
+                        // export into directory
+                        format!("{dir_or_file}{}.ts", #ts_name)
+                    } else {
+                        // export into provided file
+                        format!("{dir_or_file}")
+                    }
+                }],
+                None => quote![format!("{}.ts", #ts_name)],
             };
 
             quote! {

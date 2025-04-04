@@ -8,6 +8,7 @@
 ### Features
 - The `#[ts(rename)]` attribute on structs, enums and variants now accepts any expression.  
   This makes it possible to, for example, rename a struct to the name of a module it is contained in using `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`
+- The `#[ts(export_to)]` attribute on structs and enums now accepts any expression.
 - Added `#[ts(optional_fields)]` and `#[ts(optional_fields = nullable)]` attribute to structs, this attribute is equivalent to using the corresponding `#[ts(optional)]` or `#[ts(optional = nullable)]` on every field of the struct. ([#366](https://github.com/Aleph-Alpha/ts-rs/pull/366))
 
 ### Fixes
