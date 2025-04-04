@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Fields, ItemEnum, Variant};
+use syn::{Expr, Fields, ItemEnum, Variant};
 
 use crate::{
     attr::{Attr, EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
@@ -8,6 +8,7 @@ use crate::{
     types::{self, type_as, type_override},
     DerivedTS,
 };
+use crate::utils::make_string_literal;
 
 pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     let enum_attr: EnumAttr = EnumAttr::from_attrs(&s.attrs)?;
@@ -18,15 +19,15 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 
     let name = match &enum_attr.rename {
         Some(existing) => existing.clone(),
-        None => s.ident.to_string(),
+        None => make_string_literal(&s.ident.to_string(), s.ident.span())
     };
 
     if let Some(attr_type_override) = &enum_attr.type_override {
-        return type_override::type_override_enum(&enum_attr, &name, attr_type_override);
+        return type_override::type_override_enum(&enum_attr, name, attr_type_override);
     }
 
     if let Some(attr_type_as) = &enum_attr.type_as {
-        return type_as::type_as_enum(&enum_attr, &name, attr_type_as);
+        return type_as::type_as_enum(&enum_attr, name, attr_type_as);
     }
 
     if s.variants.is_empty() {
@@ -81,17 +82,17 @@ fn format_variant(
     }
 
     let untagged_variant = variant_attr.untagged;
-    let name = match (variant_attr.rename.clone(), &enum_attr.rename_all) {
+    let ts_name = match (variant_attr.rename.clone(), &enum_attr.rename_all) {
         (Some(rn), _) => rn,
-        (None, None) => variant.ident.to_string(),
-        (None, Some(rn)) => rn.apply(&variant.ident.to_string()),
+        (None, None) => make_string_literal(&variant.ident.to_string(), variant.ident.span()),
+        (None, Some(rn)) => make_string_literal(&rn.apply(&variant.ident.to_string()), variant.ident.span()),
     };
 
     let struct_attr = StructAttr::from_variant(enum_attr, &variant_attr, &variant.fields);
     let variant_type = types::type_def(
         &struct_attr,
         // In internally tagged enums, we can tag the struct
-        &name,
+        ts_name.clone(),
         &variant.fields,
     )?;
 
@@ -114,7 +115,7 @@ fn format_variant(
     let formatted = match (untagged_variant, enum_attr.tagged()?) {
         (true, _) | (_, Tagged::Untagged) => quote!(#parsed_ty),
         (false, Tagged::Externally) => match &variant.fields {
-            Fields::Unit => quote!(format!("\"{}\"", #name)),
+            Fields::Unit => quote!(format!("\"{}\"", #ts_name)),
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                 let field = &unnamed.unnamed[0];
                 let field_attr = FieldAttr::from_attrs(&field.attrs)?;
@@ -122,12 +123,12 @@ fn format_variant(
                 field_attr.assert_validity(field)?;
 
                 if field_attr.skip {
-                    quote!(format!("\"{}\"", #name))
+                    quote!(format!("\"{}\"", #ts_name))
                 } else {
-                    quote!(format!("{{ \"{}\": {} }}", #name, #parsed_ty))
+                    quote!(format!("{{ \"{}\": {} }}", #ts_name, #parsed_ty))
                 }
             }
-            _ => quote!(format!("{{ \"{}\": {} }}", #name, #parsed_ty)),
+            _ => quote!(format!("{{ \"{}\": {} }}", #ts_name, #parsed_ty)),
         },
         (false, Tagged::Adjacently { tag, content }) => match &variant.fields {
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
@@ -137,7 +138,7 @@ fn format_variant(
                 field_attr.assert_validity(field)?;
 
                 if field_attr.skip {
-                    quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
+                    quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name))
                 } else {
                     let ty = match field_attr.type_override {
                         Some(type_override) => quote!(#type_override),
@@ -146,12 +147,12 @@ fn format_variant(
                             quote!(<#ty as #crate_rename::TS>::name())
                         }
                     };
-                    quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #ty))
+                    quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #ts_name, #content, #ty))
                 }
             }
-            Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name)),
+            Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name)),
             _ => quote!(
-                format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #name, #content, #parsed_ty)
+                format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #ts_name, #content, #parsed_ty)
             ),
         },
         (false, Tagged::Internally { tag }) => match variant_type.inline_flattened {
@@ -166,7 +167,7 @@ fn format_variant(
                     field_attr.assert_validity(field)?;
 
                     if field_attr.skip {
-                        quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name))
+                        quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name))
                     } else {
                         let ty = match field_attr.type_override {
                             Some(type_override) => quote! { #type_override },
@@ -176,12 +177,12 @@ fn format_variant(
                             }
                         };
 
-                        quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #ty))
+                        quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #ts_name, #ty))
                     }
                 }
-                Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #name)),
+                Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name)),
                 _ => {
-                    quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #name, #parsed_ty))
+                    quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #ts_name, #parsed_ty))
                 }
             },
         },
@@ -192,8 +193,7 @@ fn format_variant(
 }
 
 // bindings for an empty enum (`never` in TS)
-fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
-    let name = name.into();
+fn empty_enum(ts_name: Expr, enum_attr: EnumAttr) -> DerivedTS {
     let crate_rename = enum_attr.crate_rename();
     DerivedTS {
         crate_rename: crate_rename.clone(),
@@ -203,7 +203,7 @@ fn empty_enum(name: impl Into<String>, enum_attr: EnumAttr) -> DerivedTS {
         dependencies: Dependencies::new(crate_rename),
         export: enum_attr.export,
         export_to: enum_attr.export_to,
-        ts_name: name,
+        ts_name,
         concrete: enum_attr.concrete,
         bound: enum_attr.bound,
     }

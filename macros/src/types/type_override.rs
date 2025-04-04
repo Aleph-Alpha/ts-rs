@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::Result;
+use syn::{Expr, Result};
 
 use crate::{
     attr::{ContainerAttr, EnumAttr, StructAttr},
@@ -9,7 +9,7 @@ use crate::{
 
 pub(crate) fn type_override_struct(
     attr: &StructAttr,
-    name: &str,
+    ts_name: Expr,
     type_override: &str,
 ) -> Result<DerivedTS> {
     let crate_rename = attr.crate_rename();
@@ -22,7 +22,7 @@ pub(crate) fn type_override_struct(
         dependencies: Dependencies::new(crate_rename),
         export: attr.export,
         export_to: attr.export_to.clone(),
-        ts_name: name.to_owned(),
+        ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
     })
@@ -30,7 +30,7 @@ pub(crate) fn type_override_struct(
 
 pub(crate) fn type_override_enum(
     attr: &EnumAttr,
-    name: &str,
+    ts_name: Expr,
     type_override: &str,
 ) -> Result<DerivedTS> {
     let crate_rename = attr.crate_rename();
@@ -43,7 +43,7 @@ pub(crate) fn type_override_enum(
         dependencies: Dependencies::new(crate_rename),
         export: attr.export,
         export_to: attr.export_to.clone(),
-        ts_name: name.to_owned(),
+        ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
     })

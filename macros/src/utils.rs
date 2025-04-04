@@ -1,11 +1,8 @@
 use std::collections::HashMap;
 
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
-use syn::{
-    spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Path, Result,
-    Type,
-};
+use syn::{spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, LitStr, Path, Result, Type};
 
 use super::attr::{Attr, Serde};
 use crate::deps::Dependencies;
@@ -312,4 +309,8 @@ pub fn format_generics(
 
     let comma_separated = quote!([#(#expanded_params),*].join(", "));
     quote!(format!("<{}>", #comma_separated))
+}
+
+pub fn make_string_literal(content: &str, span: Span) -> Expr {
+    Expr::Lit(ExprLit { attrs: vec![], lit: Lit::Str(LitStr::new(content, span)) })
 }

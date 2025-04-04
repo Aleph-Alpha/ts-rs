@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{Result, Type};
+use syn::{Expr, Result, Type};
 
 use crate::{
     attr::{ContainerAttr, EnumAttr, StructAttr},
@@ -7,7 +7,7 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn type_as_struct(attr: &StructAttr, name: &str, type_as: &Type) -> Result<DerivedTS> {
+pub(crate) fn type_as_struct(attr: &StructAttr, ts_name: Expr, type_as: &Type) -> Result<DerivedTS> {
     let crate_rename = attr.crate_rename();
 
     let mut dependencies = Dependencies::new(crate_rename.clone());
@@ -21,13 +21,13 @@ pub(crate) fn type_as_struct(attr: &StructAttr, name: &str, type_as: &Type) -> R
         dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),
-        ts_name: name.to_owned(),
+        ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
     })
 }
 
-pub(crate) fn type_as_enum(attr: &EnumAttr, name: &str, type_as: &Type) -> Result<DerivedTS> {
+pub(crate) fn type_as_enum(attr: &EnumAttr, ts_name: Expr, type_as: &Type) -> Result<DerivedTS> {
     let crate_rename = attr.crate_rename();
 
     let mut dependencies = Dependencies::new(crate_rename.clone());
@@ -41,7 +41,7 @@ pub(crate) fn type_as_enum(attr: &EnumAttr, name: &str, type_as: &Type) -> Resul
         dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),
-        ts_name: name.to_owned(),
+        ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
     })

@@ -575,7 +575,7 @@ pub trait TS {
     ///
     /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
     /// `None`.
-    fn output_path() -> Option<&'static Path> {
+    fn output_path() -> Option<PathBuf> {
         None
     }
 
@@ -613,10 +613,10 @@ pub struct Dependency {
     pub type_id: TypeId,
     /// Name of the type in TypeScript
     pub ts_name: String,
-    /// Path to where the type would be exported. By default a filename is derived from the types
+    /// Path to where the type would be exported. By default, a filename is derived from the types
     /// name, which can be customized with `#[ts(export_to = "..")]`.  
     /// This path does _not_ include a base directory.
-    pub output_path: &'static Path,
+    pub output_path: PathBuf,
 }
 
 impl Dependency {
@@ -743,7 +743,7 @@ macro_rules! impl_shadow {
             }
             fn decl() -> String { <$s as $crate::TS>::decl() }
             fn decl_concrete() -> String { <$s as $crate::TS>::decl_concrete() }
-            fn output_path() -> Option<&'static std::path::Path> { <$s as $crate::TS>::output_path() }
+            fn output_path() -> Option<std::path::PathBuf> { <$s as $crate::TS>::output_path() }
         }
     };
 }
