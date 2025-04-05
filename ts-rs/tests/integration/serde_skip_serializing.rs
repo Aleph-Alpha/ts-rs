@@ -14,14 +14,14 @@ pub struct Item {
     // There is no type we can choose which accepts every possible value in both directions.
     // Therefore, we stick with the default, ignoring the annotations: `a: number | null`.
     //
-    // When TS receives a value from Rust, users will have to needlessly check against `undefined`.
+    // When TS receives a value from Rust, users might get `undefined`, causing a runtime error.
     // When TS sends a value to Rust, the type is guaranteed to be correct.
-    // => No errors can occur, but a needless check has to happen in TS.
+    // => Possible runtime error in TS
     //
-    // If we instead generated `a?: number`, it'd be different:
+    // If we instead generated `a?: number`:
     // When TS receives a value from Rust, a runtime error may occur if the value is `null` (1)
     // When TS sends a value to Rust, a runtime error may occur if the value is `undefined` (2)
-    // => Incorrect bindings for both directions
+    // => Possible runtime errors in TS and Rust
     #[serde(skip_serializing_if = "Option::is_none")]
     a: Option<u8>,
 
