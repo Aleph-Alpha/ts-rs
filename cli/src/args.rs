@@ -7,7 +7,7 @@ use crate::metadata::FILE_NAME;
 #[derive(Parser, Debug)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Args {
-    /// Defines where your TS bindings will be saved by setting TS_RS_EXPORT_DIR
+    /// Defines where your TS bindings will be saved by setting `TS_RS_EXPORT_DIR`
     #[arg(long, short)]
     pub output_directory: PathBuf,
 

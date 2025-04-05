@@ -35,7 +35,7 @@ impl<'a> TryFrom<&'a str> for Metadata<'a> {
     }
 }
 
-impl<'a> Metadata<'a> {
+impl Metadata<'_> {
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
