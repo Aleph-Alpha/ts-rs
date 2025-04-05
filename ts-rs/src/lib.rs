@@ -651,11 +651,11 @@ static OVERRIDES: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new(
 
 fn get_override(rust_type: &str) -> Option<&'static str> {
     let overrides = OVERRIDES.get_or_init(|| {
-        const PREFIX: &str = "TS_RS_INTERNAL_OVERRIDE_";
-        std::env::vars_os()
-            .flat_map(|(key, value)| Some((key.into_string().ok()?, value.into_string().ok()?)))
-            .filter(|(key, _)| key.starts_with(PREFIX))
-            .map(|(key, value)| (&key.leak()[PREFIX.len()..], &*value.leak()))
+        std::env::var("TS_RS_INTERNAL_OVERRIDE")
+            .ok()
+            .into_iter()
+            .flat_map(|value| value.leak().split(';'))
+            .flat_map(|value| value.split_once(':'))
             .collect()
     });
     overrides.get(rust_type).copied()

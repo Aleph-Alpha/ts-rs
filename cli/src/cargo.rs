@@ -33,9 +33,13 @@ pub fn invoke(cfg: &Args) -> Result<()> {
         })
         .env("TS_RS_EXPORT_DIR", path::absolute(cfg.output_directory())?);
 
-    for (rust, ts) in &cfg.overrides {
-        let env = format!("TS_RS_INTERNAL_OVERRIDE_{rust}");
-        cargo_invocation.env(env, ts);
+    if !cfg.overrides.is_empty() {
+        cargo_invocation.env(
+            "TS_RS_INTERNAL_OVERRIDE",
+            cfg.overrides.iter().fold(String::new(), |acc, (k, v)| {
+                format!("{acc}{}{k}:{v}", if acc.is_empty() { "" } else { ";" })
+            }),
+        );
     }
 
     feature!(cargo_invocation, cfg, {
@@ -50,6 +54,7 @@ pub fn invoke(cfg: &Args) -> Result<()> {
         cargo_invocation.arg("--quiet");
     }
 
+    dbg!(&cargo_invocation);
     cargo_invocation.spawn()?.wait()?;
 
     Ok(())
