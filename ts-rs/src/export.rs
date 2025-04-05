@@ -146,7 +146,8 @@ fn export_and_merge<T: TS + ?Sized + 'static>(
         let relative_path = T::output_path()
             .ok_or_else(std::any::type_name::<T>)
             .map_err(ExportError::CannotBeExported)?
-            .to_string_lossy();
+            .to_string_lossy()
+            .into_owned();
 
         let type_ts_name = T::ident();
         let type_rs_name = std::any::type_name::<T>().split('<').next().unwrap();
