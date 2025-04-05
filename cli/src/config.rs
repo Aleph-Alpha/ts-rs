@@ -5,27 +5,34 @@ use std::{
 
 use clap::Parser;
 use color_eyre::{eyre::bail, owo_colors::OwoColorize, Result};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 #[allow(clippy::struct_excessive_bools)]
 /// This type wraps `Config` and adds an implementation of
 /// the `Drop` trait that deletes the metadata file when
 /// the CLI finishes running
-pub struct Args(Config);
+pub struct Args(pub Cli);
 
 impl std::ops::Deref for Args {
-    type Target = Config;
+    type Target = Cli;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-#[derive(Parser, Debug, Default, Deserialize)]
+#[derive(Parser, Debug)]
+#[allow(clippy::struct_excessive_bools)]
+pub enum Cli {
+    Init,
+    Export(ExportConfig),
+}
+
+#[derive(Parser, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields, default, rename_all = "kebab-case")]
 #[allow(clippy::struct_excessive_bools)]
-pub struct Config {
+pub struct ExportConfig {
     #[clap(skip)]
     /// Type overrides for types implemented inside ts-rs.
     pub overrides: HashMap<String, String>,
@@ -64,19 +71,41 @@ pub struct Config {
     pub no_capture: bool,
 }
 
-impl Args {
-    pub fn load() -> Result<Self> {
-        let cli_args = Config::parse();
-        let config_file_args = Config::load_from_file(cli_args.config_file_path.as_deref())?;
-
-        let cfg = cli_args.merge(config_file_args);
-        cfg.verify()?;
-
-        Ok(Self(cfg))
+impl Default for ExportConfig {
+    fn default() -> Self {
+        Self {
+            overrides: HashMap::default(),
+            config_file_path: None,
+            output_directory: Some(PathBuf::from("./bindings")),
+            no_warnings: false,
+            esm_imports: false,
+            format: false,
+            generate_index_ts: false,
+            no_capture: false,
+        }
     }
 }
 
-impl Config {
+impl Args {
+    pub fn load() -> Result<Self> {
+        let cli_args = Cli::parse();
+
+        match cli_args {
+            Cli::Init => Ok(Self(cli_args)),
+            Cli::Export(export_config) => {
+                let config_file_args =
+                    ExportConfig::load_from_file(export_config.config_file_path.as_deref())?;
+
+                let cfg = export_config.merge(config_file_args);
+                cfg.verify()?;
+
+                Ok(Self(Cli::Export(cfg)))
+            }
+        }
+    }
+}
+
+impl ExportConfig {
     pub fn output_directory(&self) -> &Path {
         self.output_directory
             .as_deref()

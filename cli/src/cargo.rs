@@ -2,7 +2,7 @@ use std::process::{Command, Stdio};
 
 use color_eyre::Result;
 
-use crate::{config::Args, path};
+use crate::{config::ExportConfig, path};
 
 macro_rules! feature {
     ($cargo_invocation: expr, $args: expr, { $($field: ident => $feature: literal),* $(,)? }) => {
@@ -16,7 +16,7 @@ macro_rules! feature {
     };
 }
 
-pub fn invoke(cfg: &Args) -> Result<()> {
+pub fn invoke(cfg: &ExportConfig) -> Result<()> {
     let mut cargo_invocation = Command::new("cargo");
 
     cargo_invocation
