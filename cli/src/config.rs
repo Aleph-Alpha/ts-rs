@@ -33,6 +33,7 @@ pub struct Config {
     /// Path to the `ts-rs` config file
     #[arg(long = "config")]
     #[serde(skip)]
+    #[allow(clippy::struct_field_names)]
     pub config_file_path: Option<PathBuf>,
 
     /// Defines where your TS bindings will be saved by setting `TS_RS_EXPORT_DIR`
@@ -82,9 +83,9 @@ impl Config {
             .expect("Output directory must not be `None`")
     }
 
-    fn merge(self, other: Config) -> Self {
+    fn merge(self, other: Self) -> Self {
         Self {
-            output_directory: self.output_directory.or_else(|| other.output_directory),
+            output_directory: self.output_directory.or(other.output_directory),
             overrides: other.overrides,
             no_warnings: self.no_warnings || other.no_warnings,
             esm_imports: self.esm_imports || other.esm_imports,
