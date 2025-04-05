@@ -25,7 +25,10 @@ impl std::ops::Deref for Args {
 #[derive(Parser, Debug)]
 #[allow(clippy::struct_excessive_bools)]
 pub enum Cli {
+    /// Initialize the `ts-rs.toml` config file
     Init,
+
+    /// Export your types into TypeScript
     Export(ExportConfig),
 }
 
