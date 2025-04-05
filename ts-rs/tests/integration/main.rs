@@ -45,7 +45,7 @@ mod same_file_export;
 mod self_referential;
 mod semver;
 mod serde_json;
-mod serde_skip_serializing_if;
+mod serde_skip_serializing;
 mod serde_skip_with_default;
 mod serde_with;
 mod simple;

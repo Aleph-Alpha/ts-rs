@@ -108,10 +108,14 @@
 //! - `content`
 //! - `untagged`
 //! - `skip`
+//! - `skip_serializing`
 //! - `skip_serializing_if`
 //! - `flatten`
 //! - `default`
 //!
+//! Note: `skip_serializing` and `skip_serializing_if` only have an effect when used together with
+//! `#[serde(default)]`.
+//! 
 //! Note: `skip_deserializing` is ignored. If you wish to exclude a field
 //! from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 //!

@@ -14,12 +14,16 @@ pub struct FieldAttr {
     pub rename: Option<String>,
     pub inline: bool,
     pub skip: bool,
-    pub skip_serializing_if: bool,
     pub optional: Optional,
     pub flatten: bool,
     pub docs: String,
 
+    // serde-specific
+    
     pub using_serde_with: bool,
+    // whether the field might be omitted during serialization by skip_serializing{_if}
+    pub maybe_omitted: bool,
+    pub has_default: bool,
 }
 
 impl FieldAttr {
@@ -56,11 +60,12 @@ impl Attr for FieldAttr {
             rename: self.rename.or(other.rename),
             inline: self.inline || other.inline,
             skip: self.skip || other.skip,
-            skip_serializing_if: self.skip_serializing_if || other.skip_serializing_if,
             optional: self.optional.or(other.optional),
             flatten: self.flatten || other.flatten,
 
             using_serde_with: self.using_serde_with || other.using_serde_with,
+            maybe_omitted: self.maybe_omitted || other.maybe_omitted,
+            has_default: self.has_default || other.has_default,
 
             // We can't emit TSDoc for a flattened field
             // and we cant make this invalid in assert_validity because
@@ -183,7 +188,10 @@ impl_parse! {
         "skip" => out.0.skip = true,
         "skip_serializing_if" => {
             let _ = parse_assign_str(input)?;
-            out.0.skip_serializing_if = true;
+            out.0.maybe_omitted = true;
+        },
+        "skip_serializing" => {
+            out.0.maybe_omitted = true;
         },
         "flatten" => out.0.flatten = true,
         // parse #[serde(default)] to not emit a warning
@@ -192,6 +200,7 @@ impl_parse! {
             if input.peek(Token![=]) {
                 parse_assign_str(input)?;
             }
+            out.0.has_default = true;
         },
         "with" => {
             parse_assign_str(input)?;

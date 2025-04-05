@@ -126,7 +126,11 @@ fn format_field(
 
     let ty = field_attr.type_as(&field.ty);
 
-    let (optional_annotation, nullable) = match (struct_optional, field_attr.optional, field_attr.skip_serializing_if) {
+    let (optional_annotation, nullable) = match (
+        struct_optional,
+        field_attr.optional,
+        field_attr.maybe_omitted && field_attr.has_default,
+    ) {
         // `#[ts(optional)]` on field takes precedence, and is enforced **AT COMPILE TIME**
         (_, Optional::Optional { nullable }, _) => (
             // expression that evaluates to the string "?", but fails to compile if `ty` is not an `Option`.
@@ -146,7 +150,9 @@ fn format_field(
             },
             nullable,
         ),
-        (_, _, true) => (quote!("?"), false),
+        // field may be omitted during serialization and has a default value, so the field can be
+        // optional.
+        (_, _, true) => (quote!("?"), true),
         _ => (quote!(""), true),
     };
 
