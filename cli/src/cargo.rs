@@ -1,6 +1,9 @@
-use std::process::{Command, Stdio};
+use std::{
+    path::PathBuf,
+    process::{Command, Stdio},
+};
 
-use color_eyre::Result;
+use color_eyre::{eyre::bail, Result};
 
 use crate::{config::ExportConfig, path};
 
@@ -57,4 +60,21 @@ pub fn invoke(cfg: &ExportConfig) -> Result<()> {
     cargo_invocation.spawn()?.wait()?;
 
     Ok(())
+}
+
+pub fn workspace_location() -> Result<PathBuf> {
+    let output = Command::new("cargo")
+        .arg("locate-project")
+        .arg("--workspace")
+        .arg("--message-format=plain")
+        .output()?;
+
+    match output.status.code() {
+        Some(0) => Ok(PathBuf::from(std::str::from_utf8(&output.stdout)?)
+            .parent()
+            .map(ToOwned::to_owned)
+            .unwrap_or_else(|| PathBuf::from("/"))),
+        Some(_) => bail!("{}", std::str::from_utf8(&output.stderr)?),
+        None => bail!("Unable to obtain workspace path"),
+    }
 }

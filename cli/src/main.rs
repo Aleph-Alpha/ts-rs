@@ -3,9 +3,9 @@
 use std::{
     fs::{self, OpenOptions},
     io::Write,
-    path::Path,
 };
 
+use cargo::workspace_location;
 use color_eyre::{owo_colors::OwoColorize, Result};
 
 mod cargo;
@@ -35,7 +35,7 @@ fn main() -> Result<()> {
 
     match args.0 {
         Cli::Init => {
-            let path = Path::new("./ts-rs.toml");
+            let path = workspace_location()?.join("ts-rs.toml");
             if path.exists() {
                 eprintln!("{} the config file already exists", "Error:".red().bold());
                 return Ok(());

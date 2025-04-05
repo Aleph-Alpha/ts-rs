@@ -7,6 +7,8 @@ use clap::Parser;
 use color_eyre::{eyre::bail, owo_colors::OwoColorize, Result};
 use serde::{Deserialize, Serialize};
 
+use crate::cargo::workspace_location;
+
 #[derive(Debug)]
 #[allow(clippy::struct_excessive_bools)]
 /// This type wraps `Config` and adds an implementation of
@@ -133,7 +135,11 @@ impl ExportConfig {
             bail!("The provided path doesn't exist");
         }
 
-        let path = path.unwrap_or_else(|| Path::new("./ts-rs.toml"));
+        let path = match path {
+            Some(path) => path,
+            None => &workspace_location()?.join("./ts-rs.toml"),
+        };
+
         if !path.is_file() {
             return Ok(Self::default());
         }
