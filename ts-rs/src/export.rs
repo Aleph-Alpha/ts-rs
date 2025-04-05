@@ -155,7 +155,7 @@ fn export_and_merge<T: TS + ?Sized>(
         std::fs::OpenOptions::new()
             .append(true)
             .create(true)
-            .open(default_out_dir().join("ts_rs.meta"))?
+            .open(default_out_dir().join("ts-rs.meta"))?
             .write_fmt(format_args!(
                 "{type_ts_name},{type_rs_name},./{relative_path}\n"
             ))?;

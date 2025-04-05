@@ -9,7 +9,7 @@ use color_eyre::{
     Result,
 };
 
-pub const FILE_NAME: &str = "ts_rs.meta";
+pub const FILE_NAME: &str = "ts-rs.meta";
 
 pub struct Metadata<'a> {
     entries: HashMap<&'a str, HashSet<Entry<'a>>>,
