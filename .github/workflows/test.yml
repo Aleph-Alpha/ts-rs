@@ -162,7 +162,7 @@ jobs:
       - name: Test
         working-directory: ts-rs
         run: |
-          TS_RS_EXPORT_DIR=$(pwd)/output cargo test --no-default-features
+          TS_RS_EXPORT_DIR=$(pwd)/output cargo test --no-default-features --features ts-rs/export
           shopt -s globstar
           tsc output/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf output
