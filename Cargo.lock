@@ -260,16 +260,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
 
 [[package]]
-name = "cargo-ts"
-version = "0.1.0"
-dependencies = [
- "clap",
- "color-eyre",
- "serde",
- "toml",
-]
-
-[[package]]
 name = "cc"
 version = "1.2.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1757,6 +1747,16 @@ dependencies = [
  "ts-rs-macros",
  "url",
  "uuid",
+]
+
+[[package]]
+name = "ts-rs-cli"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "color-eyre",
+ "serde",
+ "toml",
 ]
 
 [[package]]
