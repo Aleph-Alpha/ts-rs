@@ -18,7 +18,11 @@ pub struct FieldAttr {
     pub flatten: bool,
     pub docs: String,
 
+    // serde-specific
     pub using_serde_with: bool,
+    // whether the field might be omitted during serialization by skip_serializing{_if}
+    pub maybe_omitted: bool,
+    pub has_default: bool,
 }
 
 impl FieldAttr {
@@ -59,6 +63,8 @@ impl Attr for FieldAttr {
             flatten: self.flatten || other.flatten,
 
             using_serde_with: self.using_serde_with || other.using_serde_with,
+            maybe_omitted: self.maybe_omitted || other.maybe_omitted,
+            has_default: self.has_default || other.has_default,
 
             // We can't emit TSDoc for a flattened field
             // and we cant make this invalid in assert_validity because
@@ -179,6 +185,13 @@ impl_parse! {
     Serde<FieldAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "skip" => out.0.skip = true,
+        "skip_serializing_if" => {
+            let _ = parse_assign_str(input)?;
+            out.0.maybe_omitted = true;
+        },
+        "skip_serializing" => {
+            out.0.maybe_omitted = true;
+        },
         "flatten" => out.0.flatten = true,
         // parse #[serde(default)] to not emit a warning
         "default" => {
@@ -186,6 +199,7 @@ impl_parse! {
             if input.peek(Token![=]) {
                 parse_assign_str(input)?;
             }
+            out.0.has_default = true;
         },
         "with" => {
             parse_assign_str(input)?;
