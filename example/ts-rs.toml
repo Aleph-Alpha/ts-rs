@@ -1,0 +1,5 @@
+[overrides]
+u64 = "number"
+i64 = "number"
+u128 = "number"
+i128 = "number"
