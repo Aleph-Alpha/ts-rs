@@ -54,7 +54,6 @@ pub fn invoke(cfg: &Args) -> Result<()> {
         cargo_invocation.arg("--quiet");
     }
 
-    dbg!(&cargo_invocation);
     cargo_invocation.spawn()?.wait()?;
 
     Ok(())
