@@ -203,12 +203,13 @@ mod tokio;
 ///   Specifies where the type should be exported to. Defaults to `<name>.ts`.  
 ///   The path given to the `export_to` attribute is relative to the `TS_RS_EXPORT_DIR` environment variable,
 ///   or, if `TS_RS_EXPORT_DIR` is not set, to `./bindings`  
-///   If the provided path ends in a trailing `/`, it is interpreted as a directory.   
+///   If the provided path ends in a trailing `/`, it is interpreted as a directory.  
+///   This attribute also accepts arbitrary expressions.  
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
 ///   <br/><br/>
 ///
 /// - **`#[ts(as = "..")]`**  
-///   Overrides the type used in Typescript, using the provided Rust type instead.
+///   Overrides the type used in Typescript, using the provided Rust type instead.  
 ///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
 ///   <br/><br/>
 ///
@@ -218,7 +219,8 @@ mod tokio;
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename = "..")]`**  
-///   Sets the typescript name of the generated type
+///   Sets the typescript name of the generated type.  
+///   Also accepts expressions, e.g `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`.
 ///   <br/><br/>
 ///
 /// - **`#[ts(rename_all = "..")]`**  
@@ -358,7 +360,8 @@ mod tokio;
 /// ### enum variant attributes
 ///
 /// - **`#[ts(rename = "..")]`**  
-///   Renames this variant. To rename all variants of an enum, see the container attribute `#[ts(rename_all = "..")]`.
+///   Renames this variant. To rename all variants of an enum, see the container attribute `#[ts(rename_all = "..")]`.  
+///   This attribute also accepts expressions, e.g `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`.
 ///   <br/><br/>
 ///
 /// - **`#[ts(skip)]`**  
@@ -411,7 +414,7 @@ pub trait TS {
     /// Identifier of this type, excluding generic parameters.
     fn ident() -> String {
         // by default, fall back to `TS::name()`.
-        let name = Self::name();
+        let name = <Self as crate::TS>::name();
 
         match name.find('<') {
             Some(i) => name[..i].to_owned(),
@@ -472,7 +475,7 @@ pub trait TS {
                 }
             }
         }
-        Self::visit_dependencies(&mut Visit(&mut deps));
+        <Self as crate::TS>::visit_dependencies(&mut Visit(&mut deps));
 
         deps
     }
@@ -498,7 +501,7 @@ pub trait TS {
     where
         Self: 'static,
     {
-        let path = Self::default_output_path()
+        let path = <Self as crate::TS>::default_output_path()
             .ok_or_else(std::any::type_name::<Self>)
             .map_err(ExportError::CannotBeExported)?;
 
@@ -575,7 +578,7 @@ pub trait TS {
     ///
     /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
     /// `None`.
-    fn output_path() -> Option<&'static Path> {
+    fn output_path() -> Option<PathBuf> {
         None
     }
 
@@ -593,7 +596,7 @@ pub trait TS {
     /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
     /// `None`.
     fn default_output_path() -> Option<PathBuf> {
-        Some(export::default_out_dir().join(Self::output_path()?))
+        Some(export::default_out_dir().join(<Self as crate::TS>::output_path()?))
     }
 }
 
@@ -613,10 +616,10 @@ pub struct Dependency {
     pub type_id: TypeId,
     /// Name of the type in TypeScript
     pub ts_name: String,
-    /// Path to where the type would be exported. By default a filename is derived from the types
+    /// Path to where the type would be exported. By default, a filename is derived from the types
     /// name, which can be customized with `#[ts(export_to = "..")]`.  
     /// This path does _not_ include a base directory.
-    pub output_path: &'static Path,
+    pub output_path: PathBuf,
 }
 
 impl Dependency {
@@ -624,10 +627,10 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
-        let output_path = T::output_path()?;
+        let output_path = <T as crate::TS>::output_path()?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
-            ts_name: T::ident(),
+            ts_name: <T as crate::TS>::ident(),
             output_path,
         })
     }
@@ -675,7 +678,7 @@ macro_rules! impl_tuples {
             {
                 $(
                     v.visit::<$i>();
-                    <$i>::visit_generics(v);
+                    <$i as $crate::TS>::visit_generics(v);
                 )*
             }
             fn inline_flattened() -> String { panic!("tuple cannot be flattened") }
@@ -696,21 +699,21 @@ macro_rules! impl_wrapper {
         $($t)* {
             type WithoutGenerics = Self;
             type OptionInnerType = Self;
-            fn name() -> String { T::name() }
-            fn inline() -> String { T::inline() }
-            fn inline_flattened() -> String { T::inline_flattened() }
+            fn name() -> String { <T as $crate::TS>::name() }
+            fn inline() -> String { <T as $crate::TS>::inline() }
+            fn inline_flattened() -> String { <T as $crate::TS>::inline_flattened() }
             fn visit_dependencies(v: &mut impl TypeVisitor)
             where
                 Self: 'static,
             {
-                T::visit_dependencies(v);
+                <T as $crate::TS>::visit_dependencies(v);
             }
 
             fn visit_generics(v: &mut impl TypeVisitor)
             where
                 Self: 'static,
             {
-                T::visit_generics(v);
+                <T as $crate::TS>::visit_generics(v);
                 v.visit::<T>();
             }
             fn decl() -> String { panic!("wrapper type cannot be declared") }
@@ -743,7 +746,7 @@ macro_rules! impl_shadow {
             }
             fn decl() -> String { <$s as $crate::TS>::decl() }
             fn decl_concrete() -> String { <$s as $crate::TS>::decl_concrete() }
-            fn output_path() -> Option<&'static std::path::Path> { <$s as $crate::TS>::output_path() }
+            fn output_path() -> Option<std::path::PathBuf> { <$s as $crate::TS>::output_path() }
         }
     };
 }
@@ -754,38 +757,38 @@ impl<T: TS> TS for Option<T> {
     const IS_OPTION: bool = true;
 
     fn name() -> String {
-        format!("{} | null", T::name())
+        format!("{} | null", <T as crate::TS>::name())
     }
 
     fn inline() -> String {
-        format!("{} | null", T::inline())
+        format!("{} | null", <T as crate::TS>::inline())
     }
 
     fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::visit_dependencies(v);
+        <T as crate::TS>::visit_dependencies(v);
     }
 
     fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::visit_generics(v);
+        <T as crate::TS>::visit_generics(v);
         v.visit::<T>();
     }
 
     fn decl() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn decl_concrete() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", Self::name())
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
 
@@ -794,41 +797,49 @@ impl<T: TS, E: TS> TS for Result<T, E> {
     type OptionInnerType = Self;
 
     fn name() -> String {
-        format!("{{ Ok : {} }} | {{ Err : {} }}", T::name(), E::name())
+        format!(
+            "{{ Ok : {} }} | {{ Err : {} }}",
+            <T as crate::TS>::name(),
+            <E as crate::TS>::name()
+        )
     }
 
     fn inline() -> String {
-        format!("{{ Ok : {} }} | {{ Err : {} }}", T::inline(), E::inline())
+        format!(
+            "{{ Ok : {} }} | {{ Err : {} }}",
+            <T as crate::TS>::inline(),
+            <E as crate::TS>::inline()
+        )
     }
 
     fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::visit_dependencies(v);
-        E::visit_dependencies(v);
+        <T as crate::TS>::visit_dependencies(v);
+        <E as crate::TS>::visit_dependencies(v);
     }
 
     fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::visit_generics(v);
+        <T as crate::TS>::visit_generics(v);
         v.visit::<T>();
-        E::visit_generics(v);
+        <E as crate::TS>::visit_generics(v);
         v.visit::<E>();
     }
 
     fn decl() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn decl_concrete() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", Self::name())
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
 
@@ -841,38 +852,38 @@ impl<T: TS> TS for Vec<T> {
     }
 
     fn name() -> String {
-        format!("Array<{}>", T::name())
+        format!("Array<{}>", <T as crate::TS>::name())
     }
 
     fn inline() -> String {
-        format!("Array<{}>", T::inline())
+        format!("Array<{}>", <T as crate::TS>::inline())
     }
 
     fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::visit_dependencies(v);
+        <T as crate::TS>::visit_dependencies(v);
     }
 
     fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::visit_generics(v);
+        <T as crate::TS>::visit_generics(v);
         v.visit::<T>();
     }
 
     fn decl() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn decl_concrete() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", Self::name())
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
 
@@ -884,23 +895,29 @@ impl<T: TS, const N: usize> TS for [T; N] {
 
     fn name() -> String {
         if N > ARRAY_TUPLE_LIMIT {
-            return Vec::<T>::name();
+            return <Vec<T> as crate::TS>::name();
         }
 
         format!(
             "[{}]",
-            (0..N).map(|_| T::name()).collect::<Box<[_]>>().join(", ")
+            (0..N)
+                .map(|_| <T as crate::TS>::name())
+                .collect::<Box<[_]>>()
+                .join(", ")
         )
     }
 
     fn inline() -> String {
         if N > ARRAY_TUPLE_LIMIT {
-            return Vec::<T>::inline();
+            return <Vec<T> as crate::TS>::inline();
         }
 
         format!(
             "[{}]",
-            (0..N).map(|_| T::inline()).collect::<Box<[_]>>().join(", ")
+            (0..N)
+                .map(|_| <T as crate::TS>::inline())
+                .collect::<Box<[_]>>()
+                .join(", ")
         )
     }
 
@@ -908,27 +925,27 @@ impl<T: TS, const N: usize> TS for [T; N] {
     where
         Self: 'static,
     {
-        T::visit_dependencies(v);
+        <T as crate::TS>::visit_dependencies(v);
     }
 
     fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        T::visit_generics(v);
+        <T as crate::TS>::visit_generics(v);
         v.visit::<T>();
     }
 
     fn decl() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn decl_concrete() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", Self::name())
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
 
@@ -941,41 +958,49 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     }
 
     fn name() -> String {
-        format!("{{ [key in {}]?: {} }}", K::name(), V::name())
+        format!(
+            "{{ [key in {}]?: {} }}",
+            <K as crate::TS>::name(),
+            <V as crate::TS>::name()
+        )
     }
 
     fn inline() -> String {
-        format!("{{ [key in {}]?: {} }}", K::inline(), V::inline())
+        format!(
+            "{{ [key in {}]?: {} }}",
+            <K as crate::TS>::inline(),
+            <V as crate::TS>::inline()
+        )
     }
 
     fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        K::visit_dependencies(v);
-        V::visit_dependencies(v);
+        <K as crate::TS>::visit_dependencies(v);
+        <V as crate::TS>::visit_dependencies(v);
     }
 
     fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        K::visit_generics(v);
+        <K as crate::TS>::visit_generics(v);
         v.visit::<K>();
-        V::visit_generics(v);
+        <V as crate::TS>::visit_generics(v);
         v.visit::<V>();
     }
 
     fn decl() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn decl_concrete() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", Self::name())
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
 
@@ -984,38 +1009,42 @@ impl<I: TS> TS for Range<I> {
     type OptionInnerType = Self;
 
     fn name() -> String {
-        format!("{{ start: {}, end: {}, }}", I::name(), I::name())
+        format!(
+            "{{ start: {}, end: {}, }}",
+            <I as crate::TS>::name(),
+            <I as crate::TS>::name()
+        )
     }
 
     fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        I::visit_dependencies(v);
+        <I as crate::TS>::visit_dependencies(v);
     }
 
     fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        I::visit_generics(v);
+        <I as crate::TS>::visit_generics(v);
         v.visit::<I>();
     }
 
     fn decl() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn decl_concrete() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn inline() -> String {
-        panic!("{} cannot be inlined", Self::name())
+        panic!("{} cannot be inlined", <Self as crate::TS>::name())
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", Self::name())
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
 
@@ -1122,18 +1151,18 @@ impl TS for Dummy {
     }
 
     fn decl() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn decl_concrete() -> String {
-        panic!("{} cannot be declared", Self::name())
+        panic!("{} cannot be declared", <Self as crate::TS>::name())
     }
 
     fn inline() -> String {
-        panic!("{} cannot be inlined", Self::name())
+        panic!("{} cannot be inlined", <Self as crate::TS>::name())
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", Self::name())
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }

@@ -1,6 +1,6 @@
-use syn::{Attribute, Fields, Ident, Result, Type, Variant};
+use syn::{Attribute, Expr, Fields, Ident, Result, Type, Variant};
 
-use super::{Attr, Serde};
+use super::{parse_assign_expr, Attr, Serde};
 use crate::{
     attr::{parse_assign_from_str, parse_assign_inflection, parse_assign_str, Inflection},
     utils::parse_attrs,
@@ -10,7 +10,7 @@ use crate::{
 pub struct VariantAttr {
     pub type_as: Option<Type>,
     pub type_override: Option<String>,
-    pub rename: Option<String>,
+    pub rename: Option<Expr>,
     pub rename_all: Option<Inflection>,
     pub inline: bool,
     pub skip: bool,
@@ -91,7 +91,7 @@ impl_parse! {
     VariantAttr(input, out) {
         "as" => out.type_as = Some(parse_assign_from_str(input)?),
         "type" => out.type_override = Some(parse_assign_str(input)?),
-        "rename" => out.rename = Some(parse_assign_str(input)?),
+        "rename" => out.rename = Some(parse_assign_expr(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
         "inline" => out.inline = true,
         "skip" => out.skip = true,
@@ -101,7 +101,7 @@ impl_parse! {
 
 impl_parse! {
     Serde<VariantAttr>(input, out) {
-        "rename" => out.0.rename = Some(parse_assign_str(input)?),
+        "rename" => out.0.rename = Some(parse_assign_expr(input)?),
         "rename_all" => out.0.rename_all = Some(parse_assign_inflection(input)?),
         "skip" => out.0.skip = true,
         "untagged" => out.0.untagged = true,

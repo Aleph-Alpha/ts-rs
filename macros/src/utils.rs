@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 use syn::{
-    spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, Path, Result,
-    Type,
+    spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, LitStr, Path,
+    Result, Type,
 };
 
 use super::attr::{Attr, Serde};
@@ -26,14 +26,14 @@ macro_rules! syn_err_spanned {
 }
 
 macro_rules! impl_parse {
-    ($i:ident $(<$inner: ident>)? ($input:ident, $out:ident) { $($k:pat => $e:expr),* $(,)? }) => {
-        impl std::convert::TryFrom<&syn::Attribute> for $i $(<$inner>)? {
+    ($i:ident ($input:ident, $out:ident) { $($k:pat => $e:expr),* $(,)? }) => {
+        impl std::convert::TryFrom<&syn::Attribute> for $i {
             type Error = syn::Error;
 
             fn try_from(attr: &syn::Attribute) -> syn::Result<Self> { attr.parse_args() }
         }
 
-        impl syn::parse::Parse for $i $(<$inner>)? {
+        impl syn::parse::Parse for $i {
             fn parse($input: syn::parse::ParseStream) -> syn::Result<Self> {
                 let mut $out = Self::default();
                 loop {
@@ -47,14 +47,56 @@ macro_rules! impl_parse {
                             "Unknown attribute \"{x}\". Allowed attributes are: {}",
                             [$(stringify!($k),)*].join(", ")
                         )
+
                     }
 
-                    match $input.is_empty() {
-                        true => break,
-                        false => {
-                            $input.parse::<syn::Token![,]>()?;
+                    if $input.is_empty() {
+                        break;
+                    }
+
+                    $input.parse::<syn::Token![,]>()?;
+                }
+
+                Ok($out)
+            }
+        }
+    };
+    ($i:ident<$inner: ident> ($input:ident, $out:ident) { $($k:pat => $e:expr),* $(,)? }) => {
+        impl std::convert::TryFrom<&syn::Attribute> for $i<$inner> {
+            type Error = syn::Error;
+
+            fn try_from(attr: &syn::Attribute) -> syn::Result<Self> { attr.parse_args() }
+        }
+
+        impl syn::parse::Parse for $i<$inner> {
+            fn parse($input: syn::parse::ParseStream) -> syn::Result<Self> {
+                let mut $out = Self::default();
+                loop {
+                    let key: syn::Ident = $input.call(syn::ext::IdentExt::parse_any)?;
+                    match &*key.to_string() {
+                        $($k => $e,)*
+                        #[allow(unreachable_patterns)]
+                        x => {
+                            if cfg!(not(feature = "no-serde-warnings")) {
+                                let tokens = crate::attr::skip_until_next_comma($input);
+
+                                crate::utils::warning::print_warning(
+                                    "failed to parse serde attribute",
+                                    format!("{x} {tokens}"),
+                                    "ts-rs failed to parse this attribute. It will be ignored.",
+                                )
+                                .unwrap();
+                            } else {
+                                crate::attr::skip_until_next_comma($input);
+                            }
                         }
                     }
+
+                    if $input.is_empty() {
+                        break;
+                    }
+
+                    $input.parse::<syn::Token![,]>()?;
                 }
 
                 Ok($out)
@@ -119,22 +161,7 @@ where
     attrs
         .iter()
         .filter(|a| a.path().is_ident("serde"))
-        .flat_map(|attr| match Serde::<A>::try_from(attr) {
-            Ok(attr) => Some(attr),
-            Err(_) => {
-                #[cfg(not(feature = "no-serde-warnings"))]
-                use quote::ToTokens;
-
-                #[cfg(not(feature = "no-serde-warnings"))]
-                warning::print_warning(
-                    "failed to parse serde attribute",
-                    format!("{}", attr.to_token_stream()),
-                    "ts-rs failed to parse this attribute. It will be ignored.",
-                )
-                .unwrap();
-                None
-            }
-        })
+        .flat_map(|attr| Serde::<A>::try_from(attr).ok())
         .fold(Serde::<A>::default(), |acc, cur| acc.merge(cur))
 }
 
@@ -180,7 +207,7 @@ pub fn parse_docs(attrs: &[Attribute]) -> Result<String> {
 }
 
 #[cfg(feature = "serde-compat")]
-mod warning {
+pub(crate) mod warning {
     use std::{fmt::Display, io::Write};
 
     use termcolor::{BufferWriter, Color, ColorChoice, ColorSpec, WriteColor};
@@ -232,7 +259,7 @@ mod warning {
     }
 }
 #[cfg(not(feature = "serde-compat"))]
-mod warning {
+pub(crate) mod warning {
     use std::fmt::Display;
 
     // Just a stub!
@@ -285,4 +312,11 @@ pub fn format_generics(
 
     let comma_separated = quote!([#(#expanded_params),*].join(", "));
     quote!(format!("<{}>", #comma_separated))
+}
+
+pub fn make_string_literal(content: &str, span: Span) -> Expr {
+    Expr::Lit(ExprLit {
+        attrs: vec![],
+        lit: Lit::Str(LitStr::new(content, span)),
+    })
 }
