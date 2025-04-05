@@ -126,14 +126,14 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
         std::fs::create_dir_all(parent)?;
     }
 
-    export_and_merge(path, type_name, buffer)?;
+    export_and_merge::<T>(path, type_name, buffer)?;
 
     Ok(())
 }
 
 /// Exports the type to a new file if the file hasn't yet been written to.
 /// Otherwise, finds its place in the already existing file and inserts it.
-fn export_and_merge(
+fn export_and_merge<T: TS + ?Sized>(
     path: PathBuf,
     type_name: String,
     generated_type: String,
@@ -141,6 +141,25 @@ fn export_and_merge(
     use std::io::{Read, Write};
 
     let lock = &mut get_export_paths().lock().unwrap();
+
+    if cfg!(feature = "generate-metadata") {
+        let relative_path = T::output_path()
+            .ok_or_else(std::any::type_name::<T>)
+            .map_err(ExportError::CannotBeExported)?
+            .to_string_lossy()
+            .into_owned();
+
+        let type_ts_name = T::ident();
+        let type_rs_name = std::any::type_name::<T>().split('<').next().unwrap();
+
+        std::fs::OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(default_out_dir().join("ts_rs.meta"))?
+            .write_fmt(format_args!(
+                "{type_ts_name},{type_rs_name},./{relative_path}\n"
+            ))?;
+    }
 
     let Some(entry) = lock.get_mut(&path) else {
         // The file hasn't been written to yet, so it must be

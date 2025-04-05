@@ -235,7 +235,7 @@ pub(crate) mod warning {
         let mut buffer = writer.buffer();
 
         buffer.set_color(&yellow_bold)?;
-        write!(&mut buffer, "warning")?;
+        write!(&mut buffer, "Warning")?;
         buffer.set_color(&white_bold)?;
         writeln!(&mut buffer, ": {}", title)?;
 

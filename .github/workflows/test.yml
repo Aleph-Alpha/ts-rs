@@ -16,7 +16,7 @@ jobs:
         working-directory: e2e/dependencies/consumer
         run: |
           cargo t 
-          tsc bindings/* --noEmit --noUnusedLocals --strict
+          tsc bindings/*.ts --noEmit --noUnusedLocals --strict
       - name: dependencies e2e test with default export env
         working-directory: e2e/dependencies/consumer
         run: |
@@ -143,7 +143,7 @@ jobs:
       - name: Test
         working-directory: ts-rs
         run: |
-          TS_RS_EXPORT_DIR=output cargo test --no-default-features
+          TS_RS_EXPORT_DIR=output cargo test --no-default-features --features ts-rs/export
           shopt -s globstar
           tsc output/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf output
@@ -162,7 +162,7 @@ jobs:
       - name: Test
         working-directory: ts-rs
         run: |
-          TS_RS_EXPORT_DIR=$(pwd)/output cargo test --no-default-features
+          TS_RS_EXPORT_DIR=$(pwd)/output cargo test --no-default-features --features ts-rs/export
           shopt -s globstar
           tsc output/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf output
@@ -181,7 +181,7 @@ jobs:
       - name: Test
         working-directory: ts-rs
         run: |
-          cargo test --no-default-features
+          cargo test --no-default-features --features ts-rs/export
           shopt -s globstar
           tsc bindings/**/*.ts --noEmit --noUnusedLocals
           rm -rf bindings
