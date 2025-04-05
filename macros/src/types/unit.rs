@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::Result;
+use syn::{Expr, Result};
 
 use crate::{
     attr::{ContainerAttr, StructAttr},
@@ -7,7 +7,7 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
+pub(crate) fn empty_object(attr: &StructAttr, ts_name: Expr) -> Result<DerivedTS> {
     check_attributes(attr)?;
     let crate_rename = attr.crate_rename();
 
@@ -19,13 +19,13 @@ pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
         dependencies: Dependencies::new(crate_rename),
         export: attr.export,
         export_to: attr.export_to.clone(),
-        ts_name: name.to_owned(),
+        ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
     })
 }
 
-pub(crate) fn empty_array(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
+pub(crate) fn empty_array(attr: &StructAttr, ts_name: Expr) -> Result<DerivedTS> {
     check_attributes(attr)?;
     let crate_rename = attr.crate_rename();
 
@@ -37,13 +37,13 @@ pub(crate) fn empty_array(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
         dependencies: Dependencies::new(crate_rename),
         export: attr.export,
         export_to: attr.export_to.clone(),
-        ts_name: name.to_owned(),
+        ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
     })
 }
 
-pub(crate) fn null(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
+pub(crate) fn null(attr: &StructAttr, ts_name: Expr) -> Result<DerivedTS> {
     check_attributes(attr)?;
     let crate_rename = attr.crate_rename();
 
@@ -55,7 +55,7 @@ pub(crate) fn null(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
         dependencies: Dependencies::new(crate_rename),
         export: attr.export,
         export_to: attr.export_to.clone(),
-        ts_name: name.to_owned(),
+        ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
     })

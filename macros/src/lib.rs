@@ -6,9 +6,9 @@ use std::collections::{HashMap, HashSet};
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 use syn::{
-    parse_quote, spanned::Spanned, ConstParam, GenericParam, Generics, Item, LifetimeParam, Path,
-    Result, Type, TypeArray, TypeParam, TypeParen, TypePath, TypeReference, TypeSlice, TypeTuple,
-    WhereClause, WherePredicate,
+    parse_quote, spanned::Spanned, ConstParam, Expr, GenericParam, Generics, Item, LifetimeParam,
+    Path, Result, Type, TypeArray, TypeParam, TypeParen, TypePath, TypeReference, TypeSlice,
+    TypeTuple, WhereClause, WherePredicate,
 };
 
 use crate::{deps::Dependencies, utils::format_generics};
@@ -21,7 +21,7 @@ mod types;
 
 struct DerivedTS {
     crate_rename: Path,
-    ts_name: String,
+    ts_name: Expr,
     docs: String,
     inline: TokenStream,
     inline_flattened: Option<TokenStream>,
@@ -30,7 +30,7 @@ struct DerivedTS {
     bound: Option<Vec<WherePredicate>>,
 
     export: bool,
-    export_to: Option<String>,
+    export_to: Option<Expr>,
 }
 
 impl DerivedTS {
@@ -40,17 +40,25 @@ impl DerivedTS {
             .then(|| self.generate_export_test(&rust_ty, &generics));
 
         let output_path_fn = {
-            let path = match self.export_to.as_deref() {
-                Some(dirname) if dirname.ends_with('/') => {
-                    format!("{}{}.ts", dirname, self.ts_name)
-                }
-                Some(filename) => filename.to_owned(),
-                None => format!("{}.ts", self.ts_name),
+            let ts_name = &self.ts_name;
+            // expression of type `String` containing the file path
+            let path_string = match &self.export_to {
+                Some(dir_or_file) => quote![{
+                    let dir_or_file = format!("{}", #dir_or_file);
+                    if dir_or_file.ends_with('/') {
+                        // export into directory
+                        format!("{dir_or_file}{}.ts", #ts_name)
+                    } else {
+                        // export into provided file
+                        format!("{dir_or_file}")
+                    }
+                }],
+                None => quote![format!("{}.ts", #ts_name)],
             };
 
             quote! {
-                fn output_path() -> Option<&'static std::path::Path> {
-                    Some(std::path::Path::new(#path))
+                fn output_path() -> Option<std::path::PathBuf> {
+                    Some(std::path::PathBuf::from(#path_string))
                 }
             }
         };
@@ -83,7 +91,7 @@ impl DerivedTS {
                 type OptionInnerType = Self;
 
                 fn ident() -> String {
-                    #ident.to_owned()
+                    (#ident).to_string()
                 }
 
                 #docs
@@ -122,7 +130,7 @@ impl DerivedTS {
                 format!("{}<{}>", #name, vec![#(#generics_ts_names),*].join(", "))
             }
         } else {
-            quote!(#name.to_owned())
+            quote!((#name).to_string())
         }
     }
 

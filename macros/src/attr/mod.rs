@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 
 pub use field::*;
+use proc_macro2::TokenTree;
+use quote::quote;
 pub use r#enum::*;
 pub use r#struct::*;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Error, Ident, Lit, Path, Result, Token, WherePredicate,
+    Error, Expr, Ident, Lit, Path, Result, Token, WherePredicate,
 };
 pub use variant::*;
 
@@ -124,6 +126,32 @@ impl Inflection {
             Inflection::ScreamingKebab => Self::Kebab.apply(string).to_ascii_uppercase(),
         }
     }
+}
+
+fn skip_until_next_comma(input: ParseStream) -> proc_macro2::TokenStream {
+    input
+        .step(|cursor| {
+            let mut stuff = quote!();
+            let mut rest = *cursor;
+            while let Some((tt, next)) = rest.token_tree() {
+                if let Some((TokenTree::Punct(punct), _)) = next.token_tree() {
+                    if punct.as_char() == ',' {
+                        return Ok((stuff, next));
+                    }
+                }
+
+                rest = next;
+                stuff = quote!(#stuff #tt)
+            }
+
+            Ok((stuff, rest))
+        })
+        .unwrap()
+}
+
+fn parse_assign_expr(input: ParseStream) -> Result<Expr> {
+    input.parse::<Token![=]>()?;
+    Expr::parse(input)
 }
 
 fn parse_assign_str(input: ParseStream) -> Result<String> {

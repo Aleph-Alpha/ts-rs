@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
-use syn::{parse_quote, spanned::Spanned, Field, FieldsNamed, Path, Result};
+use syn::{parse_quote, spanned::Spanned, Expr, Field, FieldsNamed, Path, Result};
 
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, Inflection, Optional, StructAttr},
@@ -9,7 +9,7 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Result<DerivedTS> {
+pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> Result<DerivedTS> {
     let crate_rename = attr.crate_rename();
 
     let mut formatted_fields = Vec::new();
@@ -17,9 +17,8 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
     let mut dependencies = Dependencies::new(crate_rename.clone());
 
     if let Some(tag) = &attr.tag {
-        let formatted = format!("\"{}\": \"{}\",", tag, name);
         formatted_fields.push(quote! {
-            #formatted.to_string()
+            format!("\"{}\": \"{}\",", #tag, #ts_name)
         });
     }
 
@@ -69,7 +68,7 @@ pub(crate) fn named(attr: &StructAttr, name: &str, fields: &FieldsNamed) -> Resu
         dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),
-        ts_name: name.to_owned(),
+        ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
     })

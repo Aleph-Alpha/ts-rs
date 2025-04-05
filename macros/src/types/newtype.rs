@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{FieldsUnnamed, Result};
+use syn::{Expr, FieldsUnnamed, Result};
 
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, StructAttr},
@@ -7,7 +7,11 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> Result<DerivedTS> {
+pub(crate) fn newtype(
+    attr: &StructAttr,
+    ts_name: Expr,
+    fields: &FieldsUnnamed,
+) -> Result<DerivedTS> {
     let inner = fields.unnamed.first().unwrap();
 
     let field_attr = FieldAttr::from_attrs(&inner.attrs)?;
@@ -16,7 +20,7 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
     let crate_rename = attr.crate_rename();
 
     if field_attr.skip {
-        return super::unit::null(attr, name);
+        return super::unit::null(attr, ts_name);
     }
 
     let inner_ty = field_attr.type_as(&inner.ty);
@@ -43,7 +47,7 @@ pub(crate) fn newtype(attr: &StructAttr, name: &str, fields: &FieldsUnnamed) -> 
         dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),
-        ts_name: name.to_owned(),
+        ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
     })
