@@ -57,12 +57,6 @@ pub struct Config {
     #[serde(rename = "index")]
     pub generate_index_ts: bool,
 
-    /// Generates only a single index.ts file in your --output-directory that
-    /// contains all exported types
-    #[arg(long = "merge")]
-    #[serde(rename = "merge")]
-    pub merge_files: bool,
-
     /// Do not capture `cargo test`'s output, and pass --nocapture to the test binary
     #[arg(long = "nocapture")]
     #[serde(rename = "nocapture")]
@@ -96,24 +90,17 @@ impl Config {
             esm_imports: self.esm_imports || other.esm_imports,
             format: self.format || other.format,
             generate_index_ts: self.generate_index_ts || other.generate_index_ts,
-            merge_files: self.merge_files || other.merge_files,
             no_capture: self.no_capture || other.no_capture,
             config_file_path: None,
         }
     }
 
     fn load_from_file(path: Option<&Path>) -> Result<Self> {
-        if let Some(path) = path {
-            if !path.is_file() {
-                bail!("The provided path doesn't exist");
-            }
-
-            let content = std::fs::read_to_string(path)?;
-            return Ok(toml::from_str(&content)?);
+        if path.is_some_and(|x| !x.is_file()) {
+            bail!("The provided path doesn't exist");
         }
 
-        // TODO: from where do we actually load the config?
-        let path = Path::new("./ts-rs.toml");
+        let path = path.unwrap_or_else(|| Path::new("./ts-rs.toml"));
         if !path.is_file() {
             return Ok(Self::default());
         }
@@ -123,13 +110,6 @@ impl Config {
     }
 
     fn verify(&self) -> Result<()> {
-        if self.merge_files && self.generate_index_ts {
-            bail!(
-                "{}: --index is not compatible with --merge",
-                "Error".bold().red()
-            );
-        }
-
         if self.output_directory.is_none() {
             bail!("{}: You must provide the output diretory, either through the config file or the --output-directory flag", "Error".bold().red())
         }
