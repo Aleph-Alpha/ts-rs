@@ -1,6 +1,7 @@
+use std::collections::HashMap;
+
 #[cfg(feature = "serde-json-impl")]
 use serde_json::Value as JsonValue;
-use std::collections::HashMap;
 use ts_rs::TS;
 
 #[derive(TS)]

@@ -19,7 +19,6 @@ pub struct FieldAttr {
     pub docs: String,
 
     // serde-specific
-    
     pub using_serde_with: bool,
     // whether the field might be omitted during serialization by skip_serializing{_if}
     pub maybe_omitted: bool,
