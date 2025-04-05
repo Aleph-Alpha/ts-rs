@@ -5,3 +5,4 @@ tsconfig.json
 
 /ts-rs/tests-out
 ts_rs.meta
+ts-rs.toml
