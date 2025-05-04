@@ -1,19 +1,211 @@
 on: [push, pull_request]
 name: Test
 jobs:
-  test:
-    name: Test ts-rs
+  e2e-dependencies:
+    name: Run 'dependencies' end-to-end test
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-      - uses: actions-rs/cargo@v1
+      - uses: Swatinem/rust-cache@v2
+      - name: dependencies e2e test
+        working-directory: e2e/dependencies/consumer
+        run: |
+          cargo t 
+          tsc bindings/* --noEmit --noUnusedLocals --strict
+      - name: dependencies e2e test with default export env
+        working-directory: e2e/dependencies/consumer
+        run: |
+          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          shopt -s globstar
+          tsc custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
+  e2e-workspace:
+    name: Run 'workspace' end-to-end test
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          command: test
-          args: --no-default-features --manifest-path ts-rs/Cargo.toml
-      - uses: actions-rs/cargo@v1
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: workspace e2e test
+        working-directory: e2e/workspace
+        run: |
+          cargo t 
+          shopt -s globstar
+          tsc parent/bindings/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf parent/bindings
+      - name: workspace e2e with default export env
+        working-directory: e2e/workspace
+        run: |
+          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          shopt -s globstar
+          tsc parent/custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf parent/custom-bindings
+  e2e-example:
+    name: End-to-end test example
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          command: test
-          args: --all-features --manifest-path ts-rs/Cargo.toml
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: example e2e test
+        working-directory: example
+        run: |
+          cargo t 
+          tsc bindings/* --noEmit
+      - name: example e2e with default export env
+        working-directory: example
+        run: |
+          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          shopt -s globstar
+          tsc custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
+
+  readme-up-to-date:
+    name: Check that README.md is up-to-date
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Check that README.md is up-to-date
+        working-directory: ts-rs
+        run: |
+          cargo install cargo-readme 
+          diff -u ../README.md <(cargo readme)
+
+  msrv-valid:
+    name: Check that the MSRV is valid
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Check that README.md is up-to-date
+        working-directory: ts-rs
+        run: |
+          set +e
+          cargo install cargo-msrv 
+          cargo msrv verify --all-features
+          if [[ $? -eq 1 ]]; then
+            cargo msrv find --all-features
+            exit 1
+          fi
+
+  test-all-features:
+    name: Test ts-rs with --all-features
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        working-directory: ts-rs
+        run: |
+          cargo test --all-features
+          shopt -s globstar
+          tsc bindings/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf bindings
+
+  test-export-env:
+    name: Test ts-rs with TS_RS_EXPORT_DIR
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        working-directory: ts-rs
+        run: |
+          TS_RS_EXPORT_DIR=output cargo test --no-default-features
+          shopt -s globstar
+          tsc output/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf output
+
+  test-absolute-export-env:
+    name: Test ts-rs with absolute TS_RS_EXPORT_DIR
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        working-directory: ts-rs
+        run: |
+          TS_RS_EXPORT_DIR=$(pwd)/output cargo test --no-default-features
+          shopt -s globstar
+          tsc output/**/*.ts --noEmit --noUnusedLocals --strict
+          rm -rf output
+
+  test-no-features:
+    name: Test ts-rs with --no-default-features
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        working-directory: ts-rs
+        run: |
+          cargo test --no-default-features
+          shopt -s globstar
+          tsc bindings/**/*.ts --noEmit --noUnusedLocals
+          rm -rf bindings
+
+  test-windows:
+    name: Test ts-rs with --all-features on Windows
+    runs-on: windows-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        working-directory: ts-rs
+        # Create empty tsconfig and cd into bindings to make tsc
+        # compile every ts file in the directory
+        run: |
+          cargo test --all-features
+          "{}" | Out-File bindings/tsconfig.json
+          cd bindings
+          npm i -g typescript
+          tsc --noEmit --noUnusedLocals --strict
+          cd ..
+          rm -r -fo bindings

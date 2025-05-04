@@ -1,100 +1,70 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Field, FieldsUnnamed, Generics, Result};
+use syn::{Expr, Field, FieldsUnnamed, Path, Result};
 
 use crate::{
-    attr::{FieldAttr, StructAttr},
+    attr::{Attr, ContainerAttr, FieldAttr, StructAttr},
     deps::Dependencies,
-    types::generics::{format_generics, format_type},
     DerivedTS,
 };
 
-pub(crate) fn tuple(
-    attr: &StructAttr,
-    name: &str,
-    fields: &FieldsUnnamed,
-    generics: &Generics,
-) -> Result<DerivedTS> {
-    if attr.rename_all.is_some() {
-        syn_err!("`rename_all` is not applicable to tuple structs");
-    }
-    if attr.tag.is_some() {
-        syn_err!("`tag` is not applicable to tuple structs");
-    }
-
+pub(crate) fn tuple(attr: &StructAttr, ts_name: Expr, fields: &FieldsUnnamed) -> Result<DerivedTS> {
+    let crate_rename = attr.crate_rename();
     let mut formatted_fields = Vec::new();
-    let mut dependencies = Dependencies::default();
+    let mut dependencies = Dependencies::new(crate_rename.clone());
     for field in &fields.unnamed {
-        format_field(&mut formatted_fields, &mut dependencies, field, generics)?;
+        format_field(
+            &crate_rename,
+            &mut formatted_fields,
+            &mut dependencies,
+            field,
+        )?;
     }
 
-    let generic_args = format_generics(&mut dependencies, generics);
     Ok(DerivedTS {
+        crate_rename,
         inline: quote! {
             format!(
                 "[{}]",
                 [#(#formatted_fields),*].join(", ")
             )
         },
-        decl: quote! {
-            format!(
-                "type {}{} = {};",
-                #name,
-                #generic_args,
-                Self::inline()
-            )
-        },
         inline_flattened: None,
-        name: name.to_owned(),
+        docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),
+        ts_name,
+        concrete: attr.concrete.clone(),
+        bound: attr.bound.clone(),
     })
 }
 
 fn format_field(
+    crate_rename: &Path,
     formatted_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     field: &Field,
-    generics: &Generics,
 ) -> Result<()> {
-    let ty = &field.ty;
-    let FieldAttr {
-        type_override,
-        rename,
-        inline,
-        skip,
-        optional,
-        flatten,
-    } = FieldAttr::from_attrs(&field.attrs)?;
+    let field_attr = FieldAttr::from_attrs(&field.attrs)?;
+    field_attr.assert_validity(field)?;
 
-    if skip {
+    if field_attr.skip {
         return Ok(());
     }
-    if rename.is_some() {
-        syn_err!("`rename` is not applicable to tuple structs")
-    }
-    if optional {
-        syn_err!("`optional` is not applicable to tuple fields")
-    }
-    if flatten {
-        syn_err!("`flatten` is not applicable to tuple fields")
-    }
 
-    formatted_fields.push(match &type_override {
-        Some(o) => quote!(#o.to_owned()),
-        None if inline => quote!(<#ty as ts_rs::TS>::inline()),
-        None => format_type(ty, dependencies, generics),
+    let ty = field_attr.type_as(&field.ty);
+
+    formatted_fields.push(match field_attr.type_override {
+        Some(ref o) => quote!(#o.to_owned()),
+        None if field_attr.inline => quote!(<#ty as #crate_rename::TS>::inline()),
+        None => quote!(<#ty as #crate_rename::TS>::name()),
     });
 
-    match (inline, &type_override) {
+    match (field_attr.inline, field_attr.type_override) {
         (_, Some(_)) => (),
-        (false, _) => {
-            dependencies.push_or_append_from(ty);
-        }
-        (true, _) => {
-            dependencies.append_from(ty);
-        }
+        (false, _) => dependencies.push(&ty),
+        (true, _) => dependencies.append_from(&ty),
     };
 
     Ok(())

@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 #[derive(Serialize, TS)]
 #[ts(rename_all = "lowercase")]
-#[ts(export, export_to = "bindings/UserRole.ts")]
+#[ts(export, export_to = "UserRole.ts")]
 enum Role {
     User,
     #[ts(rename = "administrator")]
@@ -102,6 +102,6 @@ enum InlineComplexEnum {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 struct ComplexStruct {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub string_tree: Option<Rc<BTreeSet<String>>>,
 }

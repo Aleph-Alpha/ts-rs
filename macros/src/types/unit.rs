@@ -1,47 +1,63 @@
 use quote::quote;
-use syn::Result;
+use syn::{Expr, Result};
 
-use crate::{attr::StructAttr, deps::Dependencies, DerivedTS};
+use crate::{
+    attr::{ContainerAttr, StructAttr},
+    deps::Dependencies,
+    DerivedTS,
+};
 
-pub(crate) fn empty_object(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
+pub(crate) fn empty_object(attr: &StructAttr, ts_name: Expr) -> Result<DerivedTS> {
     check_attributes(attr)?;
+    let crate_rename = attr.crate_rename();
 
     Ok(DerivedTS {
+        crate_rename: crate_rename.clone(),
         inline: quote!("Record<string, never>".to_owned()),
-        decl: quote!(format!("type {} = Record<string, never>;", #name)),
         inline_flattened: None,
-        name: name.to_owned(),
-        dependencies: Dependencies::default(),
+        docs: attr.docs.clone(),
+        dependencies: Dependencies::new(crate_rename),
         export: attr.export,
         export_to: attr.export_to.clone(),
+        ts_name,
+        concrete: attr.concrete.clone(),
+        bound: attr.bound.clone(),
     })
 }
 
-pub(crate) fn empty_array(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
+pub(crate) fn empty_array(attr: &StructAttr, ts_name: Expr) -> Result<DerivedTS> {
     check_attributes(attr)?;
+    let crate_rename = attr.crate_rename();
 
     Ok(DerivedTS {
+        crate_rename: crate_rename.clone(),
         inline: quote!("never[]".to_owned()),
-        decl: quote!(format!("type {} = never[];", #name)),
         inline_flattened: None,
-        name: name.to_owned(),
-        dependencies: Dependencies::default(),
+        docs: attr.docs.clone(),
+        dependencies: Dependencies::new(crate_rename),
         export: attr.export,
         export_to: attr.export_to.clone(),
+        ts_name,
+        concrete: attr.concrete.clone(),
+        bound: attr.bound.clone(),
     })
 }
 
-pub(crate) fn null(attr: &StructAttr, name: &str) -> Result<DerivedTS> {
+pub(crate) fn null(attr: &StructAttr, ts_name: Expr) -> Result<DerivedTS> {
     check_attributes(attr)?;
+    let crate_rename = attr.crate_rename();
 
     Ok(DerivedTS {
+        crate_rename: crate_rename.clone(),
         inline: quote!("null".to_owned()),
-        decl: quote!(format!("type {} = null;", #name)),
         inline_flattened: None,
-        name: name.to_owned(),
-        dependencies: Dependencies::default(),
+        docs: attr.docs.clone(),
+        dependencies: Dependencies::new(crate_rename),
         export: attr.export,
         export_to: attr.export_to.clone(),
+        ts_name,
+        concrete: attr.concrete.clone(),
+        bound: attr.bound.clone(),
     })
 }
 
