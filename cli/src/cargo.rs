@@ -10,7 +10,7 @@ use crate::{config::ExportConfig, path};
 macro_rules! feature {
     ($cargo_invocation: expr, $args: expr, { $($field: ident => $feature: literal),* $(,)? }) => {
         $(
-            if $args.$field {
+            if $args.$field.unwrap_or(false) {
                 $cargo_invocation
                     .arg("--features")
                     .arg(format!("ts-rs/{}", $feature));
@@ -29,7 +29,7 @@ pub fn invoke(cfg: &ExportConfig) -> Result<()> {
         .arg("ts-rs/export")
         .arg("--features")
         .arg("ts-rs/generate-metadata")
-        .stdout(if cfg.no_capture {
+        .stdout(if cfg.no_capture.unwrap_or(false) {
             Stdio::inherit()
         } else {
             Stdio::piped()
@@ -51,7 +51,7 @@ pub fn invoke(cfg: &ExportConfig) -> Result<()> {
         format => "format",
     });
 
-    if cfg.no_capture {
+    if cfg.no_capture.unwrap_or(false) {
         cargo_invocation.arg("--").arg("--nocapture");
     } else {
         cargo_invocation.arg("--quiet");
@@ -72,8 +72,7 @@ pub fn workspace_location() -> Result<PathBuf> {
     match output.status.code() {
         Some(0) => Ok(PathBuf::from(std::str::from_utf8(&output.stdout)?)
             .parent()
-            .map(ToOwned::to_owned)
-            .unwrap_or_else(|| PathBuf::from("/"))),
+            .map_or_else(|| PathBuf::from("/"), ToOwned::to_owned)),
         Some(_) => bail!("{}", std::str::from_utf8(&output.stderr)?),
         None => bail!("Unable to obtain workspace path"),
     }
