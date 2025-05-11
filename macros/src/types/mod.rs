@@ -39,14 +39,14 @@ fn type_def(attr: &StructAttr, ts_name: Expr, fields: &Fields) -> Result<Derived
 
     match fields {
         Fields::Named(named) => match named.named.len() {
-            0 if attr.tag.is_none() => unit::empty_object(attr, ts_name),
+            0 if attr.tag.is_none() => Ok(unit::empty_object(attr, ts_name)),
             _ => named::named(attr, ts_name, named),
         },
         Fields::Unnamed(unnamed) => match unnamed.unnamed.len() {
-            0 => unit::empty_array(attr, ts_name),
+            0 => Ok(unit::empty_array(attr, ts_name)),
             1 => newtype::newtype(attr, ts_name, unnamed),
             _ => tuple::tuple(attr, ts_name, unnamed),
         },
-        Fields::Unit => unit::null(attr, ts_name),
+        Fields::Unit => Ok(unit::null(attr, ts_name)),
     }
 }
