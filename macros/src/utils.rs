@@ -124,7 +124,10 @@ pub fn raw_name_to_ts_field(value: String) -> String {
         .chars()
         .all(|c| c.is_alphanumeric() || c == '_' || c == '$');
 
-    let does_not_start_with_digit = value.chars().next().is_none_or(|first| !first.is_numeric());
+    let does_not_start_with_digit = value
+        .chars()
+        .next()
+        .map_or(true, |first| !first.is_numeric());
 
     let valid = valid_chars && does_not_start_with_digit;
 
