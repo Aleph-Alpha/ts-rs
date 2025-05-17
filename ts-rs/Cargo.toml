@@ -61,5 +61,4 @@ smol_str = { version = "0.3", optional = true }
 indexmap = { version = "2", optional = true }
 ordered-float = { version = ">= 3, < 5", optional = true }
 serde_json = { version = "1", optional = true }
-lazy_static = { version = "1", default-features = false }
 tokio = { version = "1", features = ["sync"], optional = true }

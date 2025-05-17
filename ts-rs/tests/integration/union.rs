@@ -9,6 +9,7 @@ enum SimpleEnum {
     A,
     B,
     C,
+    r#D,
 }
 
 #[test]
@@ -23,6 +24,6 @@ fn test_empty() {
 fn test_simple_enum() {
     assert_eq!(
         SimpleEnum::decl(),
-        r#"type SimpleEnum = "asdf" | "B" | "C";"#
+        r#"type SimpleEnum = "asdf" | "B" | "C" | "D";"#
     )
 }
