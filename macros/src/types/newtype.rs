@@ -20,7 +20,7 @@ pub(crate) fn newtype(
     let crate_rename = attr.crate_rename();
 
     if field_attr.skip {
-        return super::unit::null(attr, ts_name);
+        return Ok(super::unit::null(attr, ts_name));
     }
 
     let inner_ty = field_attr.type_as(&inner.ty);
