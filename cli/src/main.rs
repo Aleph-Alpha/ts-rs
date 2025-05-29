@@ -60,7 +60,7 @@ fn main() -> Result<()> {
             let metadata_content = fs::read_to_string(&metadata_path)?;
             let metadata = Metadata::try_from(&*metadata_content)?;
 
-            if !args.generate_index_ts || metadata.is_empty() {
+            if !args.generate_index_ts.unwrap_or(false) || metadata.is_empty() {
                 return Ok(());
             }
 
@@ -88,7 +88,7 @@ fn main() -> Result<()> {
 
             index.write_all(NOTE)?;
 
-            if args.generate_index_ts {
+            if args.generate_index_ts.unwrap_or(false) {
                 for path in metadata.export_paths() {
                     index.write_fmt(format_args!("\nexport * from {path:?};"))?;
                 }
