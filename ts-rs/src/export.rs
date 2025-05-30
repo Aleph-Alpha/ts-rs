@@ -312,9 +312,8 @@ pub(crate) fn default_out_dir() -> Cow<'static, Path> {
 /// Push the declaration of `T`
 fn generate_decl<T: TS + ?Sized>(out: &mut String) {
     // Type Docs
-    let docs = &<T as crate::TS>::DOCS;
-    if let Some(docs) = docs {
-        out.push_str(docs);
+    if let Some(docs) = <T as crate::TS>::docs() {
+        out.push_str(&docs);
     }
 
     // Type Definition
