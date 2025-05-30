@@ -35,9 +35,8 @@ struct DerivedTS {
 
 impl DerivedTS {
     fn into_impl(mut self, rust_ty: Ident, generics: Generics) -> TokenStream {
-        let export = self
-            .export
-            .then(|| self.generate_export_test(&rust_ty, &generics));
+        let allow_export = cfg!(feature = "export") && self.export;
+        let export = allow_export.then(|| self.generate_export_test(&rust_ty, &generics));
 
         let output_path_fn = {
             let ts_name = &self.ts_name;
