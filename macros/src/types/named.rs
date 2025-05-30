@@ -113,7 +113,7 @@ fn format_field(
         // Start every doc string with a newline, because when other characters are in front, it is not "understood" by VSCode
         let docs = match &*field_attr.docs {
             &[] => quote!(""),
-            docs => quote!(format!("\n{}", #crate_rename::format_docs(quote!(&[#(#docs),*])))),
+            docs => quote!(format!("\n{}", #crate_rename::format_docs(&[#(#docs),*]))),
         };
 
         formatted_fields.push(quote! {
