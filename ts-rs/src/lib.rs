@@ -1002,7 +1002,11 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+        format!(
+            "({{ [key in {}]?: {} }})",
+            <K as crate::TS>::inline(),
+            <V as crate::TS>::inline()
+        )
     }
 }
 
