@@ -1001,7 +1001,7 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
 
     fn inline_flattened() -> String {
         format!(
-            "{{ [key in {}]?: {}, }}",
+            "({{ [key in {}]?: {} }})",
             <K as crate::TS>::inline(),
             <V as crate::TS>::inline()
         )
