@@ -8,7 +8,7 @@ use super::{
 };
 use crate::{
     attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
-    utils::{parse_attrs, parse_docs},
+    utils::{extract_docs, parse_attrs},
 };
 
 #[derive(Default, Clone)]
@@ -21,7 +21,7 @@ pub struct StructAttr {
     pub export_to: Option<Expr>,
     pub export: bool,
     pub tag: Option<String>,
-    pub docs: String,
+    pub docs: Vec<Expr>,
     pub concrete: HashMap<Ident, Type>,
     pub bound: Option<Vec<WherePredicate>>,
     pub optional_fields: Optional,
@@ -36,8 +36,7 @@ impl StructAttr {
             result = result.merge(serde_attr.0);
         }
 
-        let docs = parse_docs(attrs)?;
-        result.docs = docs;
+        result.docs = extract_docs(attrs);
 
         Ok(result)
     }

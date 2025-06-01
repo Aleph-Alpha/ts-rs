@@ -1,11 +1,11 @@
 use syn::{
-    AngleBracketedGenericArguments, Attribute, Field, GenericArgument, Ident, PathArguments, QSelf,
-    Result, ReturnType, Type, TypeArray, TypeGroup, TypeParen, TypePath, TypePtr, TypeReference,
-    TypeSlice, TypeTuple,
+    AngleBracketedGenericArguments, Attribute, Expr, Field, GenericArgument, Ident, PathArguments,
+    QSelf, Result, ReturnType, Type, TypeArray, TypeGroup, TypeParen, TypePath, TypePtr,
+    TypeReference, TypeSlice, TypeTuple,
 };
 
 use super::{parse_assign_from_str, parse_assign_str, parse_optional, Attr, Optional, Serde};
-use crate::utils::{parse_attrs, parse_docs};
+use crate::utils::{extract_docs, parse_attrs};
 
 #[derive(Default)]
 pub struct FieldAttr {
@@ -16,7 +16,7 @@ pub struct FieldAttr {
     pub skip: bool,
     pub optional: Optional,
     pub flatten: bool,
-    pub docs: String,
+    pub docs: Vec<Expr>,
 
     pub using_serde_with: bool,
 }
@@ -30,7 +30,7 @@ impl FieldAttr {
             result = result.merge(serde_attr.0);
         }
 
-        result.docs = parse_docs(attrs)?;
+        result.docs = extract_docs(attrs);
 
         Ok(result)
     }
@@ -64,9 +64,9 @@ impl Attr for FieldAttr {
             // and we cant make this invalid in assert_validity because
             // this documentation is totally valid in Rust
             docs: if self.flatten || other.flatten {
-                String::new()
+                vec![]
             } else {
-                self.docs + &other.docs
+                [self.docs, other.docs].concat()
             },
         }
     }

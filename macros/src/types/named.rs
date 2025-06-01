@@ -111,9 +111,9 @@ fn format_field(
         let valid_name = raw_name_to_ts_field(name);
 
         // Start every doc string with a newline, because when other characters are in front, it is not "understood" by VSCode
-        let docs = match field_attr.docs.is_empty() {
-            true => "".to_string(),
-            false => format!("\n{}", &field_attr.docs),
+        let docs = match &*field_attr.docs {
+            &[] => quote!(""),
+            docs => quote!(format!("\n{}", #crate_rename::format_docs(&[#(#docs),*]))),
         };
 
         formatted_fields.push(quote! {
@@ -177,9 +177,9 @@ fn format_field(
     let valid_name = raw_name_to_ts_field(name);
 
     // Start every doc string with a newline, because when other characters are in front, it is not "understood" by VSCode
-    let docs = match field_attr.docs.is_empty() {
-        true => "".to_string(),
-        false => format!("\n{}", &field_attr.docs),
+    let docs = match &*field_attr.docs {
+        &[] => quote!(""),
+        docs => quote!(format!("\n{}", #crate_rename::format_docs(&[#(#docs),*]))),
     };
 
     formatted_fields.push(quote! {

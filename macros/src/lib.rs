@@ -22,7 +22,7 @@ mod types;
 struct DerivedTS {
     crate_rename: Path,
     ts_name: Expr,
-    docs: String,
+    docs: Vec<Expr>,
     inline: TokenStream,
     inline_flattened: Option<TokenStream>,
     dependencies: Dependencies,
@@ -63,12 +63,15 @@ impl DerivedTS {
             }
         };
 
-        let docs = match &*self.docs {
-            "" => None,
-            docs => Some(quote!(const DOCS: Option<&'static str> = Some(#docs);)),
-        };
-
         let crate_rename = self.crate_rename.clone();
+        let docs = match &*self.docs {
+            [] => None,
+            docs => Some(quote! {
+                fn docs() -> Option<String> {
+                    Some(#crate_rename::format_docs(&[#(#docs),*]))
+                }
+            }),
+        };
 
         let ident = self.ts_name.clone();
         let impl_start = generate_impl_block_header(
