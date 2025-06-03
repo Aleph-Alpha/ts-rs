@@ -57,7 +57,9 @@ pub fn parse_optional(input: ParseStream) -> syn::Result<Optional> {
 ///
 /// `type`:  
 /// The transformed type of the field after applying the `#[ts(optional)]` annotation.
-/// For a field of type `Option<T>`, the returned type is `T`. For all other types `T`, it's `T`.
+/// This will either  
+/// - the unmodified type of the field (no optional or `#[ts(optional = nullable)]`) or  
+/// - if the field is an `Option<T>`, its inner type `T´ (`#[ts(optional)]`)
 pub fn apply(
     crate_rename: &Path,
     for_struct: Optional,
