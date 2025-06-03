@@ -1,7 +1,7 @@
 use proc_macro2::Span;
 use syn::{
-    parse::{Parse, ParseStream},
-    parse_quote, parse_quote_spanned, Error, Expr, Ident, Path, Token, Type,
+    ext::IdentExt, parse::ParseStream, parse_quote, parse_quote_spanned, Error, Expr, Ident, Path,
+    Token, Type,
 };
 
 use crate::attr::FieldAttr;
@@ -11,42 +11,43 @@ use crate::attr::FieldAttr;
 /// `#[ts(optional = nullable)]` turns it into `t?: T | null`.
 #[derive(Default, Clone, Copy)]
 pub enum Optional {
-    Optional {
-        nullable: bool,
-    },
+    /// Explicitly marked as optional with `#[ts(optional)]`
+    Optional { nullable: bool },
+
+    /// Explicitly marked as not optional with `#[ts(optional = false)]`
+    NotOptional,
 
     #[default]
-    NotOptional,
+    Inherit,
 }
 
 impl Optional {
     pub fn or(self, other: Optional) -> Self {
         match (self, other) {
-            (Self::NotOptional, Self::NotOptional) => Self::NotOptional,
-
-            (Self::Optional { nullable }, Self::NotOptional)
-            | (Self::NotOptional, Self::Optional { nullable }) => Self::Optional { nullable },
-
+            (Self::Inherit, other) | (other, Self::Inherit) => other,
             (Self::Optional { nullable: a }, Self::Optional { nullable: b }) => {
                 Self::Optional { nullable: a || b }
             }
+            _ => other,
         }
     }
 }
 
 pub fn parse_optional(input: ParseStream) -> syn::Result<Optional> {
-    let nullable = if input.peek(Token![=]) {
+    let optional = if input.peek(Token![=]) {
         input.parse::<Token![=]>()?;
         let span = input.span();
-        match Ident::parse(input)?.to_string().as_str() {
-            "nullable" => true,
+
+        match Ident::parse_any(input)?.to_string().as_str() {
+            "nullable" => Optional::Optional { nullable: true },
+            "false" => Optional::NotOptional,
             _ => Err(Error::new(span, "expected 'nullable'"))?,
         }
     } else {
-        false
+        Optional::Optional { nullable: false }
     };
 
-    Ok(Optional::Optional { nullable })
+    Ok(optional)
 }
 
 /// Given a field, return a tuple `(is_optional, type)`.  
@@ -64,13 +65,14 @@ pub fn apply(
     field_attr: &FieldAttr,
     span: Span,
 ) -> (Expr, Type) {
-    let (is_optional, nullable) = match (
-        for_struct,
-        field_attr.optional,
-        field_attr.maybe_omitted && field_attr.has_default,
-    ) {
-        // `#[ts(optional)]` on field takes precedence, and is enforced **AT COMPILE TIME**
-        (_, Optional::Optional { nullable }, _) => (
+    match (for_struct, field_attr.optional) {
+        // explicit `#[ts(optional = false)]` on field, or inherited from struct.
+        (Optional::NotOptional, Optional::Inherit) | (_, Optional::NotOptional) => {
+            (parse_quote!(false), field_ty.clone())
+        }
+        // explicit `#[ts(optional)]` on field.
+        // It takes precedence over the struct attribute, and is enforced **AT COMPILE TIME**
+        (_, Optional::Optional { nullable }) => (
             // expression that evaluates to the string "?", but fails to compile if `ty` is not an `Option`.
             parse_quote_spanned! { span => {
                 fn check_that_field_is_option<T: #crate_rename::IsOption>(_: std::marker::PhantomData<T>) {}
@@ -78,27 +80,32 @@ pub fn apply(
                 check_that_field_is_option(x);
                 true
             }},
-            nullable,
+            nullable
+                .then(|| field_ty.clone())
+                .unwrap_or_else(|| unwrap_option(crate_rename, field_ty)),
         ),
-        // `#[ts(optional)]` on the struct acts as `#[ts(optional)]` on a field, but does not error on non-`Option`
-        // fields. Instead, it is a no-op.
-        (Optional::Optional { nullable }, _, _) => (
+        // Inherited `#[ts(optional)]` from the struct.
+        // Acts like `#[ts(optional)]` on a field, but does not error on non-`Option` fields.
+        // Instead, it is a no-op.
+        (Optional::Optional { nullable }, Optional::Inherit) => (
             parse_quote! {
                 <#field_ty as #crate_rename::TS>::IS_OPTION
             },
-            nullable,
+            nullable
+                .then(|| field_ty.clone())
+                .unwrap_or_else(|| unwrap_option(crate_rename, field_ty)),
         ),
         // field may be omitted during serialization and has a default value, so the field can be
-        // optional.
-        (_, _, true) => (parse_quote!(true), true),
-        _ => (parse_quote!(false), true),
-    };
+        // treated as `#[ts(optional = nullable)]`.
+        (Optional::Inherit, Optional::Inherit) => {
+            let is_optional = field_attr.maybe_omitted && field_attr.has_default;
+            (parse_quote!(#is_optional), field_ty.clone())
+        }
+    }
+}
 
-    let ty = if nullable {
-        field_ty.clone()
-    } else {
-        parse_quote! {<#field_ty as #crate_rename::TS>::OptionInnerType}
-    };
-
-    (is_optional, ty)
+/// Unwraps the given option type, turning `Option<T>` into `T`.
+/// otherwise, return the provided type as-is.
+fn unwrap_option(crate_rename: &Path, ty: &Type) -> Type {
+    parse_quote! {<#ty as #crate_rename::TS>::OptionInnerType}
 }

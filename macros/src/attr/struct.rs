@@ -136,11 +136,6 @@ impl Attr for StructAttr {
             if self.rename_all.is_some() {
                 syn_err!("`rename_all` cannot be used with unit or tuple structs");
             }
-
-            if let Optional::Optional { .. } = self.optional_fields {
-                //syn_err!("`optional_fields` cannot be used with unit or tuple structs");
-                // TODO: what about unit structs?
-            }
         }
 
         Ok(())

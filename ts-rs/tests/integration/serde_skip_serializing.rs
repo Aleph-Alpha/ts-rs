@@ -3,6 +3,8 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+// A field annotated with both `#[serde(skip_serializing(_if))]` and `#[serde(default)]` is treated
+// like `#[ts(optional = nullable)]` (except no errors if the type is not `Option<T>`)
 #[derive(Debug, Clone, Deserialize, Serialize, TS)]
 #[ts(export, export_to = "serde_skip_serializing/")]
 pub struct Named {
@@ -48,24 +50,33 @@ pub struct Named {
     // Most general binding:    `d?: number | null`
     #[serde(skip_serializing, default)]
     d: Option<i32>,
-    // TODO users should have the option to override
+
     // Same as above, but explicitly overridden using `#[ts(optional = false)]`
-    // #[serde(skip_serializing, default)]
-    // #[ts(optional = false)]
-    // e: Option<i32>,
+    #[serde(skip_serializing, default)]
+    #[ts(optional = false)]
+    e: Option<i32>,
+
+    // Same as above, but explicitly overridden using `#[ts(optional)]`.
+    #[serde(skip_serializing, default)]
+    #[ts(optional)]
+    f: Option<i32>,
 }
 
 #[test]
 fn named() {
+    let a = "a: number | null";
+    let b = "b?: boolean";
+    let c = "c?: number | null";
+    let d = "d?: number | null";
+    let e = "e: number | null";
+    let f = "f?: number";
+
     assert_eq!(
         Named::decl(),
-        "type Named = { a: number | null, b?: boolean, c?: number | null, d?: number | null, };"
+        format!("type Named = {{ {a}, {b}, {c}, {d}, {e}, {f}, }};")
     );
 }
 
-// TODO: either
-//   - emit warning that we don't support tuple fields or
-//   - implement `#[ts(optional)]` (and the skip_serializing+default handling) for tuples
 #[derive(Debug, Clone, Deserialize, Serialize, TS)]
 #[ts(export, export_to = "serde_skip_serializing/")]
 pub struct Tuple(

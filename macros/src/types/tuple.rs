@@ -42,7 +42,6 @@ pub(crate) fn tuple(attr: &StructAttr, ts_name: Expr, fields: &FieldsUnnamed) ->
     })
 }
 
-// TODO: interaction flatten and optional? same for structs?
 fn format_field(
     crate_rename: &Path,
     formatted_fields: &mut Vec<TokenStream>,
@@ -58,8 +57,6 @@ fn format_field(
     }
 
     if let Some(ref type_override) = field_attr.type_override {
-        // TODO: invalid TS name?
-        // TODO: UFCS?
         formatted_fields.push(quote!(#type_override.to_owned()));
         return Ok(());
     }
