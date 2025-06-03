@@ -5,7 +5,7 @@ use syn::{parse_quote, Attribute, Expr, Ident, ItemEnum, Path, Result, Type, Whe
 use super::{parse_assign_expr, parse_assign_from_str, parse_bound, Attr, ContainerAttr, Serde};
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
-    utils::{parse_attrs, parse_docs},
+    utils::{extract_docs, parse_attrs},
 };
 
 #[derive(Default)]
@@ -18,7 +18,7 @@ pub struct EnumAttr {
     pub rename: Option<Expr>,
     pub export_to: Option<Expr>,
     pub export: bool,
-    pub docs: String,
+    pub docs: Vec<Expr>,
     pub concrete: HashMap<Ident, Type>,
     pub bound: Option<Vec<WherePredicate>>,
     pub tag: Option<String>,
@@ -55,8 +55,7 @@ impl EnumAttr {
             result = result.merge(serde_attr.0);
         }
 
-        let docs = parse_docs(attrs)?;
-        result.docs = docs;
+        result.docs = extract_docs(attrs);
 
         Ok(result)
     }

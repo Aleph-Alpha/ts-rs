@@ -2,10 +2,14 @@
 ### Breaking
 - Changed return type of `TS::output_path()` from `Option<&'static Path>` to `Option<PathBuf>`.  
   This will only break your code if you manually implement `TS` or directly interact with the `TS` trait.
+- Replaced `TS::DOCS` with `TS::docs()`.  
+  This will only break your code if you manually implement `TS` or directly interact with the `TS` trait.
 - Added `OptionInnerType` associated type to the `TS` trait. If you manually implement `TS`, you must set this associated type to `Self` in all of your implementations.
 - Raised MSRV to `1.78.0` due to use of `#[diagnostic::on_unimplemented]` and `let ... else { ... }`
 
 ### Features
+- Add support for arbitrary expressions in doc attributes, e.g `#[doc = concat!("defined in ", file!())]`.
+  This would result both in a rustdoc and JSDoc comment.
 - The `#[ts(rename)]` attribute on structs, enums and variants now accepts any expression.  
   This makes it possible to, for example, rename a struct to the name of a module it is contained in using `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`
 - The `#[ts(export_to)]` attribute on structs and enums now accepts any expression.
@@ -14,6 +18,7 @@
 ### Fixes
 - Fix `#[ts(optional)]` error when using a type alias for `Option` or fully qualifying it as `core::option::Option` ([#366](https://github.com/Aleph-Alpha/ts-rs/pull/366))
 - Fix missing import statements when using `#[ts(as = "...")]` at the top level of a struct/enum ([#385](https://github.com/Aleph-Alpha/ts-rs/pull/385))
+- Fix missing `inline_flattened` implementation for `HashMap`
 
 # 10.1.0
 ### Features

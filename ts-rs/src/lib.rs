@@ -409,12 +409,14 @@ pub trait TS {
     /// All other implementations of `TS` should set this type to `Self` instead.
     type OptionInnerType: ?Sized;
 
-    /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
-    /// automatically read from your doc comments or `#[doc = ".."]` attributes
-    const DOCS: Option<&'static str> = None;
-
     #[doc(hidden)]
     const IS_OPTION: bool = false;
+
+    /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
+    /// automatically read from your doc comments or `#[doc = ".."]` attributes
+    fn docs() -> Option<String> {
+        None
+    }
 
     /// Identifier of this type, excluding generic parameters.
     fn ident() -> String {
@@ -1005,7 +1007,11 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+        format!(
+            "({{ [key in {}]?: {} }})",
+            <K as crate::TS>::inline(),
+            <V as crate::TS>::inline()
+        )
     }
 }
 
@@ -1169,5 +1175,36 @@ impl TS for Dummy {
 
     fn inline_flattened() -> String {
         panic!("{} cannot be flattened", <Self as crate::TS>::name())
+    }
+}
+
+/// Formats rust doc comments, turning them into a JSDoc comments.
+/// Expects a `&[&str]` where each element corresponds to the value of one `#[doc]` attribute.
+/// This work is deferred to runtime, allowing expressions in `#[doc]`, e.g `#[doc = file!()]`.
+#[doc(hidden)]
+pub fn format_docs(docs: &[&str]) -> String {
+    match docs {
+        // No docs
+        [] => String::new(),
+
+        // Multi-line block doc comment (/** ... */)
+        [doc] if doc.contains('\n') => format!("/**{doc}*/\n"),
+
+        // Regular doc comment(s) (///) or single line block doc comment
+        _ => {
+            let mut buffer = String::from("/**\n");
+            let mut lines = docs.iter().peekable();
+
+            while let Some(line) = lines.next() {
+                buffer.push_str(" *");
+                buffer.push_str(line);
+
+                if lines.peek().is_some() {
+                    buffer.push('\n');
+                }
+            }
+            buffer.push_str("\n */\n");
+            buffer
+        }
     }
 }
