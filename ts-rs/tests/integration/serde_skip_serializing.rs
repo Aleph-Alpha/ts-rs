@@ -92,3 +92,25 @@ fn tuple() {
         "type Tuple = [number | null, (number)?, (number | null)?];"
     );
 }
+
+#[derive(Debug, Clone, Deserialize, Serialize, TS)]
+#[ts(export, export_to = "serde_skip_serializing/")]
+#[ts(optional_fields = false)]
+pub struct Overrides {
+    #[serde(skip_serializing, default)]
+    x: Option<i32>,
+    y: Option<i32>,
+    #[ts(optional)]
+    z: Option<i32>,
+}
+
+#[test]
+fn overrides() {
+    let x = "x: number | null"; // same as without any attributes, since it's disabled at the struct level
+    let y = "y: number | null"; // default type for an option
+    let z = "z?: number"; // re-enabled for this field
+    assert_eq!(
+        Overrides::decl(),
+        format!("type Overrides = {{ {x}, {y}, {z}, }};")
+    );
+}

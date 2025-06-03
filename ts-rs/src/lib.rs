@@ -327,7 +327,8 @@ mod tokio;
 /// - **`#[ts(optional)]`**  
 ///   May be applied on a struct field of type `Option<T>`. By default, such a field would turn into `t: T | null`.  
 ///   If `#[ts(optional)]` is present, `t?: T` is generated instead.  
-///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.
+///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.  
+///   `#[ts(optional = false)]` can override for this field if this attribute is present on the struct itself.
 ///   <br/><br/>
 ///
 /// - **`#[ts(flatten)]`**  
