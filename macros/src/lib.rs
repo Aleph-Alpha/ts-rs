@@ -17,6 +17,7 @@ use crate::{deps::Dependencies, utils::format_generics};
 mod utils;
 mod attr;
 mod deps;
+mod optional;
 mod types;
 
 struct DerivedTS {

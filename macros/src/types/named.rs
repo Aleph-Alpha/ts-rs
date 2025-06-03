@@ -1,10 +1,11 @@
 use proc_macro2::TokenStream;
-use quote::{quote, quote_spanned};
-use syn::{parse_quote, spanned::Spanned, Expr, Field, FieldsNamed, Path, Result};
+use quote::quote;
+use syn::{spanned::Spanned, Expr, Field, FieldsNamed, Path, Result};
 
 use crate::{
-    attr::{Attr, ContainerAttr, FieldAttr, Inflection, Optional, StructAttr},
+    attr::{Attr, ContainerAttr, FieldAttr, Inflection, StructAttr},
     deps::Dependencies,
+    optional::Optional,
     utils::{raw_name_to_ts_field, to_ts_ident},
     DerivedTS,
 };
@@ -125,41 +126,14 @@ fn format_field(
 
     let ty = field_attr.type_as(&field.ty);
 
-    let (optional_annotation, nullable) = match (
+    let (is_optional, ty) = crate::optional::apply(
+        crate_rename,
         struct_optional,
-        field_attr.optional,
-        field_attr.maybe_omitted && field_attr.has_default,
-    ) {
-        // `#[ts(optional)]` on field takes precedence, and is enforced **AT COMPILE TIME**
-        (_, Optional::Optional { nullable }, _) => (
-            // expression that evaluates to the string "?", but fails to compile if `ty` is not an `Option`.
-            quote_spanned! { field.span() => {
-                fn check_that_field_is_option<T: #crate_rename::IsOption>(_: std::marker::PhantomData<T>) {}
-                let x: std::marker::PhantomData<#ty> = std::marker::PhantomData;
-                check_that_field_is_option(x);
-                "?"
-            }},
-            nullable,
-        ),
-        // `#[ts(optional)]` on the struct acts as `#[ts(optional)]` on a field, but does not error on non-`Option`
-        // fields. Instead, it is a no-op.
-        (Optional::Optional { nullable }, _, _) => (
-            quote! {
-                if <#ty as #crate_rename::TS>::IS_OPTION { "?" } else { "" }
-            },
-            nullable,
-        ),
-        // field may be omitted during serialization and has a default value, so the field can be
-        // optional.
-        (_, _, true) => (quote!("?"), true),
-        _ => (quote!(""), true),
-    };
-
-    let ty = if nullable {
-        ty
-    } else {
-        parse_quote! {<#ty as #crate_rename::TS>::OptionInnerType}
-    };
+        &ty,
+        &field_attr,
+        field.span(),
+    );
+    let optional_annotation = quote!(if #is_optional { "?" } else { "" });
 
     if field_attr.flatten {
         flattened_fields.push(quote!(<#ty as #crate_rename::TS>::inline_flattened()));

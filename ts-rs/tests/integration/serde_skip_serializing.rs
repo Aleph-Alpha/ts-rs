@@ -48,7 +48,6 @@ pub struct Named {
     // Most general binding:    `d?: number | null`
     #[serde(skip_serializing, default)]
     d: Option<i32>,
-    
     // TODO users should have the option to override
     // Same as above, but explicitly overridden using `#[ts(optional = false)]`
     // #[serde(skip_serializing, default)]
@@ -60,7 +59,7 @@ pub struct Named {
 fn named() {
     assert_eq!(
         Named::decl(),
-        "type Tuple = { a: number | null, b?: boolean, c?: number | null, d?: number | null, e: number | null };"
+        "type Named = { a: number | null, b?: boolean, c?: number | null, d?: number | null, };"
     );
 }
 
@@ -71,16 +70,14 @@ fn named() {
 #[ts(export, export_to = "serde_skip_serializing/")]
 pub struct Tuple(
     Option<i32>,
-    #[ts(optional)]
-    Option<i32>,
-    #[serde(skip_serializing, default)]
-    Option<i32>,
+    #[ts(optional)] Option<i32>,
+    #[serde(skip_serializing, default)] Option<i32>,
 );
 
 #[test]
 fn tuple() {
     assert_eq!(
         Tuple::decl(),
-        "type Tuple = [number | null, number?, (number | null)?];"
+        "type Tuple = [number | null, (number)?, (number | null)?];"
     );
 }

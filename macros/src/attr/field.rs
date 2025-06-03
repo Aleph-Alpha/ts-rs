@@ -4,8 +4,11 @@ use syn::{
     TypeReference, TypeSlice, TypeTuple,
 };
 
-use super::{parse_assign_from_str, parse_assign_str, parse_optional, Attr, Optional, Serde};
-use crate::utils::{extract_docs, parse_attrs};
+use super::{parse_assign_from_str, parse_assign_str, Attr, Serde};
+use crate::{
+    optional::{parse_optional, Optional},
+    utils::{extract_docs, parse_attrs},
+};
 
 #[derive(Default)]
 pub struct FieldAttr {
@@ -153,14 +156,7 @@ impl Attr for FieldAttr {
             if self.rename.is_some() {
                 syn_err_spanned!(
                     field;
-                    "`flatten` cannot be used with tuple struct fields"
-                );
-            }
-
-            if let Optional::Optional { .. } = self.optional {
-                syn_err_spanned!(
-                    field;
-                    "`optional` cannot be used with tuple struct fields"
+                    "`rename` cannot be used with tuple struct fields"
                 );
             }
         }
