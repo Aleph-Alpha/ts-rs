@@ -146,21 +146,21 @@ impl Attr for FieldAttr {
             if self.flatten {
                 syn_err_spanned!(
                     field;
-                    "`flatten` cannot with tuple struct fields"
+                    "`flatten` cannot be used with tuple struct fields"
                 );
             }
 
             if self.rename.is_some() {
                 syn_err_spanned!(
                     field;
-                    "`flatten` cannot with tuple struct fields"
+                    "`flatten` cannot be used with tuple struct fields"
                 );
             }
 
             if let Optional::Optional { .. } = self.optional {
                 syn_err_spanned!(
                     field;
-                    "`optional` cannot with tuple struct fields"
+                    "`optional` cannot be used with tuple struct fields"
                 );
             }
         }
