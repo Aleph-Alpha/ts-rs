@@ -112,11 +112,20 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     // format output
     #[cfg(feature = "format")]
     {
-        use dprint_plugin_typescript::{configuration::ConfigurationBuilder, format_text};
+        use dprint_plugin_typescript::{
+            configuration::ConfigurationBuilder, format_text, FormatTextOptions,
+        };
 
         let fmt_cfg = ConfigurationBuilder::new().deno().build();
-        if let Some(formatted) = format_text(path.as_ref(), &buffer, &fmt_cfg)
-            .map_err(|e| ExportError::Formatting(e.to_string()))?
+        let fmt_options = FormatTextOptions {
+            path: &path,
+            extension: None,
+            text: buffer.clone(),
+            config: &fmt_cfg,
+            external_formatter: None,
+        };
+        if let Some(formatted) =
+            format_text(fmt_options).map_err(|e| ExportError::Formatting(e.to_string()))?
         {
             buffer = formatted;
         }
