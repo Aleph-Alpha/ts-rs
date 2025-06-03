@@ -1,4 +1,5 @@
 use std::path::Path;
+
 use ts_rs::TS;
 
 #[derive(TS)]

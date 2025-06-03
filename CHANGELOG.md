@@ -1,5 +1,7 @@
 # master
 ### Breaking
+- `#[serde(skip_serializing)]` and `#[serde(skip_serializing_if = ..)]` are no longer ignored when used together with
+  `#[serde(default)]`. ([#393](https://github.com/Aleph-Alpha/ts-rs/pull/393))
 - Changed return type of `TS::output_path()` from `Option<&'static Path>` to `Option<PathBuf>`.  
   This will only break your code if you manually implement `TS` or directly interact with the `TS` trait.
 - Replaced `TS::DOCS` with `TS::docs()`.  
@@ -8,6 +10,8 @@
 - Raised MSRV to `1.78.0` due to use of `#[diagnostic::on_unimplemented]` and `let ... else { ... }`
 
 ### Features
+- Add support for `#[serde(skip_serializing)]` and `#[serde(skip_serializing_if = ..)]` when used together with
+  `#[serde(default)]`. Since these fields might be absent([#393](https://github.com/Aleph-Alpha/ts-rs/pull/393))
 - Add support for arbitrary expressions in doc attributes, e.g `#[doc = concat!("defined in ", file!())]`.
   This would result both in a rustdoc and JSDoc comment.
 - The `#[ts(rename)]` attribute on structs, enums and variants now accepts any expression.  

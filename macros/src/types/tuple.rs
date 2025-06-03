@@ -1,10 +1,11 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Expr, Field, FieldsUnnamed, Path, Result};
+use syn::{spanned::Spanned, Expr, Field, FieldsUnnamed, Path, Result};
 
 use crate::{
     attr::{Attr, ContainerAttr, FieldAttr, StructAttr},
     deps::Dependencies,
+    optional::Optional,
     DerivedTS,
 };
 
@@ -18,6 +19,7 @@ pub(crate) fn tuple(attr: &StructAttr, ts_name: Expr, fields: &FieldsUnnamed) ->
             &mut formatted_fields,
             &mut dependencies,
             field,
+            attr.optional_fields,
         )?;
     }
 
@@ -45,6 +47,7 @@ fn format_field(
     formatted_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     field: &Field,
+    struct_optional: Optional,
 ) -> Result<()> {
     let field_attr = FieldAttr::from_attrs(&field.attrs)?;
     field_attr.assert_validity(field)?;
@@ -53,19 +56,35 @@ fn format_field(
         return Ok(());
     }
 
+    if let Some(ref type_override) = field_attr.type_override {
+        formatted_fields.push(quote!(#type_override.to_owned()));
+        return Ok(());
+    }
+
     let ty = field_attr.type_as(&field.ty);
+    let (is_optional, ty) = crate::optional::apply(
+        crate_rename,
+        struct_optional,
+        &ty,
+        &field_attr,
+        field.span(),
+    );
 
-    formatted_fields.push(match field_attr.type_override {
-        Some(ref o) => quote!(#o.to_owned()),
-        None if field_attr.inline => quote!(<#ty as #crate_rename::TS>::inline()),
-        None => quote!(<#ty as #crate_rename::TS>::name()),
-    });
-
-    match (field_attr.inline, field_attr.type_override) {
-        (_, Some(_)) => (),
-        (false, _) => dependencies.push(&ty),
-        (true, _) => dependencies.append_from(&ty),
+    let formatted_ty = if field_attr.inline {
+        dependencies.append_from(&ty);
+        quote!(<#ty as #crate_rename::TS>::inline())
+    } else {
+        dependencies.push(&ty);
+        quote!(<#ty as #crate_rename::TS>::name())
     };
+
+    formatted_fields.push(quote! {
+        if #is_optional {
+            format!("({})?", #formatted_ty)
+        } else {
+            #formatted_ty
+        }
+    });
 
     Ok(())
 }

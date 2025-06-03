@@ -4,10 +4,11 @@ use syn::{parse_quote, Attribute, Expr, Fields, Ident, Path, Result, Type, Where
 
 use super::{
     parse_assign_expr, parse_assign_from_str, parse_assign_inflection, parse_bound, parse_concrete,
-    parse_optional, Attr, ContainerAttr, Optional, Serde, Tagged,
+    Attr, ContainerAttr, Serde, Tagged,
 };
 use crate::{
     attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
+    optional::{parse_optional, Optional},
     utils::{extract_docs, parse_attrs},
 };
 
@@ -134,10 +135,6 @@ impl Attr for StructAttr {
 
             if self.rename_all.is_some() {
                 syn_err!("`rename_all` cannot be used with unit or tuple structs");
-            }
-
-            if let Optional::Optional { .. } = self.optional_fields {
-                syn_err!("`optional_fields` cannot be used with unit or tuple structs");
             }
         }
 

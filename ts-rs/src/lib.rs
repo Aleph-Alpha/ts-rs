@@ -108,10 +108,15 @@
 //! - `content`
 //! - `untagged`
 //! - `skip`
+//! - `skip_serializing`
+//! - `skip_serializing_if`
 //! - `flatten`
 //! - `default`
 //!
-//! Note: `skip_serializing` and `skip_deserializing` are ignored. If you wish to exclude a field
+//! Note: `skip_serializing` and `skip_serializing_if` only have an effect when used together with
+//! `#[serde(default)]`.
+//!
+//! Note: `skip_deserializing` is ignored. If you wish to exclude a field
 //! from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 //!
 //! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
@@ -322,7 +327,9 @@ mod tokio;
 /// - **`#[ts(optional)]`**  
 ///   May be applied on a struct field of type `Option<T>`. By default, such a field would turn into `t: T | null`.  
 ///   If `#[ts(optional)]` is present, `t?: T` is generated instead.  
-///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.
+///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.  
+///   `#[ts(optional = false)]` can override the behaviour for this field if `#[ts(optional_fields)]`
+///   is present on the struct itself.
 ///   <br/><br/>
 ///
 /// - **`#[ts(flatten)]`**  
