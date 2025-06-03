@@ -5,7 +5,7 @@ use ts_rs::TS;
 
 #[derive(Debug, Clone, Deserialize, Serialize, TS)]
 #[ts(export, export_to = "serde_skip_serializing/")]
-pub struct Item {
+pub struct Named {
     // Serialization produces:  `number |  undefined  | null(1)`
     //                          (1): We'd know `null` is never produced if we checked the predicate
     // Deserialization accepts: `number | null`
@@ -48,12 +48,39 @@ pub struct Item {
     // Most general binding:    `d?: number | null`
     #[serde(skip_serializing, default)]
     d: Option<i32>,
+    
+    // TODO users should have the option to override
+    // Same as above, but explicitly overridden using `#[ts(optional = false)]`
+    // #[serde(skip_serializing, default)]
+    // #[ts(optional = false)]
+    // e: Option<i32>,
 }
 
 #[test]
-fn serde_skip_serializing_if() {
+fn named() {
     assert_eq!(
-        Item::decl(),
-        "type Item = { a: number | null, b?: boolean, c?: number | null, d?: number | null, };"
+        Named::decl(),
+        "type Tuple = { a: number | null, b?: boolean, c?: number | null, d?: number | null, e: number | null };"
+    );
+}
+
+// TODO: either
+//   - emit warning that we don't support tuple fields or
+//   - implement `#[ts(optional)]` (and the skip_serializing+default handling) for tuples
+#[derive(Debug, Clone, Deserialize, Serialize, TS)]
+#[ts(export, export_to = "serde_skip_serializing/")]
+pub struct Tuple(
+    Option<i32>,
+    #[ts(optional)]
+    Option<i32>,
+    #[serde(skip_serializing, default)]
+    Option<i32>,
+);
+
+#[test]
+fn tuple() {
+    assert_eq!(
+        Tuple::decl(),
+        "type Tuple = [number | null, number?, (number | null)?];"
     );
 }
