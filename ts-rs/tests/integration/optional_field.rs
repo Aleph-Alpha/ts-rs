@@ -156,36 +156,36 @@ fn struct_nullable() {
 #[derive(Serialize, TS)]
 #[ts(export, export_to = "optional_field/")]
 struct OptionalInTuple(
+    Option<i32>,
     #[ts(optional)] Option<i32>,
     #[ts(optional = nullable)] Option<i32>,
-    Option<i32>,
 );
 
 #[test]
 fn in_tuple() {
-    let a = "(number)?";
-    let b = "(number | null)?";
-    let c = "number | null";
-    assert_eq!(OptionalInTuple::inline(), format!("[{a}, {b}, {c}]"));
+    assert_eq!(
+        OptionalInTuple::inline(),
+        format!("[number | null, (number)?, (number | null)?]")
+    );
 }
 
 #[derive(Serialize, TS)]
 #[ts(export, export_to = "optional_field/")]
 #[ts(optional_fields)]
 struct OptionalTuple(
-    Option<i32>,
-    #[ts(optional)] Option<i32>,
-    #[ts(optional = nullable)] Option<i32>,
     i32,
     #[ts(type = "string")] Option<i32>,
     #[ts(as = "String")] Option<i32>,
+    Option<i32>,
+    #[ts(optional)] Option<i32>,
+    #[ts(optional = nullable)] Option<i32>,
 );
 
 #[test]
 fn tuple_optional() {
     assert_eq!(
         OptionalTuple::inline(),
-        "[(number)?, (number)?, (number | null)?, number, string, string]"
+        "[number, string, string, (number)?, (number)?, (number | null)?]"
     );
 }
 
@@ -193,18 +193,18 @@ fn tuple_optional() {
 #[ts(export, export_to = "optional_field/")]
 #[ts(optional_fields = nullable)]
 struct NullableTuple(
-    Option<i32>,
-    #[ts(optional)] Option<i32>,
-    #[ts(optional = nullable)] Option<i32>,
     i32,
     #[ts(type = "string")] Option<i32>,
     #[ts(as = "String")] Option<i32>,
+    Option<i32>,
+    #[ts(optional)] Option<i32>,
+    #[ts(optional = nullable)] Option<i32>,
 );
 
 #[test]
 fn tuple_nullable() {
     assert_eq!(
         NullableTuple::inline(),
-        "[(number | null)?, (number)?, (number | null)?, number, string, string]"
+        "[number, string, string, (number | null)?, (number)?, (number | null)?]"
     );
 }
