@@ -2,7 +2,7 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "path_bug/aaa/")]
+#[ts(export_to = "path_bug/aaa/")]
 struct Foo {
     bar: Bar,
 }
@@ -15,7 +15,7 @@ struct Bar {
 
 #[test]
 fn path_bug() {
-    export_bindings_foo();
+    Foo::export_all().unwrap();
 
     assert!(Foo::default_output_path().unwrap().is_file());
     assert!(Bar::default_output_path().unwrap().is_file());
