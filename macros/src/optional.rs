@@ -64,10 +64,10 @@ pub fn apply(
     crate_rename: &Path,
     for_struct: Optional,
     field_ty: &Type,
-    field_attr: &FieldAttr,
+    attr: &FieldAttr,
     span: Span,
 ) -> (Expr, Type) {
-    match (for_struct, field_attr.optional) {
+    match (for_struct, attr.optional) {
         // explicit `#[ts(optional = false)]` on field, or inherited from struct.
         (Optional::NotOptional, Optional::Inherit) | (_, Optional::NotOptional) => {
             (parse_quote!(false), field_ty.clone())
@@ -89,7 +89,7 @@ pub fn apply(
         // Inherited `#[ts(optional)]` from the struct.
         // Acts like `#[ts(optional)]` on a field, but does not error on non-`Option` fields.
         // Instead, it is a no-op.
-        (Optional::Optional { nullable }, Optional::Inherit) => (
+        (Optional::Optional { nullable }, Optional::Inherit) if attr.type_override.is_none() => (
             parse_quote! {
                 <#field_ty as #crate_rename::TS>::IS_OPTION
             },
@@ -97,10 +97,11 @@ pub fn apply(
                 .then(|| field_ty.clone())
                 .unwrap_or_else(|| unwrap_option(crate_rename, field_ty)),
         ),
-        // field may be omitted during serialization and has a default value, so the field can be
-        // treated as `#[ts(optional = nullable)]`.
-        (Optional::Inherit, Optional::Inherit) => {
-            let is_optional = field_attr.maybe_omitted && field_attr.has_default;
+        // no applicable `#[ts(optional)]` attributes
+        _ => {
+            // field may be omitted during serialization and has a default value, so the field can be
+            // treated as `#[ts(optional = nullable)]`.
+            let is_optional = attr.maybe_omitted && attr.has_default;
             (parse_quote!(#is_optional), field_ty.clone())
         }
     }

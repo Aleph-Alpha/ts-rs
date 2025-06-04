@@ -106,13 +106,6 @@ impl Attr for FieldAttr {
                     "`type` is not compatible with `flatten`"
                 );
             }
-
-            if let Optional::Optional { .. } = self.optional {
-                syn_err_spanned!(
-                    field;
-                    "`type` is not compatible with `optional`"
-                );
-            }
         }
 
         if self.flatten {
