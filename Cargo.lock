@@ -1435,7 +1435,7 @@ dependencies = [
 
 [[package]]
 name = "ts-rs"
-version = "11.0.0"
+version = "11.0.1"
 dependencies = [
  "bigdecimal",
  "bson",
@@ -1458,7 +1458,7 @@ dependencies = [
 
 [[package]]
 name = "ts-rs-macros"
-version = "11.0.0"
+version = "11.0.1"
 dependencies = [
  "proc-macro2",
  "quote",

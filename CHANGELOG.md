@@ -1,4 +1,8 @@
-# master
+# 11.0.1
+### Fixes
+- Fix usage of `#[ts(optional)]` together with `#[ts(type)]`. ([#416](https://github.com/Aleph-Alpha/ts-rs/pull/416)) 
+
+# 11.0.0
 ### Breaking
 - `#[serde(skip_serializing)]` and `#[serde(skip_serializing_if = ..)]` are no longer ignored when used together with
   `#[serde(default)]`. ([#393](https://github.com/Aleph-Alpha/ts-rs/pull/393))
