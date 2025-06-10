@@ -97,3 +97,37 @@ fn test_use_typescript_enum_within_struct() {
         r#"type Hello = { helloThere: A, goodNight: ("message_one" | "message_two"), };"#,
     );
 }
+
+#[derive(TS)]
+#[ts(export, export_to = "enum_typescript/", use_ts_enum)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[cfg_attr(feature = "serde-compat", serde(rename_all = "PascalCase"))]
+#[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "PascalCase"))]
+enum C {
+    MessageOne,
+    #[serde(rename = "boo_yah")]
+    MessageTwo,
+}
+
+#[test]
+fn test_use_typescript_enum_with_rename_variant() {
+    // Let inline funcs still return the normal unions,
+    // so as to not break other types that might inline an enum in their definitions
+    assert_eq!(
+        C::inline_flattened(),
+        r#"("MessageOne" | "boo_yah")"#,
+    );
+    assert_eq!(
+        C::inline(),
+        r#"("MessageOne" | "boo_yah")"#,
+    );
+    // The decl function return the proper typescript enum
+    assert_eq!(
+        C::decl(),
+        r#"enum C { MessageOne = "MessageOne", boo_yah = "boo_yah" }"#,
+    );
+    assert_eq!(
+        C::decl_concrete(),
+        r#"enum C { MessageOne = "MessageOne", boo_yah = "boo_yah" }"#,
+    );
+}
