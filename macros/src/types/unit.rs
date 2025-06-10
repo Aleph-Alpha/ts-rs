@@ -21,6 +21,7 @@ pub(crate) fn empty_object(attr: &StructAttr, ts_name: Expr) -> DerivedTS {
         ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
+        is_ts_enum: false,
     }
 }
 
@@ -38,6 +39,7 @@ pub(crate) fn empty_array(attr: &StructAttr, ts_name: Expr) -> DerivedTS {
         ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
+        is_ts_enum: false,
     }
 }
 
@@ -55,5 +57,6 @@ pub(crate) fn null(attr: &StructAttr, ts_name: Expr) -> DerivedTS {
         ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
+        is_ts_enum: false,
     }
 }

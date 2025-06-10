@@ -28,6 +28,7 @@ pub(crate) fn type_as_struct(
         ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
+        is_ts_enum: false,
     })
 }
 
@@ -48,5 +49,6 @@ pub(crate) fn type_as_enum(attr: &EnumAttr, ts_name: Expr, type_as: &Type) -> Re
         ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
+        is_ts_enum: false,
     })
 }

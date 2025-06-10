@@ -72,3 +72,4 @@ mod union_with_data;
 mod union_with_internal_tag;
 mod unit;
 mod r#unsized;
+mod enum_typescript;

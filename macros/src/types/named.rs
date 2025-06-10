@@ -72,6 +72,7 @@ pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> R
         ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
+        is_ts_enum: false,
     })
 }
 

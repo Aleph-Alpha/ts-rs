@@ -13,6 +13,7 @@ pub struct EnumAttr {
     crate_rename: Option<Path>,
     pub type_as: Option<Type>,
     pub type_override: Option<String>,
+    pub use_ts_enum: bool,
     pub rename_all: Option<Inflection>,
     pub rename_all_fields: Option<Inflection>,
     pub rename: Option<Expr>,
@@ -75,6 +76,7 @@ impl Attr for EnumAttr {
             crate_rename: self.crate_rename.or(other.crate_rename),
             type_as: self.type_as.or(other.type_as),
             type_override: self.type_override.or(other.type_override),
+            use_ts_enum: self.use_ts_enum || other.use_ts_enum,
             rename: self.rename.or(other.rename),
             rename_all: self.rename_all.or(other.rename_all),
             rename_all_fields: self.rename_all_fields.or(other.rename_all_fields),
@@ -94,6 +96,38 @@ impl Attr for EnumAttr {
     }
 
     fn assert_validity(&self, item: &Self::Item) -> Result<()> {
+        if self.use_ts_enum {
+            if self.tag.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`tag` is not compatible with `use_ts_enum`"
+                );
+            }
+            if self.type_override.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`type_override` is not compatible with `use_ts_enum`"
+                );
+            }
+            if self.type_as.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`type_as` is not compatible with `use_ts_enum`"
+                );
+            }
+            
+            match (&self.rename_all, &self.rename_all_fields) {
+                (Some(Inflection::Kebab | Inflection::ScreamingKebab), _) |
+                (_, Some(Inflection::Kebab | Inflection::ScreamingKebab)) => {
+                    syn_err_spanned!(
+                        item;
+                        "`use_ts_enum` is not compatible with kebab case renaming"
+                    );
+                },
+                _ => {},
+            }
+        }
+        
         if self.type_override.is_some() {
             if self.type_as.is_some() {
                 syn_err_spanned!(
@@ -208,6 +242,7 @@ impl_parse! {
         "crate" => out.crate_rename = Some(parse_assign_from_str(input)?),
         "as" => out.type_as = Some(parse_assign_from_str(input)?),
         "type" => out.type_override = Some(parse_assign_str(input)?),
+        "use_ts_enum" => out.use_ts_enum = true,
         "rename" => out.rename = Some(parse_assign_expr(input)?),
         "rename_all" => out.rename_all = Some(parse_assign_inflection(input)?),
         "rename_all_fields" => out.rename_all_fields = Some(parse_assign_inflection(input)?),
