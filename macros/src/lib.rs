@@ -29,7 +29,7 @@ struct DerivedTS {
     dependencies: Dependencies,
     concrete: HashMap<Ident, Type>,
     bound: Option<Vec<WherePredicate>>,
-
+    is_ts_enum: bool,
     export: bool,
     export_to: Option<Expr>,
 }
@@ -253,9 +253,17 @@ impl DerivedTS {
                 }
             },
         );
-        let inline = quote! {
-            fn inline() -> String {
-                #inline
+        let inline = if self.is_ts_enum {
+            quote! {
+                fn inline() -> String {
+                    <Self as #crate_rename::TS>::inline_flattened()
+                }
+            }
+        } else {
+            quote! {
+                fn inline() -> String {
+                    #inline
+                }
             }
         };
         quote! {
@@ -295,6 +303,19 @@ impl DerivedTS {
             // use instead. This might be something to change in the future.
             G::Const(ConstParam { ident, .. }) => Some(quote!(#ident)),
         });
+        
+        if self.is_ts_enum {
+            let inline = &self.inline;
+            return quote! {
+                fn decl_concrete() -> String {
+                    format!("enum {} {{ {} }}", #name, #inline)
+                }
+                fn decl() -> String {
+                    <#rust_ty<#(#generic_idents,)*> as #crate_rename::TS>::decl_concrete()
+                }
+            };
+        }
+        
         quote! {
             fn decl_concrete() -> String {
                 format!("type {} = {};", #name, <Self as #crate_rename::TS>::inline())
