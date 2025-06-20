@@ -105,7 +105,8 @@ fn test_use_typescript_enum_within_struct() {
 #[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "PascalCase"))]
 enum C {
     MessageOne,
-    #[serde(rename = "boo_yah")]
+    #[cfg_attr(feature = "serde-compat", serde(rename = "boo_yah"))]
+    #[cfg_attr(not(feature = "serde-compat"), ts(rename = "boo_yah"))]
     MessageTwo,
 }
 
