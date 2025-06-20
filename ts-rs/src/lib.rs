@@ -64,7 +64,7 @@
 //!
 //! ## Features
 //! - generate type declarations from rust structs
-//! - generate union declarations from rust enums
+//! - generate union declarations (and native typescript enums) from rust enums
 //! - inline types
 //! - flatten structs/types
 //! - generate necessary imports when exporting to multiple files
@@ -364,6 +364,11 @@ mod tokio;
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///  
+/// - **`#[ts(use_ts_enum)]`**  
+///   Exports a typescript enum with string values instead of a union type.
+///   Typescript enums have simple names and values; and therefore cannot be used with `tag`, `type_override`, `type_as`, or kebab-case renaming on the same enum.
+///   <br/><br/>
+///
 /// ### enum variant attributes
 ///
 /// - **`#[ts(rename = "..")]`**  

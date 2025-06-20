@@ -66,7 +66,7 @@ export type User = { user_id: number, first_name: string, last_name: string, };
 
 ### Features
 - generate type declarations from rust structs
-- generate union declarations from rust enums
+- generate union declarations (and native typescript enums) from rust enums
 - inline types
 - flatten structs/types
 - generate necessary imports when exporting to multiple files
