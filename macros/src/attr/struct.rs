@@ -132,10 +132,6 @@ impl Attr for StructAttr {
             if self.tag.is_some() {
                 syn_err!("`tag` cannot be used with unit or tuple structs");
             }
-
-            if self.rename_all.is_some() {
-                syn_err!("`rename_all` cannot be used with unit or tuple structs");
-            }
         }
 
         Ok(())
