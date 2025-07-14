@@ -109,10 +109,15 @@
 //! - `content`
 //! - `untagged`
 //! - `skip`
+//! - `skip_serializing`
+//! - `skip_serializing_if`
 //! - `flatten`
 //! - `default`
 //!
-//! Note: `skip_serializing` and `skip_deserializing` are ignored. If you wish to exclude a field
+//! Note: `skip_serializing` and `skip_serializing_if` only have an effect when used together with
+//! `#[serde(default)]`.
+//!
+//! Note: `skip_deserializing` is ignored. If you wish to exclude a field
 //! from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 //!
 //! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
@@ -323,7 +328,9 @@ mod tokio;
 /// - **`#[ts(optional)]`**  
 ///   May be applied on a struct field of type `Option<T>`. By default, such a field would turn into `t: T | null`.  
 ///   If `#[ts(optional)]` is present, `t?: T` is generated instead.  
-///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.
+///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.  
+///   `#[ts(optional = false)]` can override the behaviour for this field if `#[ts(optional_fields)]`
+///   is present on the struct itself.
 ///   <br/><br/>
 ///
 /// - **`#[ts(flatten)]`**  
@@ -405,12 +412,14 @@ pub trait TS {
     /// All other implementations of `TS` should set this type to `Self` instead.
     type OptionInnerType: ?Sized;
 
-    /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
-    /// automatically read from your doc comments or `#[doc = ".."]` attributes
-    const DOCS: Option<&'static str> = None;
-
     #[doc(hidden)]
     const IS_OPTION: bool = false;
+
+    /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
+    /// automatically read from your doc comments or `#[doc = ".."]` attributes
+    fn docs() -> Option<String> {
+        None
+    }
 
     /// Identifier of this type, excluding generic parameters.
     fn ident() -> String {
@@ -1001,7 +1010,11 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+        format!(
+            "({{ [key in {}]?: {} }})",
+            <K as crate::TS>::inline(),
+            <V as crate::TS>::inline()
+        )
     }
 }
 
@@ -1165,5 +1178,36 @@ impl TS for Dummy {
 
     fn inline_flattened() -> String {
         panic!("{} cannot be flattened", <Self as crate::TS>::name())
+    }
+}
+
+/// Formats rust doc comments, turning them into a JSDoc comments.
+/// Expects a `&[&str]` where each element corresponds to the value of one `#[doc]` attribute.
+/// This work is deferred to runtime, allowing expressions in `#[doc]`, e.g `#[doc = file!()]`.
+#[doc(hidden)]
+pub fn format_docs(docs: &[&str]) -> String {
+    match docs {
+        // No docs
+        [] => String::new(),
+
+        // Multi-line block doc comment (/** ... */)
+        [doc] if doc.contains('\n') => format!("/**{doc}*/\n"),
+
+        // Regular doc comment(s) (///) or single line block doc comment
+        _ => {
+            let mut buffer = String::from("/**\n");
+            let mut lines = docs.iter().peekable();
+
+            while let Some(line) = lines.next() {
+                buffer.push_str(" *");
+                buffer.push_str(line);
+
+                if lines.peek().is_some() {
+                    buffer.push('\n');
+                }
+            }
+            buffer.push_str("\n */\n");
+            buffer
+        }
     }
 }

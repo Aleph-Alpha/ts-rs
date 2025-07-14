@@ -8,42 +8,13 @@ pub use r#struct::*;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Error, Expr, Ident, Lit, Path, Result, Token, WherePredicate,
+    Error, Expr, Lit, Path, Result, Token, WherePredicate,
 };
 pub use variant::*;
-
 mod r#enum;
 mod field;
 mod r#struct;
 mod variant;
-
-/// Indicates whether the field is marked with `#[ts(optional)]`.
-/// `#[ts(optional)]` turns an `t: Option<T>` into `t?: T`, while
-/// `#[ts(optional = nullable)]` turns it into `t?: T | null`.
-#[derive(Default, Clone, Copy)]
-pub enum Optional {
-    Optional {
-        nullable: bool,
-    },
-
-    #[default]
-    NotOptional,
-}
-
-impl Optional {
-    pub fn or(self, other: Optional) -> Self {
-        match (self, other) {
-            (Self::NotOptional, Self::NotOptional) => Self::NotOptional,
-
-            (Self::Optional { nullable }, Self::NotOptional)
-            | (Self::NotOptional, Self::Optional { nullable }) => Self::Optional { nullable },
-
-            (Self::Optional { nullable: a }, Self::Optional { nullable: b }) => {
-                Self::Optional { nullable: a || b }
-            }
-        }
-    }
-}
 
 #[derive(Copy, Clone, Debug)]
 pub enum Inflection {
@@ -235,19 +206,4 @@ fn parse_bound(input: ParseStream) -> Result<Vec<WherePredicate>> {
         }
         other => Err(Error::new(other.span(), "expected string")),
     }
-}
-
-fn parse_optional(input: ParseStream) -> Result<Optional> {
-    let nullable = if input.peek(Token![=]) {
-        input.parse::<Token![=]>()?;
-        let span = input.span();
-        match Ident::parse(input)?.to_string().as_str() {
-            "nullable" => true,
-            _ => Err(Error::new(span, "expected 'nullable'"))?,
-        }
-    } else {
-        false
-    };
-
-    Ok(Optional::Optional { nullable })
 }

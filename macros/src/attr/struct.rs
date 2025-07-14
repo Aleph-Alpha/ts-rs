@@ -4,11 +4,12 @@ use syn::{parse_quote, Attribute, Expr, Fields, Ident, Path, Result, Type, Where
 
 use super::{
     parse_assign_expr, parse_assign_from_str, parse_assign_inflection, parse_bound, parse_concrete,
-    parse_optional, Attr, ContainerAttr, Optional, Serde, Tagged,
+    Attr, ContainerAttr, Serde, Tagged,
 };
 use crate::{
     attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
-    utils::{parse_attrs, parse_docs},
+    optional::{parse_optional, Optional},
+    utils::{extract_docs, parse_attrs},
 };
 
 #[derive(Default, Clone)]
@@ -21,7 +22,7 @@ pub struct StructAttr {
     pub export_to: Option<Expr>,
     pub export: bool,
     pub tag: Option<String>,
-    pub docs: String,
+    pub docs: Vec<Expr>,
     pub concrete: HashMap<Ident, Type>,
     pub bound: Option<Vec<WherePredicate>>,
     pub optional_fields: Optional,
@@ -36,8 +37,7 @@ impl StructAttr {
             result = result.merge(serde_attr.0);
         }
 
-        let docs = parse_docs(attrs)?;
-        result.docs = docs;
+        result.docs = extract_docs(attrs);
 
         Ok(result)
     }
@@ -131,14 +131,6 @@ impl Attr for StructAttr {
         if !matches!(item, Fields::Named(_)) {
             if self.tag.is_some() {
                 syn_err!("`tag` cannot be used with unit or tuple structs");
-            }
-
-            if self.rename_all.is_some() {
-                syn_err!("`rename_all` cannot be used with unit or tuple structs");
-            }
-
-            if let Optional::Optional { .. } = self.optional_fields {
-                syn_err!("`optional_fields` cannot be used with unit or tuple structs");
             }
         }
 

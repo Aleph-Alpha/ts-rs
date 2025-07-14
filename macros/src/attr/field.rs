@@ -1,11 +1,14 @@
 use syn::{
-    AngleBracketedGenericArguments, Attribute, Field, GenericArgument, Ident, PathArguments, QSelf,
-    Result, ReturnType, Type, TypeArray, TypeGroup, TypeParen, TypePath, TypePtr, TypeReference,
-    TypeSlice, TypeTuple,
+    AngleBracketedGenericArguments, Attribute, Expr, Field, GenericArgument, Ident, PathArguments,
+    QSelf, Result, ReturnType, Type, TypeArray, TypeGroup, TypeParen, TypePath, TypePtr,
+    TypeReference, TypeSlice, TypeTuple,
 };
 
-use super::{parse_assign_from_str, parse_assign_str, parse_optional, Attr, Optional, Serde};
-use crate::utils::{parse_attrs, parse_docs};
+use super::{parse_assign_from_str, parse_assign_str, Attr, Serde};
+use crate::{
+    optional::{parse_optional, Optional},
+    utils::{extract_docs, parse_attrs},
+};
 
 #[derive(Default)]
 pub struct FieldAttr {
@@ -16,9 +19,13 @@ pub struct FieldAttr {
     pub skip: bool,
     pub optional: Optional,
     pub flatten: bool,
-    pub docs: String,
+    pub docs: Vec<Expr>,
 
+    // serde-specific
     pub using_serde_with: bool,
+    // whether the field might be omitted during serialization by skip_serializing{_if}
+    pub maybe_omitted: bool,
+    pub has_default: bool,
 }
 
 impl FieldAttr {
@@ -30,7 +37,7 @@ impl FieldAttr {
             result = result.merge(serde_attr.0);
         }
 
-        result.docs = parse_docs(attrs)?;
+        result.docs = extract_docs(attrs);
 
         Ok(result)
     }
@@ -59,14 +66,16 @@ impl Attr for FieldAttr {
             flatten: self.flatten || other.flatten,
 
             using_serde_with: self.using_serde_with || other.using_serde_with,
+            maybe_omitted: self.maybe_omitted || other.maybe_omitted,
+            has_default: self.has_default || other.has_default,
 
             // We can't emit TSDoc for a flattened field
             // and we cant make this invalid in assert_validity because
             // this documentation is totally valid in Rust
             docs: if self.flatten || other.flatten {
-                String::new()
+                vec![]
             } else {
-                self.docs + &other.docs
+                [self.docs, other.docs].concat()
             },
         }
     }
@@ -95,13 +104,6 @@ impl Attr for FieldAttr {
                 syn_err_spanned!(
                     field;
                     "`type` is not compatible with `flatten`"
-                );
-            }
-
-            if let Optional::Optional { .. } = self.optional {
-                syn_err_spanned!(
-                    field;
-                    "`type` is not compatible with `optional`"
                 );
             }
         }
@@ -140,21 +142,14 @@ impl Attr for FieldAttr {
             if self.flatten {
                 syn_err_spanned!(
                     field;
-                    "`flatten` cannot with tuple struct fields"
+                    "`flatten` cannot be used with tuple struct fields"
                 );
             }
 
             if self.rename.is_some() {
                 syn_err_spanned!(
                     field;
-                    "`flatten` cannot with tuple struct fields"
-                );
-            }
-
-            if let Optional::Optional { .. } = self.optional {
-                syn_err_spanned!(
-                    field;
-                    "`optional` cannot with tuple struct fields"
+                    "`rename` cannot be used with tuple struct fields"
                 );
             }
         }
@@ -179,6 +174,13 @@ impl_parse! {
     Serde<FieldAttr>(input, out) {
         "rename" => out.0.rename = Some(parse_assign_str(input)?),
         "skip" => out.0.skip = true,
+        "skip_serializing_if" => {
+            let _ = parse_assign_str(input)?;
+            out.0.maybe_omitted = true;
+        },
+        "skip_serializing" => {
+            out.0.maybe_omitted = true;
+        },
         "flatten" => out.0.flatten = true,
         // parse #[serde(default)] to not emit a warning
         "default" => {
@@ -186,6 +188,7 @@ impl_parse! {
             if input.peek(Token![=]) {
                 parse_assign_str(input)?;
             }
+            out.0.has_default = true;
         },
         "with" => {
             parse_assign_str(input)?;
