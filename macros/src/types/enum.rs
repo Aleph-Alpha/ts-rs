@@ -3,7 +3,7 @@ use quote::quote;
 use syn::{ext::IdentExt, Expr, Fields, ItemEnum, Variant};
 
 use crate::{
-    attr::{Attr, EnumAttr, FieldAttr, StructAttr, Tagged, VariantAttr},
+    attr::{Attr, EnumAttr, FieldAttr, Repr, StructAttr, Tagged, VariantAttr},
     deps::Dependencies,
     types::{self, type_as, type_override},
     utils::make_string_literal,
@@ -46,10 +46,15 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         )?;
     }
 
+    let separator = match enum_attr.repr {
+        Some(_) => ", ",
+        None => " | ",
+    };
+
     Ok(DerivedTS {
         crate_rename,
-        inline: quote!([#(#formatted_variants),*].join(" | ")),
-        inline_flattened: Some(quote!(
+        inline: quote!([#(#formatted_variants),*].join(#separator)),
+        inline_flattened: enum_attr.repr.is_none().then_some(quote!(
             format!("({})", [#(#formatted_variants),*].join(" | "))
         )),
         dependencies,
@@ -92,6 +97,20 @@ fn format_variant(
             variant.ident.span(),
         ),
     };
+
+    if let Some(ref repr) = enum_attr.repr {
+        let formatted = match (repr, &variant.discriminant) {
+            (Repr::Name | Repr::Int, Some((_, value))) => {
+                quote!(format!("{} = {}", #ts_name, #value))
+            }
+            (Repr::Int, None) => quote!(format!("{}", #ts_name)),
+            (Repr::Name, None) => quote!(format!("{} = \"{}\"", #ts_name, #ts_name)),
+        };
+
+        formatted_variants.push(formatted);
+
+        return Ok(());
+    }
 
     let struct_attr = StructAttr::from_variant(enum_attr, &variant_attr, &variant.fields);
     let variant_type = types::type_def(
