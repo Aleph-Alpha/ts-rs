@@ -1,3 +1,7 @@
+# main
+### Features
+- Add `#[ts(repr(enum))]` attribute ([#425](https://github.com/Aleph-Alpha/ts-rs/pull/425))
+
 # 11.0.1
 ### Fixes
 - Fix usage of `#[ts(optional)]` together with `#[ts(type)]`. ([#416](https://github.com/Aleph-Alpha/ts-rs/pull/416)) 
