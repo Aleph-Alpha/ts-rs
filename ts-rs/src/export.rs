@@ -9,7 +9,6 @@ use std::{
     sync::{Mutex, OnceLock},
 };
 
-use dprint_plugin_typescript::FormatTextOptions;
 pub use error::ExportError;
 use path::diff_paths;
 pub(crate) use recursive_export::export_all_into;
