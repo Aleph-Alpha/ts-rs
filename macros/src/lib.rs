@@ -238,30 +238,30 @@ impl DerivedTS {
         let inline = &self.inline;
         let crate_rename = &self.crate_rename;
 
-        let inline_flattened = self.inline_flattened.as_ref().map_or_else(
-            || {
-                quote! {
-                    fn inline_flattened() -> String {
-                        panic!("{} cannot be flattened", <Self as #crate_rename::TS>::name())
-                    }
-                }
-            },
-            |inline_flattened| {
-                quote! {
-                    fn inline_flattened() -> String {
-                        #inline_flattened
-                    }
-                }
-            },
-        );
-        let inline = quote! {
-            fn inline() -> String {
+        let inline_flattened = self.inline_flattened.clone().unwrap_or_else(|| {
+            quote! {
+                panic!("{} cannot be flattened", <Self as #crate_rename::TS>::name())
+            }
+        });
+
+        let inline = if self.ts_enum {
+            quote! {
+                panic!("{} cannot be inlined", <Self as #crate_rename::TS>::name())
+            }
+        } else {
+            quote! {
                 #inline
             }
         };
+
         quote! {
-            #inline
-            #inline_flattened
+            fn inline() -> String {
+                #inline
+            }
+
+            fn inline_flattened() -> String {
+                #inline_flattened
+            }
         }
     }
 
