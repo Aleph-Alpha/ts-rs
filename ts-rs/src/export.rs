@@ -9,6 +9,7 @@ use std::{
     sync::{Mutex, OnceLock},
 };
 
+use dprint_plugin_typescript::FormatTextOptions;
 pub use error::ExportError;
 use path::diff_paths;
 pub(crate) use recursive_export::export_all_into;
@@ -115,8 +116,16 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
         use dprint_plugin_typescript::{configuration::ConfigurationBuilder, format_text};
 
         let fmt_cfg = ConfigurationBuilder::new().deno().build();
-        if let Some(formatted) = format_text(path.as_ref(), &buffer, &fmt_cfg)
-            .map_err(|e| ExportError::Formatting(e.to_string()))?
+        let options = FormatTextOptions {
+            path: path.as_ref(),
+            extension: path.extension().and_then(|x| x.to_str()),
+            text: buffer.clone(),
+            config: &fmt_cfg,
+            external_formatter: None,
+        };
+
+        if let Some(formatted) =
+            format_text(options).map_err(|e| ExportError::Formatting(e.to_string()))?
         {
             buffer = formatted;
         }
