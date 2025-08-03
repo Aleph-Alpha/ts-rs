@@ -106,10 +106,10 @@ fn format_variant(
 
         let formatted = match (repr, &variant.discriminant) {
             (Repr::Name | Repr::Int, Some((_, value))) => {
-                quote!(format!("{} = {}", #ts_name, #value))
+                quote!(format!("\"{}\" = {}", #ts_name, #value))
             }
-            (Repr::Int, None) => quote!(format!("{}", #ts_name)),
-            (Repr::Name, None) => quote!(format!("{} = \"{}\"", #ts_name, #ts_name)),
+            (Repr::Int, None) => quote!(format!("\"{}\"", #ts_name)),
+            (Repr::Name, None) => quote!(format!("\"{}\" = \"{}\"", #ts_name, #ts_name)),
         };
 
         formatted_variants.push(formatted);
