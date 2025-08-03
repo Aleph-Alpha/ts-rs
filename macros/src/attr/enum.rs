@@ -2,7 +2,9 @@ use std::collections::HashMap;
 
 use syn::{parse_quote, Attribute, Expr, Ident, ItemEnum, Path, Result, Type, WherePredicate};
 
-use super::{parse_assign_expr, parse_assign_from_str, parse_bound, Attr, ContainerAttr, Serde};
+use super::{
+    parse_assign_expr, parse_assign_from_str, parse_bound, parse_repr, Attr, ContainerAttr, Serde,
+};
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
     utils::{extract_docs, parse_attrs},
@@ -24,6 +26,7 @@ pub struct EnumAttr {
     pub tag: Option<String>,
     pub untagged: bool,
     pub content: Option<String>,
+    pub repr: Option<Repr>,
 }
 
 #[derive(Copy, Clone)]
@@ -32,6 +35,12 @@ pub enum Tagged<'a> {
     Adjacently { tag: &'a str, content: &'a str },
     Internally { tag: &'a str },
     Untagged,
+}
+
+#[derive(Copy, Clone)]
+pub enum Repr {
+    Int,
+    Name,
 }
 
 impl EnumAttr {
@@ -90,6 +99,7 @@ impl Attr for EnumAttr {
                 (Some(bound), None) | (None, Some(bound)) => Some(bound),
                 (None, None) => None,
             },
+            repr: self.repr.or(other.repr),
         }
     }
 
@@ -136,6 +146,13 @@ impl Attr for EnumAttr {
                     "`untagged` is not compatible with `type`"
                 );
             }
+
+            if self.repr.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`repr` is not compatible with `type`"
+                );
+            }
         }
 
         if self.type_as.is_some() {
@@ -173,6 +190,21 @@ impl Attr for EnumAttr {
                     "`untagged` is not compatible with `as`"
                 );
             }
+
+            if self.repr.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`repr` is not compatible with `as`"
+                );
+            }
+        }
+
+        if self.untagged && self.repr.is_some() {
+            syn_err_spanned!(item; "`untagged` is not compatible with `repr`");
+        }
+
+        if self.tag.is_some() && self.repr.is_some() {
+            syn_err_spanned!(item; "`tag` is not compatible with `repr`");
         }
 
         match (self.untagged, &self.tag, &self.content) {
@@ -218,6 +250,7 @@ impl_parse! {
         "untagged" => out.untagged = true,
         "concrete" => out.concrete = parse_concrete(input)?,
         "bound" => out.bound = Some(parse_bound(input)?),
+        "repr" => out.repr = Some(parse_repr(input)?),
     }
 }
 
