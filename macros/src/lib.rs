@@ -29,6 +29,7 @@ struct DerivedTS {
     dependencies: Dependencies,
     concrete: HashMap<Ident, Type>,
     bound: Option<Vec<WherePredicate>>,
+    ts_enum: bool,
 
     export: bool,
     export_to: Option<Expr>,
