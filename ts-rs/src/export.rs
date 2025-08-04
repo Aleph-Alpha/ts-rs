@@ -112,7 +112,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     // format output
     #[cfg(feature = "format")]
     {
-        use dprint_plugin_typescript::{configuration::ConfigurationBuilder, format_text};
+        use dprint_plugin_typescript::{configuration::ConfigurationBuilder, FormatTextOptions, format_text};
 
         let fmt_cfg = ConfigurationBuilder::new().deno().build();
         let options = FormatTextOptions {
