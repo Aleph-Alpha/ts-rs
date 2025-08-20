@@ -311,6 +311,9 @@ pub(crate) fn default_out_dir() -> Cow<'static, Path> {
 
 pub(crate) fn import_extension() -> Result<&'static str, ExportError> {
     match std::env::var("TS_RS_IMPORT_EXTENSION").as_deref() {
+        Err(_) if cfg!(feature = "import-esm") => {
+            Ok(".js")
+        }
         Err(_) => Ok(""),
         Ok("js") => Ok(".js"),
         Ok("ts") => Ok(".ts"),

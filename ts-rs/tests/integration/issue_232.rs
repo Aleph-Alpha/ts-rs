@@ -43,9 +43,13 @@ enum Enum {
 
 #[test]
 fn issue_232() {
-    let extension = std::env::var("TS_RS_IMPORT_EXTENSION")
-        .map(|x| format!(".{x}"))
-        .unwrap_or("".into());
+    let extension = if cfg!(feature = "import-esm") {
+        ".js".to_string()
+    } else {
+        std::env::var("TS_RS_IMPORT_EXTENSION")
+            .map(|x| format!(".{x}"))
+            .unwrap_or("".into())
+    };
 
     println!("{}", StateInlinedVec::export_to_string().unwrap());
     assert_eq!(

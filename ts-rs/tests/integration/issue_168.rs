@@ -33,9 +33,13 @@ struct Baz {
 
 #[test]
 fn issue_168() {
-    let extension = std::env::var("TS_RS_IMPORT_EXTENSION")
-        .map(|x| format!(".{x}"))
-        .unwrap_or("".into());
+    let extension = if cfg!(feature = "import-esm") {
+        ".js".to_string()
+    } else {
+        std::env::var("TS_RS_IMPORT_EXTENSION")
+            .map(|x| format!(".{x}"))
+            .unwrap_or("".into())
+    };
 
     assert_eq!(
         FooInlined::export_to_string().unwrap(),
