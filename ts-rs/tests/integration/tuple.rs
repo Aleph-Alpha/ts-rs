@@ -24,7 +24,7 @@ fn test_newtype() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tuple/")]
+#[ts(export, export_to = "tuple/", rename_all = "camelCase")] // rename_all should compile, but it's a noop
 struct TupleNewType(String, i32, (i32, i32));
 
 #[test]
@@ -36,7 +36,7 @@ fn test_tuple_newtype() {
 }
 
 #[derive(TS)]
-#[ts(export, export_to = "tuple/")]
+#[ts(export, export_to = "tuple/", rename_all = "kebab-case")]
 struct Dep1;
 
 #[derive(TS)]
