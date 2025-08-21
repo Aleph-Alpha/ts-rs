@@ -6,9 +6,10 @@ use quote::quote;
 pub use r#enum::*;
 pub use r#struct::*;
 use syn::{
+    parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Error, Expr, Lit, Path, Result, Token, WherePredicate,
+    Error, Expr, Ident, Lit, Path, Result, Token, WherePredicate,
 };
 pub use variant::*;
 mod r#enum;
@@ -151,7 +152,7 @@ fn parse_concrete(input: ParseStream) -> Result<HashMap<syn::Ident, syn::Type>> 
     }
 
     let content;
-    syn::parenthesized!(content in input);
+    parenthesized!(content in input);
 
     Ok(
         Punctuated::<Concrete, Token![,]>::parse_terminated(&content)?
@@ -205,5 +206,25 @@ fn parse_bound(input: ParseStream) -> Result<Vec<WherePredicate>> {
             Ok(string.parse_with(parser)?.into_iter().collect())
         }
         other => Err(Error::new(other.span(), "expected string")),
+    }
+}
+
+fn parse_repr(input: ParseStream) -> Result<Repr> {
+    let content;
+    parenthesized!(content in input);
+
+    content.parse::<Token![enum]>()?;
+
+    if content.is_empty() {
+        return Ok(Repr::Int);
+    }
+
+    content.parse::<Token![=]>()?;
+
+    let span = content.span();
+    let ident = content.parse::<Ident>()?;
+    match ident.to_string().as_str() {
+        "name" => Ok(Repr::Name),
+        _ => syn_err!(span; "expected `name`"),
     }
 }
