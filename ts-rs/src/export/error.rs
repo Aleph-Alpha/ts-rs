@@ -12,4 +12,6 @@ pub enum ExportError {
     ManifestDirNotSet,
     #[error("an error occurred while writing to a formatted buffer")]
     Fmt(#[from] std::fmt::Error),
+    #[error(r#"TS_RS_IMPORT_EXTENSION must be either "js" or "ts""#)]
+    InvalidImportExtension,
 }

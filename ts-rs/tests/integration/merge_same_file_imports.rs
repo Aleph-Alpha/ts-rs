@@ -45,9 +45,11 @@ fn merge_same_file_imports() {
     let text = std::fs::read_to_string(EditProfile::default_output_path().unwrap()).unwrap();
 
     let extension = if cfg!(feature = "import-esm") {
-        ".js"
+        ".js".to_string()
     } else {
-        ""
+        std::env::var("TS_RS_IMPORT_EXTENSION")
+            .map(|x| format!(".{x}"))
+            .unwrap_or("".into())
     };
 
     let mut expected = String::with_capacity(text.len());

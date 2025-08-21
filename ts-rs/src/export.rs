@@ -309,6 +309,25 @@ pub(crate) fn default_out_dir() -> Cow<'static, Path> {
     }
 }
 
+pub(crate) fn import_extension() -> Result<&'static str, ExportError> {
+    match std::env::var("TS_RS_IMPORT_EXTENSION").as_deref() {
+        Err(_) if cfg!(feature = "import-esm") => {
+            const YELLOW_TEXT: &str = "\x1b[0;33m";
+            const BOLD: &str = "\x1b[1m";
+            const RESET: &str = "\x1b[1m";
+
+            let mut stderr = std::io::stderr();
+            _ = std::io::Write::write_all(&mut stderr, format!("{YELLOW_TEXT}{BOLD}Warning:{RESET} The \"import-esm\" feature is deprecated and will be removed in the next major release. Set the TS_RS_IMPORT_EXTENSION environment variable to \"js\" instead.\n").as_bytes());
+
+            Ok(".js")
+        }
+        Err(_) => Ok(""),
+        Ok("js") => Ok(".js"),
+        Ok("ts") => Ok(".ts"),
+        Ok(_) => Err(ExportError::InvalidImportExtension),
+    }
+}
+
 /// Push the declaration of `T`
 fn generate_decl<T: TS + ?Sized>(out: &mut String) {
     // Type Docs
@@ -395,11 +414,8 @@ fn import_path(from: &Path, import: &Path) -> Result<String, ExportError> {
         str_path
     };
 
-    let path_without_extension = path.trim_end_matches(".ts");
+    let path = path.trim_end_matches(".ts");
+    let import_extension = import_extension()?;
 
-    Ok(if cfg!(feature = "import-esm") {
-        format!("{}.js", path_without_extension)
-    } else {
-        path_without_extension.to_owned()
-    })
+    Ok(format!("{path}{import_extension}"))
 }
