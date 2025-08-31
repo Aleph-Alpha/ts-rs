@@ -12,7 +12,7 @@ pub(crate) fn empty_object(attr: &StructAttr, ts_name: Expr) -> DerivedTS {
 
     DerivedTS {
         crate_rename: crate_rename.clone(),
-        inline: quote!("Record<string, never>".to_owned()),
+        inline: quote!("Record<never, never>".to_owned()),
         inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies: Dependencies::new(crate_rename),
