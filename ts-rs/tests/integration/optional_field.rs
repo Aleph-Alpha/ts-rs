@@ -141,6 +141,14 @@ struct NullableStruct {
 
     #[ts(as = "String")]
     h: Option<i32>,
+
+    // not nullable
+    #[ts(optional)]
+    i: Option<i32>,
+
+    // not optional
+    #[ts(optional = false)]
+    j: Option<i32>,
 }
 
 #[test]
@@ -148,7 +156,7 @@ fn struct_nullable() {
     assert_eq!(
         NullableStruct::inline(),
         format!(
-            "{{ a?: number | null, b?: number | null, c?: number | null, d: number, e?: number | null, f?: number | null, g: string, h: string, }}"
+            "{{ a?: number | null, b?: number | null, c?: number | null, d: number, e?: number | null, f?: number | null, g: string, h: string, i?: number, j: number | null, }}"
         )
     )
 }
@@ -217,6 +225,18 @@ enum OptionalFieldsEnum {
 }
 
 #[derive(Serialize, TS)]
+#[ts(export, export_to = "optional_field/", optional_fields = nullable)]
+enum OptionalFieldsEnumVariantOverride {
+    // Disable `nullable`
+    #[ts(optional_fields)]
+    A { a: Option<i32> },
+
+    // Disable `optional_fields`
+    #[ts(optional_fields = false)]
+    B { b: String, c: Option<bool> },
+}
+
+#[derive(Serialize, TS)]
 #[ts(export, export_to = "optional_field/", optional_fields, tag = "type")]
 enum OptionalFieldsTaggedEnum {
     A { a: Option<i32> },
@@ -241,6 +261,11 @@ fn optional_fields_enum() {
     assert_eq!(
         OptionalFieldsEnum::inline(),
         r#"{ "A": { a?: number, } } | { "B": { b: string, c?: boolean, } }"#
+    );
+
+    assert_eq!(
+        OptionalFieldsEnumVariantOverride::inline(),
+        r#"{ "A": { a?: number, } } | { "B": { b: string, c: boolean | null, } }"#
     );
 
     assert_eq!(

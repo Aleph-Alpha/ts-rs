@@ -26,7 +26,7 @@ impl Optional {
         match (self, other) {
             (Self::Inherit, other) | (other, Self::Inherit) => other,
             (Self::Optional { nullable: a }, Self::Optional { nullable: b }) => {
-                Self::Optional { nullable: a || b }
+                Self::Optional { nullable: a && b }
             }
             _ => other,
         }

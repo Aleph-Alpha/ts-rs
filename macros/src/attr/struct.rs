@@ -64,7 +64,7 @@ impl StructAttr {
                 },
                 _ => None,
             },
-            optional_fields: enum_attr.optional_fields,
+            optional_fields: enum_attr.optional_fields.or(variant_attr.optional_fields),
 
             // inline and skip are not supported on StructAttr
             ..Self::default()
