@@ -208,3 +208,48 @@ fn tuple_nullable() {
         "[number, string, string, (number | null)?, (number)?, (number | null)?]"
     );
 }
+
+#[derive(Serialize, TS)]
+#[ts(export, export_to = "optional_field/", optional_fields)]
+enum OptionalFieldsEnum {
+    A { a: Option<i32> },
+    B { b: String, c: Option<bool> },
+}
+
+#[derive(Serialize, TS)]
+#[ts(export, export_to = "optional_field/", optional_fields, tag = "type")]
+enum OptionalFieldsTaggedEnum {
+    A { a: Option<i32> },
+    B { b: String, c: Option<bool> },
+}
+
+#[derive(Serialize, TS)]
+#[ts(
+    export,
+    export_to = "optional_field/",
+    optional_fields,
+    tag = "type",
+    content = "data"
+)]
+enum OptionalFieldsExternallyTaggedEnum {
+    A { a: Option<i32> },
+    B { b: String, c: Option<bool> },
+}
+
+#[test]
+fn optional_fields_enum() {
+    assert_eq!(
+        OptionalFieldsEnum::inline(),
+        r#"{ "A": { a?: number, } } | { "B": { b: string, c?: boolean, } }"#
+    );
+
+    assert_eq!(
+        OptionalFieldsTaggedEnum::inline(),
+        r#"{ "type": "A", a?: number, } | { "type": "B", b: string, c?: boolean, }"#
+    );
+
+    assert_eq!(
+        OptionalFieldsExternallyTaggedEnum::inline(),
+        r#"{ "type": "A", "data": { a?: number, } } | { "type": "B", "data": { b: string, c?: boolean, } }"#
+    );
+}
