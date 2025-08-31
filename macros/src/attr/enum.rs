@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use syn::{parse_quote, Attribute, Expr, Ident, ItemEnum, Path, Result, Type, WherePredicate};
+use syn::{
+    parse_quote, Attribute, Expr, Fields, Ident, ItemEnum, Path, Result, Type, WherePredicate,
+};
 
 use super::{
     parse_assign_expr, parse_assign_from_str, parse_bound, parse_repr, Attr, ContainerAttr, Serde,
@@ -205,6 +207,14 @@ impl Attr for EnumAttr {
 
         if self.tag.is_some() && self.repr.is_some() {
             syn_err_spanned!(item; "`tag` is not compatible with `repr`");
+        }
+
+        if self.repr.is_some() {
+            for variant in item.variants.iter() {
+                if !matches!(variant.fields, Fields::Unit) {
+                    syn_err_spanned!(variant; "All variants of an enum marked as `#[ts(repr(enum))]` must be unit variants");
+                }
+            }
         }
 
         match (self.untagged, &self.tag, &self.content) {

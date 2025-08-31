@@ -100,10 +100,6 @@ fn format_variant(
     };
 
     if let Some(ref repr) = enum_attr.repr {
-        if !matches!(variant.fields, Fields::Unit) {
-            syn_err_spanned!(variant; "All variants of an enum marked as `#[ts(repr(enum))]` must be unit variants");
-        }
-
         let formatted = match (repr, &variant.discriminant) {
             (Repr::Name | Repr::Int, Some((_, value))) => {
                 quote!(format!("\"{}\" = {}", #ts_name, #value))
