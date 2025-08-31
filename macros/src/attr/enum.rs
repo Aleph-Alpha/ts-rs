@@ -210,6 +210,10 @@ impl Attr for EnumAttr {
         }
 
         if self.repr.is_some() {
+            if item.generics.type_params().next().is_some() {
+                syn_err_spanned!(item; "`repr` enums cannot have generic type parameters");
+            }
+
             for variant in item.variants.iter() {
                 if !matches!(variant.fields, Fields::Unit) {
                     syn_err_spanned!(variant; "All variants of an enum marked as `#[ts(repr(enum))]` must be unit variants");
