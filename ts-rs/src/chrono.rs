@@ -23,7 +23,8 @@ macro_rules! impl_dummy {
     )*};
 }
 
-impl_primitives!(NaiveDateTime, NaiveDate, NaiveTime, Month, Weekday, Duration => "string");
+impl_primitives!(NaiveDateTime, NaiveDate, NaiveTime, Month, Weekday => "string");
+impl_primitives!(Duration => "[number, number]");
 impl_dummy!(Utc, Local, FixedOffset);
 
 impl<T: TimeZone + 'static> TS for DateTime<T> {
