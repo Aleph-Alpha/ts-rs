@@ -72,25 +72,25 @@
 //! - generic types
 //! - support for ESM imports
 //!
-//! ## cargo features
-//! | **Feature**        | **Description**                                                                                                                                                                                           |
-//! |:-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-//! | serde-compat       | **Enabled by default** <br/>See the *"serde compatibility"* section below for more information.                                                                                                           |
-//! | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
-//! | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
-//! | serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                                                                                |
-//! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
-//! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
-//! | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
-//! | uuid-impl          | Implement `TS` for types from *uuid*                                                                                                                                                                      |
-//! | bson-uuid-impl     | Implement `TS` for *bson::oid::ObjectId* and *bson::uuid*                                                                                                                                                 |
-//! | bytes-impl         | Implement `TS` for types from *bytes*                                                                                                                                                                     |
-//! | indexmap-impl      | Implement `TS` for types from *indexmap*                                                                                                                                                                  |
-//! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
-//! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
-//! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
-//! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
-//! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                    |
+//! | **Feature**        | **Description**                                                                                                                                    |
+//! | :----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+//! | serde-compat       | **Enabled by default** <br/>See the _"serde compatibility"_ section below for more information.                                                    |
+//! | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                         |
+//! | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings. |
+//! | serde-json-impl    | Implement `TS` for types from _serde_json_                                                                                                         |
+//! | chrono-impl        | Implement `TS` for types from _chrono_                                                                                                             |
+//! | bigdecimal-impl    | Implement `TS` for types from _bigdecimal_                                                                                                         |
+//! | url-impl           | Implement `TS` for types from _url_                                                                                                                |
+//! | uuid-impl          | Implement `TS` for types from _uuid_                                                                                                               |
+//! | bson-uuid-impl     | Implement `TS` for _bson::oid::ObjectId_ and _bson::uuid_                                                                                          |
+//! | bytes-impl         | Implement `TS` for types from _bytes_                                                                                                              |
+//! | indexmap-impl      | Implement `TS` for types from _indexmap_                                                                                                           |
+//! | ordered-float-impl | Implement `TS` for types from _ordered_float_                                                                                                      |
+//! | heapless-impl      | Implement `TS` for types from _heapless_                                                                                                           |
+//! | semver-impl        | Implement `TS` for types from _semver_                                                                                                             |
+//! | smol_str-impl      | Implement `TS` for types from _smol_str_                                                                                                           |
+//! | tokio-impl         | Implement `TS` for types from _tokio_                                                                                                              |
+//! | no-big-int         | Always bind primitive integers to raw javascript numbers even when this could lead to precision loss                                               |
 //!
 //! <br/>
 //!
