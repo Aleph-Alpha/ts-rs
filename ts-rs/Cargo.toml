@@ -36,6 +36,7 @@ serde-json-impl = ["serde_json"]
 no-serde-warnings = ["ts-rs-macros/no-serde-warnings"]
 import-esm = []
 tokio-impl = ["tokio"]
+no-big-int = []
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -50,7 +51,9 @@ thiserror = "2"
 heapless = { version = ">= 0.7, < 0.9", optional = true }
 dprint-plugin-typescript = { version = "0.90", optional = true }
 chrono = { version = "0.4", optional = true }
-bigdecimal = { version = ">= 0.0.13, < 0.5", features = ["serde"], optional = true }
+bigdecimal = { version = ">= 0.0.13, < 0.5", features = [
+    "serde",
+], optional = true }
 uuid = { version = "1", optional = true }
 bson = { version = "2", optional = true }
 bytes = { version = "1", optional = true }
