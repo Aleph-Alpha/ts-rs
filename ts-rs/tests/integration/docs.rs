@@ -220,7 +220,7 @@ fn export_c() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type C = Record<string, never>;\n",
+            "export type C = Record<symbol, never>;\n",
         )
     } else {
         concat!(
@@ -231,7 +231,7 @@ fn export_c() {
             " *\n",
             " * Testing\n",
             " */\n",
-            "export type C = Record<string, never>;",
+            "export type C = Record<symbol, never>;",
             "\n",
         )
     };
