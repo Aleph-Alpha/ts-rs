@@ -237,6 +237,18 @@ enum OptionalFieldsEnumVariantOverride {
 }
 
 #[derive(Serialize, TS)]
+#[ts(export, export_to = "optional_field/", optional_fields)]
+enum OptionalFieldsEnumNotNullableVariantOverride {
+    // Disable `nullable`
+    #[ts(optional_fields = nullable)]
+    A { a: Option<i32> },
+
+    // Disable `optional_fields`
+    #[ts(optional_fields = false)]
+    B { b: String, c: Option<bool> },
+}
+
+#[derive(Serialize, TS)]
 #[ts(export, export_to = "optional_field/", optional_fields, tag = "type")]
 enum OptionalFieldsTaggedEnum {
     A { a: Option<i32> },
@@ -266,6 +278,11 @@ fn optional_fields_enum() {
     assert_eq!(
         OptionalFieldsEnumVariantOverride::inline(),
         r#"{ "A": { a?: number, } } | { "B": { b: string, c: boolean | null, } }"#
+    );
+
+    assert_eq!(
+        OptionalFieldsEnumNotNullableVariantOverride::inline(),
+        r#"{ "A": { a?: number | null, } } | { "B": { b: string, c: boolean | null, } }"#
     );
 
     assert_eq!(
