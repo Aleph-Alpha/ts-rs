@@ -11,7 +11,7 @@ use syn::{
     TypeTuple, WhereClause, WherePredicate,
 };
 
-use crate::{deps::Dependencies, utils::format_generics};
+use crate::{attr::Repr, deps::Dependencies, utils::format_generics};
 
 #[macro_use]
 mod utils;
@@ -29,7 +29,7 @@ struct DerivedTS {
     dependencies: Dependencies,
     concrete: HashMap<Ident, Type>,
     bound: Option<Vec<WherePredicate>>,
-    ts_enum: bool,
+    ts_enum: Option<Repr>,
 
     export: bool,
     export_to: Option<Expr>,
@@ -244,14 +244,50 @@ impl DerivedTS {
             }
         });
 
-        let inline = if self.ts_enum {
-            quote! {
-                panic!("{} cannot be inlined", <Self as #crate_rename::TS>::name())
-            }
-        } else {
-            quote! {
-                #inline
-            }
+        let inline = match self.ts_enum {
+            Some(Repr::Int) => quote! {
+                let variants = #inline.replace(|x: char| !x.is_numeric() && x != ',', "");
+                let mut variants = variants
+                    .split(',')
+                    .map(|x| isize::from_str_radix(x, 10).ok())
+                    .peekable();
+
+                if variants.peek().is_none() {
+                    return "never".into()
+                }
+
+                let mut buffer = String::new();
+                let mut latest = None::<isize>;
+
+                for variant in variants {
+                    let value = variant.or(latest.map(|x| x + 1)).unwrap_or(0);
+                    buffer.push_str(&format!("{} | ", value));
+
+                    latest = Some(value)
+                }
+
+                buffer.trim_end_matches(['|', ' ']).into()
+            },
+            Some(Repr::Name) => quote! {
+                let variants = #inline;
+                let mut variants = variants
+                    .split(',')
+                    .map(|x| x.split_once(" = ").unwrap().1.to_string())
+                    .peekable();
+
+                if variants.peek().is_none() {
+                    return "never".into()
+                }
+
+                let mut buffer = String::new();
+                for variant in variants {
+                    buffer.push_str(&variant);
+                    buffer.push_str(" | ");
+                }
+
+                buffer.trim_end_matches(['|', ' ']).into()
+            },
+            None => quote!(#inline),
         };
 
         quote! {
@@ -272,7 +308,7 @@ impl DerivedTS {
     fn generate_decl_fn(&mut self, rust_ty: &Ident, generics: &Generics) -> TokenStream {
         let name = &self.ts_name;
 
-        if self.ts_enum {
+        if self.ts_enum.is_some() {
             let inline = &self.inline;
             return quote! {
                 fn decl_concrete() -> String {
