@@ -101,11 +101,11 @@ fn format_variant(
 
     if let Some(ref repr) = enum_attr.repr {
         let formatted = match (repr, &variant.discriminant) {
-            (Repr::Name | Repr::Int, Some((_, value))) => {
+            (Repr::Int, Some((_, value))) => {
                 quote!(format!("\"{}\" = {}", #ts_name, #value))
             }
             (Repr::Int, None) => quote!(format!("\"{}\"", #ts_name)),
-            (Repr::Name, None) => quote!(format!("\"{}\" = \"{}\"", #ts_name, #ts_name)),
+            (Repr::Name, _) => quote!(format!("\"{}\" = \"{}\"", #ts_name, #ts_name)),
         };
 
         formatted_variants.push(formatted);

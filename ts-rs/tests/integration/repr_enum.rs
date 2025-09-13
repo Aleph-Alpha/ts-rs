@@ -24,7 +24,8 @@ enum Baz {
 #[derive(TS)]
 #[ts(export, export_to = "repr_enum/", repr(enum = name))]
 enum Biz {
-    A,
+    // The discriminant is ignored when using `repr(enum = name)`
+    A = 0,
     B,
 }
 
