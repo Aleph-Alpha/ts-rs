@@ -59,3 +59,24 @@ fn native_ts_enum_repr() {
     assert_eq!(CamelCase::decl(), "enum CamelCase { \"enumVariantFoo\" = \"enumVariantFoo\", \"enumVariantBar\" = \"enumVariantBar\" }");
     assert_eq!(KebabCase::decl(), "enum KebabCase { \"enum-variant-foo\" = \"enum-variant-foo\", \"enum-variant-bar\" = \"enum-variant-bar\" }");
 }
+
+#[test]
+fn native_ts_enum_repr_inline() {
+    assert_eq!(Foo::inline(), "1 | 2");
+    assert_eq!(Bar::inline(), "1 | 2");
+    assert_eq!(Baz::inline(), "0 | 1");
+
+    assert_eq!(Biz::inline(), r#""A" | "B""#);
+    assert_eq!(
+        SnakeCase::inline(),
+        r#""enum_variant_foo" | "enum_variant_bar""#
+    );
+    assert_eq!(
+        CamelCase::inline(),
+        r#""enumVariantFoo" | "enumVariantBar""#
+    );
+    assert_eq!(
+        KebabCase::inline(),
+        r#""enum-variant-foo" | "enum-variant-bar""#
+    );
+}
