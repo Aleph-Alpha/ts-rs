@@ -23,10 +23,20 @@ enum A {
 }
 
 #[test]
+#[cfg(not(feature = "no-big-int"))]
 fn test_enum_variant_rename_all() {
     assert_eq!(
         A::inline(),
         r#"{ "MESSAGE_ONE": { sender_id: string, number_of_snakes: bigint, } } | { "MESSAGE_TWO": { senderId: string, numberOfCamels: bigint, } }"#,
+    );
+}
+
+#[test]
+#[cfg(feature = "no-big-int")]
+fn test_enum_variant_rename_all() {
+    assert_eq!(
+        A::inline(),
+        r#"{ "MESSAGE_ONE": { sender_id: string, number_of_snakes: number, } } | { "MESSAGE_TWO": { senderId: string, numberOfCamels: number, } }"#,
     );
 }
 
@@ -49,10 +59,20 @@ enum B {
 }
 
 #[test]
+#[cfg(not(feature = "no-big-int"))]
 fn test_enum_variant_rename() {
     assert_eq!(
         B::inline(),
         r#"{ "SnakeMessage": { sender_id: string, number_of_snakes: bigint, } } | { "CamelMessage": { sender_id: string, number_of_camels: bigint, } }"#,
+    );
+}
+
+#[test]
+#[cfg(feature = "no-big-int")]
+fn test_enum_variant_rename() {
+    assert_eq!(
+        B::inline(),
+        r#"{ "SnakeMessage": { sender_id: string, number_of_snakes: number, } } | { "CamelMessage": { sender_id: string, number_of_camels: number, } }"#,
     );
 }
 
