@@ -18,6 +18,8 @@ readme = "../README.md"
 rust-version = "1.78.0"
 
 [features]
+default = ["serde-compat"]
+
 chrono-impl = ["chrono"]
 bigdecimal-impl = ["bigdecimal"]
 uuid-impl = ["uuid"]
@@ -26,7 +28,6 @@ bytes-impl = ["bytes"]
 url-impl = ["url"]
 serde-compat = ["ts-rs-macros/serde-compat"]
 format = ["dprint-plugin-typescript"]
-default = ["serde-compat"]
 indexmap-impl = ["indexmap"]
 ordered-float-impl = ["ordered-float"]
 heapless-impl = ["heapless"]
