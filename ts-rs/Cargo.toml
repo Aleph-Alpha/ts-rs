@@ -49,7 +49,7 @@ ts-rs-macros = { version = "=11.0.1", path = "../macros" }
 thiserror = "2"
 
 heapless = { version = ">= 0.7, < 0.9", optional = true }
-dprint-plugin-typescript = { version = "0.95", optional = true }
+dprint-plugin-typescript = { version = "= 0.95", optional = true }
 chrono = { version = "0.4", optional = true }
 bigdecimal = { version = ">= 0.0.13, < 0.5", features = ["serde"], optional = true }
 uuid = { version = "1", optional = true }
