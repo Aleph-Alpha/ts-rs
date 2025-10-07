@@ -9,6 +9,7 @@ use super::{
 };
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
+    optional::{parse_optional, Optional},
     utils::{extract_docs, parse_attrs},
 };
 
@@ -29,6 +30,7 @@ pub struct EnumAttr {
     pub untagged: bool,
     pub content: Option<String>,
     pub repr: Option<Repr>,
+    pub optional_fields: Optional,
 }
 
 #[derive(Copy, Clone)]
@@ -102,6 +104,7 @@ impl Attr for EnumAttr {
                 (None, None) => None,
             },
             repr: self.repr.or(other.repr),
+            optional_fields: self.optional_fields.or(other.optional_fields),
         }
     }
 
@@ -154,6 +157,10 @@ impl Attr for EnumAttr {
                     item;
                     "`repr` is not compatible with `type`"
                 );
+            }
+
+            if let Optional::Optional { .. } = self.optional_fields {
+                syn_err!("`optional_fields` is not compatible with `type`");
             }
         }
 
@@ -219,6 +226,10 @@ impl Attr for EnumAttr {
                     syn_err_spanned!(variant; "All variants of an enum marked as `#[ts(repr(enum))]` must be unit variants");
                 }
             }
+
+            if let Optional::Optional { .. } = self.optional_fields {
+                syn_err!("`optional_fields` is not compatible with `as`");
+            }
         }
 
         match (self.untagged, &self.tag, &self.content) {
@@ -265,6 +276,7 @@ impl_parse! {
         "concrete" => out.concrete = parse_concrete(input)?,
         "bound" => out.bound = Some(parse_bound(input)?),
         "repr" => out.repr = Some(parse_repr(input)?),
+        "optional_fields" => out.optional_fields = parse_optional(input)?,
     }
 }
 
