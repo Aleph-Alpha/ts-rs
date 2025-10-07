@@ -5,6 +5,7 @@ use syn::{parse_quote, Attribute, Expr, Ident, ItemEnum, Path, Result, Type, Whe
 use super::{parse_assign_expr, parse_assign_from_str, parse_bound, Attr, ContainerAttr, Serde};
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
+    optional::{parse_optional, Optional},
     utils::{extract_docs, parse_attrs},
 };
 
@@ -24,6 +25,7 @@ pub struct EnumAttr {
     pub tag: Option<String>,
     pub untagged: bool,
     pub content: Option<String>,
+    pub optional_fields: Optional,
 }
 
 #[derive(Copy, Clone)]
@@ -90,6 +92,7 @@ impl Attr for EnumAttr {
                 (Some(bound), None) | (None, Some(bound)) => Some(bound),
                 (None, None) => None,
             },
+            optional_fields: self.optional_fields.or(other.optional_fields),
         }
     }
 
@@ -136,6 +139,10 @@ impl Attr for EnumAttr {
                     "`untagged` is not compatible with `type`"
                 );
             }
+
+            if let Optional::Optional { .. } = self.optional_fields {
+                syn_err!("`optional_fields` is not compatible with `type`");
+            }
         }
 
         if self.type_as.is_some() {
@@ -172,6 +179,10 @@ impl Attr for EnumAttr {
                     item;
                     "`untagged` is not compatible with `as`"
                 );
+            }
+
+            if let Optional::Optional { .. } = self.optional_fields {
+                syn_err!("`optional_fields` is not compatible with `as`");
             }
         }
 
@@ -218,6 +229,7 @@ impl_parse! {
         "untagged" => out.untagged = true,
         "concrete" => out.concrete = parse_concrete(input)?,
         "bound" => out.bound = Some(parse_bound(input)?),
+        "optional_fields" => out.optional_fields = parse_optional(input)?,
     }
 }
 

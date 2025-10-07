@@ -64,6 +64,10 @@ impl StructAttr {
                 },
                 _ => None,
             },
+            optional_fields: match (enum_attr.optional_fields, variant_attr.optional_fields) {
+                (parent, Optional::Inherit) => parent,
+                (_, child) => child,
+            },
 
             // inline and skip are not supported on StructAttr
             ..Self::default()
