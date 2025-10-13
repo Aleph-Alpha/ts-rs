@@ -33,7 +33,7 @@ mod recursive_export {
     use crate::{ExportError, TypeVisitor, TS};
 
     /// Exports `T` to the file specified by the `#[ts(export_to = ..)]` attribute within the given
-    /// base directory.  
+    /// base directory.
     /// Additionally, all dependencies of `T` will be exported as well.
     pub(crate) fn export_all_into<T: TS + ?Sized + 'static>(
         out_dir: impl AsRef<Path>,
@@ -112,11 +112,21 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
     // format output
     #[cfg(feature = "format")]
     {
-        use dprint_plugin_typescript::{configuration::ConfigurationBuilder, format_text};
+        use dprint_plugin_typescript::{
+            configuration::ConfigurationBuilder, format_text, FormatTextOptions,
+        };
 
         let fmt_cfg = ConfigurationBuilder::new().deno().build();
-        if let Some(formatted) = format_text(path.as_ref(), &buffer, &fmt_cfg)
-            .map_err(|e| ExportError::Formatting(e.to_string()))?
+        let options = FormatTextOptions {
+            path: &path,
+            text: buffer.clone(),
+            config: &fmt_cfg,
+            external_formatter: None,
+            extension: None,
+        };
+
+        if let Some(formatted) =
+            format_text(options).map_err(|e| ExportError::Formatting(e.to_string()))?
         {
             buffer = formatted;
         }
