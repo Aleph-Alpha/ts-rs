@@ -146,7 +146,7 @@ use std::{
     },
     ops::{Range, RangeInclusive},
     path::{Path, PathBuf},
-    sync::LazyLock,
+    sync::OnceLock,
 };
 
 pub use ts_rs_macros::TS;
@@ -1140,8 +1140,7 @@ mod bytes {
     impl_shadow!(as Vec<u8>: impl TS for bytes::BytesMut);
 }
 
-static LARGE_INT_BINDING: LazyLock<String> =
-    LazyLock::new(|| std::env::var("TS_RS_LARGE_INT").unwrap_or_else(|_| "bigint".to_owned()));
+static LARGE_INT_BINDING: OnceLock<String> = OnceLock::new();
 
 impl_primitives! {
     u8, i8, NonZeroU8, NonZeroI8,
@@ -1149,7 +1148,8 @@ impl_primitives! {
     u32, i32, NonZeroU32, NonZeroI32,
     usize, isize, NonZeroUsize, NonZeroIsize, f32, f64 => "number",
     u64, i64, NonZeroU64, NonZeroI64,
-    u128, i128, NonZeroU128, NonZeroI128 => &*LARGE_INT_BINDING,
+    u128, i128, NonZeroU128, NonZeroI128 => LARGE_INT_BINDING
+        .get_or_init(|| std::env::var("TS_RS_LARGE_INT").unwrap_or_else(|_| "bigint".to_owned())),
     bool => "boolean",
     char, Path, PathBuf, String, str,
     Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr => "string",
