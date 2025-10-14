@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ts-rs = { path = "../../../ts-rs" }
+ts-rs = { path = "../../../ts-rs", features = ["format"] }
