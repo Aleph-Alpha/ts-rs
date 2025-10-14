@@ -180,5 +180,10 @@ impl_parse! {
                 parse_assign_str(input)?;
             }
         },
+
+        // parse #[serde(crate = "...")] to not emit a warning
+        "crate" => {
+            parse_assign_str(input)?;
+        }
     }
 }
