@@ -362,6 +362,13 @@ mod tokio;
 ///   `#[ts(rename_all = "..")]` on all of the enum's variants.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
+///
+/// - **`#[ts(repr(enum))]`**
+///   Exports the enum as a TypeScript enum instead of type union
+///   Discriminants (`= {integer}`) are included in the exported enum's variants
+///   If `#[ts(repr(enum = name))]` is used, all variants without a discriminant will be exported
+///   as `VariantName = "VariantName"`
+///   <br/><br/>
 ///  
 /// ### enum variant attributes
 ///
