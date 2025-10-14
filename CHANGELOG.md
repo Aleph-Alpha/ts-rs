@@ -1,18 +1,23 @@
-# main
+# 11.1.0
 ### Features
 - Add `#[ts(repr(enum))]` attribute ([#425](https://github.com/Aleph-Alpha/ts-rs/pull/425))
+- Add support for `#[ts(optional_fields)]` in enums and enum variants ([#432](https://github.com/Aleph-Alpha/ts-rs/pull/432))
+- Deprecate `import-esm` cargo feature in favour of `RS_RS_IMPORT_EXTENSION` ([#423](https://github.com/Aleph-Alpha/ts-rs/pull/423))
+
+### Fixes
+- Fix bindings for `chrono::Duration` ([#434](https://github.com/Aleph-Alpha/ts-rs/pull/434))
 
 # 11.0.1
 ### Fixes
-- Fix usage of `#[ts(optional)]` together with `#[ts(type)]`. ([#416](https://github.com/Aleph-Alpha/ts-rs/pull/416)) 
+- Fix usage of `#[ts(optional)]` together with `#[ts(type)]`. ([#416](https://github.com/Aleph-Alpha/ts-rs/pull/416))
 
 # 11.0.0
 ### Breaking
 - `#[serde(skip_serializing)]` and `#[serde(skip_serializing_if = ..)]` are no longer ignored when used together with
   `#[serde(default)]`. ([#393](https://github.com/Aleph-Alpha/ts-rs/pull/393))
-- Changed return type of `TS::output_path()` from `Option<&'static Path>` to `Option<PathBuf>`.  
+- Changed return type of `TS::output_path()` from `Option<&'static Path>` to `Option<PathBuf>`.
   This will only break your code if you manually implement `TS` or directly interact with the `TS` trait.
-- Replaced `TS::DOCS` with `TS::docs()`.  
+- Replaced `TS::DOCS` with `TS::docs()`.
   This will only break your code if you manually implement `TS` or directly interact with the `TS` trait.
 - Added `OptionInnerType` associated type to the `TS` trait. If you manually implement `TS`, you must set this associated type to `Self` in all of your implementations.
 - Raised MSRV to `1.78.0` due to use of `#[diagnostic::on_unimplemented]` and `let ... else { ... }`
@@ -22,7 +27,7 @@
   `#[serde(default)]`. Since these fields might be absent([#393](https://github.com/Aleph-Alpha/ts-rs/pull/393))
 - Add support for arbitrary expressions in doc attributes, e.g `#[doc = concat!("defined in ", file!())]`.
   This would result both in a rustdoc and JSDoc comment.
-- The `#[ts(rename)]` attribute on structs, enums and variants now accepts any expression.  
+- The `#[ts(rename)]` attribute on structs, enums and variants now accepts any expression.
   This makes it possible to, for example, rename a struct to the name of a module it is contained in using `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`
 - The `#[ts(export_to)]` attribute on structs and enums now accepts any expression.
 - Added `#[ts(optional_fields)]` and `#[ts(optional_fields = nullable)]` attribute to structs, this attribute is equivalent to using the corresponding `#[ts(optional)]` or `#[ts(optional = nullable)]` on every field of the struct. ([#366](https://github.com/Aleph-Alpha/ts-rs/pull/366))
