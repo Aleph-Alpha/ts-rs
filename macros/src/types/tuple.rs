@@ -39,6 +39,7 @@ pub(crate) fn tuple(attr: &StructAttr, ts_name: Expr, fields: &FieldsUnnamed) ->
         ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
+        ts_enum: None,
     })
 }
 
