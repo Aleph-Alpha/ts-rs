@@ -289,5 +289,10 @@ impl_parse! {
         "content" => out.0.content = Some(parse_assign_str(input)?),
         "untagged" => out.0.untagged = true,
         "bound" => out.0.bound = Some(parse_bound(input)?),
+
+        // parse #[serde(crate = "...")] to not emit a warning
+        "crate" => {
+            parse_assign_str(input)?;
+        }
     }
 }
