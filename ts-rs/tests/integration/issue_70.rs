@@ -24,11 +24,11 @@ struct Struct {
 fn issue_70() {
     assert_eq!(
         Enum::decl(),
-        "type Enum = { \"A\": { [key in string]?: string } } | { \"B\": { [key in string]?: string } };"
+        "type Enum = { \"A\": { [key in string]: string } } | { \"B\": { [key in string]: string } };"
     );
     assert_eq!(
         Struct::decl(),
-        "type Struct = { a: { [key in string]?: string }, b: { [key in string]?: string }, };"
+        "type Struct = { a: { [key in string]: string }, b: { [key in string]: string }, };"
     );
 }
 

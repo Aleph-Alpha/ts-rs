@@ -420,6 +420,9 @@ pub trait TS {
     #[doc(hidden)]
     const IS_OPTION: bool = false;
 
+    #[doc(hidden)]
+    const IS_HASHMAP_OPTIONAL: bool = false;
+
     /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
     /// automatically read from your doc comments or `#[doc = ".."]` attributes
     fn docs() -> Option<String> {
@@ -974,16 +977,26 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
 
     fn name() -> String {
         format!(
-            "{{ [key in {}]?: {} }}",
+            "{{ [key in {}]{}: {} }}",
             <K as crate::TS>::name(),
+            if <K as crate::TS>::IS_HASHMAP_OPTIONAL {
+                "?"
+            } else {
+                ""
+            },
             <V as crate::TS>::name()
         )
     }
 
     fn inline() -> String {
         format!(
-            "{{ [key in {}]?: {} }}",
+            "{{ [key in {}]{}: {} }}",
             <K as crate::TS>::inline(),
+            if <K as crate::TS>::IS_HASHMAP_OPTIONAL {
+                "?"
+            } else {
+                ""
+            },
             <V as crate::TS>::inline()
         )
     }
@@ -1016,8 +1029,13 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
 
     fn inline_flattened() -> String {
         format!(
-            "({{ [key in {}]?: {} }})",
+            "({{ [key in {}]{}: {} }})",
             <K as crate::TS>::inline(),
+            if <K as crate::TS>::IS_HASHMAP_OPTIONAL {
+                "?"
+            } else {
+                ""
+            },
             <V as crate::TS>::inline()
         )
     }
