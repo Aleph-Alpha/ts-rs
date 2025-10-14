@@ -91,8 +91,8 @@ export type User = { user_id: number, first_name: string, last_name: string, };
 | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
 | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
-| smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
-| tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                    |
+| smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                  |
+| tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
 
 <br/>
 
@@ -121,6 +121,14 @@ Note: `skip_deserializing` is ignored. If you wish to exclude a field
 from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 
 When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
+
+### Environment variables
+| Variable                 | Description                                                         | Default      |
+|--------------------------|---------------------------------------------------------------------|--------------|
+| `TS_RS_EXPORT_DIR`       | Base directory into which bindings will be exported                 | `./bindings` |
+| `TS_RS_IMPORT_EXTENSION` | File extension used in `import` statements                          | *none*       |
+| `TS_RS_LARGE_INT`        | Binding used for large integer types (`i64`, `u64`, `i128`, `u128`) | `bigint`     |
+
 
 ### Contributing
 Contributions are always welcome!
