@@ -20,22 +20,22 @@ fn using_serde_json() {
     assert_eq!(serde_json::Number::inline(), "number");
     assert_eq!(
         serde_json::Map::<String, i32>::inline(),
-        "{ [key in string]: number }"
+        "{ [key: string]: number }"
     );
     assert_eq!(
         serde_json::Value::decl(),
-        "type JsonValue = number | string | boolean | Array<JsonValue> | { [key in string]: JsonValue } | null;",
+        "type JsonValue = number | string | boolean | Array<JsonValue> | { [key: string]: JsonValue } | null;",
     );
 
     assert_eq!(
         UsingSerdeJson::decl(),
         "type UsingSerdeJson = { \
             num: number, \
-            map1: { [key in string]: number }, \
-            map2: { [key in string]: UsingSerdeJson }, \
-            map3: { [key in string]: { [key in string]: number } }, \
-            map4: { [key in string]: number }, \
-            map5: { [key in string]: JsonValue }, \
+            map1: { [key: string]: number }, \
+            map2: { [key: string]: UsingSerdeJson }, \
+            map3: { [key: string]: { [key: string]: number } }, \
+            map4: { [key: string]: number }, \
+            map5: { [key: string]: JsonValue }, \
             any: JsonValue, \
          };"
     )
@@ -53,7 +53,7 @@ fn inlined_value() {
     assert_eq!(
         InlinedValue::decl(),
         "type InlinedValue = { \
-            any: number | string | boolean | Array<JsonValue> | { [key in string]: JsonValue } | null, \
+            any: number | string | boolean | Array<JsonValue> | { [key: string]: JsonValue } | null, \
          };"
     );
 }
