@@ -89,8 +89,8 @@
 //! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
 //! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 //! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
-//! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
-//! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                    |
+//! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                  |
+//! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
 //!
 //! <br/>
 //!
@@ -120,6 +120,14 @@
 //!
 //! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
 //!
+//! ## Environment variables
+//! | Variable                 | Description                                                         | Default      |
+//! |--------------------------|---------------------------------------------------------------------|--------------|
+//! | `TS_RS_EXPORT_DIR`       | Base directory into which bindings will be exported                 | `./bindings` |
+//! | `TS_RS_IMPORT_EXTENSION` | File extension used in `import` statements                          | *none*       |
+//! | `TS_RS_LARGE_INT`        | Binding used for large integer types (`i64`, `u64`, `i128`, `u128`) | `bigint`     |
+//!
+//!
 //! ## Contributing
 //! Contributions are always welcome!
 //! Feel free to open an issue, discuss using GitHub discussions or open a PR.
@@ -138,6 +146,7 @@ use std::{
     },
     ops::{Range, RangeInclusive},
     path::{Path, PathBuf},
+    sync::OnceLock,
 };
 
 pub use ts_rs_macros::TS;
@@ -663,11 +672,11 @@ impl<T> IsOption for Option<T> {}
 
 // generate impls for primitive types
 macro_rules! impl_primitives {
-    ($($($ty:ty),* => $l:literal),*) => { $($(
+    ($($($ty:ty),* => $l:expr),*) => { $($(
         impl TS for $ty {
             type WithoutGenerics = Self;
             type OptionInnerType = Self;
-            fn name() -> String { $l.to_owned() }
+            fn name() -> String { String::from($l) }
             fn inline() -> String { <Self as $crate::TS>::name() }
             fn inline_flattened() -> String { panic!("{} cannot be flattened", <Self as $crate::TS>::name()) }
             fn decl() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
@@ -1131,13 +1140,16 @@ mod bytes {
     impl_shadow!(as Vec<u8>: impl TS for bytes::BytesMut);
 }
 
+static LARGE_INT_BINDING: OnceLock<String> = OnceLock::new();
+
 impl_primitives! {
     u8, i8, NonZeroU8, NonZeroI8,
     u16, i16, NonZeroU16, NonZeroI16,
     u32, i32, NonZeroU32, NonZeroI32,
     usize, isize, NonZeroUsize, NonZeroIsize, f32, f64 => "number",
     u64, i64, NonZeroU64, NonZeroI64,
-    u128, i128, NonZeroU128, NonZeroI128 => "bigint",
+    u128, i128, NonZeroU128, NonZeroI128 => LARGE_INT_BINDING
+        .get_or_init(|| std::env::var("TS_RS_LARGE_INT").unwrap_or_else(|_| "bigint".to_owned())),
     bool => "boolean",
     char, Path, PathBuf, String, str,
     Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr => "string",

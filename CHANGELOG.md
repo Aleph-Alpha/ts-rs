@@ -1,3 +1,10 @@
+# master
+### Features
+- Add `TS_RS_LARGE_INT` environment variable to configure binding for `i64`, `u64`, `i128`, etc. ([#448](https://github.com/Aleph-Alpha/ts-rs/pull/448))
+
+### Fixes
+- Do not emit warning for `#[serde(crate = "..")]` ([#447](https://github.com/Aleph-Alpha/ts-rs/pull/447))
+
 # 11.1.0
 ### Features
 - Add `#[ts(repr(enum))]` attribute ([#425](https://github.com/Aleph-Alpha/ts-rs/pull/425))
