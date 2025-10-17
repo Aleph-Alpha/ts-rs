@@ -3,8 +3,7 @@ use std::collections::HashMap;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 use syn::{
-    spanned::Spanned, Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, LitStr, Path,
-    Result, Type,
+    Attribute, Error, Expr, ExprLit, GenericParam, Generics, Lit, LitStr, Path, Result, Type,
 };
 
 use super::attr::{Attr, Serde};
@@ -165,45 +164,15 @@ where
         .fold(Serde::<A>::default(), |acc, cur| acc.merge(cur))
 }
 
-/// Return doc comments parsed and formatted as JSDoc.
-pub fn parse_docs(attrs: &[Attribute]) -> Result<String> {
-    let doc_attrs = attrs
+/// Extracts doc comments from the given attributes, returning a `syn::Expr` for every `#[doc]`
+/// attribute. These `syn::Expr`s are expected to evaluate to `&str`.
+pub fn extract_docs(attrs: &[Attribute]) -> Vec<Expr> {
+    attrs
         .iter()
         .filter_map(|attr| attr.meta.require_name_value().ok())
         .filter(|attr| attr.path.is_ident("doc"))
-        .map(|attr| match attr.value {
-            Expr::Lit(ExprLit {
-                lit: Lit::Str(ref str),
-                ..
-            }) => Ok(str.value()),
-            _ => syn_err!(attr.span(); "doc  with non literal expression found"),
-        })
-        .collect::<Result<Vec<_>>>()?;
-
-    Ok(match doc_attrs.len() {
-        // No docs
-        0 => String::new(),
-
-        // Multi-line block doc comment (/** ... */)
-        1 if doc_attrs[0].contains('\n') => format!("/**{}*/\n", &doc_attrs[0]),
-
-        // Regular doc comment(s) (///) or single line block doc comment
-        _ => {
-            let mut buffer = String::from("/**\n");
-            let mut lines = doc_attrs.iter().peekable();
-
-            while let Some(line) = lines.next() {
-                buffer.push_str(" *");
-                buffer.push_str(line);
-
-                if lines.peek().is_some() {
-                    buffer.push('\n');
-                }
-            }
-            buffer.push_str("\n */\n");
-            buffer
-        }
-    })
+        .map(|attr| attr.value.clone())
+        .collect()
 }
 
 #[cfg(feature = "serde-compat")]

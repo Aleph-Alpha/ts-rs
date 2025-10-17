@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs"
-version = "10.1.0"
+version = "11.1.0"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -18,6 +18,8 @@ readme = "../README.md"
 rust-version = "1.78.0"
 
 [features]
+default = ["serde-compat", "export"]
+
 chrono-impl = ["chrono"]
 bigdecimal-impl = ["bigdecimal"]
 uuid-impl = ["uuid"]
@@ -26,7 +28,6 @@ bytes-impl = ["bytes"]
 url-impl = ["url"]
 serde-compat = ["ts-rs-macros/serde-compat"]
 format = ["dprint-plugin-typescript"]
-default = ["serde-compat", "export"]
 indexmap-impl = ["indexmap"]
 ordered-float-impl = ["ordered-float"]
 heapless-impl = ["heapless"]
@@ -46,11 +47,11 @@ chrono = { version = "0.4", features = ["serde"] }
 tokio = { version = "1.40", features = ["sync", "rt"] }
 
 [dependencies]
-ts-rs-macros = { version = "=10.1.0", path = "../macros" }
+ts-rs-macros = { version = "=11.1.0", path = "../macros" }
 thiserror = "2"
 
 heapless = { version = ">= 0.7, < 0.9", optional = true }
-dprint-plugin-typescript = { version = "0.90", optional = true }
+dprint-plugin-typescript = { version = "= 0.95", optional = true }
 chrono = { version = "0.4", optional = true }
 bigdecimal = { version = ">= 0.0.13, < 0.5", features = ["serde"], optional = true }
 uuid = { version = "1", optional = true }
@@ -60,6 +61,6 @@ url = { version = "2", optional = true }
 semver = { version = "1", optional = true }
 smol_str = { version = "0.3", optional = true }
 indexmap = { version = "2", optional = true }
-ordered-float = { version = ">= 3, < 5", optional = true }
+ordered-float = { version = ">= 3, < 6", optional = true }
 serde_json = { version = "1", optional = true }
 tokio = { version = "1", features = ["sync"], optional = true }

@@ -40,7 +40,7 @@
 //! ## Get started
 //! ```toml
 //! [dependencies]
-//! ts-rs = "10.1"
+//! ts-rs = "11.1"
 //! ```
 //!
 //! ```rust
@@ -78,7 +78,6 @@
 //! | serde-compat       | **Enabled by default** <br/>See the *"serde compatibility"* section below for more information.                                                                                                           |
 //! | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
 //! | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
-//! | import-esm         | When enabled,`import` statements in the generated file will have the `.js` extension in the end of the path to conform to the ES Modules spec. <br/> Example: `import { MyStruct } from "./my_struct.js"` |
 //! | serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                                                                                |
 //! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
 //! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
@@ -90,8 +89,8 @@
 //! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
 //! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 //! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
-//! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
-//! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                    |
+//! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                  |
+//! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
 //!
 //! <br/>
 //!
@@ -108,13 +107,26 @@
 //! - `content`
 //! - `untagged`
 //! - `skip`
+//! - `skip_serializing`
+//! - `skip_serializing_if`
 //! - `flatten`
 //! - `default`
 //!
-//! Note: `skip_serializing` and `skip_deserializing` are ignored. If you wish to exclude a field
+//! Note: `skip_serializing` and `skip_serializing_if` only have an effect when used together with
+//! `#[serde(default)]`.
+//!
+//! Note: `skip_deserializing` is ignored. If you wish to exclude a field
 //! from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 //!
 //! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
+//!
+//! ## Environment variables
+//! | Variable                 | Description                                                         | Default      |
+//! |--------------------------|---------------------------------------------------------------------|--------------|
+//! | `TS_RS_EXPORT_DIR`       | Base directory into which bindings will be exported                 | `./bindings` |
+//! | `TS_RS_IMPORT_EXTENSION` | File extension used in `import` statements                          | *none*       |
+//! | `TS_RS_LARGE_INT`        | Binding used for large integer types (`i64`, `u64`, `i128`, `u128`) | `bigint`     |
+//!
 //!
 //! ## Contributing
 //! Contributions are always welcome!
@@ -122,7 +134,7 @@
 //! [See CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
 //!
 //! ## MSRV
-//! The Minimum Supported Rust Version for this crate is 1.78.0
+//! The Minimum Supported Rust Version for this crate is 1.88.0
 
 use std::{
     any::TypeId,
@@ -323,7 +335,9 @@ mod tokio;
 /// - **`#[ts(optional)]`**  
 ///   May be applied on a struct field of type `Option<T>`. By default, such a field would turn into `t: T | null`.  
 ///   If `#[ts(optional)]` is present, `t?: T` is generated instead.  
-///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.
+///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.  
+///   `#[ts(optional = false)]` can override the behaviour for this field if `#[ts(optional_fields)]`
+///   is present on the struct itself.
 ///   <br/><br/>
 ///
 /// - **`#[ts(flatten)]`**  
@@ -356,6 +370,13 @@ mod tokio;
 ///   Renames the fields of all the struct variants of this enum. This is equivalent to using
 ///   `#[ts(rename_all = "..")]` on all of the enum's variants.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
+///   <br/><br/>
+///
+/// - **`#[ts(repr(enum))]`**
+///   Exports the enum as a TypeScript enum instead of type union
+///   Discriminants (`= {integer}`) are included in the exported enum's variants
+///   If `#[ts(repr(enum = name))]` is used, all variants without a discriminant will be exported
+///   as `VariantName = "VariantName"`
 ///   <br/><br/>
 ///  
 /// ### enum variant attributes
@@ -405,12 +426,14 @@ pub trait TS {
     /// All other implementations of `TS` should set this type to `Self` instead.
     type OptionInnerType: ?Sized;
 
-    /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
-    /// automatically read from your doc comments or `#[doc = ".."]` attributes
-    const DOCS: Option<&'static str> = None;
-
     #[doc(hidden)]
     const IS_OPTION: bool = false;
+
+    /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
+    /// automatically read from your doc comments or `#[doc = ".."]` attributes
+    fn docs() -> Option<String> {
+        None
+    }
 
     /// Identifier of this type, excluding generic parameters.
     fn ident() -> String {
@@ -663,7 +686,7 @@ fn get_override(rust_type: &str) -> Option<&'static str> {
 
 // generate impls for primitive types
 macro_rules! impl_primitives {
-    ($($($ty:ty),* => $l:literal),*) => { $($(
+    ($($($ty:ty),* => $l:expr),*) => { $($(
         impl TS for $ty {
             type WithoutGenerics = Self;
             type OptionInnerType = Self;
@@ -1019,7 +1042,11 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+        format!(
+            "({{ [key in {}]?: {} }})",
+            <K as crate::TS>::inline(),
+            <V as crate::TS>::inline()
+        )
     }
 }
 
@@ -1131,13 +1158,16 @@ mod bytes {
     impl_shadow!(as Vec<u8>: impl TS for bytes::BytesMut);
 }
 
+static LARGE_INT_BINDING: OnceLock<String> = OnceLock::new();
+
 impl_primitives! {
     u8, i8, NonZeroU8, NonZeroI8,
     u16, i16, NonZeroU16, NonZeroI16,
     u32, i32, NonZeroU32, NonZeroI32,
     usize, isize, NonZeroUsize, NonZeroIsize, f32, f64 => "number",
     u64, i64, NonZeroU64, NonZeroI64,
-    u128, i128, NonZeroU128, NonZeroI128 => "bigint",
+    u128, i128, NonZeroU128, NonZeroI128 => LARGE_INT_BINDING
+        .get_or_init(|| std::env::var("TS_RS_LARGE_INT").unwrap_or_else(|_| "bigint".to_owned())),
     bool => "boolean",
     char, Path, PathBuf, String, str,
     Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr => "string",
@@ -1183,5 +1213,36 @@ impl TS for Dummy {
 
     fn inline_flattened() -> String {
         panic!("{} cannot be flattened", <Self as crate::TS>::name())
+    }
+}
+
+/// Formats rust doc comments, turning them into a JSDoc comments.
+/// Expects a `&[&str]` where each element corresponds to the value of one `#[doc]` attribute.
+/// This work is deferred to runtime, allowing expressions in `#[doc]`, e.g `#[doc = file!()]`.
+#[doc(hidden)]
+pub fn format_docs(docs: &[&str]) -> String {
+    match docs {
+        // No docs
+        [] => String::new(),
+
+        // Multi-line block doc comment (/** ... */)
+        [doc] if doc.contains('\n') => format!("/**{doc}*/\n"),
+
+        // Regular doc comment(s) (///) or single line block doc comment
+        _ => {
+            let mut buffer = String::from("/**\n");
+            let mut lines = docs.iter().peekable();
+
+            while let Some(line) = lines.next() {
+                buffer.push_str(" *");
+                buffer.push_str(line);
+
+                if lines.peek().is_some() {
+                    buffer.push('\n');
+                }
+            }
+            buffer.push_str("\n */\n");
+            buffer
+        }
     }
 }

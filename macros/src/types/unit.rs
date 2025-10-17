@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{Expr, Result};
+use syn::Expr;
 
 use crate::{
     attr::{ContainerAttr, StructAttr},
@@ -7,11 +7,10 @@ use crate::{
     DerivedTS,
 };
 
-pub(crate) fn empty_object(attr: &StructAttr, ts_name: Expr) -> Result<DerivedTS> {
-    check_attributes(attr)?;
+pub(crate) fn empty_object(attr: &StructAttr, ts_name: Expr) -> DerivedTS {
     let crate_rename = attr.crate_rename();
 
-    Ok(DerivedTS {
+    DerivedTS {
         crate_rename: crate_rename.clone(),
         inline: quote!("Record<string, never>".to_owned()),
         inline_flattened: None,
@@ -22,14 +21,14 @@ pub(crate) fn empty_object(attr: &StructAttr, ts_name: Expr) -> Result<DerivedTS
         ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
-    })
+        ts_enum: None,
+    }
 }
 
-pub(crate) fn empty_array(attr: &StructAttr, ts_name: Expr) -> Result<DerivedTS> {
-    check_attributes(attr)?;
+pub(crate) fn empty_array(attr: &StructAttr, ts_name: Expr) -> DerivedTS {
     let crate_rename = attr.crate_rename();
 
-    Ok(DerivedTS {
+    DerivedTS {
         crate_rename: crate_rename.clone(),
         inline: quote!("never[]".to_owned()),
         inline_flattened: None,
@@ -40,14 +39,14 @@ pub(crate) fn empty_array(attr: &StructAttr, ts_name: Expr) -> Result<DerivedTS>
         ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
-    })
+        ts_enum: None,
+    }
 }
 
-pub(crate) fn null(attr: &StructAttr, ts_name: Expr) -> Result<DerivedTS> {
-    check_attributes(attr)?;
+pub(crate) fn null(attr: &StructAttr, ts_name: Expr) -> DerivedTS {
     let crate_rename = attr.crate_rename();
 
-    Ok(DerivedTS {
+    DerivedTS {
         crate_rename: crate_rename.clone(),
         inline: quote!("null".to_owned()),
         inline_flattened: None,
@@ -58,17 +57,6 @@ pub(crate) fn null(attr: &StructAttr, ts_name: Expr) -> Result<DerivedTS> {
         ts_name,
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
-    })
-}
-
-fn check_attributes(attr: &StructAttr) -> Result<()> {
-    if attr.rename_all.is_some() {
-        syn_err!("`rename_all` is not applicable to unit structs");
+        ts_enum: None,
     }
-
-    if attr.tag.is_some() {
-        syn_err!("`tag` is not applicable to unit structs");
-    }
-
-    Ok(())
 }

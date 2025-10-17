@@ -42,7 +42,7 @@ We recommend doing this in your tests.
 ### Get started
 ```toml
 [dependencies]
-ts-rs = "10.1"
+ts-rs = "11.1"
 ```
 
 ```rust
@@ -80,7 +80,6 @@ export type User = { user_id: number, first_name: string, last_name: string, };
 | serde-compat       | **Enabled by default** <br/>See the *"serde compatibility"* section below for more information.                                                                                                           |
 | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
 | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
-| import-esm         | When enabled,`import` statements in the generated file will have the `.js` extension in the end of the path to conform to the ES Modules spec. <br/> Example: `import { MyStruct } from "./my_struct.js"` |
 | serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                                                                                |
 | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
 | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
@@ -92,8 +91,8 @@ export type User = { user_id: number, first_name: string, last_name: string, };
 | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
 | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
 | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
-| smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                    |
-| tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                    |
+| smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                  |
+| tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
 
 <br/>
 
@@ -110,13 +109,26 @@ Supported serde attributes:
 - `content`
 - `untagged`
 - `skip`
+- `skip_serializing`
+- `skip_serializing_if`
 - `flatten`
 - `default`
 
-Note: `skip_serializing` and `skip_deserializing` are ignored. If you wish to exclude a field
+Note: `skip_serializing` and `skip_serializing_if` only have an effect when used together with
+`#[serde(default)]`.
+
+Note: `skip_deserializing` is ignored. If you wish to exclude a field
 from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 
 When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
+
+### Environment variables
+| Variable                 | Description                                                         | Default      |
+|--------------------------|---------------------------------------------------------------------|--------------|
+| `TS_RS_EXPORT_DIR`       | Base directory into which bindings will be exported                 | `./bindings` |
+| `TS_RS_IMPORT_EXTENSION` | File extension used in `import` statements                          | *none*       |
+| `TS_RS_LARGE_INT`        | Binding used for large integer types (`i64`, `u64`, `i128`, `u128`) | `bigint`     |
+
 
 ### Contributing
 Contributions are always welcome!
@@ -124,6 +136,6 @@ Feel free to open an issue, discuss using GitHub discussions or open a PR.
 [See CONTRIBUTING.md](https://github.com/Aleph-Alpha/ts-rs/blob/main/CONTRIBUTING.md)
 
 ### MSRV
-The Minimum Supported Rust Version for this crate is 1.78.0
+The Minimum Supported Rust Version for this crate is 1.88.0
 
 License: MIT

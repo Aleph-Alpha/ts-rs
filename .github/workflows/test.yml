@@ -15,12 +15,12 @@ jobs:
       - name: dependencies e2e test
         working-directory: e2e/dependencies/consumer
         run: |
-          cargo t 
-          tsc bindings/*.ts --noEmit --noUnusedLocals --strict
+          cargo t
+          tsc bindings/* --noEmit --noUnusedLocals --strict
       - name: dependencies e2e test with default export env
         working-directory: e2e/dependencies/consumer
         run: |
-          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          TS_RS_EXPORT_DIR=custom-bindings cargo t
           shopt -s globstar
           tsc custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
   e2e-workspace:
@@ -37,14 +37,14 @@ jobs:
       - name: workspace e2e test
         working-directory: e2e/workspace
         run: |
-          cargo t 
+          cargo t
           shopt -s globstar
           tsc parent/bindings/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf parent/bindings
       - name: workspace e2e with default export env
         working-directory: e2e/workspace
         run: |
-          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          TS_RS_EXPORT_DIR=custom-bindings cargo t
           shopt -s globstar
           tsc parent/custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
           rm -rf parent/custom-bindings
@@ -62,12 +62,12 @@ jobs:
       - name: example e2e test
         working-directory: example
         run: |
-          cargo t 
+          cargo t
           tsc bindings/* --noEmit
       - name: example e2e with default export env
         working-directory: example
         run: |
-          TS_RS_EXPORT_DIR=custom-bindings cargo t 
+          TS_RS_EXPORT_DIR=custom-bindings cargo t
           shopt -s globstar
           tsc custom-bindings/**/*.ts --noEmit --noUnusedLocals --strict
 
@@ -85,7 +85,7 @@ jobs:
       - name: Check that README.md is up-to-date
         working-directory: ts-rs
         run: |
-          cargo install cargo-readme 
+          cargo install cargo-readme
           diff -u ../README.md <(cargo readme)
 
   msrv-valid:
@@ -101,12 +101,13 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Check that README.md is up-to-date
         working-directory: ts-rs
+        # FIXME: use --all-features for next breaking change
         run: |
           set +e
-          cargo install cargo-msrv 
-          cargo msrv verify --all-features
+          cargo install cargo-msrv
+          cargo msrv verify
           if [[ $? -eq 1 ]]; then
-            cargo msrv find --all-features
+            cargo msrv find
             exit 1
           fi
 
