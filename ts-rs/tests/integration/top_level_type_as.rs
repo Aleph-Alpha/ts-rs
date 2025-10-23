@@ -53,3 +53,72 @@ pub struct Bar {
     as = "HashMap::<String, Bar>"
 )]
 pub struct Biz(String);
+
+// -- test that TS::IS_ENUM is preserved correctly --
+
+pub struct Unsupported;
+
+#[derive(TS)]
+#[ts(export, export_to = "top_level_type_as/")]
+pub enum NormalEnum {
+    A,
+    B,
+}
+#[derive(TS)]
+#[ts(export, export_to = "top_level_type_as/")]
+pub struct NormalStruct {
+    x: u32,
+}
+#[derive(TS)]
+#[ts(export, export_to = "top_level_type_as/", as = "String")]
+pub enum EnumAsString {
+    A(Unsupported),
+    B(Unsupported),
+}
+#[derive(TS)]
+#[ts(export, export_to = "top_level_type_as/", as = "NormalEnum")]
+pub enum EnumAsEnum {
+    A(Unsupported),
+    B(Unsupported),
+}
+#[derive(TS)]
+#[ts(export, export_to = "top_level_type_as/", as = "NormalStruct")]
+pub enum EnumAsStruct {
+    A(Unsupported),
+    B(Unsupported),
+}
+#[derive(TS)]
+#[ts(export, export_to = "top_level_type_as/", as = "String")]
+pub struct StructAsString {
+    x: Unsupported,
+}
+#[derive(TS)]
+#[ts(export, export_to = "top_level_type_as/", as = "NormalEnum")]
+pub struct StructAsEnum {
+    x: Unsupported,
+}
+#[derive(TS)]
+#[ts(export, export_to = "top_level_type_as/", as = "NormalStruct")]
+pub struct StructAsStruct {
+    x: Unsupported,
+}
+
+#[test]
+fn preserves_is_enum() {
+    assert!(NormalEnum::IS_ENUM);
+    assert!(!NormalStruct::IS_ENUM);
+
+    assert_eq!(EnumAsString::inline(), String::inline());
+    assert!(!EnumAsString::IS_ENUM);
+    assert_eq!(EnumAsEnum::inline(), NormalEnum::inline());
+    assert!(EnumAsEnum::IS_ENUM);
+    assert_eq!(EnumAsStruct::inline(), NormalStruct::inline());
+    assert!(!EnumAsStruct::IS_ENUM);
+
+    assert_eq!(StructAsString::inline(), String::inline());
+    assert!(!StructAsString::IS_ENUM);
+    assert_eq!(StructAsEnum::inline(), NormalEnum::inline());
+    assert!(StructAsEnum::IS_ENUM);
+    assert_eq!(StructAsStruct::inline(), NormalStruct::inline());
+    assert!(!StructAsStruct::IS_ENUM);
+}

@@ -15,7 +15,7 @@ struct Hashes {
 fn hashmap() {
     assert_eq!(
         Hashes::decl(),
-        "type Hashes = { map: { [key in string]?: string }, set: Array<string>, };"
+        "type Hashes = { map: { [key in string]: string }, set: Array<string>, };"
     )
 }
 
@@ -35,7 +35,7 @@ struct HashesHasher {
 fn hashmap_with_custom_hasher() {
     assert_eq!(
         HashesHasher::decl(),
-        "type HashesHasher = { map: { [key in string]?: string }, set: Array<string>, };"
+        "type HashesHasher = { map: { [key in string]: string }, set: Array<string>, };"
     )
 }
 
@@ -59,6 +59,13 @@ struct BTreeMapWithCustomTypes {
     map: BTreeMap<CustomKey, CustomValue>,
 }
 
+#[derive(TS)]
+#[ts(export, export_to = "hashmap/")]
+enum EnumKey {
+    Foo,
+    Bar,
+}
+
 #[test]
 fn with_custom_types() {
     assert_eq!(
@@ -67,6 +74,14 @@ fn with_custom_types() {
     );
     assert_eq!(
         HashMapWithCustomTypes::decl(),
-        "type HashMapWithCustomTypes = { map: { [key in CustomKey]?: CustomValue }, };"
+        "type HashMapWithCustomTypes = { map: { [key in CustomKey]: CustomValue }, };"
+    );
+    assert_eq!(
+        HashMap::<EnumKey, String>::name(),
+        "{ [key in EnumKey]?: string }"
+    );
+    assert_eq!(
+        HashMap::<EnumKey, String>::inline(),
+        r#"{ [key in "Foo" | "Bar"]?: string }"#
     );
 }
