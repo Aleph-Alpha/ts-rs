@@ -86,7 +86,7 @@ impl DerivedTS {
         );
         let assoc_type = generate_assoc_type(&rust_ty, &crate_rename, &generics, &self.concrete);
         let name = self.generate_name_fn(&generics);
-        let is_hashmap_optional = self.is_enum.clone();
+        let is_enum = self.is_enum.clone();
         let inline = self.generate_inline_fn();
         let decl = self.generate_decl_fn(&rust_ty, &generics);
         let dependencies = &self.dependencies;
@@ -97,7 +97,7 @@ impl DerivedTS {
                 #assoc_type
                 type OptionInnerType = Self;
 
-                const IS_ENUM: bool = #is_hashmap_optional;
+                const IS_ENUM: bool = #is_enum;
 
                 fn ident() -> String {
                     (#ident).to_string()

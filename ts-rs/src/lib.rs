@@ -986,25 +986,19 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
 
     fn name() -> String {
         format!(
-            "{{ {}: {} }}",
-            if <K as crate::TS>::IS_ENUM {
-                format!("[key in {}]?", <K as crate::TS>::name())
-            } else {
-                format!("[key: {}]", <K as crate::TS>::name())
-            },
-            <V as crate::TS>::name()
+            "{{ [key in {}]{}: {} }}",
+            <K as crate::TS>::name(),
+            if <K as crate::TS>::IS_ENUM { "?" } else { "" },
+            <V as crate::TS>::name(),
         )
     }
 
     fn inline() -> String {
         format!(
-            "{{ {}: {} }}",
-            if <K as crate::TS>::IS_ENUM {
-                format!("[key in {}]?", <K as crate::TS>::inline())
-            } else {
-                format!("[key: {}]", <K as crate::TS>::inline())
-            },
-            <V as crate::TS>::inline()
+            "{{ [key in {}]{}: {} }}",
+            <K as crate::TS>::inline(),
+            if <K as crate::TS>::IS_ENUM { "?" } else { "" },
+            <V as crate::TS>::inline(),
         )
     }
 
