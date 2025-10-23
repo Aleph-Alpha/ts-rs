@@ -30,7 +30,7 @@ struct DerivedTS {
     concrete: HashMap<Ident, Type>,
     bound: Option<Vec<WherePredicate>>,
     ts_enum: Option<Repr>,
-    is_hashmap_optional: TokenStream,
+    is_enum: TokenStream,
 
     export: bool,
     export_to: Option<Expr>,
@@ -86,7 +86,7 @@ impl DerivedTS {
         );
         let assoc_type = generate_assoc_type(&rust_ty, &crate_rename, &generics, &self.concrete);
         let name = self.generate_name_fn(&generics);
-        let is_hashmap_optional = self.is_hashmap_optional.clone();
+        let is_hashmap_optional = self.is_enum.clone();
         let inline = self.generate_inline_fn();
         let decl = self.generate_decl_fn(&rust_ty, &generics);
         let dependencies = &self.dependencies;
@@ -97,7 +97,7 @@ impl DerivedTS {
                 #assoc_type
                 type OptionInnerType = Self;
 
-                const IS_HASHMAP_OPTIONAL: bool = #is_hashmap_optional;
+                const IS_ENUM: bool = #is_hashmap_optional;
 
                 fn ident() -> String {
                     (#ident).to_string()
