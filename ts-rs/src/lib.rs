@@ -666,9 +666,13 @@ impl Dependency {
     note = "`#[ts(optional)]` was used on a field of type {Self}, which is not permitted",
     label = "`#[ts(optional)]` is not allowed on field of type {Self}"
 )]
-pub trait IsOption {}
+pub trait IsOption {
+    type Inner;
+}
 
-impl<T> IsOption for Option<T> {}
+impl<T> IsOption for Option<T> {
+    type Inner = T;
+}
 
 // generate impls for primitive types
 macro_rules! impl_primitives {
