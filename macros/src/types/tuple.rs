@@ -58,14 +58,6 @@ fn format_field(
     }
 
     let ty = field_attr.type_as(&field.ty);
-    if field_attr.type_override.is_none() {
-        if field_attr.inline {
-            dependencies.append_from(&ty);
-        } else {
-            dependencies.push(&ty);
-        }
-    }
-
     let (is_optional, ty) = crate::optional::apply(
         crate_rename,
         struct_optional,
@@ -73,6 +65,14 @@ fn format_field(
         &field_attr,
         field.span(),
     );
+
+    if field_attr.type_override.is_none() {
+        if field_attr.inline {
+            dependencies.append_from(&ty);
+        } else {
+            dependencies.push(&ty);
+        }
+    }
 
     let formatted_ty = field_attr
         .type_override
