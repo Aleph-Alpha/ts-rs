@@ -249,7 +249,7 @@ impl DerivedTS {
                 let variants = #inline.replace(|x: char| !x.is_numeric() && x != ',', "");
                 let mut variants = variants
                     .split(',')
-                    .map(|x| isize::from_str_radix(x, 10).ok())
+                    .map(|x| x.parse().ok())
                     .peekable();
 
                 if variants.peek().is_none() {

@@ -1,5 +1,4 @@
 #![allow(clippy::box_collection, clippy::enum_variant_names, dead_code)]
-#![allow(dead_code)]
 
 use std::{
     collections::{BTreeMap, HashSet},

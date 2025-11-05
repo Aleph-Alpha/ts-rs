@@ -12,9 +12,11 @@ use crate::attr::FieldAttr;
 #[derive(Default, Clone, Copy)]
 pub enum Optional {
     /// Explicitly marked as optional with `#[ts(optional)]`
+    #[allow(clippy::enum_variant_names)]
     Optional { nullable: bool },
 
     /// Explicitly marked as not optional with `#[ts(optional = false)]`
+    #[allow(clippy::enum_variant_names)]
     NotOptional,
 
     #[default]
@@ -76,13 +78,15 @@ pub fn apply(
         // It takes precedence over the struct attribute, and is enforced **AT COMPILE TIME**
         (_, Optional::Optional { nullable }) => (
             parse_quote!(true),
-            nullable.then(|| field_ty.clone()).unwrap_or_else(|| {
+            if nullable {
+                field_ty.clone()
+            } else {
                 // expression that evaluates to the the Option's inner type,
                 // but fails to compile if `field_ty` is not an `Option`.
                 parse_quote_spanned! {
                     span => <#field_ty as #crate_rename::IsOption>::Inner
                 }
-            }),
+            },
         ),
         // Inherited `#[ts(optional)]` from the struct.
         // Acts like `#[ts(optional)]` on a field, but does not error on non-`Option` fields.
@@ -91,9 +95,11 @@ pub fn apply(
             parse_quote! {
                 <#field_ty as #crate_rename::TS>::IS_OPTION
             },
-            nullable
-                .then(|| field_ty.clone())
-                .unwrap_or_else(|| unwrap_option(crate_rename, field_ty)),
+            if nullable {
+                field_ty.clone()
+            } else {
+                unwrap_option(crate_rename, field_ty)
+            },
         ),
         // no applicable `#[ts(optional)]` attributes
         _ => {
