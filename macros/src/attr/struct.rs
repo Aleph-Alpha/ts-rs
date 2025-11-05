@@ -132,10 +132,8 @@ impl Attr for StructAttr {
             }
         }
 
-        if !matches!(item, Fields::Named(_)) {
-            if self.tag.is_some() {
-                syn_err!("`tag` cannot be used with unit or tuple structs");
-            }
+        if !matches!(item, Fields::Named(_)) && self.tag.is_some() {
+            syn_err!("`tag` cannot be used with unit or tuple structs");
         }
 
         Ok(())
