@@ -69,7 +69,7 @@ enum ExternallyTagged {
 
     G(
         Vec<ExternallyTagged>,
-        [&'static ExternallyTagged; 1024],
+        Box<[&'static ExternallyTagged; 1024]>,
         HashMap<String, ExternallyTagged>,
     ),
 }

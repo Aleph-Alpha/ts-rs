@@ -12,9 +12,11 @@ use crate::attr::FieldAttr;
 #[derive(Default, Clone, Copy)]
 pub enum Optional {
     /// Explicitly marked as optional with `#[ts(optional)]`
+    #[allow(clippy::enum_variant_names)]
     Optional { nullable: bool },
 
     /// Explicitly marked as not optional with `#[ts(optional = false)]`
+    #[allow(clippy::enum_variant_names)]
     NotOptional,
 
     #[default]
@@ -82,9 +84,11 @@ pub fn apply(
                 check_that_field_is_option(x);
                 true
             }},
-            nullable
-                .then(|| field_ty.clone())
-                .unwrap_or_else(|| unwrap_option(crate_rename, field_ty)),
+            if nullable {
+                field_ty.clone()
+            } else {
+                unwrap_option(crate_rename, field_ty)
+            },
         ),
         // Inherited `#[ts(optional)]` from the struct.
         // Acts like `#[ts(optional)]` on a field, but does not error on non-`Option` fields.
@@ -93,9 +97,11 @@ pub fn apply(
             parse_quote! {
                 <#field_ty as #crate_rename::TS>::IS_OPTION
             },
-            nullable
-                .then(|| field_ty.clone())
-                .unwrap_or_else(|| unwrap_option(crate_rename, field_ty)),
+            if nullable {
+                field_ty.clone()
+            } else {
+                unwrap_option(crate_rename, field_ty)
+            },
         ),
         // no applicable `#[ts(optional)]` attributes
         _ => {
