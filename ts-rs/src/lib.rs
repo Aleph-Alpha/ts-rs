@@ -91,6 +91,7 @@
 //! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
 //! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                  |
 //! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
+//! | jiff-0_2-impl      | Implement `TS` for types from *jiff* (v0.2)                                                                                                                                                               |
 //!
 //! <br/>
 //!
@@ -156,13 +157,15 @@ pub use crate::export::ExportError;
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
+#[cfg(feature = "jiff-0_2-impl")]
+mod jiff;
 #[cfg(feature = "serde-json-impl")]
 mod serde_json;
 #[cfg(feature = "tokio-impl")]
 mod tokio;
 
-/// A type which can be represented in TypeScript.  
-/// Most of the time, you'd want to derive this trait instead of implementing it manually.  
+/// A type which can be represented in TypeScript.
+/// Most of the time, you'd want to derive this trait instead of implementing it manually.
 /// ts-rs comes with implementations for all primitives, most collections, tuples,
 /// arrays and containers.
 ///
@@ -171,7 +174,7 @@ mod tokio;
 /// bindings __cannot__ be exported during compile time.
 ///
 /// Bindings can be exported within a test, which ts-rs generates for you by adding `#[ts(export)]`
-/// to a type you wish to export to a file.  
+/// to a type you wish to export to a file.
 /// When `cargo test` is run, all types annotated with `#[ts(export)]` and all of their
 /// dependencies will be written to `TS_RS_EXPORT_DIR`, or `./bindings` by default.
 ///
@@ -200,7 +203,7 @@ mod tokio;
 ///   Generates code which references the module passed to it instead of defaulting to `::ts_rs`
 ///   This is useful for cases where you have to re-export the crate.
 ///
-/// - **`#[ts(export)]`**  
+/// - **`#[ts(export)]`**
 ///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
 ///   `cargo test`. The default base directory can be overridden with the `TS_RS_EXPORT_DIR` environment variable.
 ///   Adding the variable to a project's [config.toml](https://doc.rust-lang.org/cargo/reference/config.html#env) can
@@ -212,39 +215,39 @@ mod tokio;
 ///   ```
 ///   <br/>
 ///
-/// - **`#[ts(export_to = "..")]`**  
-///   Specifies where the type should be exported to. Defaults to `<name>.ts`.  
+/// - **`#[ts(export_to = "..")]`**
+///   Specifies where the type should be exported to. Defaults to `<name>.ts`.
 ///   The path given to the `export_to` attribute is relative to the `TS_RS_EXPORT_DIR` environment variable,
-///   or, if `TS_RS_EXPORT_DIR` is not set, to `./bindings`  
-///   If the provided path ends in a trailing `/`, it is interpreted as a directory.  
-///   This attribute also accepts arbitrary expressions.  
+///   or, if `TS_RS_EXPORT_DIR` is not set, to `./bindings`
+///   If the provided path ends in a trailing `/`, it is interpreted as a directory.
+///   This attribute also accepts arbitrary expressions.
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
 ///   <br/><br/>
 ///
-/// - **`#[ts(as = "..")]`**  
-///   Overrides the type used in Typescript, using the provided Rust type instead.  
+/// - **`#[ts(as = "..")]`**
+///   Overrides the type used in Typescript, using the provided Rust type instead.
 ///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
 ///   <br/><br/>
 ///
-/// - **`#[ts(type = "..")]`**  
-///   Overrides the type used in TypeScript.  
+/// - **`#[ts(type = "..")]`**
+///   Overrides the type used in TypeScript.
 ///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
 ///   <br/><br/>
 ///
-/// - **`#[ts(rename = "..")]`**  
-///   Sets the typescript name of the generated type.  
+/// - **`#[ts(rename = "..")]`**
+///   Sets the typescript name of the generated type.
 ///   Also accepts expressions, e.g `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`.
 ///   <br/><br/>
 ///
-/// - **`#[ts(rename_all = "..")]`**  
-///   Rename all fields/variants of the type.  
+/// - **`#[ts(rename_all = "..")]`**
+///   Rename all fields/variants of the type.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///
-/// - **`#[ts(concrete(..)]`**  
-///   Disables one ore more generic type parameters by specifying a concrete type for them.  
+/// - **`#[ts(concrete(..)]`**
+///   Disables one ore more generic type parameters by specifying a concrete type for them.
 ///   The resulting TypeScript definition will not be generic over these parameters and will use the
-///   provided type instead.  
+///   provided type instead.
 ///   This is especially useful for generic types containing associated types. Since TypeScript does
 ///   not have an equivalent construct to associated types, we cannot generate a generic definition
 ///   for them. Using `#[ts(concrete(..)]`, we can however generate a non-generic definition.
@@ -297,76 +300,76 @@ mod tokio;
 ///   <br/><br/>
 ///
 /// ### struct attributes
-/// - **`#[ts(tag = "..")]`**  
+/// - **`#[ts(tag = "..")]`**
 ///   Include the structs name (or value of `#[ts(rename = "..")]`) as a field with the given key.
 ///   <br/><br/>
 ///
-/// - **`#[ts(optional_fields)]`**  
+/// - **`#[ts(optional_fields)]`**
 ///   Makes all `Option<T>` fields in a struct optional.
-///   If `#[ts(optional_fields)]` is present, `t?: T` is generated for every `Option<T>` field of the struct.  
-///   If `#[ts(optional_fields = nullable)]` is present, `t?: T | null` is generated for every `Option<T>` field of the struct.  
+///   If `#[ts(optional_fields)]` is present, `t?: T` is generated for every `Option<T>` field of the struct.
+///   If `#[ts(optional_fields = nullable)]` is present, `t?: T | null` is generated for every `Option<T>` field of the struct.
 ///   <br/><br/>
 ///
 /// ### struct field attributes
 ///
-/// - **`#[ts(type = "..")]`**  
-///   Overrides the type used in TypeScript.  
+/// - **`#[ts(type = "..")]`**
+///   Overrides the type used in TypeScript.
 ///   This is useful when there's a type for which you cannot derive `TS`.
 ///   <br/><br/>
 ///
-/// - **`#[ts(as = "..")]`**  
+/// - **`#[ts(as = "..")]`**
 ///   Overrides the type of the annotated field, using the provided Rust type instead.
-///   This is useful when there's a type for which you cannot derive `TS`.  
+///   This is useful when there's a type for which you cannot derive `TS`.
 ///   `_` may be used to refer to the type of the field, e.g `#[ts(as = "Option<_>")]`.
 ///   <br/><br/>
 ///
-/// - **`#[ts(rename = "..")]`**  
+/// - **`#[ts(rename = "..")]`**
 ///   Renames this field. To rename all fields of a struct, see the container attribute `#[ts(rename_all = "..")]`.
 ///   <br/><br/>
 ///
-/// - **`#[ts(inline)]`**  
+/// - **`#[ts(inline)]`**
 ///   Inlines the type of this field, replacing its name with its definition.
 ///   <br/><br/>
 ///
-/// - **`#[ts(skip)]`**  
+/// - **`#[ts(skip)]`**
 ///   Skips this field, omitting it from the generated *TypeScript* type.
 ///   <br/><br/>
 ///
-/// - **`#[ts(optional)]`**  
-///   May be applied on a struct field of type `Option<T>`. By default, such a field would turn into `t: T | null`.  
-///   If `#[ts(optional)]` is present, `t?: T` is generated instead.  
-///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.  
+/// - **`#[ts(optional)]`**
+///   May be applied on a struct field of type `Option<T>`. By default, such a field would turn into `t: T | null`.
+///   If `#[ts(optional)]` is present, `t?: T` is generated instead.
+///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.
 ///   `#[ts(optional = false)]` can override the behaviour for this field if `#[ts(optional_fields)]`
 ///   is present on the struct itself.
 ///   <br/><br/>
 ///
-/// - **`#[ts(flatten)]`**  
+/// - **`#[ts(flatten)]`**
 ///   Flatten this field, inlining all the keys of the field's type into its parent.
 ///   <br/><br/>
-///   
+///
 /// ### enum attributes
 ///
-/// - **`#[ts(tag = "..")]`**  
-///   Changes the representation of the enum to store its tag in a separate field.  
+/// - **`#[ts(tag = "..")]`**
+///   Changes the representation of the enum to store its tag in a separate field.
 ///   See [the serde docs](https://serde.rs/enum-representations.html) for more information.
 ///   <br/><br/>
 ///
-/// - **`#[ts(content = "..")]`**  
-///   Changes the representation of the enum to store its content in a separate field.  
+/// - **`#[ts(content = "..")]`**
+///   Changes the representation of the enum to store its content in a separate field.
 ///   See [the serde docs](https://serde.rs/enum-representations.html) for more information.
 ///   <br/><br/>
 ///
-/// - **`#[ts(untagged)]`**  
-///   Changes the representation of the enum to not include its tag.  
+/// - **`#[ts(untagged)]`**
+///   Changes the representation of the enum to not include its tag.
 ///   See [the serde docs](https://serde.rs/enum-representations.html) for more information.
 ///   <br/><br/>
 ///
-/// - **`#[ts(rename_all = "..")]`**  
-///   Rename all variants of this enum.  
+/// - **`#[ts(rename_all = "..")]`**
+///   Rename all variants of this enum.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 ///
-/// - **`#[ts(rename_all_fields = "..")]`**  
+/// - **`#[ts(rename_all_fields = "..")]`**
 ///   Renames the fields of all the struct variants of this enum. This is equivalent to using
 ///   `#[ts(rename_all = "..")]` on all of the enum's variants.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
@@ -378,24 +381,24 @@ mod tokio;
 ///   If `#[ts(repr(enum = name))]` is used, all variants without a discriminant will be exported
 ///   as `VariantName = "VariantName"`
 ///   <br/><br/>
-///  
+///
 /// ### enum variant attributes
 ///
-/// - **`#[ts(rename = "..")]`**  
-///   Renames this variant. To rename all variants of an enum, see the container attribute `#[ts(rename_all = "..")]`.  
+/// - **`#[ts(rename = "..")]`**
+///   Renames this variant. To rename all variants of an enum, see the container attribute `#[ts(rename_all = "..")]`.
 ///   This attribute also accepts expressions, e.g `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`.
 ///   <br/><br/>
 ///
-/// - **`#[ts(skip)]`**  
+/// - **`#[ts(skip)]`**
 ///   Skip this variant, omitting it from the generated *TypeScript* type.
 ///   <br/><br/>
 ///
-/// - **`#[ts(untagged)]`**  
+/// - **`#[ts(untagged)]`**
 ///   Changes this variant to be treated as if the enum was untagged, regardless of the enum's tag
 ///   and content attributes
 ///   <br/><br/>
 ///
-/// - **`#[ts(rename_all = "..")]`**  
+/// - **`#[ts(rename_all = "..")]`**
 ///   Renames all the fields of a struct variant.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
@@ -467,7 +470,7 @@ pub trait TS {
     /// This function will panic if the type cannot be inlined.
     fn inline() -> String;
 
-    /// Flatten a type declaration.  
+    /// Flatten a type declaration.
     /// This function will panic if the type cannot be flattened.
     fn inline_flattened() -> String;
 
@@ -509,7 +512,7 @@ pub trait TS {
     ///
     /// # Automatic Exporting
     /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
-    /// exported automatically whenever `cargo test` is run.  
+    /// exported automatically whenever `cargo test` is run.
     /// In that case, there is no need to manually call this function.
     ///
     /// # Target Directory
@@ -532,12 +535,12 @@ pub trait TS {
         export::export_to::<Self, _>(path)
     }
 
-    /// Manually export this type to the filesystem, together with all of its dependencies.  
+    /// Manually export this type to the filesystem, together with all of its dependencies.
     /// To export only this type, without its dependencies, use [`TS::export`].
     ///
     /// # Automatic Exporting
     /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
-    /// exported automatically whenever `cargo test` is run.  
+    /// exported automatically whenever `cargo test` is run.
     /// In that case, there is no need to manually call this function.
     ///
     /// # Target Directory
@@ -555,7 +558,7 @@ pub trait TS {
         export::export_all_into::<Self>(&*export::default_out_dir())
     }
 
-    /// Manually export this type into the given directory, together with all of its dependencies.  
+    /// Manually export this type into the given directory, together with all of its dependencies.
     /// To export only this type, without its dependencies, use [`TS::export`].
     ///
     /// Unlike [`TS::export_all`], this function disregards `TS_RS_EXPORT_DIR`, using the provided
@@ -566,7 +569,7 @@ pub trait TS {
     ///
     /// # Automatic Exporting
     /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
-    /// exported automatically whenever `cargo test` is run.  
+    /// exported automatically whenever `cargo test` is run.
     /// In that case, there is no need to manually call this function.
     fn export_all_to(out_dir: impl AsRef<Path>) -> Result<(), ExportError>
     where
@@ -575,12 +578,12 @@ pub trait TS {
         export::export_all_into::<Self>(out_dir)
     }
 
-    /// Manually generate bindings for this type, returning a [`String`].  
+    /// Manually generate bindings for this type, returning a [`String`].
     /// This function does not format the output, even if the `format` feature is enabled.
     ///
     /// # Automatic Exporting
     /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
-    /// exported automatically whenever `cargo test` is run.  
+    /// exported automatically whenever `cargo test` is run.
     /// In that case, there is no need to manually call this function.
     fn export_to_string() -> Result<String, ExportError>
     where
@@ -589,12 +592,12 @@ pub trait TS {
         export::export_to_string::<Self>()
     }
 
-    /// Returns the output path to where `T` should be exported.  
-    /// The returned path does _not_ include the base directory from `TS_RS_EXPORT_DIR`.  
+    /// Returns the output path to where `T` should be exported.
+    /// The returned path does _not_ include the base directory from `TS_RS_EXPORT_DIR`.
     ///
     /// To get the output path containing `TS_RS_EXPORT_DIR`, use [`TS::default_output_path`].
     ///
-    /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.  
+    /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.
     /// See the documentation of [`TS`] for more details.
     ///
     /// The output of this function depends on the environment variable `TS_RS_EXPORT_DIR`, which is
@@ -606,7 +609,7 @@ pub trait TS {
         None
     }
 
-    /// Returns the output path to where `T` should be exported.  
+    /// Returns the output path to where `T` should be exported.
     ///
     /// The output of this function depends on the environment variable `TS_RS_EXPORT_DIR`, which is
     /// used as base directory. If it is not set, `./bindings` is used as default directory.
@@ -614,7 +617,7 @@ pub trait TS {
     /// To get the output path relative to `TS_RS_EXPORT_DIR` and without reading the environment
     /// variable, use [`TS::output_path`].
     ///
-    /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.  
+    /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.
     /// See the documentation of [`TS`] for more details.
     ///
     /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
@@ -641,7 +644,7 @@ pub struct Dependency {
     /// Name of the type in TypeScript
     pub ts_name: String,
     /// Path to where the type would be exported. By default, a filename is derived from the types
-    /// name, which can be customized with `#[ts(export_to = "..")]`.  
+    /// name, which can be customized with `#[ts(export_to = "..")]`.
     /// This path does _not_ include a base directory.
     pub output_path: PathBuf,
 }
