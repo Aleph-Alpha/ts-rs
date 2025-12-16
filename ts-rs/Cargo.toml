@@ -37,7 +37,7 @@ serde-json-impl = ["serde_json"]
 no-serde-warnings = ["ts-rs-macros/no-serde-warnings"]
 import-esm = []
 tokio-impl = ["tokio"]
-jiff-0_2-impl = ["jiff"]
+jiff-impl = ["jiff"]
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }

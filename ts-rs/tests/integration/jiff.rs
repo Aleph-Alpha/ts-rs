@@ -1,4 +1,4 @@
-#![cfg(feature = "jiff-0_2-impl")]
+#![cfg(feature = "jiff-impl")]
 use jiff::{
     civil::{Date, DateTime, Time},
     Span, Timestamp, Zoned,

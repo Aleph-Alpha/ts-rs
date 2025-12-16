@@ -157,7 +157,7 @@ pub use crate::export::ExportError;
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
-#[cfg(feature = "jiff-0_2-impl")]
+#[cfg(feature = "jiff-impl")]
 mod jiff;
 #[cfg(feature = "serde-json-impl")]
 mod serde_json;
