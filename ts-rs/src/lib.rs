@@ -91,7 +91,7 @@
 //! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
 //! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                  |
 //! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
-//! | jiff-0_2-impl      | Implement `TS` for types from *jiff* (v0.2)                                                                                                                                                               |
+//! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                                                                      |
 //!
 //! <br/>
 //!
