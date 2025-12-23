@@ -39,6 +39,7 @@ import-esm = []
 export = ["ts-rs-macros/export"]
 generate-metadata = []
 tokio-impl = ["tokio"]
+jiff-impl = ["jiff"]
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -64,3 +65,4 @@ indexmap = { version = "2", optional = true }
 ordered-float = { version = ">= 3, < 6", optional = true }
 serde_json = { version = "1", optional = true }
 tokio = { version = "1", features = ["sync"], optional = true }
+jiff = { version = "0.2", optional = true }
