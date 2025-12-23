@@ -9,8 +9,10 @@ homepage = "https://github.com/Aleph-Alpha/ts-rs"
 repository = "https://github.com/Aleph-Alpha/ts-rs"
 
 [features]
+default = ["export-bindings"]
 serde-compat = ["termcolor"]
 no-serde-warnings = []
+export-bindings = []
 
 [lib]
 proc-macro = true

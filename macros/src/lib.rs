@@ -4,7 +4,7 @@
 use std::collections::{HashMap, HashSet};
 
 use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote};
+use quote::quote;
 use syn::{
     parse_quote, spanned::Spanned, ConstParam, Expr, GenericParam, Generics, Item, LifetimeParam,
     Path, Result, Type, TypeArray, TypeParam, TypeParen, TypePath, TypeReference, TypeSlice,
@@ -181,8 +181,9 @@ impl DerivedTS {
         }
     }
 
+    #[cfg(feature = "export-bindings")]
     fn generate_export_test(&self, rust_ty: &Ident, generics: &Generics) -> TokenStream {
-        let test_fn = format_ident!(
+        let test_fn = quote::format_ident!(
             "export_bindings_{}",
             rust_ty.to_string().to_lowercase().replace("r#", "")
         );
@@ -202,6 +203,10 @@ impl DerivedTS {
                 #ty::export_all().expect("could not export type");
             }
         }
+    }
+    #[cfg(not(feature = "export-bindings"))]
+    fn generate_export_test(&self, _rust_ty: &Ident, _generics: &Generics) -> TokenStream {
+        quote! {}
     }
 
     fn generate_generics_fn(&self, generics: &Generics) -> TokenStream {

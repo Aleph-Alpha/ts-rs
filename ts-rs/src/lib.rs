@@ -92,6 +92,7 @@
 //! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                  |
 //! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
 //! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                                                                      |
+//! | export-bindings    | **Enabled by default** <br/>See the section below on "controlling binding generation" for more information.                                                                                               |
 //!
 //! <br/>
 //!
@@ -128,6 +129,34 @@
 //! | `TS_RS_IMPORT_EXTENSION` | File extension used in `import` statements                          | *none*       |
 //! | `TS_RS_LARGE_INT`        | Binding used for large integer types (`i64`, `u64`, `i128`, `u128`) | `bigint`     |
 //!
+//! ## Controlling when the bindings are generated
+//!
+//! Feature "export-bindings", which is enabled by default, instructs ts-rs to export the bindings
+//! when you run `cargo test`. This behavior may be undesirable if you need to export only at a
+//! specific time (e.g., during `./configure` or a build pipeline.)
+//!
+//! To opt out of this automatic binding generation, disable the default features in your
+//! Cargo.toml:
+//!
+//! ```toml
+//! [dependencies]
+//! ts-rs = { version = "11", default-features = false, features = [
+//!   "serde-compat",
+//!   "no-serde-warnings",
+//! ] }
+//! ```
+//!
+//! Now, you may export the bindings on demand using the `--features` flag:
+//!
+//! ```bash
+//! cargo test --features ts-rs/export-bindings
+//! ```
+//!
+//! Or, if you want to merely export the bindings and run no other tests:
+//!
+//! ```bash
+//! cargo test --features ts-rs/export-bindings -- 'export_bindings_'
+//! ```
 //!
 //! ## Contributing
 //! Contributions are always welcome!
