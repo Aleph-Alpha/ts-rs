@@ -34,6 +34,7 @@ mod issue_397;
 mod issue_415;
 mod issue_70;
 mod issue_80;
+mod jiff;
 mod leading_colon;
 mod lifetimes;
 mod list;
