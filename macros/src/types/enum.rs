@@ -65,6 +65,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         concrete: enum_attr.concrete,
         bound: enum_attr.bound,
         ts_enum: enum_attr.repr,
+        is_enum: quote!(true),
     })
 }
 
@@ -234,5 +235,6 @@ fn empty_enum(ts_name: Expr, enum_attr: EnumAttr) -> DerivedTS {
         concrete: enum_attr.concrete,
         bound: enum_attr.bound,
         ts_enum: enum_attr.repr,
+        is_enum: quote!(false),
     }
 }
