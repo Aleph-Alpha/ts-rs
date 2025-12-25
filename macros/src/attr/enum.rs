@@ -1,10 +1,15 @@
 use std::collections::HashMap;
 
-use syn::{parse_quote, Attribute, Expr, Ident, ItemEnum, Path, Result, Type, WherePredicate};
+use syn::{
+    parse_quote, Attribute, Expr, Fields, Ident, ItemEnum, Path, Result, Type, WherePredicate,
+};
 
-use super::{parse_assign_expr, parse_assign_from_str, parse_bound, Attr, ContainerAttr, Serde};
+use super::{
+    parse_assign_expr, parse_assign_from_str, parse_bound, parse_repr, Attr, ContainerAttr, Serde,
+};
 use crate::{
     attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
+    optional::{parse_optional, Optional},
     utils::{extract_docs, parse_attrs},
 };
 
@@ -24,6 +29,8 @@ pub struct EnumAttr {
     pub tag: Option<String>,
     pub untagged: bool,
     pub content: Option<String>,
+    pub repr: Option<Repr>,
+    pub optional_fields: Optional,
 }
 
 #[derive(Copy, Clone)]
@@ -32,6 +39,12 @@ pub enum Tagged<'a> {
     Adjacently { tag: &'a str, content: &'a str },
     Internally { tag: &'a str },
     Untagged,
+}
+
+#[derive(Copy, Clone)]
+pub enum Repr {
+    Int,
+    Name,
 }
 
 impl EnumAttr {
@@ -90,6 +103,8 @@ impl Attr for EnumAttr {
                 (Some(bound), None) | (None, Some(bound)) => Some(bound),
                 (None, None) => None,
             },
+            repr: self.repr.or(other.repr),
+            optional_fields: self.optional_fields.or(other.optional_fields),
         }
     }
 
@@ -136,6 +151,17 @@ impl Attr for EnumAttr {
                     "`untagged` is not compatible with `type`"
                 );
             }
+
+            if self.repr.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`repr` is not compatible with `type`"
+                );
+            }
+
+            if let Optional::Optional { .. } = self.optional_fields {
+                syn_err!("`optional_fields` is not compatible with `type`");
+            }
         }
 
         if self.type_as.is_some() {
@@ -172,6 +198,37 @@ impl Attr for EnumAttr {
                     item;
                     "`untagged` is not compatible with `as`"
                 );
+            }
+
+            if self.repr.is_some() {
+                syn_err_spanned!(
+                    item;
+                    "`repr` is not compatible with `as`"
+                );
+            }
+        }
+
+        if self.untagged && self.repr.is_some() {
+            syn_err_spanned!(item; "`untagged` is not compatible with `repr`");
+        }
+
+        if self.tag.is_some() && self.repr.is_some() {
+            syn_err_spanned!(item; "`tag` is not compatible with `repr`");
+        }
+
+        if self.repr.is_some() {
+            if item.generics.type_params().next().is_some() {
+                syn_err_spanned!(item; "`repr` enums cannot have generic type parameters");
+            }
+
+            for variant in item.variants.iter() {
+                if !matches!(variant.fields, Fields::Unit) {
+                    syn_err_spanned!(variant; "All variants of an enum marked as `#[ts(repr(enum))]` must be unit variants");
+                }
+            }
+
+            if let Optional::Optional { .. } = self.optional_fields {
+                syn_err!("`optional_fields` is not compatible with `as`");
             }
         }
 
@@ -218,6 +275,8 @@ impl_parse! {
         "untagged" => out.untagged = true,
         "concrete" => out.concrete = parse_concrete(input)?,
         "bound" => out.bound = Some(parse_bound(input)?),
+        "repr" => out.repr = Some(parse_repr(input)?),
+        "optional_fields" => out.optional_fields = parse_optional(input)?,
     }
 }
 
@@ -230,5 +289,10 @@ impl_parse! {
         "content" => out.0.content = Some(parse_assign_str(input)?),
         "untagged" => out.0.untagged = true,
         "bound" => out.0.bound = Some(parse_bound(input)?),
+
+        // parse #[serde(crate = "...")] to not emit a warning
+        "crate" => {
+            parse_assign_str(input)?;
+        }
     }
 }

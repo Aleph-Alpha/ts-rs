@@ -64,6 +64,10 @@ impl StructAttr {
                 },
                 _ => None,
             },
+            optional_fields: match (enum_attr.optional_fields, variant_attr.optional_fields) {
+                (parent, Optional::Inherit) => parent,
+                (_, child) => child,
+            },
 
             // inline and skip are not supported on StructAttr
             ..Self::default()
@@ -128,10 +132,8 @@ impl Attr for StructAttr {
             }
         }
 
-        if !matches!(item, Fields::Named(_)) {
-            if self.tag.is_some() {
-                syn_err!("`tag` cannot be used with unit or tuple structs");
-            }
+        if !matches!(item, Fields::Named(_)) && self.tag.is_some() {
+            syn_err!("`tag` cannot be used with unit or tuple structs");
         }
 
         Ok(())
@@ -176,5 +178,10 @@ impl_parse! {
                 parse_assign_str(input)?;
             }
         },
+
+        // parse #[serde(crate = "...")] to not emit a warning
+        "crate" => {
+            parse_assign_str(input)?;
+        }
     }
 }

@@ -1,3 +1,5 @@
+#![allow(clippy::useless_format)]
+
 use std::path::Path;
 
 use ts_rs::TS;

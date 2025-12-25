@@ -3,6 +3,7 @@ use syn::{Attribute, Expr, Fields, Ident, Result, Type, Variant};
 use super::{parse_assign_expr, Attr, Serde};
 use crate::{
     attr::{parse_assign_from_str, parse_assign_inflection, parse_assign_str, Inflection},
+    optional::{parse_optional, Optional},
     utils::parse_attrs,
 };
 
@@ -15,6 +16,7 @@ pub struct VariantAttr {
     pub inline: bool,
     pub skip: bool,
     pub untagged: bool,
+    pub optional_fields: Optional,
 }
 
 impl VariantAttr {
@@ -40,6 +42,7 @@ impl Attr for VariantAttr {
             inline: self.inline || other.inline,
             skip: self.skip || other.skip,
             untagged: self.untagged || other.untagged,
+            optional_fields: self.optional_fields.or(other.optional_fields),
         }
     }
 
@@ -96,6 +99,7 @@ impl_parse! {
         "inline" => out.inline = true,
         "skip" => out.skip = true,
         "untagged" => out.untagged = true,
+        "optional_fields" => out.optional_fields = parse_optional(input)?,
     }
 }
 
