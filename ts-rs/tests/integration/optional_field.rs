@@ -23,6 +23,21 @@ fn in_struct() {
 
 #[derive(Serialize, TS)]
 #[ts(export, export_to = "optional_field/")]
+struct GenericOptionalStruct<T> {
+    #[ts(optional)]
+    a: Option<T>,
+}
+
+#[test]
+fn in_generic_struct() {
+    assert_eq!(
+        GenericOptionalStruct::<()>::decl(),
+        "type GenericOptionalStruct<T> = { a?: T, };"
+    )
+}
+
+#[derive(Serialize, TS)]
+#[ts(export, export_to = "optional_field/")]
 enum OptionalInEnum {
     A {
         #[ts(optional)]

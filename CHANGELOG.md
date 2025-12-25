@@ -4,6 +4,7 @@
 
 ### Fixes
 - Do not emit warning for `#[serde(crate = "..")]` ([#447](https://github.com/Aleph-Alpha/ts-rs/pull/447))
+- Fix trait bound generation when using `#[ts(optional)]` on an `Option<Generic>` ([#454](https://github.com/Aleph-Alpha/ts-rs/pull/454))
 
 # 11.1.0
 ### Features
