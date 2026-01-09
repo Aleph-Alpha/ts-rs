@@ -446,7 +446,7 @@ pub trait TS {
 
     /// Flatten an optional type declaration.
     /// This function will panic if the type cannot be flattened.
-    fn optional_inline_flattened() -> String;
+    fn optional_inline_flattened(cfg: &Config) -> String;
 
     /// Iterates over all dependency of this type.
     fn visit_dependencies(_: &mut impl TypeVisitor)
@@ -863,9 +863,9 @@ impl<T: TS> TS for Option<T> {
 
     fn inline_flattened(cfg: &Config) -> String {
         if <T as crate::TS>::IS_ENUM {
-            <T as crate::TS>::inline_flattened(cfg)
+            <T as crate::TS>::optional_inline_flattened(cfg)
         } else {
-            panic!("{} cannot be flattened", <Self as crate::TS>::name(cfg))
+            <T as crate::TS>::inline_flattened(cfg)
         }
     }
 

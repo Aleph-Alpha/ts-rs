@@ -23,7 +23,11 @@ pub(crate) fn empty_object(attr: &StructAttr, ts_name: Expr) -> DerivedTS {
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+<<<<<<< HEAD
         is_enum: quote!(false),
+=======
+        is_enum: false,
+>>>>>>> d212ed6 (wip: added other options, need to retroactively add skipped past options)
     }
 }
 
