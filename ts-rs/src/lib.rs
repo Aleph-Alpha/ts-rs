@@ -379,6 +379,7 @@ pub trait TS {
     ///     // ...
     ///     # fn name(_: &ts_rs::Config) -> String { todo!() }
     ///     # fn inline(_: &ts_rs::Config) -> String { todo!() }
+    ///     # fn optional_inline_flattened(_: &ts_rs::Config) -> String { todo!() }
     /// }
     /// ```
     type WithoutGenerics: TS + ?Sized;
@@ -442,6 +443,10 @@ pub trait TS {
     fn inline_flattened(cfg: &Config) -> String {
         panic!("{} cannot be flattened", Self::name(cfg))
     }
+
+    /// Flatten an optional type declaration.
+    /// This function will panic if the type cannot be flattened.
+    fn optional_inline_flattened() -> String;
 
     /// Iterates over all dependency of this type.
     fn visit_dependencies(_: &mut impl TypeVisitor)
@@ -732,6 +737,7 @@ macro_rules! impl_primitives {
             type OptionInnerType = Self;
             fn name(_: &$crate::Config) -> String { String::from($l) }
             fn inline(cfg: &$crate::Config) -> String { <Self as $crate::TS>::name(cfg) }
+            fn optional_inline_flattened(cfg: &$crate::Config) -> String { <Self as $crate::TS>::name(cfg) }
         }
     )*)* };
 }
@@ -772,6 +778,7 @@ macro_rules! impl_tuples {
             fn inline_flattened(_: &$crate::Config) -> String { panic!("tuple cannot be flattened") }
             fn decl(_: &$crate::Config) -> String { panic!("tuple cannot be declared") }
             fn decl_concrete(_: &$crate::Config) -> String { panic!("tuple cannot be declared") }
+            fn optional_inline_flattened(_: &$crate::Config) -> String { panic!("tuple cannot be declared") }
         }
     };
     ( $i2:ident $(, $i:ident)* ) => {
@@ -790,6 +797,7 @@ macro_rules! impl_wrapper {
             fn name(cfg: &$crate::Config) -> String { <T as $crate::TS>::name(cfg) }
             fn inline(cfg: &$crate::Config) -> String { <T as $crate::TS>::inline(cfg) }
             fn inline_flattened(cfg: &$crate::Config) -> String { <T as $crate::TS>::inline_flattened(cfg) }
+            fn optional_inline_flattened(cfg: &$crate::Config) -> String { <T as $crate::TS>::optional_inline_flattened(cfg) }
             fn visit_dependencies(v: &mut impl TypeVisitor)
             where
                 Self: 'static,
@@ -820,6 +828,7 @@ macro_rules! impl_shadow {
             fn name(cfg: &$crate::Config) -> String { <$s as $crate::TS>::name(cfg) }
             fn inline(cfg: &$crate::Config) -> String { <$s as $crate::TS>::inline(cfg) }
             fn inline_flattened(cfg: &$crate::Config) -> String { <$s as $crate::TS>::inline_flattened(cfg) }
+            fn optional_inline_flattened(cfg: &$crate::Config) -> String { <$s as $crate::TS>::optional_inline_flattened(cfg) }
             fn visit_dependencies(v: &mut impl $crate::TypeVisitor)
             where
                 Self: 'static,
@@ -1044,6 +1053,10 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     fn inline_flattened(cfg: &Config) -> String {
         format!("({})", Self::inline(cfg))
     }
+
+    fn optional_inline_flattened() -> String {
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+    }
 }
 
 // TODO: replace manual impl with dummy struct & `impl_shadow` (like for `JsonValue`)
@@ -1073,6 +1086,10 @@ impl<I: TS> TS for Range<I> {
 
     fn inline(cfg: &Config) -> String {
         panic!("{} cannot be inlined", Self::name(cfg))
+    }
+
+    fn optional_inline_flattened() -> String {
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
 
@@ -1192,6 +1209,10 @@ impl TS for Dummy {
 
     fn inline(cfg: &Config) -> String {
         panic!("{} cannot be inlined", Self::name(cfg))
+    }
+
+    fn optional_inline_flattened() -> String {
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
 
