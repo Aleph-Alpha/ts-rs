@@ -43,6 +43,7 @@ pub(crate) fn newtype(
         crate_rename,
         inline: inline_def,
         inline_flattened: None,
+        optional_inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
@@ -51,6 +52,6 @@ pub(crate) fn newtype(
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
-        is_enum: false,
+        is_enum: false
     })
 }

@@ -18,7 +18,7 @@ fn optional_flatten_enum_adds_empty_object() {
     }
 
     assert_eq!(
-        T::inline_flattened(),
+        T::optional_inline_flattened(),
         r#"{ a: string, } & ({ "firstOption": string; "secondOption"?: never } | { "secondOption": boolean; "firstOption"?: never } | { "firstOption"?: never; "secondOption"?: never })"#
     );
 }
@@ -41,7 +41,7 @@ fn optional_flatten_unit_variants_adds_empty_object() {
     }
 
     assert_eq!(
-        T::inline_flattened(),
+        T::optional_inline_flattened(),
         r#"{ a: string, } & ("first" | "second" | "third" | { "first"?: never; "second"?: never; "third"?: never })"#
     );
 }
@@ -64,7 +64,7 @@ fn optional_flatten_mixed_variants_adds_empty_object() {
     }
 
     assert_eq!(
-        T::inline_flattened(),
+        T::optional_inline_flattened(),
         r#"{ a: string, } & ("unit" | { "tuple": [number, string]; "struct"?: never; "unit"?: never } | { "struct": { x: number, y: string, }; "tuple"?: never; "unit"?: never } | { "unit"?: never; "tuple"?: never; "struct"?: never })"#
     );
 }
@@ -91,7 +91,7 @@ fn optional_flatten_with_nested_objects_adds_empty_object() {
     }
 
     assert_eq!(
-        T::inline_flattened(),
+        T::optional_inline_flattened(),
         r#"{ a: string, } & ({ "first": Inner; "second"?: never } | { "second": Inner; "first"?: never } | { "first"?: never; "second"?: never })"#
     );
 }
@@ -119,7 +119,7 @@ fn multiple_optional_flattened_enums_each_add_empty_object() {
         b_enum: Option<EnumB>,
     }
 
-    let result = T::inline_flattened();
+    let result = T::optional_inline_flattened();
 
     assert!(result.contains(r#"{ "optionA": string; "optionA"?: never } | { "optionA"?: never }"#));
     assert!(result.contains(r#"{ "optionB": number; "optionB"?: never } | { "optionB"?: never }"#));
@@ -141,7 +141,7 @@ fn optional_flatten_with_rename_all_kebab_case() {
         flattened: Option<Enum>,
     }
 
-    let result = T::inline_flattened();
+    let result = T::optional_inline_flattened();
 
     assert!(result.contains(r#""first-option": string"#));
     assert!(result.contains(r#""second-option": boolean"#));
@@ -165,7 +165,7 @@ fn optional_flatten_single_variant_adds_empty_object() {
     }
 
     assert_eq!(
-        T::inline_flattened(),
+        T::optional_inline_flattened(),
         r#"{ a: string, } & ({ "only": string } | { "only"?: never })"#
     );
 }
@@ -187,7 +187,7 @@ fn non_optional_flatten_enum_is_unchanged() {
     }
 
     assert_eq!(
-        T::inline_flattened(),
+        T::optional_inline_flattened(),
         r#"{ a: string, } & ({ "firstOption": string } | { "secondOption": boolean })"#
     );
 }

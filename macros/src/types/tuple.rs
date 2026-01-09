@@ -32,6 +32,7 @@ pub(crate) fn tuple(attr: &StructAttr, ts_name: Expr, fields: &FieldsUnnamed) ->
             )
         },
         inline_flattened: None,
+        optional_inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
@@ -40,7 +41,7 @@ pub(crate) fn tuple(attr: &StructAttr, ts_name: Expr, fields: &FieldsUnnamed) ->
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
-        is_enum: false,
+        is_enum: false
     })
 }
 
