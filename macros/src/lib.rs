@@ -30,6 +30,7 @@ struct DerivedTS {
     concrete: HashMap<Ident, Type>,
     bound: Option<Vec<WherePredicate>>,
     ts_enum: Option<Repr>,
+    is_enum: bool,
 
     export: bool,
     export_to: Option<Expr>,
@@ -89,11 +90,14 @@ impl DerivedTS {
         let decl = self.generate_decl_fn(&rust_ty, &generics);
         let dependencies = &self.dependencies;
         let generics_fn = self.generate_generics_fn(&generics);
+        let is_enum = self.is_enum;
 
         quote! {
             #impl_start {
                 #assoc_type
                 type OptionInnerType = Self;
+
+                const IS_ENUM: bool = #is_enum;
 
                 fn ident() -> String {
                     (#ident).to_string()
@@ -511,7 +515,11 @@ fn entry(input: proc_macro::TokenStream) -> Result<TokenStream> {
     let input = syn::parse::<Item>(input)?;
     let (ts, ident, generics) = match input {
         Item::Struct(s) => (types::struct_def(&s)?, s.ident, s.generics),
-        Item::Enum(e) => (types::enum_def(&e)?, e.ident, e.generics),
+        Item::Enum(e) => {
+            let mut item_type = types::enum_def(&e)?;
+            item_type.is_enum = true;
+            (item_type, e.ident, e.generics)
+        }
         _ => syn_err!(input.span(); "unsupported item"),
     };
 

@@ -35,14 +35,17 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     }
 
     let mut formatted_variants = Vec::new();
+    let mut formatted_none = Vec::new();
     let mut dependencies = Dependencies::new(crate_rename.clone());
 
-    for variant in &s.variants {
+    for (index, variant) in s.variants.iter().enumerate() {
         format_variant(
             &mut formatted_variants,
+            &mut formatted_none,
             &mut dependencies,
             &enum_attr,
             variant,
+            index,
         )?;
     }
 
@@ -54,9 +57,17 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
     Ok(DerivedTS {
         crate_rename,
         inline: quote!([#(#formatted_variants),*].join(#separator)),
-        inline_flattened: enum_attr.repr.is_none().then_some(quote!(
-            format!("({})", [#(#formatted_variants),*].join(" | "))
-        )),
+        inline_flattened: enum_attr.repr.is_none().then_some({
+            if formatted_none.is_empty() {
+                quote!(format!("({})", [#(#formatted_variants),*].join(" | ")))
+            } else {
+                quote!(format!(
+                    "({} | {})",
+                    [#(#formatted_variants),*].join(" | "),
+                    [#(#formatted_none),*].join(" | ")
+                ))
+            }
+        }),
         dependencies,
         docs: enum_attr.docs,
         export: enum_attr.export,
@@ -65,14 +76,17 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         concrete: enum_attr.concrete,
         bound: enum_attr.bound,
         ts_enum: enum_attr.repr,
+        is_enum: true,
     })
 }
 
 fn format_variant(
     formatted_variants: &mut Vec<TokenStream>,
+    formatted_optional_variants: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     enum_attr: &EnumAttr,
     variant: &Variant,
+    _index: usize,
 ) -> syn::Result<()> {
     let crate_rename = enum_attr.crate_rename();
 
@@ -137,23 +151,27 @@ fn format_variant(
         }
     };
 
-    let formatted = match (untagged_variant, enum_attr.tagged()?) {
-        (true, _) | (_, Tagged::Untagged) => quote!(#parsed_ty),
+    let never_ty = quote!(format!("\"{}\"?: never", #ts_name));
+    let (formatted, formatted_optional) = match (untagged_variant, enum_attr.tagged()?) {
+        (true, _) | (_, Tagged::Untagged) => (quote!(#parsed_ty), None),
         (false, Tagged::Externally) => match &variant.fields {
-            Fields::Unit => quote!(format!("\"{}\"", #ts_name)),
+            Fields::Unit => (quote!(format!("\"{}\"", #ts_name)), None),
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                 let field = &unnamed.unnamed[0];
-                let field_attr = FieldAttr::from_attrs(&field.attrs)?;
+                let field_attr = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
 
                 field_attr.assert_validity(field)?;
 
                 if field_attr.skip {
-                    quote!(format!("\"{}\"", #ts_name))
+                    (quote!(format!("\"{}\"", #ts_name)), None)
                 } else {
-                    quote!(format!("{{ \"{}\": {} }}", #ts_name, #parsed_ty))
+                    (
+                        quote!(format!("{{ \"{}\": {} }}", #ts_name, #parsed_ty)),
+                        Some(quote!(format!("{{ \"{}\": {}; {} }}", #ts_name, #parsed_ty, #never_ty)))
+                    )
                 }
             }
-            _ => quote!(format!("{{ \"{}\": {} }}", #ts_name, #parsed_ty)),
+            _ => (quote!(format!("{{ \"{}\": {} }}", #ts_name, #parsed_ty)), None),
         },
         (false, Tagged::Adjacently { tag, content }) => match &variant.fields {
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
@@ -162,29 +180,26 @@ fn format_variant(
 
                 field_attr.assert_validity(field)?;
 
+                let field_ty = field_attr.type_as(&field.ty);
+
                 if field_attr.skip {
-                    quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name))
+                    (quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name)), None)
                 } else {
                     let ty = match field_attr.type_override {
                         Some(type_override) => quote!(#type_override),
-                        None => {
-                            let ty = field_attr.type_as(&field.ty);
-                            quote!(<#ty as #crate_rename::TS>::name())
-                        }
+                        None => quote!(<#field_ty as #crate_rename::TS>::name())
                     };
-                    quote!(
-                        format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #ts_name, #content, #ty)
-                    )
+
+                    (quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #ts_name, #content, #ty)), None)
                 }
             }
-            Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name)),
-            _ => quote!(
-                format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #ts_name, #content, #parsed_ty)
-            ),
+            Fields::Unit => (quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name)), None),
+            _ => (quote!(format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #ts_name, #content, #parsed_ty)), None)
+            
         },
         (false, Tagged::Internally { tag }) => match variant_type.inline_flattened {
             Some(_) => {
-                quote! { #parsed_ty }
+                (quote! { #parsed_ty }, None)
             }
             None => match &variant.fields {
                 Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
@@ -193,29 +208,31 @@ fn format_variant(
 
                     field_attr.assert_validity(field)?;
 
+                    let field_ty = field_attr.type_as(&field.ty);
+
                     if field_attr.skip {
-                        quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name))
+                        (quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name)), None)
                     } else {
                         let ty = match field_attr.type_override {
                             Some(type_override) => quote! { #type_override },
                             None => {
-                                let ty = field_attr.type_as(&field.ty);
-                                quote!(<#ty as #crate_rename::TS>::name())
+                                quote!(<#field_ty as #crate_rename::TS>::name())
                             }
                         };
 
-                        quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #ts_name, #ty))
+                        (quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #ts_name, #ty)), None)
                     }
                 }
-                Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name)),
-                _ => {
-                    quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #ts_name, #parsed_ty))
-                }
+                Fields::Unit => (quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name)), None),
+                _ => (quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #ts_name, #parsed_ty)), None)
             },
         },
     };
 
     formatted_variants.push(formatted);
+    if let Some(formatted) = formatted_optional {
+        formatted_optional_variants.push(formatted);
+    }
     Ok(())
 }
 
@@ -234,5 +251,6 @@ fn empty_enum(ts_name: Expr, enum_attr: EnumAttr) -> DerivedTS {
         concrete: enum_attr.concrete,
         bound: enum_attr.bound,
         ts_enum: enum_attr.repr,
+        is_enum: true,
     }
 }

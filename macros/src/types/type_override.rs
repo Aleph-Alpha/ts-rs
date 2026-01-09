@@ -26,6 +26,7 @@ pub(crate) fn type_override_struct(
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+        is_enum: false,
     })
 }
 
@@ -48,5 +49,6 @@ pub(crate) fn type_override_enum(
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+        is_enum: false,
     })
 }

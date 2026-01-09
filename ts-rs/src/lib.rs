@@ -98,7 +98,7 @@
 //! If there's a type you're dealing with which doesn't implement `TS`, use either
 //! `#[ts(as = "..")]` or `#[ts(type = "..")]`, or open a PR.
 //!
-//! ## `serde` compatability
+//! ## `serde` compatibility
 //! With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
 //! Supported serde attributes:
 //! - `rename`
@@ -431,6 +431,8 @@ pub trait TS {
 
     #[doc(hidden)]
     const IS_OPTION: bool = false;
+    #[doc(hidden)]
+    const IS_ENUM: bool = false;
 
     /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
     /// automatically read from your doc comments or `#[doc = ".."]` attributes
@@ -819,7 +821,11 @@ impl<T: TS> TS for Option<T> {
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+        if <T as crate::TS>::IS_ENUM {
+            <T as crate::TS>::inline_flattened()
+        } else {
+            panic!("{} cannot be flattened", <Self as crate::TS>::name())
+        }
     }
 }
 
