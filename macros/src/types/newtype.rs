@@ -52,6 +52,6 @@ pub(crate) fn newtype(
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
-        is_enum: false
+        is_enum: false,
     })
 }

@@ -831,7 +831,7 @@ impl<T: TS> TS for Option<T> {
 
     fn inline_flattened() -> String {
         if <T as crate::TS>::IS_ENUM {
-        <T as crate::TS>::optional_inline_flattened()
+            <T as crate::TS>::optional_inline_flattened()
         } else {
             <T as crate::TS>::inline_flattened()
         }

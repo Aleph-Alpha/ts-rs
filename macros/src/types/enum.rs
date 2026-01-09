@@ -63,13 +63,11 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
             format!("({})", [#(#formatted_variants),*].join(" | "))
         )),
         optional_inline_flattened: if !formatted_optional_variants.is_empty() {
-            enum_attr.repr.is_none().then_some(
-                quote!(format!(
-                    "({} | {{ {} }})",
-                    [#(#formatted_optional_variants),*].join(" | "),
-                    [#(#formatted_never),*].join("; "),
-                ))
-            )
+            enum_attr.repr.is_none().then_some(quote!(format!(
+                "({} | {{ {} }})",
+                [#(#formatted_optional_variants),*].join(" | "),
+                [#(#formatted_never),*].join("; "),
+            )))
         } else {
             None
         },
@@ -81,7 +79,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         concrete: enum_attr.concrete,
         bound: enum_attr.bound,
         ts_enum: enum_attr.repr,
-        is_enum: true
+        is_enum: true,
     })
 }
 
@@ -164,17 +162,27 @@ fn format_variant(
             Fields::Unit => (quote!(format!("\"{}\"", #ts_name)), None),
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                 let field = &unnamed.unnamed[0];
-                let field_attr = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+                let field_attr = FieldAttr::from_attrs(&field.attrs)?;
 
                 field_attr.assert_validity(field)?;
 
                 if field_attr.skip {
                     (quote!(format!("\"{}\"", #ts_name)), None)
                 } else {
+                    let other_options = if !formatted_never.is_empty() {
+                        // if let Some(past_option) = formatted_optional_variants.get_mut(index - 1) {
+                        //     quote!(#past_option.replace("}", format!("{}; }", #never_ty)));
+                        // }
+
+                        quote!([#(#formatted_never),*].join("; "))
+                    } else {
+                        quote!("")
+                    };
+
                     (
                         quote!(format!("{{ \"{}\": {} }}", #ts_name, #parsed_ty)),
                         Some(quote!(
-                            format!("{{ \"{}\": {}; {} }}", #ts_name, #parsed_ty, #never_ty)
+                            format!("{{ \"{}\": {}; {}}}", #ts_name, #parsed_ty, #other_options)
                         )),
                     )
                 }
@@ -187,7 +195,7 @@ fn format_variant(
         (false, Tagged::Adjacently { tag, content }) => match &variant.fields {
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                 let field = &unnamed.unnamed[0];
-                let field_attr = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+                let field_attr = FieldAttr::from_attrs(&field.attrs)?;
 
                 field_attr.assert_validity(field)?;
 
@@ -228,7 +236,7 @@ fn format_variant(
             None => match &variant.fields {
                 Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
                     let field = &unnamed.unnamed[0];
-                    let field_attr = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+                    let field_attr = FieldAttr::from_attrs(&field.attrs)?;
 
                     field_attr.assert_validity(field)?;
 
@@ -289,6 +297,6 @@ fn empty_enum(ts_name: Expr, enum_attr: EnumAttr) -> DerivedTS {
         concrete: enum_attr.concrete,
         bound: enum_attr.bound,
         ts_enum: enum_attr.repr,
-        is_enum: true
+        is_enum: true,
     }
 }

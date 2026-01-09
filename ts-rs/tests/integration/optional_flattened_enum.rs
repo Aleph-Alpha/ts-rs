@@ -166,7 +166,7 @@ fn optional_flatten_single_variant_adds_empty_object() {
 
     assert_eq!(
         T::optional_inline_flattened(),
-        r#"{ a: string, } & ({ "only": string } | { "only"?: never })"#
+        r#"{ a: string, } & ({ "only": string; } | { "only"?: never })"#
     );
 }
 
