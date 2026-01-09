@@ -91,6 +91,7 @@ impl DerivedTS {
         let decl = self.generate_decl_fn(&rust_ty, &generics);
         let dependencies = &self.dependencies;
         let generics_fn = self.generate_generics_fn(&generics);
+        let is_enum = self.is_enum;
 
         quote! {
             #[automatically_derived]
@@ -518,7 +519,11 @@ fn entry(input: proc_macro::TokenStream) -> Result<TokenStream> {
     let input = syn::parse::<Item>(input)?;
     let (ts, ident, generics) = match input {
         Item::Struct(s) => (types::struct_def(&s)?, s.ident, s.generics),
-        Item::Enum(e) => (types::enum_def(&e)?, e.ident, e.generics),
+        Item::Enum(e) => {
+            let mut item_type = types::enum_def(&e)?;
+            item_type.is_enum = true;
+            (item_type, e.ident, e.generics)
+        }
         _ => syn_err!(input.span(); "unsupported item"),
     };
 

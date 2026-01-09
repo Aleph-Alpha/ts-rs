@@ -49,6 +49,10 @@ pub(crate) fn type_override_enum(
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+<<<<<<< HEAD
         is_enum: quote!(true), // we dont know what the override is, so we preserve is_enum
+=======
+        is_enum: false,
+>>>>>>> a316b00 (feat: parse optional flat enums)
     })
 }

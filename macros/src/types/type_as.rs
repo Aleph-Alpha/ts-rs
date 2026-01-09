@@ -51,6 +51,10 @@ pub(crate) fn type_as_enum(attr: &EnumAttr, ts_name: Expr, type_as: &Type) -> Re
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+<<<<<<< HEAD
         is_enum: quote!(<#type_as as #crate_rename::TS>::IS_ENUM),
+=======
+        is_enum: false,
+>>>>>>> a316b00 (feat: parse optional flat enums)
     })
 }

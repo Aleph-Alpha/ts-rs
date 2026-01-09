@@ -389,6 +389,8 @@ pub trait TS {
 
     #[doc(hidden)]
     const IS_OPTION: bool = false;
+    #[doc(hidden)]
+    const IS_ENUM: bool = false;
 
     #[doc(hidden)]
     const IS_ENUM: bool = false;
@@ -848,6 +850,18 @@ impl<T: TS> TS for Option<T> {
 
     fn inline(cfg: &Config) -> String {
         format!("{} | null", T::inline(cfg))
+    }
+
+    fn inline_flattened(cfg: &Config) -> String {
+        if <T as crate::TS>::IS_ENUM {
+            <T as crate::TS>::inline_flattened(cfg)
+        } else {
+            panic!("{} cannot be flattened", <Self as crate::TS>::name(cfg))
+        }
+    }
+
+    fn optional_inline_flattened(cfg: &Config) -> String {
+        <T as crate::TS>::optional_inline_flattened(cfg)
     }
 
     fn visit_dependencies(v: &mut impl TypeVisitor)
