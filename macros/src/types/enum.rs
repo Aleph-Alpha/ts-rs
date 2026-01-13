@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{ext::IdentExt, Expr, Fields, ItemEnum, Variant};
+use syn::{ext::IdentExt, punctuated::Punctuated, token::Comma, Expr, Fields, ItemEnum, Variant};
 
 use crate::{
     attr::{Attr, EnumAttr, FieldAttr, Repr, StructAttr, Tagged, VariantAttr},
@@ -36,17 +36,18 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 
     let mut formatted_variants = Vec::new();
     let mut formatted_optional_variants = Vec::new();
-    let mut formatted_never = Vec::new();
     let mut dependencies = Dependencies::new(crate_rename.clone());
+    let (field_names, never_fields) = collect_field_names(&s.variants, &enum_attr)?;
 
     for (index, variant) in s.variants.iter().enumerate() {
         format_variant(
             &mut formatted_variants,
             &mut formatted_optional_variants,
-            &mut formatted_never,
             &mut dependencies,
             &enum_attr,
             variant,
+            &field_names[index],
+            &never_fields,
             index,
         )?;
     }
@@ -62,11 +63,11 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         inline_flattened: enum_attr.repr.is_none().then_some(quote!(
             format!("({})", [#(#formatted_variants),*].join(" | "))
         )),
-        optional_inline_flattened: if !formatted_optional_variants.is_empty() {
+        optional_inline_flattened: if formatted_optional_variants.len() == never_fields.len() {
             enum_attr.repr.is_none().then_some(quote!(format!(
                 "({} | {{ {} }})",
                 [#(#formatted_optional_variants),*].join(" | "),
-                [#(#formatted_never),*].join("; "),
+                [#(#never_fields),*].join("; "),
             )))
         } else {
             None
@@ -86,13 +87,15 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 fn format_variant(
     formatted_variants: &mut Vec<TokenStream>,
     formatted_optional_variants: &mut Vec<TokenStream>,
-    formatted_never: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
     enum_attr: &EnumAttr,
     variant: &Variant,
-    _index: usize,
+    ts_name: &Expr,
+    never_fields: &Vec<TokenStream>,
+    index: usize,
 ) -> syn::Result<()> {
     let crate_rename = enum_attr.crate_rename();
+    let never_fields_len = never_fields.len();
 
     // If `variant.fields` is not a `Fields::Named(_)` the `rename_all_fields`
     // attribute must be ignored to prevent a `rename_all` from getting to
@@ -106,16 +109,6 @@ fn format_variant(
     }
 
     let untagged_variant = variant_attr.untagged;
-    let ts_name = match (variant_attr.rename.clone(), &enum_attr.rename_all) {
-        (Some(rn), _) => rn,
-        (None, None) => {
-            make_string_literal(&variant.ident.unraw().to_string(), variant.ident.span())
-        }
-        (None, Some(rn)) => make_string_literal(
-            &rn.apply(&variant.ident.unraw().to_string()),
-            variant.ident.span(),
-        ),
-    };
 
     if let Some(ref repr) = enum_attr.repr {
         let formatted = match (repr, &variant.discriminant) {
@@ -155,7 +148,6 @@ fn format_variant(
         }
     };
 
-    let never_ty = quote!(format!("\"{}\"?: never", #ts_name));
     let (formatted, formatted_optional) = match (untagged_variant, enum_attr.tagged()?) {
         (true, _) | (_, Tagged::Untagged) => (quote!(#parsed_ty), None),
         (false, Tagged::Externally) => match &variant.fields {
@@ -169,27 +161,33 @@ fn format_variant(
                 if field_attr.skip {
                     (quote!(format!("\"{}\"", #ts_name)), None)
                 } else {
-                    let other_options = if !formatted_never.is_empty() {
-                        // if let Some(past_option) = formatted_optional_variants.get_mut(index - 1) {
-                        //     quote!(#past_option.replace("}", format!("{}; }", #never_ty)));
-                        // }
-
-                        quote!([#(#formatted_never),*].join("; "))
-                    } else {
-                        quote!("")
-                    };
-
                     (
                         quote!(format!("{{ \"{}\": {} }}", #ts_name, #parsed_ty)),
-                        Some(quote!(
-                            format!("{{ \"{}\": {}; {}}}", #ts_name, #parsed_ty, #other_options)
-                        )),
+                        Some(quote!({
+                            if #never_fields_len >= 2 && #never_fields_len >= #index {
+                                let mut never_field_options = vec![#(#never_fields),*];
+                                never_field_options.remove(#index);
+
+                                format!("{{ \"{}\": {}; {} }}", #ts_name, #parsed_ty, never_field_options.join("; "))
+                            } else {
+                                format!("{{ \"{}\": {}; }}", #ts_name, #parsed_ty)
+                            }
+                        })),
                     )
                 }
             }
             _ => (
                 quote!(format!("{{ \"{}\": {} }}", #ts_name, #parsed_ty)),
-                None,
+                Some(quote!({
+                    if #never_fields_len >= 2 && #never_fields_len >= #index {
+                        let mut never_field_options = vec![#(#never_fields),*];
+                        never_field_options.remove(#index);
+
+                        format!("{{ \"{}\": {}; {} }}", #ts_name, #parsed_ty, never_field_options.join("; "))
+                    } else {
+                        format!("{{ \"{}\": {}; }}", #ts_name, #parsed_ty)
+                    }
+                })),
             ),
         },
         (false, Tagged::Adjacently { tag, content }) => match &variant.fields {
@@ -276,9 +274,43 @@ fn format_variant(
     formatted_variants.push(formatted);
     if let Some(formatted) = formatted_optional {
         formatted_optional_variants.push(formatted);
-        formatted_never.push(never_ty);
     }
+
     Ok(())
+}
+
+fn collect_field_names(
+    variants: &Punctuated<Variant, Comma>,
+    enum_attr: &EnumAttr,
+) -> syn::Result<(Vec<Expr>, Vec<TokenStream>)> {
+    let mut field_names = Vec::new();
+    let mut never_fields = Vec::new();
+
+    for variant in variants {
+        let variant_attr = VariantAttr::from_attrs(&variant.attrs)?;
+
+        variant_attr.assert_validity(variant)?;
+
+        if variant_attr.skip {
+            continue;
+        }
+
+        let ts_name = match (variant_attr.rename.clone(), &enum_attr.rename_all) {
+            (Some(rn), _) => rn,
+            (None, None) => {
+                make_string_literal(&variant.ident.unraw().to_string(), variant.ident.span())
+            }
+            (None, Some(rn)) => make_string_literal(
+                &rn.apply(&variant.ident.unraw().to_string()),
+                variant.ident.span(),
+            ),
+        };
+
+        field_names.push(ts_name.clone());
+        never_fields.push(quote!(format!("\"{}\"?: never", #ts_name)));
+    }
+
+    Ok((field_names, never_fields))
 }
 
 // bindings for an empty enum (`never` in TS)

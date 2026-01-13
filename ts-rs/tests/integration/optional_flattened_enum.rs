@@ -2,7 +2,7 @@ use serde::Serialize;
 use ts_rs::TS;
 
 #[test]
-fn optional_flatten_enum_adds_empty_object() {
+fn two_variant_enum() {
     #[derive(TS, Serialize)]
     #[serde(rename_all = "camelCase")]
     enum Enum {
@@ -24,7 +24,31 @@ fn optional_flatten_enum_adds_empty_object() {
 }
 
 #[test]
-fn optional_flatten_unit_variants_adds_empty_object() {
+fn three_variant_enum() {
+    #[derive(TS, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    enum Enum {
+        FirstOption(String),
+        SecondOption(bool),
+        ThirdOption(usize),
+    }
+
+    #[derive(TS, Serialize)]
+    struct T {
+        a: String,
+        #[serde(flatten)]
+        flattened: Option<Enum>,
+    }
+
+    assert_eq!(
+        T::optional_inline_flattened(),
+        r#"{ a: string, } & ({ "firstOption": string; "secondOption"?: never; "thirdOption"?: never } | { "secondOption": boolean; "firstOption"?: never; "thirdOption"?: never } | { "thirdOption": number; "firstOption"?: never; "secondOption"?: never } | { "firstOption"?: never; "secondOption"?: never; "thirdOption"?: never })"#
+    );
+}
+
+#[test]
+#[should_panic(expected = "Enum cannot be flattened")]
+fn unit_variants() {
     #[derive(TS, Serialize)]
     #[serde(rename_all = "camelCase")]
     enum Enum {
@@ -40,6 +64,7 @@ fn optional_flatten_unit_variants_adds_empty_object() {
         status: Option<Enum>,
     }
 
+    // "first" | "second" | "third" isn't valid
     assert_eq!(
         T::optional_inline_flattened(),
         r#"{ a: string, } & ("first" | "second" | "third" | { "first"?: never; "second"?: never; "third"?: never })"#
@@ -47,7 +72,8 @@ fn optional_flatten_unit_variants_adds_empty_object() {
 }
 
 #[test]
-fn optional_flatten_mixed_variants_adds_empty_object() {
+#[should_panic(expected = "Enum cannot be flattened")]
+fn mixed_variant_types() {
     #[derive(TS, Serialize)]
     #[serde(rename_all = "camelCase")]
     enum Enum {
@@ -63,14 +89,15 @@ fn optional_flatten_mixed_variants_adds_empty_object() {
         data: Option<Enum>,
     }
 
+    // "unit" isn't valid
     assert_eq!(
         T::optional_inline_flattened(),
-        r#"{ a: string, } & ("unit" | { "tuple": [number, string]; "struct"?: never; "unit"?: never } | { "struct": { x: number, y: string, }; "tuple"?: never; "unit"?: never } | { "unit"?: never; "tuple"?: never; "struct"?: never })"#
+        r#"{ a: string, } & ("unit" | { "tuple": [number, string]; "unit"?: never; "struct"?: never } | { "struct": { x: number, y: string, }; "unit"?: never; "tuple"?: never } | { "unit"?: never; "tuple"?: never; "struct"?: never })"#
     );
 }
 
 #[test]
-fn optional_flatten_with_nested_objects_adds_empty_object() {
+fn nested_structs() {
     #[derive(TS, Serialize)]
     struct Inner {
         value: i32,
@@ -97,36 +124,7 @@ fn optional_flatten_with_nested_objects_adds_empty_object() {
 }
 
 #[test]
-fn multiple_optional_flattened_enums_each_add_empty_object() {
-    #[derive(TS, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    enum EnumA {
-        OptionA(String),
-    }
-
-    #[derive(TS, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    enum EnumB {
-        OptionB(i32),
-    }
-
-    #[derive(TS, Serialize)]
-    struct T {
-        a: String,
-        #[serde(flatten)]
-        a_enum: Option<EnumA>,
-        #[serde(flatten)]
-        b_enum: Option<EnumB>,
-    }
-
-    let result = T::optional_inline_flattened();
-
-    assert!(result.contains(r#"{ "optionA": string; "optionA"?: never } | { "optionA"?: never }"#));
-    assert!(result.contains(r#"{ "optionB": number; "optionB"?: never } | { "optionB"?: never }"#));
-}
-
-#[test]
-fn optional_flatten_with_rename_all_kebab_case() {
+fn kebab_case_renaming() {
     #[derive(TS, Serialize)]
     #[serde(rename_all = "kebab-case")]
     enum Enum {
@@ -150,7 +148,7 @@ fn optional_flatten_with_rename_all_kebab_case() {
 }
 
 #[test]
-fn optional_flatten_single_variant_adds_empty_object() {
+fn single_variant_enum() {
     #[derive(TS, Serialize)]
     #[serde(rename_all = "camelCase")]
     enum Enum {
@@ -171,7 +169,7 @@ fn optional_flatten_single_variant_adds_empty_object() {
 }
 
 #[test]
-fn non_optional_flatten_enum_is_unchanged() {
+fn original_non_optional_enum() {
     #[derive(TS, Serialize)]
     #[serde(rename_all = "camelCase")]
     enum Enum {
