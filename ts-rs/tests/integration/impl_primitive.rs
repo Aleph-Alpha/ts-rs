@@ -1,3 +1,29 @@
+#[cfg(feature = "rust_decimal-impl")]
+#[test]
+fn impl_primitive_rust_decimal() {
+    assert_eq!(
+        <rust_decimal::Decimal as ts_rs::TS>::name(),
+        <String as ts_rs::TS>::name()
+    );
+    assert_eq!(
+        <rust_decimal::Decimal as ts_rs::TS>::inline(),
+        <String as ts_rs::TS>::inline()
+    )
+}
+
+#[cfg(feature = "rust_decimal-impl-float")]
+#[test]
+fn impl_primitive_rust_decimal_float() {
+    assert_eq!(
+        <rust_decimal::Decimal as ts_rs::TS>::name(),
+        <f64 as ts_rs::TS>::name()
+    );
+    assert_eq!(
+        <rust_decimal::Decimal as ts_rs::TS>::inline(),
+        <f64 as ts_rs::TS>::inline()
+    )
+}
+
 #[cfg(feature = "bigdecimal-impl")]
 #[test]
 fn impl_primitive_bigdecimal() {
