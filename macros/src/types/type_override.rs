@@ -18,6 +18,7 @@ pub(crate) fn type_override_struct(
         crate_rename: crate_rename.clone(),
         inline: quote!(#type_override.to_owned()),
         inline_flattened: None,
+        optional_inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies: Dependencies::new(crate_rename),
         export: attr.export,
@@ -26,6 +27,7 @@ pub(crate) fn type_override_struct(
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+        is_enum: false,
     })
 }
 
@@ -40,6 +42,7 @@ pub(crate) fn type_override_enum(
         crate_rename: crate_rename.clone(),
         inline: quote!(#type_override.to_owned()),
         inline_flattened: None,
+        optional_inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies: Dependencies::new(crate_rename),
         export: attr.export,
@@ -48,5 +51,6 @@ pub(crate) fn type_override_enum(
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+        is_enum: false,
     })
 }
