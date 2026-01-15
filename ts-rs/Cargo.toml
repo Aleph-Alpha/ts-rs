@@ -22,6 +22,8 @@ default = ["serde-compat"]
 
 chrono-impl = ["chrono"]
 bigdecimal-impl = ["bigdecimal"]
+rust_decimal-impl = ["rust_decimal"]
+rust_decimal-impl-float = ["rust_decimal"]
 uuid-impl = ["uuid"]
 bson-uuid-impl = ["bson"]
 bytes-impl = ["bytes"]
@@ -53,6 +55,7 @@ heapless = { version = ">= 0.7, < 0.9", optional = true }
 dprint-plugin-typescript = { version = "= 0.95", optional = true }
 chrono = { version = "0.4", optional = true }
 bigdecimal = { version = ">= 0.0.13, < 0.5", features = ["serde"], optional = true }
+rust_decimal = { version = "1", optional = true }
 uuid = { version = "1", optional = true }
 bson = { version = "2", optional = true }
 bytes = { version = "1", optional = true }

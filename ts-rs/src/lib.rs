@@ -81,6 +81,8 @@
 //! | serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                                                                                |
 //! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
 //! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
+//! | rust_decimal-impl  | Implement `TS` for types from *rust_decimal*, serializing as `string` (use with `serde-str`, the default)                                                                                                 |
+//! | rust_decimal-impl-float | Implement `TS` for types from *rust_decimal*, serializing as `number` (use with `serde-float` or `serde-arbitrary-precision`)                                                                        |
 //! | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
 //! | uuid-impl          | Implement `TS` for types from *uuid*                                                                                                                                                                      |
 //! | bson-uuid-impl     | Implement `TS` for *bson::oid::ObjectId* and *bson::uuid*                                                                                                                                                 |
@@ -1105,6 +1107,25 @@ impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
 
 #[cfg(feature = "bigdecimal-impl")]
 impl_primitives! { bigdecimal::BigDecimal => "string" }
+
+#[cfg(all(feature = "rust_decimal-impl", feature = "rust_decimal-impl-float"))]
+compile_error!(
+    "Features `rust_decimal-impl` and `rust_decimal-impl-float` are mutually exclusive. \
+    Use `rust_decimal-impl` for serde-str (string serialization, the default), \
+    or `rust_decimal-impl-float` for serde-float/serde-arbitrary-precision (number serialization)."
+);
+
+#[cfg(all(
+    feature = "rust_decimal-impl",
+    not(feature = "rust_decimal-impl-float")
+))]
+impl_primitives! { rust_decimal::Decimal => "string" }
+
+#[cfg(all(
+    feature = "rust_decimal-impl-float",
+    not(feature = "rust_decimal-impl")
+))]
+impl_primitives! { rust_decimal::Decimal => "number" }
 
 #[cfg(feature = "smol_str-impl")]
 impl_primitives! { smol_str::SmolStr => "string" }
