@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 #[cfg(feature = "serde-compat")]
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 #[derive(TS)]
@@ -53,4 +53,17 @@ fn test_serde_enum() {
         Untagged::decl(),
         r#"type Untagged = string | number | null;"#
     )
+}
+
+#[derive(TS)]
+#[cfg_attr(feature = "serde-compat", derive(Serialize))]
+#[serde(deny_unknown_fields, rename_all = "camelCase")]
+enum Enum {
+    FirstOption,
+    SecondOption,
+}
+
+#[test]
+fn test_rename_all() {
+    assert_eq!(Enum::inline(), r#""firstOption" | "secondOption""#);
 }
