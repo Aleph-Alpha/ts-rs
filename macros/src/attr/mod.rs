@@ -105,7 +105,14 @@ fn skip_until_next_comma(input: ParseStream) -> proc_macro2::TokenStream {
         .step(|cursor| {
             let mut stuff = quote!();
             let mut rest = *cursor;
+
             while let Some((tt, next)) = rest.token_tree() {
+                if let TokenTree::Punct(ref punct) = tt {
+                    if punct.as_char() == ',' {
+                        return Ok((stuff, rest));
+                    }
+                }
+
                 if let Some((TokenTree::Punct(punct), _)) = next.token_tree() {
                     if punct.as_char() == ',' {
                         return Ok((stuff, next));
