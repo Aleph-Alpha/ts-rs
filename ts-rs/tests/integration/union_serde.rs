@@ -57,7 +57,11 @@ fn test_serde_enum() {
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
-#[serde(deny_unknown_fields, rename_all = "camelCase")]
+#[cfg_attr(
+    feature = "serde-compat",
+    serde(deny_unknown_fields, rename_all = "camelCase")
+)]
+#[cfg_attr(not(feature = "serde-compat"), ts(rename_all = "camelCase"))]
 enum Enum {
     FirstOption,
     SecondOption,
