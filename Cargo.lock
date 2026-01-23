@@ -59,6 +59,12 @@ checksum = "4c95c10ba0b00a02636238b814946408b1322d5ac4760326e6fb8ec956d85775"
 
 [[package]]
 name = "arrayvec"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
+
+[[package]]
+name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
@@ -1259,7 +1265,7 @@ version = "23.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67c3bd958a5a67e2cc3f74abdd41fda688e54e7a25b866569260ef7018b67972"
 dependencies = [
- "arrayvec",
+ "arrayvec 0.7.6",
  "bitflags",
  "either",
  "num-bigint",
@@ -1497,6 +1503,7 @@ dependencies = [
 name = "ts-rs"
 version = "11.1.0"
 dependencies = [
+ "arrayvec 0.5.2",
  "bigdecimal",
  "bson",
  "bytes",

@@ -92,6 +92,7 @@
 //! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                  |
 //! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
 //! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                                                                      |
+//! | arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                                                                                  |
 //!
 //! <br/>
 //!
@@ -154,6 +155,8 @@ pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
 
+#[cfg(feature = "arrayvec-impl")]
+mod arrayvec;
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
