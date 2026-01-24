@@ -257,19 +257,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn decimal_ts_name_matches_runtime_serde_shape() {
-        let shape = match detect_decimal_serde_shape() {
-            DecimalSerdeShape::Number => "number",
-            DecimalSerdeShape::String => "string",
-        };
+    fn decimal_ts_name_matches_actual_serialization() {
+        let decimal = Decimal::new(123, 2); // 1.23
+        let json = serde_json::to_value(&decimal).unwrap();
 
-        assert_eq!(Decimal::name(), shape);
-    }
-
-    #[test]
-    fn decimal_ts_name_is_cached_and_stable() {
-        let a = Decimal::name();
-        let b = Decimal::name();
-        assert_eq!(a, b);
+        match Decimal::name().as_str() {
+            "number" => assert!(json.is_number()),
+            "string" => assert!(json.is_string()),
+            other => panic!("unexpected type: {}", other),
+        }
     }
 }
