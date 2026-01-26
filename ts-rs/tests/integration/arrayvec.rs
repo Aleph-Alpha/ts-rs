@@ -2,7 +2,7 @@
 use ts_rs::TS;
 
 #[derive(TS)]
-#[ts(export, export_to = "jiff/")]
+#[ts(export, export_to = "arrayvec/")]
 struct ImStackAllocated {
     smol_vec: arrayvec::ArrayVec<f32, 16>,
     name: arrayvec::ArrayString<32>,
