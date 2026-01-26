@@ -94,6 +94,7 @@ export type User = { user_id: number, first_name: string, last_name: string, };
 | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                  |
 | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
 | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                                                                      |
+| arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                                                                                  |
 
 <br/>
 
