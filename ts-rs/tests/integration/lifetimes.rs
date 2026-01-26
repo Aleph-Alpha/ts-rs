@@ -31,6 +31,6 @@ fn contains_borrow() {
 fn contains_borrow_type_args() {
     assert_eq!(
         A::decl(),
-        "type A = { a: Array<number>, b: Array<B<number>>, c: { [key in string]?: boolean }, };"
+        "type A = { a: Array<number>, b: Array<B<number>>, c: { [key in string]: boolean }, };"
     );
 }

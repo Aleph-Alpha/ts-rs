@@ -432,6 +432,9 @@ pub trait TS {
     #[doc(hidden)]
     const IS_OPTION: bool = false;
 
+    #[doc(hidden)]
+    const IS_ENUM: bool = false;
+
     /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
     /// automatically read from your doc comments or `#[doc = ".."]` attributes
     fn docs() -> Option<String> {
@@ -980,6 +983,18 @@ impl<T: TS, const N: usize> TS for [T; N] {
     }
 }
 
+// FIXME: Remove in future release
+// Whether to treat `HashMap` (and derived types) like we did in v11.
+fn use_v11_hashmap() -> bool {
+    static USE_V11_HASHMAP: OnceLock<bool> = OnceLock::new();
+    *USE_V11_HASHMAP.get_or_init(|| {
+        let Ok(var) = std::env::var("TS_RS_USE_V11_HASHMAP") else {
+            return false;
+        };
+        ["1", "true", "on", "yes"].contains(&var.trim().to_ascii_lowercase().as_str())
+    })
+}
+
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     type WithoutGenerics = HashMap<Dummy, Dummy>;
     type OptionInnerType = Self;
@@ -989,18 +1004,22 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     }
 
     fn name() -> String {
+        let optional = K::IS_ENUM || use_v11_hashmap();
         format!(
-            "{{ [key in {}]?: {} }}",
-            <K as crate::TS>::name(),
-            <V as crate::TS>::name()
+            "{{ [key in {}]{}: {} }}",
+            K::name(),
+            if optional { "?" } else { "" },
+            V::name(),
         )
     }
 
     fn inline() -> String {
+        let optional = K::IS_ENUM || use_v11_hashmap();
         format!(
-            "{{ [key in {}]?: {} }}",
-            <K as crate::TS>::inline(),
-            <V as crate::TS>::inline()
+            "{{ [key in {}]{}: {} }}",
+            K::inline(),
+            if optional { "?" } else { "" },
+            V::inline(),
         )
     }
 
@@ -1008,34 +1027,30 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     where
         Self: 'static,
     {
-        <K as crate::TS>::visit_dependencies(v);
-        <V as crate::TS>::visit_dependencies(v);
+        K::visit_dependencies(v);
+        V::visit_dependencies(v);
     }
 
     fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        <K as crate::TS>::visit_generics(v);
+        K::visit_generics(v);
         v.visit::<K>();
-        <V as crate::TS>::visit_generics(v);
+        V::visit_generics(v);
         v.visit::<V>();
     }
 
     fn decl() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
+        panic!("{} cannot be declared", Self::name())
     }
 
     fn decl_concrete() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
+        panic!("{} cannot be declared", Self::name())
     }
 
     fn inline_flattened() -> String {
-        format!(
-            "({{ [key in {}]?: {} }})",
-            <K as crate::TS>::inline(),
-            <V as crate::TS>::inline()
-        )
+        format!("({})", Self::inline())
     }
 }
 
