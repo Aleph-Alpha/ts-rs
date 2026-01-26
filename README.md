@@ -95,6 +95,7 @@ export type User = { user_id: number, first_name: string, last_name: string, };
 | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
 | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                                                                      |
 | rust_decimal-impl  | Implement `TS` for types from *rust_decimal*                                                                                                                                                              |
+| arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                                                                                  |
 
 <br/>
 

@@ -141,6 +141,15 @@ fn parse_assign_str(input: ParseStream) -> Result<String> {
     }
 }
 
+fn parse_optional_assign_str(input: ParseStream) -> Result<Option<String>> {
+    if input.peek(Token![=]) {
+        Some(parse_assign_str(input))
+    } else {
+        None
+    }
+    .transpose()
+}
+
 fn parse_concrete(input: ParseStream) -> Result<HashMap<syn::Ident, syn::Type>> {
     struct Concrete {
         ident: syn::Ident,

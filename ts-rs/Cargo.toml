@@ -39,6 +39,7 @@ no-serde-warnings = ["ts-rs-macros/no-serde-warnings"]
 import-esm = []
 tokio-impl = ["tokio"]
 jiff-impl = ["jiff"]
+arrayvec-impl = ["arrayvec"]
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -67,3 +68,4 @@ serde_json = { version = "1", optional = true }
 tokio = { version = "1", features = ["sync"], optional = true }
 jiff = { version = "0.2", optional = true }
 rust_decimal = { version = "1", optional = true }
+arrayvec = { version = ">= 0.6, < 0.8", optional = true }
