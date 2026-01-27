@@ -11,6 +11,7 @@ repository = "https://github.com/Aleph-Alpha/ts-rs"
 [features]
 serde-compat = ["termcolor"]
 no-serde-warnings = []
+export = []
 
 [lib]
 proc-macro = true

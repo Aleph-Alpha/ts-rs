@@ -18,7 +18,7 @@ readme = "../README.md"
 rust-version = "1.78.0"
 
 [features]
-default = ["serde-compat"]
+default = ["serde-compat", "export"]
 
 chrono-impl = ["chrono"]
 bigdecimal-impl = ["bigdecimal"]
@@ -36,6 +36,8 @@ smol_str-impl = ["smol_str"]
 serde-json-impl = ["serde_json"]
 no-serde-warnings = ["ts-rs-macros/no-serde-warnings"]
 import-esm = []
+export = ["ts-rs-macros/export"]
+generate-metadata = []
 tokio-impl = ["tokio"]
 jiff-impl = ["jiff"]
 arrayvec-impl = ["arrayvec"]
