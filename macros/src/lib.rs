@@ -26,10 +26,12 @@ struct DerivedTS {
     docs: Vec<Expr>,
     inline: TokenStream,
     inline_flattened: Option<TokenStream>,
+    optional_inline_flattened: Option<TokenStream>,
     dependencies: Dependencies,
     concrete: HashMap<Ident, Type>,
     bound: Option<Vec<WherePredicate>>,
     ts_enum: Option<Repr>,
+    is_enum: bool,
 
     export: bool,
     export_to: Option<Expr>,
@@ -89,11 +91,14 @@ impl DerivedTS {
         let decl = self.generate_decl_fn(&rust_ty, &generics);
         let dependencies = &self.dependencies;
         let generics_fn = self.generate_generics_fn(&generics);
+        let is_enum = self.is_enum;
 
         quote! {
             #impl_start {
                 #assoc_type
                 type OptionInnerType = Self;
+
+                const IS_ENUM: bool = #is_enum;
 
                 fn ident() -> String {
                     (#ident).to_string()
@@ -174,6 +179,7 @@ impl DerivedTS {
                     fn name() -> String { stringify!(#generics).to_owned() }
                     fn inline() -> String { panic!("{} cannot be inlined", #name) }
                     fn inline_flattened() -> String { stringify!(#generics).to_owned() }
+                    fn optional_inline_flattened() -> String { stringify!(#generics).to_owned() }
                     fn decl() -> String { panic!("{} cannot be declared", #name) }
                     fn decl_concrete() -> String { panic!("{} cannot be declared", #name) }
                 }
@@ -244,6 +250,13 @@ impl DerivedTS {
             }
         });
 
+        let optional_inline_flattened =
+            self.optional_inline_flattened.clone().unwrap_or_else(|| {
+                quote! {
+                    panic!("{} cannot be flattened", <Self as #crate_rename::TS>::name())
+                }
+            });
+
         let inline = match self.ts_enum {
             Some(Repr::Int) => quote! {
                 let variants = #inline.replace(|x: char| !x.is_numeric() && x != ',', "");
@@ -297,6 +310,10 @@ impl DerivedTS {
 
             fn inline_flattened() -> String {
                 #inline_flattened
+            }
+
+            fn optional_inline_flattened() -> String {
+                #optional_inline_flattened
             }
         }
     }
@@ -511,7 +528,11 @@ fn entry(input: proc_macro::TokenStream) -> Result<TokenStream> {
     let input = syn::parse::<Item>(input)?;
     let (ts, ident, generics) = match input {
         Item::Struct(s) => (types::struct_def(&s)?, s.ident, s.generics),
-        Item::Enum(e) => (types::enum_def(&e)?, e.ident, e.generics),
+        Item::Enum(e) => {
+            let mut item_type = types::enum_def(&e)?;
+            item_type.is_enum = true;
+            (item_type, e.ident, e.generics)
+        }
         _ => syn_err!(input.span(); "unsupported item"),
     };
 

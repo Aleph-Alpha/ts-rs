@@ -42,6 +42,7 @@ mod list;
 mod merge_same_file_imports;
 mod nested;
 mod optional_field;
+mod optional_flattened_enum;
 mod path_bug;
 mod ranges;
 mod raw_idents;
