@@ -70,5 +70,6 @@ enum Enum {
 
 #[test]
 fn test_rename_all() {
-    assert_eq!(Enum::inline(), r#""firstOption" | "secondOption""#);
+    let cfg = Config::from_env();
+    assert_eq!(Enum::inline(&cfg), r#""firstOption" | "secondOption""#);
 }
