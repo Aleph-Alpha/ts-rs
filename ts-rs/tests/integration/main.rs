@@ -1,6 +1,7 @@
 #![allow(dead_code, unused)]
 
 mod arrays;
+mod arrayvec;
 mod bound;
 mod bson;
 mod chrono;
