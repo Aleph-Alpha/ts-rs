@@ -74,6 +74,9 @@ export type User = { user_id: number, first_name: string, last_name: string, };
 - generic types
 - support for ESM imports
 
+If there's a type you're dealing with which doesn't implement `TS`, you can use either
+`#[ts(as = "..")]` or `#[ts(type = "..")]`, enable the appropriate cargo feature, or open a PR.
+
 ### cargo features
 | **Feature**        | **Description**                                                                                                                                                                                           |
 |:-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -96,9 +99,6 @@ export type User = { user_id: number, first_name: string, last_name: string, };
 | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                                                                      |
 
 <br/>
-
-If there's a type you're dealing with which doesn't implement `TS`, use either
-`#[ts(as = "..")]` or `#[ts(type = "..")]`, or open a PR.
 
 ### `serde` compatability
 With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
@@ -123,13 +123,16 @@ from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` inst
 
 When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
 
-### Environment variables
+### Configuration
+When using `#[ts(export)]` on a type, `ts-rs` generates a test which writes the bindings for it to disk.
+The following environment variables may be set to configure *how* and *where*:
 | Variable                 | Description                                                         | Default      |
 |--------------------------|---------------------------------------------------------------------|--------------|
 | `TS_RS_EXPORT_DIR`       | Base directory into which bindings will be exported                 | `./bindings` |
 | `TS_RS_IMPORT_EXTENSION` | File extension used in `import` statements                          | *none*       |
 | `TS_RS_LARGE_INT`        | Binding used for large integer types (`i64`, `u64`, `i128`, `u128`) | `bigint`     |
 
+To export bindings programmatically without the use of tests, `TS::export_all`, `TS::export`, and `TS::export_to_string` can be used instead.
 
 ### Contributing
 Contributions are always welcome!
