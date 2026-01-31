@@ -442,9 +442,9 @@ pub trait TS {
     }
 
     /// Identifier of this type, excluding generic parameters.
-    fn ident() -> String {
+    fn ident(cfg: &Config) -> String {
         // by default, fall back to `TS::name()`.
-        let name = <Self as crate::TS>::name();
+        let name = <Self as crate::TS>::name(cfg);
 
         match name.find('<') {
             Some(i) => name[..i].to_owned(),
@@ -459,23 +459,29 @@ pub trait TS {
     /// placeholders, resulting in a generic typescript definition.
     /// Both `SomeType::<i32>::decl()` and `SomeType::<String>::decl()` will therefore result in
     /// the same TypeScript declaration `type SomeType<A> = ...`.
-    fn decl() -> String;
+    fn decl(cfg: &Config) -> String {
+        panic!("{} cannot be declared", Self::name(cfg))
+    }
 
     /// Declaration of this type using the supplied generic arguments.
     /// The resulting TypeScript definition will not be generic. For that, see `TS::decl()`.
     /// If this type is not generic, then this function is equivalent to `TS::decl()`.
-    fn decl_concrete() -> String;
+    fn decl_concrete(cfg: &Config) -> String {
+        panic!("{} cannot be declared", Self::name(cfg))
+    }
 
     /// Name of this type in TypeScript, including generic parameters
-    fn name() -> String;
+    fn name(cfg: &Config) -> String;
 
     /// Formats this types definition in TypeScript, e.g `{ user_id: number }`.
     /// This function will panic if the type cannot be inlined.
-    fn inline() -> String;
+    fn inline(cfg: &Config) -> String;
 
     /// Flatten a type declaration.
     /// This function will panic if the type cannot be flattened.
-    fn inline_flattened() -> String;
+    fn inline_flattened(cfg: &Config) -> String {
+        panic!("{} cannot be flattened", Self::name(cfg))
+    }
 
     /// Iterates over all dependency of this type.
     fn visit_dependencies(_: &mut impl TypeVisitor)
@@ -492,21 +498,22 @@ pub trait TS {
     }
 
     /// Resolves all dependencies of this type recursively.
-    fn dependencies() -> Vec<Dependency>
+    fn dependencies(cfg: &Config) -> Vec<Dependency>
     where
         Self: 'static,
     {
-        let mut deps: Vec<Dependency> = vec![];
-        struct Visit<'a>(&'a mut Vec<Dependency>);
+        struct Visit<'a>(&'a Config, &'a mut Vec<Dependency>);
         impl TypeVisitor for Visit<'_> {
             fn visit<T: TS + 'static + ?Sized>(&mut self) {
-                if let Some(dep) = Dependency::from_ty::<T>() {
-                    self.0.push(dep);
+                let Visit(cfg, deps) = self;
+                if let Some(dep) = Dependency::from_ty::<T>(cfg) {
+                    deps.push(dep);
                 }
             }
         }
-        <Self as crate::TS>::visit_dependencies(&mut Visit(&mut deps));
 
+        let mut deps: Vec<Dependency> = vec![];
+        Self::visit_dependencies(&mut Visit(cfg, &mut deps));
         deps
     }
 
@@ -518,24 +525,18 @@ pub trait TS {
     /// exported automatically whenever `cargo test` is run.
     /// In that case, there is no need to manually call this function.
     ///
-    /// # Target Directory
-    /// The target directory to which the type will be exported may be changed by setting the
-    /// `TS_RS_EXPORT_DIR` environment variable. By default, `./bindings` will be used.
-    ///
-    /// To specify a target directory manually, use [`TS::export_all_to`], which also exports all
-    /// dependencies.
-    ///
     /// To alter the filename or path of the type within the target directory,
     /// use `#[ts(export_to = "...")]`.
-    fn export() -> Result<(), ExportError>
+    fn export(cfg: &Config) -> Result<(), ExportError>
     where
         Self: 'static,
     {
-        let path = <Self as crate::TS>::default_output_path()
+        let relative_path = Self::output_path()
             .ok_or_else(std::any::type_name::<Self>)
             .map_err(ExportError::CannotBeExported)?;
+        let path = cfg.export_dir.join(relative_path);
 
-        export::export_to::<Self, _>(path)
+        export::export_to::<Self, _>(cfg, path)
     }
 
     /// Manually export this type to the filesystem, together with all of its dependencies.
@@ -546,39 +547,13 @@ pub trait TS {
     /// exported automatically whenever `cargo test` is run.
     /// In that case, there is no need to manually call this function.
     ///
-    /// # Target Directory
-    /// The target directory to which the types will be exported may be changed by setting the
-    /// `TS_RS_EXPORT_DIR` environment variable. By default, `./bindings` will be used.
-    ///
-    /// To specify a target directory manually, use [`TS::export_all_to`].
-    ///
     /// To alter the filenames or paths of the types within the target directory,
     /// use `#[ts(export_to = "...")]`.
-    fn export_all() -> Result<(), ExportError>
+    fn export_all(cfg: &Config) -> Result<(), ExportError>
     where
         Self: 'static,
     {
-        export::export_all_into::<Self>(&*export::default_out_dir())
-    }
-
-    /// Manually export this type into the given directory, together with all of its dependencies.
-    /// To export only this type, without its dependencies, use [`TS::export`].
-    ///
-    /// Unlike [`TS::export_all`], this function disregards `TS_RS_EXPORT_DIR`, using the provided
-    /// directory instead.
-    ///
-    /// To alter the filenames or paths of the types within the target directory,
-    /// use `#[ts(export_to = "...")]`.
-    ///
-    /// # Automatic Exporting
-    /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
-    /// exported automatically whenever `cargo test` is run.
-    /// In that case, there is no need to manually call this function.
-    fn export_all_to(out_dir: impl AsRef<Path>) -> Result<(), ExportError>
-    where
-        Self: 'static,
-    {
-        export::export_all_into::<Self>(out_dir)
+        export::export_all_into::<Self>(cfg)
     }
 
     /// Manually generate bindings for this type, returning a [`String`].
@@ -588,45 +563,23 @@ pub trait TS {
     /// Types annotated with `#[ts(export)]`, together with all of their dependencies, will be
     /// exported automatically whenever `cargo test` is run.
     /// In that case, there is no need to manually call this function.
-    fn export_to_string() -> Result<String, ExportError>
+    fn export_to_string(cfg: &Config) -> Result<String, ExportError>
     where
         Self: 'static,
     {
-        export::export_to_string::<Self>()
+        export::export_to_string::<Self>(cfg)
     }
 
-    /// Returns the output path to where `T` should be exported.
-    /// The returned path does _not_ include the base directory from `TS_RS_EXPORT_DIR`.
-    ///
-    /// To get the output path containing `TS_RS_EXPORT_DIR`, use [`TS::default_output_path`].
+    /// Returns the output path to where `T` should be exported, relative to the output directory.
+    /// The returned path does _not_ include any base directory.
     ///
     /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.
     /// See the documentation of [`TS`] for more details.
-    ///
-    /// The output of this function depends on the environment variable `TS_RS_EXPORT_DIR`, which is
-    /// used as base directory. If it is not set, `./bindings` is used as default directory.
     ///
     /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
     /// `None`.
     fn output_path() -> Option<PathBuf> {
         None
-    }
-
-    /// Returns the output path to where `T` should be exported.
-    ///
-    /// The output of this function depends on the environment variable `TS_RS_EXPORT_DIR`, which is
-    /// used as base directory. If it is not set, `./bindings` is used as default directory.
-    ///
-    /// To get the output path relative to `TS_RS_EXPORT_DIR` and without reading the environment
-    /// variable, use [`TS::output_path`].
-    ///
-    /// When deriving `TS`, the output path can be altered using `#[ts(export_to = "...")]`.
-    /// See the documentation of [`TS`] for more details.
-    ///
-    /// If `T` cannot be exported (e.g because it's a primitive type), this function will return
-    /// `None`.
-    fn default_output_path() -> Option<PathBuf> {
-        Some(export::default_out_dir().join(<Self as crate::TS>::output_path()?))
     }
 }
 
@@ -656,13 +609,84 @@ impl Dependency {
     /// Constructs a [`Dependency`] from the given type `T`.
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
-    pub fn from_ty<T: TS + 'static + ?Sized>() -> Option<Self> {
+    pub fn from_ty<T: TS + 'static + ?Sized>(cfg: &Config) -> Option<Self> {
         let output_path = <T as crate::TS>::output_path()?;
         Some(Dependency {
             type_id: TypeId::of::<T>(),
-            ts_name: <T as crate::TS>::ident(),
+            ts_name: <T as crate::TS>::ident(cfg),
             output_path,
         })
+    }
+}
+
+pub struct Config {
+    // TS_RS_LARGE_INT
+    large_int_type: String,
+    // TS_RS_USE_V11_HASHMAP
+    use_v11_hashmap: bool,
+    // TS_RS_EXPORT_DIR
+    export_dir: PathBuf,
+    // TS_RS_IMPORT_EXTENSION
+    import_extension: String,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            large_int_type: "bigint".to_owned(),
+            use_v11_hashmap: false,
+            export_dir: "./bindings".into(),
+            import_extension: "".to_owned(),
+        }
+    }
+}
+
+impl Config {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn from_env() -> Self {
+        let large_int_type =
+            std::env::var("TS_RS_LARGE_INT").unwrap_or_else(|_| "bigint".to_owned());
+        let use_v11_hashmap = std::env::var("TS_RS_USE_V11_HASHMAP")
+            .ok()
+            .as_deref()
+            .map(str::trim)
+            .map(|var| ["1", "true", "on", "yes"].contains(&var))
+            .unwrap_or(false);
+        let export_dir = match std::env::var("TS_RS_EXPORT_DIR") {
+            Ok(dir) => PathBuf::from(dir),
+            Err(..) => PathBuf::from("./bindings"),
+        };
+        let import_extension = std::env::var("TS_RS_IMPORT_EXTENSION").unwrap_or_default();
+
+        Config {
+            large_int_type,
+            use_v11_hashmap,
+            export_dir,
+            import_extension,
+        }
+    }
+
+    pub fn large_integer_type(mut self, ty: impl Into<String>) -> Self {
+        self.large_int_type = ty.into();
+        self
+    }
+
+    pub fn use_v11_hashmap(mut self) -> Self {
+        self.use_v11_hashmap = true;
+        self
+    }
+
+    pub fn export_directory(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.export_dir = dir.into();
+        self
+    }
+
+    pub fn import_extension(mut self, ext: impl Into<String>) -> Self {
+        self.import_extension = ext.into();
+        self
     }
 }
 
@@ -686,24 +710,34 @@ macro_rules! impl_primitives {
         impl TS for $ty {
             type WithoutGenerics = Self;
             type OptionInnerType = Self;
-            fn name() -> String { String::from($l) }
-            fn inline() -> String { <Self as $crate::TS>::name() }
-            fn inline_flattened() -> String { panic!("{} cannot be flattened", <Self as $crate::TS>::name()) }
-            fn decl() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
-            fn decl_concrete() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
+            fn name(cfg: &Config) -> String { String::from($l) }
+            fn inline(cfg: &Config) -> String { <Self as $crate::TS>::name(cfg) }
         }
     )*)* };
 }
+
+// generate impls for big integers
+macro_rules! impl_large_integers {
+    ($($ty:ty),*) => { $(
+        impl TS for $ty {
+            type WithoutGenerics = Self;
+            type OptionInnerType = Self;
+            fn name(cfg: &Config) -> String { cfg.large_int_type.clone() }
+            fn inline(cfg: &Config) -> String { <Self as $crate::TS>::name(cfg) }
+        }
+    )* };
+}
+
 // generate impls for tuples
 macro_rules! impl_tuples {
     ( impl $($i:ident),* ) => {
         impl<$($i: TS),*> TS for ($($i,)*) {
             type WithoutGenerics = (Dummy, );
             type OptionInnerType = Self;
-            fn name() -> String {
-                format!("[{}]", [$(<$i as $crate::TS>::name()),*].join(", "))
+            fn name(cfg: &Config) -> String {
+                format!("[{}]", [$(<$i as $crate::TS>::name(cfg)),*].join(", "))
             }
-            fn inline() -> String {
+            fn inline(_: &Config) -> String {
                 panic!("tuple cannot be inlined!");
             }
             fn visit_generics(v: &mut impl TypeVisitor)
@@ -715,9 +749,9 @@ macro_rules! impl_tuples {
                     <$i as $crate::TS>::visit_generics(v);
                 )*
             }
-            fn inline_flattened() -> String { panic!("tuple cannot be flattened") }
-            fn decl() -> String { panic!("tuple cannot be declared") }
-            fn decl_concrete() -> String { panic!("tuple cannot be declared") }
+            fn inline_flattened(_: &Config) -> String { panic!("tuple cannot be flattened") }
+            fn decl(_: &Config) -> String { panic!("tuple cannot be declared") }
+            fn decl_concrete(_: &Config) -> String { panic!("tuple cannot be declared") }
         }
     };
     ( $i2:ident $(, $i:ident)* ) => {
@@ -733,9 +767,9 @@ macro_rules! impl_wrapper {
         $($t)* {
             type WithoutGenerics = Self;
             type OptionInnerType = Self;
-            fn name() -> String { <T as $crate::TS>::name() }
-            fn inline() -> String { <T as $crate::TS>::inline() }
-            fn inline_flattened() -> String { <T as $crate::TS>::inline_flattened() }
+            fn name(cfg: &Config) -> String { <T as $crate::TS>::name(cfg) }
+            fn inline(cfg: &Config) -> String { <T as $crate::TS>::inline(cfg) }
+            fn inline_flattened(cfg: &Config) -> String { <T as $crate::TS>::inline_flattened(cfg) }
             fn visit_dependencies(v: &mut impl TypeVisitor)
             where
                 Self: 'static,
@@ -750,8 +784,8 @@ macro_rules! impl_wrapper {
                 <T as $crate::TS>::visit_generics(v);
                 v.visit::<T>();
             }
-            fn decl() -> String { panic!("wrapper type cannot be declared") }
-            fn decl_concrete() -> String { panic!("wrapper type cannot be declared") }
+            fn decl(_: &Config) -> String { panic!("wrapper type cannot be declared") }
+            fn decl_concrete(_: &Config) -> String { panic!("wrapper type cannot be declared") }
         }
     };
 }
@@ -762,10 +796,10 @@ macro_rules! impl_shadow {
         $($impl)* {
             type WithoutGenerics = <$s as $crate::TS>::WithoutGenerics;
             type OptionInnerType = <$s as $crate::TS>::OptionInnerType;
-            fn ident() -> String { <$s as $crate::TS>::ident() }
-            fn name() -> String { <$s as $crate::TS>::name() }
-            fn inline() -> String { <$s as $crate::TS>::inline() }
-            fn inline_flattened() -> String { <$s as $crate::TS>::inline_flattened() }
+            fn ident(cfg: &Config) -> String { <$s as $crate::TS>::ident(cfg) }
+            fn name(cfg: &Config) -> String { <$s as $crate::TS>::name(cfg) }
+            fn inline(cfg: &Config) -> String { <$s as $crate::TS>::inline(cfg) }
+            fn inline_flattened(cfg: &Config) -> String { <$s as $crate::TS>::inline_flattened(cfg) }
             fn visit_dependencies(v: &mut impl $crate::TypeVisitor)
             where
                 Self: 'static,
@@ -778,8 +812,8 @@ macro_rules! impl_shadow {
             {
                 <$s as $crate::TS>::visit_generics(v);
             }
-            fn decl() -> String { <$s as $crate::TS>::decl() }
-            fn decl_concrete() -> String { <$s as $crate::TS>::decl_concrete() }
+            fn decl(cfg: &Config) -> String { <$s as $crate::TS>::decl(cfg) }
+            fn decl_concrete(cfg: &Config) -> String { <$s as $crate::TS>::decl_concrete(cfg) }
             fn output_path() -> Option<std::path::PathBuf> { <$s as $crate::TS>::output_path() }
         }
     };
@@ -790,12 +824,12 @@ impl<T: TS> TS for Option<T> {
     type OptionInnerType = T;
     const IS_OPTION: bool = true;
 
-    fn name() -> String {
-        format!("{} | null", <T as crate::TS>::name())
+    fn name(cfg: &Config) -> String {
+        format!("{} | null", T::name(cfg))
     }
 
-    fn inline() -> String {
-        format!("{} | null", <T as crate::TS>::inline())
+    fn inline(cfg: &Config) -> String {
+        format!("{} | null", T::inline(cfg))
     }
 
     fn visit_dependencies(v: &mut impl TypeVisitor)
@@ -812,37 +846,21 @@ impl<T: TS> TS for Option<T> {
         <T as crate::TS>::visit_generics(v);
         v.visit::<T>();
     }
-
-    fn decl() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
-    }
-
-    fn decl_concrete() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
-    }
-
-    fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
-    }
 }
 
 impl<T: TS, E: TS> TS for Result<T, E> {
     type WithoutGenerics = Result<Dummy, Dummy>;
     type OptionInnerType = Self;
 
-    fn name() -> String {
-        format!(
-            "{{ Ok : {} }} | {{ Err : {} }}",
-            <T as crate::TS>::name(),
-            <E as crate::TS>::name()
-        )
+    fn name(cfg: &Config) -> String {
+        format!("{{ Ok : {} }} | {{ Err : {} }}", T::name(cfg), E::name(cfg))
     }
 
-    fn inline() -> String {
+    fn inline(cfg: &Config) -> String {
         format!(
             "{{ Ok : {} }} | {{ Err : {} }}",
-            <T as crate::TS>::inline(),
-            <E as crate::TS>::inline()
+            T::inline(cfg),
+            E::inline(cfg)
         )
     }
 
@@ -863,34 +881,22 @@ impl<T: TS, E: TS> TS for Result<T, E> {
         <E as crate::TS>::visit_generics(v);
         v.visit::<E>();
     }
-
-    fn decl() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
-    }
-
-    fn decl_concrete() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
-    }
-
-    fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
-    }
 }
 
 impl<T: TS> TS for Vec<T> {
     type WithoutGenerics = Vec<Dummy>;
     type OptionInnerType = Self;
 
-    fn ident() -> String {
+    fn ident(_: &Config) -> String {
         "Array".to_owned()
     }
 
-    fn name() -> String {
-        format!("Array<{}>", <T as crate::TS>::name())
+    fn name(cfg: &Config) -> String {
+        format!("Array<{}>", T::name(cfg))
     }
 
-    fn inline() -> String {
-        format!("Array<{}>", <T as crate::TS>::inline())
+    fn inline(cfg: &Config) -> String {
+        format!("Array<{}>", T::inline(cfg))
     }
 
     fn visit_dependencies(v: &mut impl TypeVisitor)
@@ -906,18 +912,6 @@ impl<T: TS> TS for Vec<T> {
     {
         <T as crate::TS>::visit_generics(v);
         v.visit::<T>();
-    }
-
-    fn decl() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
-    }
-
-    fn decl_concrete() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
-    }
-
-    fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
 
@@ -927,29 +921,29 @@ impl<T: TS, const N: usize> TS for [T; N] {
     type WithoutGenerics = [Dummy; N];
     type OptionInnerType = Self;
 
-    fn name() -> String {
+    fn name(cfg: &Config) -> String {
         if N > ARRAY_TUPLE_LIMIT {
-            return <Vec<T> as crate::TS>::name();
+            return <Vec<T> as crate::TS>::name(cfg);
         }
 
         format!(
             "[{}]",
             (0..N)
-                .map(|_| <T as crate::TS>::name())
+                .map(|_| T::name(cfg))
                 .collect::<Box<[_]>>()
                 .join(", ")
         )
     }
 
-    fn inline() -> String {
+    fn inline(cfg: &Config) -> String {
         if N > ARRAY_TUPLE_LIMIT {
-            return <Vec<T> as crate::TS>::inline();
+            return <Vec<T> as crate::TS>::inline(cfg);
         }
 
         format!(
             "[{}]",
             (0..N)
-                .map(|_| <T as crate::TS>::inline())
+                .map(|_| T::inline(cfg))
                 .collect::<Box<[_]>>()
                 .join(", ")
         )
@@ -969,57 +963,33 @@ impl<T: TS, const N: usize> TS for [T; N] {
         <T as crate::TS>::visit_generics(v);
         v.visit::<T>();
     }
-
-    fn decl() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
-    }
-
-    fn decl_concrete() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
-    }
-
-    fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
-    }
-}
-
-// FIXME: Remove in future release
-// Whether to treat `HashMap` (and derived types) like we did in v11.
-fn use_v11_hashmap() -> bool {
-    static USE_V11_HASHMAP: OnceLock<bool> = OnceLock::new();
-    *USE_V11_HASHMAP.get_or_init(|| {
-        let Ok(var) = std::env::var("TS_RS_USE_V11_HASHMAP") else {
-            return false;
-        };
-        ["1", "true", "on", "yes"].contains(&var.trim().to_ascii_lowercase().as_str())
-    })
 }
 
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     type WithoutGenerics = HashMap<Dummy, Dummy>;
     type OptionInnerType = Self;
 
-    fn ident() -> String {
+    fn ident(_: &Config) -> String {
         panic!()
     }
 
-    fn name() -> String {
-        let optional = K::IS_ENUM || use_v11_hashmap();
+    fn name(cfg: &Config) -> String {
+        let optional = K::IS_ENUM || cfg.use_v11_hashmap;
         format!(
             "{{ [key in {}]{}: {} }}",
-            K::name(),
+            K::name(cfg),
             if optional { "?" } else { "" },
-            V::name(),
+            V::name(cfg),
         )
     }
 
-    fn inline() -> String {
-        let optional = K::IS_ENUM || use_v11_hashmap();
+    fn inline(cfg: &Config) -> String {
+        let optional = K::IS_ENUM || cfg.use_v11_hashmap;
         format!(
             "{{ [key in {}]{}: {} }}",
-            K::inline(),
+            K::inline(cfg),
             if optional { "?" } else { "" },
-            V::inline(),
+            V::inline(cfg),
         )
     }
 
@@ -1040,61 +1010,35 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
         V::visit_generics(v);
         v.visit::<V>();
     }
-
-    fn decl() -> String {
-        panic!("{} cannot be declared", Self::name())
-    }
-
-    fn decl_concrete() -> String {
-        panic!("{} cannot be declared", Self::name())
-    }
-
-    fn inline_flattened() -> String {
-        format!("({})", Self::inline())
-    }
 }
 
+// TODO: replace manual impl with dummy struct & `impl_shadow` (like for `JsonValue`)
 impl<I: TS> TS for Range<I> {
     type WithoutGenerics = Range<Dummy>;
     type OptionInnerType = Self;
 
-    fn name() -> String {
-        format!(
-            "{{ start: {}, end: {}, }}",
-            <I as crate::TS>::name(),
-            <I as crate::TS>::name()
-        )
+    fn name(cfg: &Config) -> String {
+        let name = I::name(cfg);
+        format!("{{ start: {name}, end: {name}, }}")
     }
 
     fn visit_dependencies(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        <I as crate::TS>::visit_dependencies(v);
+        I::visit_dependencies(v);
     }
 
     fn visit_generics(v: &mut impl TypeVisitor)
     where
         Self: 'static,
     {
-        <I as crate::TS>::visit_generics(v);
+        I::visit_generics(v);
         v.visit::<I>();
     }
 
-    fn decl() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
-    }
-
-    fn decl_concrete() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
-    }
-
-    fn inline() -> String {
-        panic!("{} cannot be inlined", <Self as crate::TS>::name())
-    }
-
-    fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+    fn inline(cfg: &Config) -> String {
+        panic!("{} cannot be inlined", Self::name(cfg))
     }
 }
 
@@ -1162,20 +1106,20 @@ mod bytes {
     impl_shadow!(as Vec<u8>: impl TS for bytes::BytesMut);
 }
 
-static LARGE_INT_BINDING: OnceLock<String> = OnceLock::new();
-
 impl_primitives! {
     u8, i8, NonZeroU8, NonZeroI8,
     u16, i16, NonZeroU16, NonZeroI16,
     u32, i32, NonZeroU32, NonZeroI32,
     usize, isize, NonZeroUsize, NonZeroIsize, f32, f64 => "number",
-    u64, i64, NonZeroU64, NonZeroI64,
-    u128, i128, NonZeroU128, NonZeroI128 => LARGE_INT_BINDING
-        .get_or_init(|| std::env::var("TS_RS_LARGE_INT").unwrap_or_else(|_| "bigint".to_owned())),
     bool => "boolean",
     char, Path, PathBuf, String, str,
     Ipv4Addr, Ipv6Addr, IpAddr, SocketAddrV4, SocketAddrV6, SocketAddr => "string",
     () => "null"
+}
+
+impl_large_integers! {
+    u64, i64, NonZeroU64, NonZeroI64,
+    u128, i128, NonZeroU128, NonZeroI128
 }
 
 #[rustfmt::skip]
@@ -1199,24 +1143,12 @@ impl TS for Dummy {
     type WithoutGenerics = Self;
     type OptionInnerType = Self;
 
-    fn name() -> String {
+    fn name(_: &Config) -> String {
         "Dummy".to_owned()
     }
 
-    fn decl() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
-    }
-
-    fn decl_concrete() -> String {
-        panic!("{} cannot be declared", <Self as crate::TS>::name())
-    }
-
-    fn inline() -> String {
-        panic!("{} cannot be inlined", <Self as crate::TS>::name())
-    }
-
-    fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+    fn inline(cfg: &Config) -> String {
+        panic!("{} cannot be inlined", Self::name(cfg))
     }
 }
 

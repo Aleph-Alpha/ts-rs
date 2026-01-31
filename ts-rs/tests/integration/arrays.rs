@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "arrays/")]
@@ -10,6 +10,7 @@ struct Interface {
 
 #[test]
 fn free() {
+    let cfg = Config::from_env();
     assert_eq!(<[String; 4]>::inline(), "[string, string, string, string]")
 }
 
