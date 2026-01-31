@@ -186,11 +186,11 @@ mod tokio;
 /// ### container attributes
 /// attributes applicable for both structs and enums
 ///
-/// - **`#[ts(crate = "..")]`**
+/// - **`#[ts(crate = "..")]`** \
 ///   Generates code which references the module passed to it instead of defaulting to `::ts_rs`
 ///   This is useful for cases where you have to re-export the crate.
 ///
-/// - **`#[ts(export)]`**
+/// - **`#[ts(export)]`** \
 ///   Generates a test which will export the type, by default to `bindings/<name>.ts` when running
 ///   `cargo test`. The default base directory can be overridden with the `TS_RS_EXPORT_DIR` environment variable.
 ///   Adding the variable to a project's [config.toml](https://doc.rust-lang.org/cargo/reference/config.html#env) can
@@ -200,44 +200,38 @@ mod tokio;
 ///   [env]
 ///   TS_RS_EXPORT_DIR = { value = "<OVERRIDE_DIR>", relative = true }
 ///   ```
-///   <br/>
 ///
-/// - **`#[ts(export_to = "..")]`**
+/// - **`#[ts(export_to = "..")]`** \
 ///   Specifies where the type should be exported to. Defaults to `<name>.ts`.
 ///   The path given to the `export_to` attribute is relative to the `TS_RS_EXPORT_DIR` environment variable,
 ///   or, if `TS_RS_EXPORT_DIR` is not set, to `./bindings`
 ///   If the provided path ends in a trailing `/`, it is interpreted as a directory.
 ///   This attribute also accepts arbitrary expressions.
 ///   Note that you need to add the `export` attribute as well, in order to generate a test which exports the type.
-///   <br/><br/>
 ///
-/// - **`#[ts(as = "..")]`**
-///   Overrides the type used in Typescript, using the provided Rust type instead.
+/// - **`#[ts(as = "..")]`** \
+///   Overrides the type used in Typescript, using the provided Rust type instead. \
 ///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
-///   <br/><br/>
 ///
-/// - **`#[ts(type = "..")]`**
-///   Overrides the type used in TypeScript.
+/// - **`#[ts(type = "..")]`** \
+///   Overrides the type used in TypeScript. \
 ///   This is useful when you have a custom serializer and deserializer and don't want to implement `TS` manually
-///   <br/><br/>
 ///
-/// - **`#[ts(rename = "..")]`**
-///   Sets the typescript name of the generated type.
+/// - **`#[ts(rename = "..")]`** \
+///   Sets the typescript name of the generated type. \
 ///   Also accepts expressions, e.g `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`.
-///   <br/><br/>
 ///
-/// - **`#[ts(rename_all = "..")]`**
-///   Rename all fields/variants of the type.
+/// - **`#[ts(rename_all = "..")]`** \
+///   Rename all fields/variants of the type. \
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
-///   <br/><br/>
 ///
-/// - **`#[ts(concrete(..)]`**
-///   Disables one ore more generic type parameters by specifying a concrete type for them.
+/// - **`#[ts(concrete(..)]`** \
+///   Disables one ore more generic type parameters by specifying a concrete type for them. \
 ///   The resulting TypeScript definition will not be generic over these parameters and will use the
-///   provided type instead.
+///   provided type instead. \
 ///   This is especially useful for generic types containing associated types. Since TypeScript does
 ///   not have an equivalent construct to associated types, we cannot generate a generic definition
-///   for them. Using `#[ts(concrete(..)]`, we can however generate a non-generic definition.
+///   for them. Using `#[ts(concrete(..)]`, we can however generate a non-generic definition. \
 ///   Example:
 ///   ```
 ///   # use ts_rs::TS;
@@ -246,9 +240,8 @@ mod tokio;
 ///   struct SearchResult<I: Iterator>(Vec<I::Item>);
 ///   // will always generate `type SearchResult = Array<String>`.
 ///   ```
-///   <br/><br/>
 ///
-/// - **`#[ts(bound)]`**
+/// - **`#[ts(bound)]`** \
 ///   Override the bounds generated on the `TS` implementation for this type. This is useful in
 ///   combination with `#[ts(concrete)]`, when the type's generic parameters aren't directly used
 ///   in a field or variant.
@@ -284,115 +277,96 @@ mod tokio;
 ///       inner: Inner<C>,
 ///   }
 ///   ```
-///   <br/><br/>
 ///
 /// ### struct attributes
-/// - **`#[ts(tag = "..")]`**
+/// - **`#[ts(tag = "..")]`** \
 ///   Include the structs name (or value of `#[ts(rename = "..")]`) as a field with the given key.
-///   <br/><br/>
 ///
-/// - **`#[ts(optional_fields)]`**
-///   Makes all `Option<T>` fields in a struct optional.
+/// - **`#[ts(optional_fields)]`** \
+///   Makes all `Option<T>` fields in a struct optional. \
 ///   If `#[ts(optional_fields)]` is present, `t?: T` is generated for every `Option<T>` field of the struct.
 ///   If `#[ts(optional_fields = nullable)]` is present, `t?: T | null` is generated for every `Option<T>` field of the struct.
-///   <br/><br/>
 ///
 /// ### struct field attributes
 ///
-/// - **`#[ts(type = "..")]`**
-///   Overrides the type used in TypeScript.
+/// - **`#[ts(type = "..")]`** \
+///   Overrides the type used in TypeScript. \
 ///   This is useful when there's a type for which you cannot derive `TS`.
-///   <br/><br/>
 ///
-/// - **`#[ts(as = "..")]`**
-///   Overrides the type of the annotated field, using the provided Rust type instead.
+/// - **`#[ts(as = "..")]`** \
+///   Overrides the type of the annotated field, using the provided Rust type instead. \
 ///   This is useful when there's a type for which you cannot derive `TS`.
 ///   `_` may be used to refer to the type of the field, e.g `#[ts(as = "Option<_>")]`.
-///   <br/><br/>
 ///
-/// - **`#[ts(rename = "..")]`**
+/// - **`#[ts(rename = "..")]`** \
 ///   Renames this field. To rename all fields of a struct, see the container attribute `#[ts(rename_all = "..")]`.
-///   <br/><br/>
 ///
-/// - **`#[ts(inline)]`**
+/// - **`#[ts(inline)]`** \
 ///   Inlines the type of this field, replacing its name with its definition.
-///   <br/><br/>
 ///
-/// - **`#[ts(skip)]`**
+/// - **`#[ts(skip)]`** \
 ///   Skips this field, omitting it from the generated *TypeScript* type.
-///   <br/><br/>
 ///
-/// - **`#[ts(optional)]`**
-///   May be applied on a struct field of type `Option<T>`. By default, such a field would turn into `t: T | null`.
+/// - **`#[ts(optional)]`** \
+///   May be applied on a struct field of type `Option<T>`. By default, such a field would turn into `t: T | null`. \
 ///   If `#[ts(optional)]` is present, `t?: T` is generated instead.
 ///   If `#[ts(optional = nullable)]` is present, `t?: T | null` is generated.
 ///   `#[ts(optional = false)]` can override the behaviour for this field if `#[ts(optional_fields)]`
 ///   is present on the struct itself.
-///   <br/><br/>
 ///
-/// - **`#[ts(flatten)]`**
+/// - **`#[ts(flatten)]`** \
 ///   Flatten this field, inlining all the keys of the field's type into its parent.
-///   <br/><br/>
 ///
 /// ### enum attributes
 ///
-/// - **`#[ts(tag = "..")]`**
-///   Changes the representation of the enum to store its tag in a separate field.
+/// - **`#[ts(tag = "..")]`** \
+///   Changes the representation of the enum to store its tag in a separate field. \
 ///   See [the serde docs](https://serde.rs/enum-representations.html) for more information.
-///   <br/><br/>
 ///
-/// - **`#[ts(content = "..")]`**
-///   Changes the representation of the enum to store its content in a separate field.
+/// - **`#[ts(content = "..")]`** \
+///   Changes the representation of the enum to store its content in a separate field. \
 ///   See [the serde docs](https://serde.rs/enum-representations.html) for more information.
-///   <br/><br/>
 ///
-/// - **`#[ts(untagged)]`**
-///   Changes the representation of the enum to not include its tag.
+/// - **`#[ts(untagged)]`** \
+///   Changes the representation of the enum to not include its tag. \
 ///   See [the serde docs](https://serde.rs/enum-representations.html) for more information.
-///   <br/><br/>
 ///
-/// - **`#[ts(rename_all = "..")]`**
-///   Rename all variants of this enum.
+/// - **`#[ts(rename_all = "..")]`** \
+///   Rename all variants of this enum. \
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
-///   <br/><br/>
 ///
-/// - **`#[ts(rename_all_fields = "..")]`**
+/// - **`#[ts(rename_all_fields = "..")]`** \
 ///   Renames the fields of all the struct variants of this enum. This is equivalent to using
 ///   `#[ts(rename_all = "..")]` on all of the enum's variants.
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
-///   <br/><br/>
 ///
-/// - **`#[ts(repr(enum))]`**
-///   Exports the enum as a TypeScript enum instead of type union
+/// - **`#[ts(repr(enum))]`** \
+///   Exports the enum as a TypeScript enum instead of type union. \
 ///   Discriminants (`= {integer}`) are included in the exported enum's variants
 ///   If `#[ts(repr(enum = name))]` is used, all variants without a discriminant will be exported
 ///   as `VariantName = "VariantName"`
-///   <br/><br/>
 ///
 /// ### enum variant attributes
 ///
-/// - **`#[ts(rename = "..")]`**
+/// - **`#[ts(rename = "..")]`** \
 ///   Renames this variant. To rename all variants of an enum, see the container attribute `#[ts(rename_all = "..")]`.
 ///   This attribute also accepts expressions, e.g `#[ts(rename = module_path!().rsplit_once("::").unwrap().1)]`.
-///   <br/><br/>
 ///
-/// - **`#[ts(skip)]`**
+/// - **`#[ts(skip)]`** \
 ///   Skip this variant, omitting it from the generated *TypeScript* type.
-///   <br/><br/>
 ///
-/// - **`#[ts(untagged)]`**
+/// - **`#[ts(untagged)]`** \
 ///   Changes this variant to be treated as if the enum was untagged, regardless of the enum's tag
 ///   and content attributes
-///   <br/><br/>
 ///
-/// - **`#[ts(rename_all = "..")]`**
-///   Renames all the fields of a struct variant.
+/// - **`#[ts(rename_all = "..")]`** \
+///   Renames all the fields of a struct variant. \
 ///   Valid values are `lowercase`, `UPPERCASE`, `camelCase`, `snake_case`, `PascalCase`, `SCREAMING_SNAKE_CASE`, "kebab-case" and "SCREAMING-KEBAB-CASE"
 ///   <br/><br/>
 pub trait TS {
     /// If this type does not have generic parameters, then `WithoutGenerics` should just be `Self`.
     /// If the type does have generic parameters, then all generic parameters must be replaced with
-    /// a dummy type, e.g `ts_rs::Dummy` or `()`.
+    /// a dummy type, e.g `ts_rs::Dummy` or `()`. \
     /// The only requirement for these dummy types is that `EXPORT_TO` must be `None`.
     ///
     /// # Example:

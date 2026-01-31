@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs"
-version = "12.0.0"
+version = "12.0.1"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -46,7 +46,7 @@ chrono = { version = "0.4", features = ["serde"] }
 tokio = { version = "1.40", features = ["sync", "rt"] }
 
 [dependencies]
-ts-rs-macros = { version = "=12.0.0", path = "../macros" }
+ts-rs-macros = { version = "=12.0.1", path = "../macros" }
 thiserror = "2"
 
 heapless = { version = ">= 0.7, < 0.9", optional = true }
