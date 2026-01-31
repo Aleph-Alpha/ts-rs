@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "lifetimes/")]
@@ -24,13 +24,15 @@ struct A<'a> {
 
 #[test]
 fn contains_borrow() {
-    assert_eq!(S::decl(), "type S = { s: string, };")
+    let cfg = Config::from_env();
+    assert_eq!(S::decl(&cfg), "type S = { s: string, };")
 }
 
 #[test]
 fn contains_borrow_type_args() {
+    let cfg = Config::from_env();
     assert_eq!(
-        A::decl(),
+        A::decl(&cfg),
         "type A = { a: Array<number>, b: Array<B<number>>, c: { [key in string]: boolean }, };"
     );
 }

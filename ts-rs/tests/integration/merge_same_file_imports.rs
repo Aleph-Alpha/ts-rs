@@ -1,7 +1,7 @@
 use std::fmt::Write;
 
 use serde::de::Expected;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export_to = "merge_same_file_imports/a.ts")]
@@ -41,15 +41,15 @@ pub struct Extra {
 
 #[test]
 fn merge_same_file_imports() {
-    EditProfile::export_all().unwrap();
-    let text = std::fs::read_to_string(EditProfile::default_output_path().unwrap()).unwrap();
+    let cfg = Config::from_env();
+    EditProfile::export_all(&cfg).unwrap();
+    let path = cfg.out_dir().join(EditProfile::output_path().unwrap());
+    let text = std::fs::read_to_string(path).unwrap();
+    let cfg = Config::from_env();
 
-    let extension = if cfg!(feature = "import-esm") {
-        ".js".to_string()
-    } else {
-        std::env::var("TS_RS_IMPORT_EXTENSION")
-            .map(|x| format!(".{x}"))
-            .unwrap_or("".into())
+    let extension = match cfg.import_extension() {
+        "" => String::new(),
+        ext => format!(".{ext}"),
     };
 
     let mut expected = String::with_capacity(text.len());
@@ -75,7 +75,7 @@ fn merge_same_file_imports() {
         writeln!(expected, "  extra: Extra;").unwrap();
         writeln!(expected, "}};").unwrap();
     } else {
-        writeln!(expected, "export {}", EditProfile::decl()).unwrap();
+        writeln!(expected, "export {}", EditProfile::decl(&cfg)).unwrap();
     }
 
     assert_eq!(text, expected)

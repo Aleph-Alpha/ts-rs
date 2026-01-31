@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #![allow(dead_code)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "struct_rename/", rename_all = "UPPERCASE")]
@@ -12,7 +12,8 @@ struct RenameAllUpper {
 
 #[test]
 fn rename_all() {
-    assert_eq!(RenameAllUpper::inline(), "{ A: number, B: number, }");
+    let cfg = Config::from_env();
+    assert_eq!(RenameAllUpper::inline(&cfg), "{ A: number, B: number, }");
 }
 
 #[derive(TS)]
@@ -25,8 +26,9 @@ struct RenameAllCamel {
 
 #[test]
 fn rename_all_camel_case() {
+    let cfg = Config::from_env();
     assert_eq!(
-        RenameAllCamel::inline(),
+        RenameAllCamel::inline(&cfg),
         "{ crc32cHash: number, b: number, alreadyCamelCase: number, }"
     );
 }
@@ -40,8 +42,9 @@ struct RenameAllPascal {
 
 #[test]
 fn rename_all_pascal_case() {
+    let cfg = Config::from_env();
     assert_eq!(
-        RenameAllPascal::inline(),
+        RenameAllPascal::inline(&cfg),
         "{ Crc32cHash: number, B: number, }"
     );
 }
@@ -59,8 +62,9 @@ struct RenameAllScreamingKebab {
 #[test]
 fn rename_all_screaming_kebab_case() {
     let rename_all = RenameAllScreamingKebab::default();
+    let cfg = Config::from_env();
     assert_eq!(
-        RenameAllScreamingKebab::inline(),
+        RenameAllScreamingKebab::inline(&cfg),
         r#"{ "CRC32C-HASH": number, "SOME-FIELD": number, "SOME-OTHER-FIELD": number, }"#
     );
 }
@@ -75,7 +79,8 @@ struct RenameSerdeSpecialChar {
 #[cfg(feature = "serde-compat")]
 #[test]
 fn serde_rename_special_char() {
-    assert_eq!(RenameSerdeSpecialChar::inline(), r#"{ "a/b": number, }"#);
+    let cfg = Config::from_env();
+    assert_eq!(RenameSerdeSpecialChar::inline(&cfg), r#"{ "a/b": number, }"#);
 }
 
 // struct-level renames
@@ -91,8 +96,9 @@ enum WithStrLiteral {
 
 #[test]
 fn test_rename_with_str_literal() {
+    let cfg = Config::from_env();
     assert_eq!(
-        WithStrLiteral::decl(),
+        WithStrLiteral::decl(&cfg),
         r#"type RenamedWithStrLiteral = "A" | "B" | "C";"#
     )
 }
@@ -108,8 +114,9 @@ enum WithStringExpression {
 
 #[test]
 fn test_rename_with_string_expression() {
+    let cfg = Config::from_env();
     assert_eq!(
-        WithStringExpression::decl(),
+        WithStringExpression::decl(&cfg),
         r#"type RenamedWithStringExpression = "A" | "B" | "C";"#
     )
 }
@@ -125,8 +132,9 @@ enum WithStrExpression {
 
 #[test]
 fn test_rename_with_str_expression() {
+    let cfg = Config::from_env();
     assert_eq!(
-        WithStrExpression::decl(),
+        WithStrExpression::decl(&cfg),
         r#"type RenamedWithStrExpression = "A" | "B" | "C";"#
     )
 }
@@ -142,8 +150,9 @@ enum RenameUsingModuleName {
 
 #[test]
 fn test_rename_using_module_name() {
+    let cfg = Config::from_env();
     assert_eq!(
-        RenameUsingModuleName::decl(),
+        RenameUsingModuleName::decl(&cfg),
         r#"type i_am_inside_module_struct_rename = "A" | "B" | "C";"#
     )
 }

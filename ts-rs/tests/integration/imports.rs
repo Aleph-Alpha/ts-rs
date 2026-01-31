@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export_to = "imports/ts_rs_test_type_a.ts")]
@@ -25,14 +25,13 @@ pub enum TestEnum {
 #[test]
 fn test_def() {
     // The only way to get access to how the imports look is to export the type and load the exported file
-    TestEnum::export_all().unwrap();
-    let text = std::fs::read_to_string(TestEnum::default_output_path().unwrap()).unwrap();
-    let extension = if cfg!(feature = "import-esm") {
-        ".js".to_string()
-    } else {
-        std::env::var("TS_RS_IMPORT_EXTENSION")
-            .map(|x| format!(".{x}"))
-            .unwrap_or("".into())
+    let cfg = Config::from_env();
+    TestEnum::export_all(&cfg).unwrap();
+    let path = cfg.out_dir().join(TestEnum::output_path().unwrap());
+    let text = std::fs::read_to_string(path).unwrap();
+    let extension = match cfg.import_extension() {
+        "" => String::new(),
+        ext => format!(".{ext}"),
     };
     let mut expected = String::with_capacity(512);
 

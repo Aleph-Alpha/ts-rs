@@ -147,7 +147,6 @@ use std::{
     },
     ops::{Range, RangeInclusive},
     path::{Path, PathBuf},
-    sync::OnceLock,
 };
 
 pub use ts_rs_macros::TS;
@@ -669,24 +668,32 @@ impl Config {
         }
     }
 
-    pub fn large_integer_type(mut self, ty: impl Into<String>) -> Self {
+    pub fn with_large_int_type(mut self, ty: impl Into<String>) -> Self {
         self.large_int_type = ty.into();
         self
     }
 
-    pub fn use_v11_hashmap(mut self) -> Self {
+    pub fn with_v11_hashmap(mut self) -> Self {
         self.use_v11_hashmap = true;
         self
     }
 
-    pub fn export_directory(mut self, dir: impl Into<PathBuf>) -> Self {
+    pub fn with_out_dir(mut self, dir: impl Into<PathBuf>) -> Self {
         self.export_dir = dir.into();
         self
     }
 
-    pub fn import_extension(mut self, ext: impl Into<String>) -> Self {
+    pub fn out_dir(&self) -> &Path {
+        &self.export_dir
+    }
+
+    pub fn with_import_extension(mut self, ext: impl Into<String>) -> Self {
         self.import_extension = ext.into();
         self
+    }
+
+    pub fn import_extension(&self) -> &str {
+        &self.import_extension
     }
 }
 
@@ -710,7 +717,7 @@ macro_rules! impl_primitives {
         impl TS for $ty {
             type WithoutGenerics = Self;
             type OptionInnerType = Self;
-            fn name(cfg: &Config) -> String { String::from($l) }
+            fn name(_: &Config) -> String { String::from($l) }
             fn inline(cfg: &Config) -> String { <Self as $crate::TS>::name(cfg) }
         }
     )*)* };

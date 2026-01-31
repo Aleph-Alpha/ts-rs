@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "export_to/with_str_to_file.ts")]
@@ -46,7 +46,8 @@ struct WithStringRefToDir;
 
 #[derive(TS)]
 #[ts(export, export_to = {
-    let dir = WithStrToFile::default_output_path().unwrap();
+    let cfg = Config::from_env();
+    let dir = cfg.out_dir().join(WithStrToFile::output_path().unwrap());
     let dir = dir.parent().unwrap();
     let file = dir.join("to_absolute_file_path.ts");
     let file = std::path::absolute(file).unwrap();
@@ -56,7 +57,8 @@ struct ToAbsoluteFilePath(WithStrToDir, WithStrToFile);
 
 #[derive(TS)]
 #[ts(export, export_to = {
-    let dir = WithStrToFile::default_output_path().unwrap();
+    let cfg = Config::from_env();
+    let dir = cfg.out_dir().join(WithStrToFile::output_path().unwrap());
     let dir = dir.parent().unwrap();
     let dir = std::path::absolute(dir).unwrap();
     let dir = dir.display();

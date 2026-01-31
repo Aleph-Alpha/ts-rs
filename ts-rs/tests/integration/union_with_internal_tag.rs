@@ -2,7 +2,7 @@
 
 #[cfg(feature = "serde-compat")]
 use serde::Serialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
@@ -40,13 +40,14 @@ enum EnumWithInternalTag2 {
 
 #[test]
 fn test_enums_with_internal_tags() {
+    let cfg = Config::from_env();
     assert_eq!(
-        EnumWithInternalTag::decl(),
+        EnumWithInternalTag::decl(&cfg),
         r#"type EnumWithInternalTag = { "type": "A", foo: string, } | { "type": "B", bar: number, };"#
     );
 
     assert_eq!(
-        EnumWithInternalTag2::decl(),
+        EnumWithInternalTag2::decl(&cfg),
         r#"type EnumWithInternalTag2 = { "type": "A" } & InnerA | { "type": "B" } & InnerB;"#
     );
 }

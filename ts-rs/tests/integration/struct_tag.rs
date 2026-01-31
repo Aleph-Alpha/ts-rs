@@ -2,7 +2,7 @@
 
 #[cfg(feature = "serde-compat")]
 use serde::Serialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
@@ -21,13 +21,14 @@ struct EmptyTaggedType {}
 
 #[test]
 fn test() {
+    let cfg = Config::from_env();
     assert_eq!(
-        TaggedType::inline(),
+        TaggedType::inline(&cfg),
         "{ \"type\": \"TaggedType\", a: number, b: number, }"
     );
 
     assert_eq!(
-        EmptyTaggedType::inline(),
+        EmptyTaggedType::inline(&cfg),
         r#"{ "type": "EmptyTaggedType", }"#
     );
 }

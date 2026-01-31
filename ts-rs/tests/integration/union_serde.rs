@@ -2,7 +2,7 @@
 
 #[cfg(feature = "serde-compat")]
 use serde::Deserialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Deserialize))]
@@ -40,17 +40,18 @@ enum Untagged {
 
 #[test]
 fn test_serde_enum() {
+    let cfg = Config::from_env();
     assert_eq!(
-        SimpleEnum::decl(),
+        SimpleEnum::decl(&cfg),
         r#"type SimpleEnum = { "kind": "A" } | { "kind": "B" };"#
     );
     assert_eq!(
-        ComplexEnum::decl(),
+        ComplexEnum::decl(&cfg),
         r#"type ComplexEnum = { "kind": "A" } | { "kind": "B", "data": { foo: string, bar: number, } } | { "kind": "W", "data": SimpleEnum } | { "kind": "F", "data": { nested: SimpleEnum, } } | { "kind": "T", "data": [number, SimpleEnum] };"#
     );
 
     assert_eq!(
-        Untagged::decl(),
+        Untagged::decl(&cfg),
         r#"type Untagged = string | number | null;"#
     )
 }

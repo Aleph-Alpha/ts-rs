@@ -11,13 +11,14 @@ struct Interface {
 #[test]
 fn free() {
     let cfg = Config::from_env();
-    assert_eq!(<[String; 4]>::inline(), "[string, string, string, string]")
+    assert_eq!(<[String; 4]>::inline(&cfg), "[string, string, string, string]")
 }
 
 #[test]
 fn interface() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Interface::inline(),
+        Interface::inline(&cfg),
         "{ a: [number, number, number, number], }"
     )
 }
@@ -27,5 +28,6 @@ fn newtype() {
     #[derive(TS)]
     struct Newtype(#[allow(dead_code)] [i32; 4]);
 
-    assert_eq!(Newtype::inline(), "[number, number, number, number]")
+    let cfg = Config::from_env();
+    assert_eq!(Newtype::inline(&cfg), "[number, number, number, number]")
 }

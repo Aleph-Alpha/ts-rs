@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 trait Driver {
     type Info;
@@ -31,6 +31,13 @@ struct Outer<D: Driver> {
 
 #[test]
 fn test_bound() {
-    assert_eq!(Outer::<TsDriver>::decl(), "type Outer = { inner: Inner, };");
-    assert_eq!(Inner::<TsDriver>::decl(), "type Inner = { info: TsInfo, };");
+    let cfg = Config::from_env();
+    assert_eq!(
+        Outer::<TsDriver>::decl(&cfg),
+        "type Outer = { inner: Inner, };"
+    );
+    assert_eq!(
+        Inner::<TsDriver>::decl(&cfg),
+        "type Inner = { info: TsInfo, };"
+    );
 }
