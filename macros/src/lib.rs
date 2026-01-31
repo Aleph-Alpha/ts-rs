@@ -93,6 +93,7 @@ impl DerivedTS {
         let generics_fn = self.generate_generics_fn(&generics);
 
         quote! {
+            #[automatically_derived]
             #impl_start {
                 #assoc_type
                 type OptionInnerType = Self;
