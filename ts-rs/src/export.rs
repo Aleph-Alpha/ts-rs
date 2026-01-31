@@ -397,7 +397,10 @@ fn import_path(cfg: &Config, from: &Path, import: &Path) -> Result<String, Expor
     };
 
     let path = path.trim_end_matches(".ts");
-    let import_extension = &cfg.import_extension;
+    let extension = match cfg.import_extension() {
+        "" => String::new(),
+        ext => format!(".{ext}"),
+    };
 
-    Ok(format!("{path}.{import_extension}"))
+    Ok(format!("{path}{extension}"))
 }

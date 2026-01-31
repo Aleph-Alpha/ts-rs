@@ -415,11 +415,11 @@ pub trait TS {
     ///     type WithoutGenerics = GenericType<ts_rs::Dummy, ts_rs::Dummy>;
     ///     type OptionInnerType = Self;
     ///     // ...
-    ///     # fn decl() -> String { todo!() }
-    ///     # fn decl_concrete() -> String { todo!() }
-    ///     # fn name() -> String { todo!() }
-    ///     # fn inline() -> String { todo!() }
-    ///     # fn inline_flattened() -> String { todo!() }
+    ///     # fn decl(_: &ts_rs::Config) -> String { todo!() }
+    ///     # fn decl_concrete(_: &ts_rs::Config) -> String { todo!() }
+    ///     # fn name(_: &ts_rs::Config) -> String { todo!() }
+    ///     # fn inline(_: &ts_rs::Config) -> String { todo!() }
+    ///     # fn inline_flattened(_: &ts_rs::Config) -> String { todo!() }
     /// }
     /// ```
     type WithoutGenerics: TS + ?Sized;
@@ -1016,6 +1016,10 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
         v.visit::<K>();
         V::visit_generics(v);
         v.visit::<V>();
+    }
+
+    fn inline_flattened(cfg: &Config) -> String {
+        format!("({})", Self::inline(cfg))
     }
 }
 
