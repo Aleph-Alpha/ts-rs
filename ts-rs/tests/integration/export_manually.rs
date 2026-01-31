@@ -2,7 +2,7 @@
 
 use std::{concat, fs};
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export_to = "export_manually/UserFile.ts")]
@@ -22,7 +22,8 @@ struct UserDir {
 
 #[test]
 fn export_manually() {
-    User::export().unwrap();
+    let cfg = Config::from_env();
+    User::export(&cfg).unwrap();
 
     let expected_content = if cfg!(feature = "format") {
         concat!(
@@ -37,14 +38,14 @@ fn export_manually() {
         )
     };
 
-    let actual_content = fs::read_to_string(User::default_output_path().unwrap()).unwrap();
-
+    let actual_content = super::read_file::<User>(&cfg);
     assert_eq!(actual_content, expected_content);
 }
 
 #[test]
 fn export_manually_dir() {
-    UserDir::export().unwrap();
+    let cfg = Config::from_env();
+    UserDir::export(&cfg).unwrap();
 
     let expected_content = if cfg!(feature = "format") {
         concat!(
@@ -59,7 +60,6 @@ fn export_manually_dir() {
         )
     };
 
-    let actual_content = fs::read_to_string(UserDir::default_output_path().unwrap()).unwrap();
-
+    let actual_content = super::read_file::<UserDir>(&cfg);
     assert_eq!(actual_content, expected_content);
 }

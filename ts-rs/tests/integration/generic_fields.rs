@@ -2,7 +2,7 @@
 
 use std::borrow::Cow;
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "generic_fields/")]
@@ -10,7 +10,8 @@ struct Newtype(Vec<Cow<'static, i32>>);
 
 #[test]
 fn newtype() {
-    assert_eq!(Newtype::inline(), "Array<number>");
+    let cfg = Config::from_env();
+    assert_eq!(Newtype::inline(&cfg), "Array<number>");
 }
 
 #[derive(TS)]
@@ -19,19 +20,22 @@ struct NewtypeNested(Vec<Vec<i32>>);
 
 #[test]
 fn newtype_nested() {
-    assert_eq!(NewtypeNested::inline(), "Array<Array<number>>");
+    let cfg = Config::from_env();
+    assert_eq!(NewtypeNested::inline(&cfg), "Array<Array<number>>");
 }
 
 #[test]
 fn alias() {
     type Alias = Vec<String>;
-    assert_eq!(Alias::inline(), "Array<string>");
+    let cfg = Config::from_env();
+    assert_eq!(Alias::inline(&cfg), "Array<string>");
 }
 
 #[test]
 fn alias_nested() {
     type Alias = Vec<Vec<String>>;
-    assert_eq!(Alias::inline(), "Array<Array<string>>");
+    let cfg = Config::from_env();
+    assert_eq!(Alias::inline(&cfg), "Array<Array<string>>");
 }
 
 #[derive(TS)]
@@ -44,8 +48,9 @@ struct Struct {
 
 #[test]
 fn named() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Struct::inline(),
+        Struct::inline(&cfg),
         "{ a: Array<string>, b: [Array<string>, Array<string>], c: [Array<string>, Array<string>, Array<string>], }"
     );
 }
@@ -60,7 +65,11 @@ struct StructNested {
 
 #[test]
 fn named_nested() {
-    assert_eq!(StructNested::inline(), "{ a: Array<Array<string>>, b: [Array<Array<string>>, Array<Array<string>>], c: [Array<Array<string>>, Array<Array<string>>, Array<Array<string>>], }");
+    let cfg = Config::from_env();
+    assert_eq!(
+        StructNested::inline(&cfg),
+        "{ a: Array<Array<string>>, b: [Array<Array<string>>, Array<Array<string>>], c: [Array<Array<string>>, Array<Array<string>>, Array<Array<string>>], }"
+    );
 }
 
 #[derive(TS)]
@@ -69,8 +78,9 @@ struct Tuple(Vec<i32>, (Vec<i32>, Vec<i32>), [Vec<i32>; 3]);
 
 #[test]
 fn tuple() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Tuple::inline(),
+        Tuple::inline(&cfg),
         "[Array<number>, [Array<number>, Array<number>], [Array<number>, Array<number>, Array<number>]]"
     );
 }
@@ -85,8 +95,9 @@ struct TupleNested(
 
 #[test]
 fn tuple_nested() {
+    let cfg = Config::from_env();
     assert_eq!(
-        TupleNested::inline(),
+        TupleNested::inline(&cfg),
         "[Array<Array<number>>, [Array<Array<number>>, Array<Array<number>>], [Array<Array<number>>, Array<Array<number>>, Array<Array<number>>]]"
     );
 }

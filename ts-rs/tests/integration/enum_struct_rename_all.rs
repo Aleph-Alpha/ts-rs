@@ -1,6 +1,6 @@
 #[cfg(feature = "serde-compat")]
 use serde::Serialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "enum_struct_rename_all/")]
@@ -23,8 +23,9 @@ pub enum TaskStatus {
 
 #[test]
 pub fn enum_struct_rename_all() {
+    let cfg = Config::from_env();
     assert_eq!(
-        TaskStatus::inline(),
+        TaskStatus::inline(&cfg),
         r#"{ "running": { startedTime: string, } } | { "terminated": { status: number, stdout: string, stderr: string, } }"#
     )
 }
@@ -52,8 +53,9 @@ pub enum TaskStatus2 {
 
 #[test]
 pub fn enum_struct_rename_all_fields() {
+    let cfg = Config::from_env();
     assert_eq!(
-        TaskStatus2::inline(),
+        TaskStatus2::inline(&cfg),
         r#"{ "Running": { "started-time": string, } } | { "Terminated": { status: number, stdout: string, stderr: string, } } | { "A": number } | { "B": [number, number] } | "C""#
     )
 }

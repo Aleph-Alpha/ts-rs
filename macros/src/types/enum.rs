@@ -65,6 +65,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
         concrete: enum_attr.concrete,
         bound: enum_attr.bound,
         ts_enum: enum_attr.repr,
+        is_enum: quote!(true),
     })
 }
 
@@ -128,7 +129,7 @@ fn format_variant(
         (Some(_), Some(_)) => syn_err_spanned!(variant; "`type` is not compatible with `as`"),
         (Some(ty), None) => {
             dependencies.push(ty);
-            quote!(<#ty as #crate_rename::TS>::name())
+            quote!(<#ty as #crate_rename::TS>::name(cfg))
         }
         (None, Some(ty)) => quote!(#ty.to_owned()),
         (None, None) => {
@@ -169,7 +170,7 @@ fn format_variant(
                         Some(type_override) => quote!(#type_override),
                         None => {
                             let ty = field_attr.type_as(&field.ty);
-                            quote!(<#ty as #crate_rename::TS>::name())
+                            quote!(<#ty as #crate_rename::TS>::name(cfg))
                         }
                     };
                     quote!(
@@ -200,7 +201,7 @@ fn format_variant(
                             Some(type_override) => quote! { #type_override },
                             None => {
                                 let ty = field_attr.type_as(&field.ty);
-                                quote!(<#ty as #crate_rename::TS>::name())
+                                quote!(<#ty as #crate_rename::TS>::name(cfg))
                             }
                         };
 
@@ -234,5 +235,6 @@ fn empty_enum(ts_name: Expr, enum_attr: EnumAttr) -> DerivedTS {
         concrete: enum_attr.concrete,
         bound: enum_attr.bound,
         ts_enum: enum_attr.repr,
+        is_enum: quote!(false),
     }
 }

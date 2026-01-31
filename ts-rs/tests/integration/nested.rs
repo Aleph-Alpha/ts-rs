@@ -2,7 +2,7 @@
 
 use std::{cell::Cell, rc::Rc, sync::Arc};
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "nested/")]
@@ -29,8 +29,9 @@ struct C {
 
 #[test]
 fn test_nested() {
+    let cfg = Config::from_env();
     assert_eq!(
-        C::inline(),
+        C::inline(&cfg),
         "{ b1: B, b2: { a1: A, a2: { x1: number, y1: number, }, }, }"
     );
 }

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "union_rename/")]
@@ -16,8 +16,9 @@ enum RenamedEnum {
 
 #[test]
 fn test_simple_enum() {
+    let cfg = Config::from_env();
     assert_eq!(
-        RenamedEnum::decl(),
+        RenamedEnum::decl(&cfg),
         r#"type SimpleEnum = "ASDF" | "BB" | "CC";"#
     )
 }
@@ -33,8 +34,9 @@ enum WithStringExpression {
 
 #[test]
 fn test_rename_with_string_expression() {
+    let cfg = Config::from_env();
     assert_eq!(
-        WithStringExpression::decl(),
+        WithStringExpression::decl(&cfg),
         r#"type RenamedWithStringExpression = "A" | "B" | "C";"#
     )
 }
@@ -50,8 +52,9 @@ enum WithStrExpression {
 
 #[test]
 fn test_rename_with_str_expression() {
+    let cfg = Config::from_env();
     assert_eq!(
-        WithStrExpression::decl(),
+        WithStrExpression::decl(&cfg),
         r#"type RenamedWithStrExpression = "A" | "B" | "C";"#
     )
 }
@@ -67,8 +70,9 @@ enum RenameUsingModuleName {
 
 #[test]
 fn test_rename_using_module_name() {
+    let cfg = Config::from_env();
     assert_eq!(
-        RenameUsingModuleName::decl(),
+        RenameUsingModuleName::decl(&cfg),
         r#"type i_am_inside_module_union_rename = "A" | "B" | "C";"#
     )
 }

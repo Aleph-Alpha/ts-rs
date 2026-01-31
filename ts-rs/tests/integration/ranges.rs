@@ -5,7 +5,7 @@ use std::{
     ops::{Range, RangeInclusive},
 };
 
-use ts_rs::{Dependency, TS};
+use ts_rs::{Config, Dependency, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "ranges/")]
@@ -23,8 +23,9 @@ struct RangeTest {
 
 #[test]
 fn range() {
+    let cfg = Config::from_env();
     assert_eq!(
-        RangeTest::decl(),
+        RangeTest::decl(&cfg),
         "type RangeTest = { \
             a: { start: number, end: number, }, \
             b: { start: string, end: string, }, \
@@ -37,11 +38,11 @@ fn range() {
         };"
     );
     assert_eq!(
-        RangeTest::dependencies()
+        RangeTest::dependencies(&cfg)
             .into_iter()
             .collect::<BTreeSet<_>>()
             .into_iter()
             .collect::<Vec<_>>(),
-        vec![Dependency::from_ty::<Inner>().unwrap(),]
+        vec![Dependency::from_ty::<Inner>(&cfg).unwrap(),]
     );
 }

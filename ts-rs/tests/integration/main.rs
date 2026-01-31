@@ -1,5 +1,9 @@
 #![allow(dead_code, unused)]
 
+use std::path::PathBuf;
+
+use ts_rs::{Config, TS};
+
 mod arrays;
 mod arrayvec;
 mod bound;
@@ -75,3 +79,13 @@ mod union_with_data;
 mod union_with_internal_tag;
 mod unit;
 mod r#unsized;
+
+// Returns the path to the file into which `T` is exported
+fn target_file<T: TS>(cfg: &Config) -> PathBuf {
+    cfg.out_dir().join(T::output_path().unwrap())
+}
+
+// Read the bindings for `T` from disk
+fn read_file<T: TS>(cfg: &Config) -> String {
+    std::fs::read_to_string(target_file::<T>(cfg)).unwrap()
+}

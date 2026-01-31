@@ -1,10 +1,24 @@
 # master
+### Breaking
+### Features
+### Fixes
+
+# 12.0.0
+### Breaking
+- Change generated type of unit structs to `Record<symbol, never>` ([#431](https://github.com/Aleph-Alpha/ts-rs/pull/431))
+- Change generated type of `HashMap` to `{ [key in K]: V }` if `K` is not an enum ([#446](https://github.com/Aleph-Alpha/ts-rs/pull/446))
+- Enable programmatic configuration of binding generation ([#460](https://github.com/Aleph-Alpha/ts-rs/pull/460))
+
 ### Features
 - Add `TS_RS_LARGE_INT` environment variable to configure binding for `i64`, `u64`, `i128`, etc. ([#448](https://github.com/Aleph-Alpha/ts-rs/pull/448))
+- Add support for `arrayvec` ([#469](https://github.com/Aleph-Alpha/ts-rs/pull/469))
+- Add support for `jiff` ([#458](https://github.com/Aleph-Alpha/ts-rs/pull/458))
 
 ### Fixes
+- Do not emit warning for `#[serde(borrow)]` ([#471](https://github.com/Aleph-Alpha/ts-rs/pull/471))
 - Do not emit warning for `#[serde(crate = "..")]` ([#447](https://github.com/Aleph-Alpha/ts-rs/pull/447))
 - Fix trait bound generation when using `#[ts(optional)]` on an `Option<Generic>` ([#454](https://github.com/Aleph-Alpha/ts-rs/pull/454))
+- Fix parsing of comma-separated serde attributes ([#466](https://github.com/Aleph-Alpha/ts-rs/pull/466))
 
 # 11.1.0
 ### Features

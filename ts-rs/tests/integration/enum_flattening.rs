@@ -2,7 +2,7 @@
 
 #[cfg(feature = "serde-compat")]
 use serde::Serialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
@@ -36,12 +36,13 @@ struct NestedExternally {
 
 #[test]
 fn externally_tagged() {
+    let cfg = Config::from_env();
     assert_eq!(
-        FooExternally::inline(),
+        FooExternally::inline(&cfg),
         r#"{ qux: number, biz: string | null, } & ({ "Baz": { a: number, a2: string, } } | { "Biz": { b: boolean, } } | { "Buz": { c: string, d: number | null, } })"#
     );
     assert_eq!(
-        NestedExternally::inline(),
+        NestedExternally::inline(&cfg),
         r#"{ u: number, qux: number, biz: string | null, } & ({ "Baz": { a: number, a2: string, } } | { "Biz": { b: boolean, } } | { "Buz": { c: string, d: number | null, } })"#
     );
 }
@@ -90,12 +91,13 @@ struct NestedAdjecently {
 
 #[test]
 fn adjacently_tagged() {
+    let cfg = Config::from_env();
     assert_eq!(
-        FooAdjecently::inline(),
+        FooAdjecently::inline(&cfg),
         r#"{ one: number, qux: string | null, } & ({ "type": "Baz", "stuff": { a: number, a2: string, } } | { "type": "Biz", "stuff": { b: boolean, } } | { c: string, d: number | null, })"#
     );
     assert_eq!(
-        NestedAdjecently::inline(),
+        NestedAdjecently::inline(&cfg),
         r#"{ u: number, one: number, qux: string | null, } & ({ "type": "Baz", "stuff": { a: number, a2: string, } } | { "type": "Biz", "stuff": { b: boolean, } } | { c: string, d: number | null, })"#
     );
 }
@@ -133,12 +135,13 @@ struct NestedInternally {
 
 #[test]
 fn internally_tagged() {
+    let cfg = Config::from_env();
     assert_eq!(
-        FooInternally::inline(),
+        FooInternally::inline(&cfg),
         r#"{ qux: string | null, } & ({ "type": "Baz", a: number, a2: string, } | { "type": "Biz", b: boolean, } | { "type": "Buz", c: string, d: number | null, })"#
     );
     assert_eq!(
-        NestedInternally::inline(),
+        NestedInternally::inline(&cfg),
         r#"{ u: number, qux: string | null, } & ({ "type": "Baz", a: number, a2: string, } | { "type": "Biz", b: boolean, } | { "type": "Buz", c: string, d: number | null, })"#
     );
 }
@@ -175,12 +178,13 @@ enum BarUntagged {
 
 #[test]
 fn untagged() {
+    let cfg = Config::from_env();
     assert_eq!(
-        FooUntagged::inline(),
+        FooUntagged::inline(&cfg),
         r#"{ one: number, } & ({ a: number, a2: string, } | { b: boolean, } | { c: string, })"#
     );
     assert_eq!(
-        NestedUntagged::inline(),
+        NestedUntagged::inline(&cfg),
         r#"{ u: number, one: number, } & ({ a: number, a2: string, } | { b: boolean, } | { c: string, })"#
     );
 }
