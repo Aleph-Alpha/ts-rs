@@ -1495,7 +1495,7 @@ dependencies = [
 
 [[package]]
 name = "ts-rs"
-version = "11.1.0"
+version = "12.0.0"
 dependencies = [
  "arrayvec",
  "bigdecimal",
@@ -1520,7 +1520,7 @@ dependencies = [
 
 [[package]]
 name = "ts-rs-macros"
-version = "11.1.0"
+version = "12.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
