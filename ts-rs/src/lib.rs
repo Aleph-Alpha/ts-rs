@@ -44,9 +44,7 @@
 //! ```
 //!
 //! ```rust
-//! use ts_rs::TS;
-//!
-//! #[derive(TS)]
+//! #[derive(ts_rs::TS)]
 //! #[ts(export)]
 //! struct User {
 //!     user_id: i32,
@@ -55,8 +53,7 @@
 //! }
 //! ```
 //!
-//! When running `cargo test` or `cargo test export_bindings`, the TypeScript bindings will be exported to the file `bindings/User.ts`
-//! and will contain the following code:
+//! When running `cargo test` or `cargo test export_bindings`, the following TypeScript type will be exported to `bindings/User.ts`:
 //!
 //! ```ts
 //! export type User = { user_id: number, first_name: string, last_name: string, };
@@ -65,15 +62,45 @@
 //! ## Features
 //! - generate type declarations from rust structs
 //! - generate union declarations from rust enums
-//! - inline types
-//! - flatten structs/types
+//! - works with generic types
+//! - compatible with serde
 //! - generate necessary imports when exporting to multiple files
-//! - serde compatibility
-//! - generic types
-//! - support for ESM imports
+//! - precise control over generated types
 //!
 //! If there's a type you're dealing with which doesn't implement `TS`, you can use either
 //! `#[ts(as = "..")]` or `#[ts(type = "..")]`, enable the appropriate cargo feature, or open a PR.
+//!
+//! ## Configuration
+//! When using `#[ts(export)]` on a type, `ts-rs` generates a test which writes the bindings for it to disk.\
+//! The following environment variables may be set to configure *how* and *where*:   
+//! | Variable                 | Description                                                         | Default      |
+//! |--------------------------|---------------------------------------------------------------------|--------------|
+//! | `TS_RS_EXPORT_DIR`       | Base directory into which bindings will be exported                 | `./bindings` |
+//! | `TS_RS_IMPORT_EXTENSION` | File extension used in `import` statements                          | *none*       |
+//! | `TS_RS_LARGE_INT`        | Binding used for large integer types (`i64`, `u64`, `i128`, `u128`) | `bigint`     |
+//!
+//! We recommend putting this configuration in the project's [config.toml](https://doc.rust-lang.org/cargo/reference/config.html#env) to make it persistent:
+//! ```toml
+//! # <project-root>/.cargo/config.toml
+//! [env]
+//! TS_RS_EXPORT_DIR = { value = "bindings", relative = true }
+//! TS_RS_LARGE_INT = "number"
+//! ```
+//!
+//! To export bindings programmatically without the use of tests, `TS::export_all`, `TS::export`, and `TS::export_to_string` can be used instead.
+//!
+//! ## Serde Compatibility
+//! With the `serde-compat` feature (enabled by default), serde attributes are parsed for enums and structs.\
+//! Supported serde attributes: `rename`, `rename-all`, `rename-all-fields`, `tag`, `content`, `untagged`, `skip`, `skip_serializing`, `skip_serializing_if`, `flatten`, `default`
+//!
+//! **Note**: `skip_serializing` and `skip_serializing_if` only have an effect when used together with
+//! `#[serde(default)]`. This ensures that the generated type is correct for both serialization and deserialization.
+//!
+//! **Note**: `skip_deserializing` is ignored. If you wish to exclude a field
+//! from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
+//!
+//! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.\
+//! We are currently waiting for [#54140](https://github.com/rust-lang/rust/issues/54140), which will improve the ergonomics arund these diagnostics.
 //!
 //! ## Cargo Features
 //! | **Feature**        | **Description**                                                                                                                                     |
@@ -96,30 +123,6 @@
 //! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                               |
 //! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                |
 //! | arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                            |
-//!
-//! ## Serde Compatibility
-//! With the `serde-compat` feature (enabled by default), serde attributes are parsed for enums and structs.\
-//! Supported serde attributes: `rename`, `rename-all`, `rename-all-fields`, `tag`, `content`, `untagged`, `skip`, `skip_serializing`, `skip_serializing_if`, `flatten`, `default`
-//!
-//! **Note**: `skip_serializing` and `skip_serializing_if` only have an effect when used together with
-//! `#[serde(default)]`. This ensures that the generated type is correct for both serialization and deserialization.
-//!
-//! **Note**: `skip_deserializing` is ignored. If you wish to exclude a field
-//! from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
-//!
-//! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.\
-//! We are currently waiting for [#54140](https://github.com/rust-lang/rust/issues/54140), which will improve the ergonomics arund these diagnostics.
-//!
-//! ## Configuration
-//! When using `#[ts(export)]` on a type, `ts-rs` generates a test which writes the bindings for it to disk.\
-//! The following environment variables may be set to configure *how* and *where*:   
-//! | Variable                 | Description                                                         | Default      |
-//! |--------------------------|---------------------------------------------------------------------|--------------|
-//! | `TS_RS_EXPORT_DIR`       | Base directory into which bindings will be exported                 | `./bindings` |
-//! | `TS_RS_IMPORT_EXTENSION` | File extension used in `import` statements                          | *none*       |
-//! | `TS_RS_LARGE_INT`        | Binding used for large integer types (`i64`, `u64`, `i128`, `u128`) | `bigint`     |
-//!
-//! To export bindings programmatically without the use of tests, `TS::export_all`, `TS::export`, and `TS::export_to_string` can be used instead.
 //!
 //! ## Contributing
 //! Contributions are always welcome!
