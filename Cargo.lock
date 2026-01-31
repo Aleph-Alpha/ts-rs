@@ -1492,6 +1492,7 @@ dependencies = [
 name = "ts-rs"
 version = "11.1.0"
 dependencies = [
+ "arrayvec",
  "bigdecimal",
  "bson",
  "bytes",

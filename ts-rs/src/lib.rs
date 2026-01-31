@@ -92,6 +92,7 @@
 //! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                  |
 //! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
 //! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                                                                      |
+//! | arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                                                                                  |
 //!
 //! <br/>
 //!
@@ -1174,6 +1175,12 @@ impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for indexmap::IndexMap<K, V
 
 #[cfg(feature = "heapless-impl")]
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for heapless::Vec<T, N>);
+
+#[cfg(feature = "arrayvec-impl")]
+impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for arrayvec::ArrayVec<T, N>);
+
+#[cfg(feature = "arrayvec-impl")]
+impl_shadow!(as String: impl<const N: usize> TS for arrayvec::ArrayString<N>);
 
 #[cfg(feature = "semver-impl")]
 impl_primitives! { semver::Version => "string" }
