@@ -99,7 +99,7 @@
 //! If there's a type you're dealing with which doesn't implement `TS`, use either
 //! `#[ts(as = "..")]` or `#[ts(type = "..")]`, or open a PR.
 //!
-//! ## `serde` compatability
+//! ## `serde` compatibility
 //! With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
 //! Supported serde attributes:
 //! - `rename`
@@ -422,6 +422,7 @@ pub trait TS {
     ///     # fn name() -> String { todo!() }
     ///     # fn inline() -> String { todo!() }
     ///     # fn inline_flattened() -> String { todo!() }
+    ///     # fn optional_inline_flattened() -> String { todo!() }
     /// }
     /// ```
     type WithoutGenerics: TS + ?Sized;
@@ -432,6 +433,8 @@ pub trait TS {
 
     #[doc(hidden)]
     const IS_OPTION: bool = false;
+    #[doc(hidden)]
+    const IS_ENUM: bool = false;
 
     /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
     /// automatically read from your doc comments or `#[doc = ".."]` attributes
@@ -474,6 +477,10 @@ pub trait TS {
     /// Flatten a type declaration.
     /// This function will panic if the type cannot be flattened.
     fn inline_flattened() -> String;
+
+    /// Flatten an optional type declaration.
+    /// This function will panic if the type cannot be flattened.
+    fn optional_inline_flattened() -> String;
 
     /// Iterates over all dependency of this type.
     fn visit_dependencies(_: &mut impl TypeVisitor)
@@ -687,6 +694,7 @@ macro_rules! impl_primitives {
             fn name() -> String { String::from($l) }
             fn inline() -> String { <Self as $crate::TS>::name() }
             fn inline_flattened() -> String { panic!("{} cannot be flattened", <Self as $crate::TS>::name()) }
+            fn optional_inline_flattened() -> String { panic!("{} cannot be flattened", <Self as $crate::TS>::name()) }
             fn decl() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
             fn decl_concrete() -> String { panic!("{} cannot be declared", <Self as $crate::TS>::name()) }
         }
@@ -714,6 +722,7 @@ macro_rules! impl_tuples {
                 )*
             }
             fn inline_flattened() -> String { panic!("tuple cannot be flattened") }
+            fn optional_inline_flattened() -> String { panic!("tuple cannot be flattened") }
             fn decl() -> String { panic!("tuple cannot be declared") }
             fn decl_concrete() -> String { panic!("tuple cannot be declared") }
         }
@@ -734,6 +743,7 @@ macro_rules! impl_wrapper {
             fn name() -> String { <T as $crate::TS>::name() }
             fn inline() -> String { <T as $crate::TS>::inline() }
             fn inline_flattened() -> String { <T as $crate::TS>::inline_flattened() }
+            fn optional_inline_flattened() -> String { <T as $crate::TS>::optional_inline_flattened() }
             fn visit_dependencies(v: &mut impl TypeVisitor)
             where
                 Self: 'static,
@@ -764,6 +774,7 @@ macro_rules! impl_shadow {
             fn name() -> String { <$s as $crate::TS>::name() }
             fn inline() -> String { <$s as $crate::TS>::inline() }
             fn inline_flattened() -> String { <$s as $crate::TS>::inline_flattened() }
+            fn optional_inline_flattened() -> String { <$s as $crate::TS>::optional_inline_flattened() }
             fn visit_dependencies(v: &mut impl $crate::TypeVisitor)
             where
                 Self: 'static,
@@ -820,7 +831,15 @@ impl<T: TS> TS for Option<T> {
     }
 
     fn inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+        if <T as crate::TS>::IS_ENUM {
+            <T as crate::TS>::optional_inline_flattened()
+        } else {
+            <T as crate::TS>::inline_flattened()
+        }
+    }
+
+    fn optional_inline_flattened() -> String {
+        <T as crate::TS>::optional_inline_flattened()
     }
 }
 
@@ -873,6 +892,10 @@ impl<T: TS, E: TS> TS for Result<T, E> {
     fn inline_flattened() -> String {
         panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
+
+    fn optional_inline_flattened() -> String {
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+    }
 }
 
 impl<T: TS> TS for Vec<T> {
@@ -915,6 +938,10 @@ impl<T: TS> TS for Vec<T> {
     }
 
     fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+    }
+
+    fn optional_inline_flattened() -> String {
         panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
@@ -979,6 +1006,10 @@ impl<T: TS, const N: usize> TS for [T; N] {
     fn inline_flattened() -> String {
         panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
+
+    fn optional_inline_flattened() -> String {
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+    }
 }
 
 impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
@@ -1038,6 +1069,10 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
             <V as crate::TS>::inline()
         )
     }
+
+    fn optional_inline_flattened() -> String {
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+    }
 }
 
 impl<I: TS> TS for Range<I> {
@@ -1080,6 +1115,10 @@ impl<I: TS> TS for Range<I> {
     }
 
     fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+    }
+
+    fn optional_inline_flattened() -> String {
         panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
@@ -1208,6 +1247,10 @@ impl TS for Dummy {
     }
 
     fn inline_flattened() -> String {
+        panic!("{} cannot be flattened", <Self as crate::TS>::name())
+    }
+
+    fn optional_inline_flattened() -> String {
         panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
