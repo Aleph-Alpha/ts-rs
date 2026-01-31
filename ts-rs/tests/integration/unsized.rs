@@ -2,7 +2,7 @@
 
 use std::{borrow::Cow, rc::Rc, sync::Arc};
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "unsized/")]
@@ -15,8 +15,9 @@ struct S<'a> {
 
 #[test]
 fn contains_str() {
+    let cfg = Config::from_env();
     assert_eq!(
-        S::decl(),
+        S::decl(&cfg),
         "type S = { b: string, c: string, r: string, a: string, };"
     )
 }

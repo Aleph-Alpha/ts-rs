@@ -1,5 +1,5 @@
 #![cfg(feature = "arrayvec-impl")]
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "arrayvec/")]
@@ -11,5 +11,6 @@ struct ImStackAllocated {
 
 #[test]
 fn arrayvec() {
-    assert_eq!(ImStackAllocated::decl(), "type ImStackAllocated = { smol_vec: Array<number>, name: string, nested: Array<Array<string>>, };")
+    let cfg = Config::from_env();
+    assert_eq!(ImStackAllocated::decl(&cfg), "type ImStackAllocated = { smol_vec: Array<number>, name: string, nested: Array<Array<string>>, };")
 }

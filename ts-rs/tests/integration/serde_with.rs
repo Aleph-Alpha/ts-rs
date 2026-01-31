@@ -1,7 +1,7 @@
 #![allow(unused, dead_code, clippy::disallowed_names)]
 
 use serde::{Deserialize, Serialize};
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(Serialize, Deserialize, TS)]
 struct Foo {
@@ -38,7 +38,8 @@ fn no_serde_compat() {
         a: Foo,
     }
 
-    assert_eq!(Baz::inline(), "{ a: Foo, }")
+    let cfg = Config::from_env();
+    assert_eq!(Baz::inline(&cfg), "{ a: Foo, }")
 }
 
 #[test]
@@ -50,7 +51,8 @@ fn serde_compat_as() {
         a: Foo,
     }
 
-    assert_eq!(Baz::inline(), "{ a: Bar, }")
+    let cfg = Config::from_env();
+    assert_eq!(Baz::inline(&cfg), "{ a: Bar, }")
 }
 
 #[test]
@@ -62,5 +64,6 @@ fn serde_compat_type() {
         a: Foo,
     }
 
-    assert_eq!(Baz::inline(), "{ a: { a: number }, }")
+    let cfg = Config::from_env();
+    assert_eq!(Baz::inline(&cfg), "{ a: { a: number }, }")
 }

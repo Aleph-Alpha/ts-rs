@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "union/")]
@@ -16,14 +16,15 @@ enum SimpleEnum {
 fn test_empty() {
     #[derive(TS)]
     enum Empty {}
-
-    assert_eq!(Empty::decl(), "type Empty = never;")
+    let cfg = Config::from_env();
+    assert_eq!(Empty::decl(&cfg), "type Empty = never;")
 }
 
 #[test]
 fn test_simple_enum() {
+    let cfg = Config::from_env();
     assert_eq!(
-        SimpleEnum::decl(),
+        SimpleEnum::decl(&cfg),
         r#"type SimpleEnum = "asdf" | "B" | "C" | "D";"#
     )
 }
