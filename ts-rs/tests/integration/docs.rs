@@ -156,9 +156,7 @@ fn export_a() {
         )
     };
 
-    let path = cfg.out_dir().join(A::output_path().unwrap());
-    let actual_content = fs::read_to_string(path).unwrap();
-
+    let actual_content = super::read_file::<A>(&cfg);
     assert_eq!(actual_content, expected_content);
 }
 
@@ -205,9 +203,7 @@ fn export_b() {
         )
     };
 
-    let path = cfg.out_dir().join(B::output_path().unwrap());
-    let actual_content = fs::read_to_string(path).unwrap();
-
+    let actual_content = super::read_file::<B>(&cfg);
     assert_eq!(actual_content, expected_content);
 }
 
@@ -227,9 +223,7 @@ fn export_c() {
         "export type C = Record<symbol, never>;\n",
     );
 
-    let path = cfg.out_dir().join(C::output_path().unwrap());
-    let actual_content = fs::read_to_string(path).unwrap();
-
+    let actual_content = super::read_file::<C>(&cfg);
     assert_eq!(actual_content, expected_content);
 }
 
@@ -249,9 +243,7 @@ fn export_d() {
             "export type D = null;\n",
         );
 
-    let path = cfg.out_dir().join(D::output_path().unwrap());
-    let actual_content = fs::read_to_string(path).unwrap();
-
+    let actual_content = super::read_file::<D>(&cfg);
     assert_eq!(actual_content, expected_content);
 }
 
@@ -271,9 +263,7 @@ fn export_e() {
             "export type E = never;\n",
         );
 
-    let path = cfg.out_dir().join(E::output_path().unwrap());
-    let actual_content = fs::read_to_string(path).unwrap();
-
+    let actual_content = super::read_file::<E>(&cfg);
     assert_eq!(actual_content, expected_content);
 }
 
@@ -322,9 +312,7 @@ fn export_f() {
         )
     };
 
-    let path = cfg.out_dir().join(F::output_path().unwrap());
-    let actual_content = fs::read_to_string(path).unwrap();
-
+    let actual_content = super::read_file::<F>(&cfg);
     assert_eq!(actual_content, expected_content);
 }
 
@@ -373,9 +361,7 @@ fn export_g() {
         )
     };
 
-    let path = cfg.out_dir().join(G::output_path().unwrap());
-    let actual_content = fs::read_to_string(path).unwrap();
-
+    let actual_content = super::read_file::<G>(&cfg);
     assert_eq!(actual_content, expected_content);
 }
 
@@ -406,9 +392,7 @@ fn export_h() {
         )
     };
 
-    let path = cfg.out_dir().join(H::output_path().unwrap());
-    let actual_content = fs::read_to_string(path).unwrap();
-
+    let actual_content = super::read_file::<H>(&cfg);
     assert_eq!(actual_content, expected_content);
 }
 
@@ -452,8 +436,6 @@ fn export_i() {
         )
     };
 
-    let path = cfg.out_dir().join(I::output_path().unwrap());
-    let actual_content = fs::read_to_string(path).unwrap();
-
+    let actual_content = super::read_file::<I>(&cfg);
     assert_eq!(actual_content, expected_content);
 }

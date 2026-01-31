@@ -72,6 +72,9 @@
 //! - generic types
 //! - support for ESM imports
 //!
+//! If there's a type you're dealing with which doesn't implement `TS`, you can use either
+//! `#[ts(as = "..")]` or `#[ts(type = "..")]`, enable the appropriate cargo feature, or open a PR.
+//!
 //! ## cargo features
 //! | **Feature**        | **Description**                                                                                                                                                                                           |
 //! |:-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -94,9 +97,6 @@
 //! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                                                                      |
 //!
 //! <br/>
-//!
-//! If there's a type you're dealing with which doesn't implement `TS`, use either
-//! `#[ts(as = "..")]` or `#[ts(type = "..")]`, or open a PR.
 //!
 //! ## `serde` compatability
 //! With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
@@ -121,13 +121,16 @@
 //!
 //! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
 //!
-//! ## Environment variables
+//! ## Configuration
+//! When using `#[ts(export)]` on a type, `ts-rs` generates a test which writes the bindings for it to disk.  
+//! The following environment variables may be set to configure *how* and *where*:   
 //! | Variable                 | Description                                                         | Default      |
 //! |--------------------------|---------------------------------------------------------------------|--------------|
 //! | `TS_RS_EXPORT_DIR`       | Base directory into which bindings will be exported                 | `./bindings` |
 //! | `TS_RS_IMPORT_EXTENSION` | File extension used in `import` statements                          | *none*       |
 //! | `TS_RS_LARGE_INT`        | Binding used for large integer types (`i64`, `u64`, `i128`, `u128`) | `bigint`     |
 //!
+//! To export bindings programmatically without the use of tests, `TS::export_all`, `TS::export`, and `TS::export_to_string` can be used instead.
 //!
 //! ## Contributing
 //! Contributions are always welcome!
@@ -181,19 +184,12 @@ mod tokio;
 /// `#[ts(export_to = "...")]`. By default, the filename will be derived from the name of the type.
 ///
 /// If, for some reason, you need to do this during runtime or cannot use `#[ts(export)]`, bindings
-/// can be exported manually:
-///
-/// | Function              | Includes Dependencies | To                 |
-/// |-----------------------|-----------------------|--------------------|
-/// | [`TS::export`]        | ❌                    | `TS_RS_EXPORT_DIR` |
-/// | [`TS::export_all`]    | ✔️                    | `TS_RS_EXPORT_DIR` |
-/// | [`TS::export_all_to`] | ✔️                    | _custom_           |
+/// can be exported manually using [`TS::export_all`], [`TS::export`], or [`TS::export_to_string`].
 ///
 /// ### serde compatibility
-/// By default, the feature `serde-compat` is enabled.
-/// ts-rs then parses serde attributes and adjusts the generated typescript bindings accordingly.
+/// With the `serde-compat` feature enabled (default), ts-rs parses serde attributes and adjusts the generated typescript bindings accordingly.  
 /// Not all serde attributes are supported yet - if you use an unsupported attribute, you'll see a
-/// warning.
+/// warning. These warnings can be disabled by enabling the `no-serde-warnings` cargo feature.
 ///
 /// ### container attributes
 /// attributes applicable for both structs and enums
@@ -415,11 +411,8 @@ pub trait TS {
     ///     type WithoutGenerics = GenericType<ts_rs::Dummy, ts_rs::Dummy>;
     ///     type OptionInnerType = Self;
     ///     // ...
-    ///     # fn decl(_: &ts_rs::Config) -> String { todo!() }
-    ///     # fn decl_concrete(_: &ts_rs::Config) -> String { todo!() }
     ///     # fn name(_: &ts_rs::Config) -> String { todo!() }
     ///     # fn inline(_: &ts_rs::Config) -> String { todo!() }
-    ///     # fn inline_flattened(_: &ts_rs::Config) -> String { todo!() }
     /// }
     /// ```
     type WithoutGenerics: TS + ?Sized;
@@ -618,6 +611,7 @@ impl Dependency {
     }
 }
 
+/// Configuration that affects the generation of TypeScript bindings and how they are exported.  
 pub struct Config {
     // TS_RS_LARGE_INT
     large_int_type: String,
@@ -626,7 +620,8 @@ pub struct Config {
     // TS_RS_EXPORT_DIR
     export_dir: PathBuf,
     // TS_RS_IMPORT_EXTENSION
-    import_extension: String,
+    import_extension: Option<String>,
+    array_tuple_limit: usize,
 }
 
 impl Default for Config {
@@ -635,65 +630,115 @@ impl Default for Config {
             large_int_type: "bigint".to_owned(),
             use_v11_hashmap: false,
             export_dir: "./bindings".into(),
-            import_extension: "".to_owned(),
+            import_extension: None,
+            array_tuple_limit: 64,
         }
     }
 }
 
 impl Config {
+    /// Creates a new `Config` with default values.  
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Creates a new `Config` with values read from environment variables.
+    ///
+    /// | Variable                 | Description                                                         | Default      |
+    /// |--------------------------|---------------------------------------------------------------------|--------------|
+    /// | `TS_RS_EXPORT_DIR`       | Base directory into which bindings will be exported                 | `./bindings` |
+    /// | `TS_RS_IMPORT_EXTENSION` | File extension used in `import` statements                          | *none*       |
+    /// | `TS_RS_LARGE_INT`        | Binding used for large integer types (`i64`, `u64`, `i128`, `u128`) | `bigint`     |
     pub fn from_env() -> Self {
-        let large_int_type =
-            std::env::var("TS_RS_LARGE_INT").unwrap_or_else(|_| "bigint".to_owned());
-        let use_v11_hashmap = std::env::var("TS_RS_USE_V11_HASHMAP")
-            .ok()
-            .as_deref()
-            .map(str::trim)
-            .map(|var| ["1", "true", "on", "yes"].contains(&var))
-            .unwrap_or(false);
-        let export_dir = match std::env::var("TS_RS_EXPORT_DIR") {
-            Ok(dir) => PathBuf::from(dir),
-            Err(..) => PathBuf::from("./bindings"),
-        };
-        let import_extension = std::env::var("TS_RS_IMPORT_EXTENSION").unwrap_or_default();
+        let mut cfg = Self::default();
 
-        Config {
-            large_int_type,
-            use_v11_hashmap,
-            export_dir,
-            import_extension,
+        if let Ok(ty) = std::env::var("TS_RS_LARGE_INT") {
+            cfg = cfg.with_large_int(ty);
         }
+
+        if let Ok(dir) = std::env::var("TS_RS_EXPORT_DIR") {
+            cfg = cfg.with_out_dir(dir);
+        }
+
+        if let Ok(ext) = std::env::var("TS_RS_IMPORT_EXTENSION") {
+            if !ext.trim().is_empty() {
+                cfg = cfg.with_import_extension(Some(ext));
+            }
+        }
+
+        #[allow(deprecated)]
+        if let Ok("1" | "true" | "on" | "yes") = std::env::var("TS_RS_USE_V11_HASHMAP").as_deref() {
+            cfg = cfg.with_v11_hashmap();
+        }
+
+        cfg
     }
 
-    pub fn with_large_int_type(mut self, ty: impl Into<String>) -> Self {
+    /// Sets the TypeScript type used to represent large integers.
+    /// Here, "large" refers to integers that can not be losslessly stored using the 64-bit "binary64" IEEE 754 float format used by JavaScript.  
+    /// Those include `u64`, `i64, `u128`, and `i128`.
+    ///
+    /// Default: `"bigint"`
+    pub fn with_large_int(mut self, ty: impl Into<String>) -> Self {
         self.large_int_type = ty.into();
         self
     }
 
+    /// Returns the TypeScript type used to represent large integers.
+    pub fn large_int(&self) -> &str {
+        &self.large_int_type
+    }
+
+    /// When enabled, `HashMap<K, V>` and similar types will always be translated to `{ [key in K]?: V }`.  
+    /// Normally, with this option disabled, `{ [key in K]: V }` is generated instead, unless the key `K` is an enum.  
+    /// This option is only intended to aid migration and will be removed in a future release.
+    ///
+    /// Default: disabled
+    #[deprecated = "this option is merely meant to aid migration to v12 and will be removed in a future release"]
     pub fn with_v11_hashmap(mut self) -> Self {
         self.use_v11_hashmap = true;
         self
     }
 
+    /// Sets the output directory into which bindings will be exported.  
+    /// This affects `TS::export`, `TS::export_all`, and the automatic export of types annotated with `#[ts(export)]` when `cargo test` is run.
+    ///
+    /// Default: `./bindings`
     pub fn with_out_dir(mut self, dir: impl Into<PathBuf>) -> Self {
         self.export_dir = dir.into();
         self
     }
 
+    /// Returns the output directory into which bindings will be exported.
     pub fn out_dir(&self) -> &Path {
         &self.export_dir
     }
 
-    pub fn with_import_extension(mut self, ext: impl Into<String>) -> Self {
-        self.import_extension = ext.into();
+    /// Sets the file extension used for `import` statements in generated TypeScript files.  
+    ///
+    /// Default: `None`
+    pub fn with_import_extension(mut self, ext: Option<impl Into<String>>) -> Self {
+        self.import_extension = ext.map(Into::into);
         self
     }
 
-    pub fn import_extension(&self) -> &str {
-        &self.import_extension
+    /// Returns the file extension used for `import` statements in generated TypeScript files.  
+    pub fn import_extension(&self) -> Option<&str> {
+        self.import_extension.as_deref()
+    }
+
+    /// Sets the maximum size of arrays (`[T; N]`) up to which they are treated as TypeScript tuples (`[T, T, ...]`).  
+    /// Arrays beyond this size will instead result in a TypeScript array (`Array<T>`).
+    ///
+    /// Default: `64`
+    pub fn with_array_tuple_limit(mut self, limit: usize) -> Self {
+        self.array_tuple_limit = limit;
+        self
+    }
+
+    /// Returns the maximum size of arrays (`[T; N]`) up to which they are treated as TypeScript tuples (`[T, T, ...]`).  
+    pub fn array_tuple_limit(&self) -> usize {
+        self.array_tuple_limit
     }
 }
 
@@ -922,14 +967,12 @@ impl<T: TS> TS for Vec<T> {
     }
 }
 
-// Arrays longer than this limit will be emitted as Array<T>
-const ARRAY_TUPLE_LIMIT: usize = 64;
 impl<T: TS, const N: usize> TS for [T; N] {
     type WithoutGenerics = [Dummy; N];
     type OptionInnerType = Self;
 
     fn name(cfg: &Config) -> String {
-        if N > ARRAY_TUPLE_LIMIT {
+        if N > cfg.array_tuple_limit() {
             return <Vec<T> as crate::TS>::name(cfg);
         }
 
@@ -943,7 +986,7 @@ impl<T: TS, const N: usize> TS for [T; N] {
     }
 
     fn inline(cfg: &Config) -> String {
-        if N > ARRAY_TUPLE_LIMIT {
+        if N > cfg.array_tuple_limit() {
             return <Vec<T> as crate::TS>::inline(cfg);
         }
 

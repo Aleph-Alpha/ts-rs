@@ -38,9 +38,7 @@ fn export_manually() {
         )
     };
 
-    let path = cfg.out_dir().join(User::output_path().unwrap());
-    let actual_content = fs::read_to_string(path).unwrap();
-
+    let actual_content = super::read_file::<User>(&cfg);
     assert_eq!(actual_content, expected_content);
 }
 
@@ -62,8 +60,6 @@ fn export_manually_dir() {
         )
     };
 
-    let path = cfg.out_dir().join(UserDir::output_path().unwrap());
-    let actual_content = fs::read_to_string(path).unwrap();
-
+    let actual_content = super::read_file::<UserDir>(&cfg);
     assert_eq!(actual_content, expected_content);
 }

@@ -44,10 +44,10 @@ enum Enum {
 #[test]
 fn issue_232() {
     let cfg = Config::from_env();
-    let extension = match cfg.import_extension() {
-        "" => String::new(),
-        ext => format!(".{ext}"),
-    };
+    let extension = cfg
+        .import_extension()
+        .map(|ext| format!(".{ext}"))
+        .unwrap_or_default();
 
     println!("{}", StateInlinedVec::export_to_string(&cfg).unwrap());
     assert_eq!(
