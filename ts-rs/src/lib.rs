@@ -75,54 +75,42 @@
 //! If there's a type you're dealing with which doesn't implement `TS`, you can use either
 //! `#[ts(as = "..")]` or `#[ts(type = "..")]`, enable the appropriate cargo feature, or open a PR.
 //!
-//! ## cargo features
-//! | **Feature**        | **Description**                                                                                                                                                                                           |
-//! |:-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-//! | serde-compat       | **Enabled by default** <br/>See the *"serde compatibility"* section below for more information.                                                                                                           |
-//! | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                                                                                |
-//! | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.                                                        |
-//! | serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                                                                                |
-//! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                                                                                    |
-//! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                                                                                |
-//! | url-impl           | Implement `TS` for types from *url*                                                                                                                                                                       |
-//! | uuid-impl          | Implement `TS` for types from *uuid*                                                                                                                                                                      |
-//! | bson-uuid-impl     | Implement `TS` for *bson::oid::ObjectId* and *bson::uuid*                                                                                                                                                 |
-//! | bytes-impl         | Implement `TS` for types from *bytes*                                                                                                                                                                     |
-//! | indexmap-impl      | Implement `TS` for types from *indexmap*                                                                                                                                                                  |
-//! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                                                                             |
-//! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                                                                                  |
-//! | semver-impl        | Implement `TS` for types from *semver*                                                                                                                                                                    |
-//! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                                                                                  |
-//! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                                                                                     |
-//! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                                                                      |
+//! ## Cargo Features
+//! | **Feature**        | **Description**                                                                                                                                     |
+//! |:-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+//! | serde-compat       | **Enabled by default** <br/>See the *"serde compatibility"* section below for more information.                                                     |
+//! | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                          |
+//! | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.  |
+//! | serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                          |
+//! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                              |
+//! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                          |
+//! | url-impl           | Implement `TS` for types from *url*                                                                                                                 |
+//! | uuid-impl          | Implement `TS` for types from *uuid*                                                                                                                |
+//! | bson-uuid-impl     | Implement `TS` for *bson::oid::ObjectId* and *bson::uuid*                                                                                           |
+//! | bytes-impl         | Implement `TS` for types from *bytes*                                                                                                               |
+//! | indexmap-impl      | Implement `TS` for types from *indexmap*                                                                                                            |
+//! | ordered-float-impl | Implement `TS` for types from *ordered_float*                                                                                                       |
+//! | heapless-impl      | Implement `TS` for types from *heapless*                                                                                                            |
+//! | semver-impl        | Implement `TS` for types from *semver*                                                                                                              |
+//! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                            |
+//! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                               |
+//! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                |
 //!
-//! <br/>
+//! ## Serde Compatibility
+//! With the `serde-compat` feature (enabled by default), serde attributes are parsed for enums and structs.\
+//! Supported serde attributes: `rename`, `rename-all`, `rename-all-fields`, `tag`, `content`, `untagged`, `skip`, `skip_serializing`, `skip_serializing_if`, `flatten`, `default`
 //!
-//! ## `serde` compatability
-//! With the `serde-compat` feature (enabled by default), serde attributes can be parsed for enums and structs.
-//! Supported serde attributes:
-//! - `rename`
-//! - `rename-all`
-//! - `rename-all-fields`
-//! - `tag`
-//! - `content`
-//! - `untagged`
-//! - `skip`
-//! - `skip_serializing`
-//! - `skip_serializing_if`
-//! - `flatten`
-//! - `default`
+//! **Note**: `skip_serializing` and `skip_serializing_if` only have an effect when used together with
+//! `#[serde(default)]`. This ensures that the generated type is correct for both serialization and deserialization.
 //!
-//! Note: `skip_serializing` and `skip_serializing_if` only have an effect when used together with
-//! `#[serde(default)]`.
-//!
-//! Note: `skip_deserializing` is ignored. If you wish to exclude a field
+//! **Note**: `skip_deserializing` is ignored. If you wish to exclude a field
 //! from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 //!
-//! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.
+//! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.\
+//! We are currently waiting for [#54140](https://github.com/rust-lang/rust/issues/54140), which will improve the ergonomics arund these diagnostics.
 //!
 //! ## Configuration
-//! When using `#[ts(export)]` on a type, `ts-rs` generates a test which writes the bindings for it to disk.  
+//! When using `#[ts(export)]` on a type, `ts-rs` generates a test which writes the bindings for it to disk.\
 //! The following environment variables may be set to configure *how* and *where*:   
 //! | Variable                 | Description                                                         | Default      |
 //! |--------------------------|---------------------------------------------------------------------|--------------|
