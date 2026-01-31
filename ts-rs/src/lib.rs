@@ -717,8 +717,8 @@ macro_rules! impl_primitives {
         impl TS for $ty {
             type WithoutGenerics = Self;
             type OptionInnerType = Self;
-            fn name(_: &Config) -> String { String::from($l) }
-            fn inline(cfg: &Config) -> String { <Self as $crate::TS>::name(cfg) }
+            fn name(_: &$crate::Config) -> String { String::from($l) }
+            fn inline(cfg: &$crate::Config) -> String { <Self as $crate::TS>::name(cfg) }
         }
     )*)* };
 }
@@ -729,8 +729,8 @@ macro_rules! impl_large_integers {
         impl TS for $ty {
             type WithoutGenerics = Self;
             type OptionInnerType = Self;
-            fn name(cfg: &Config) -> String { cfg.large_int_type.clone() }
-            fn inline(cfg: &Config) -> String { <Self as $crate::TS>::name(cfg) }
+            fn name(cfg: &$crate::Config) -> String { cfg.large_int_type.clone() }
+            fn inline(cfg: &$crate::Config) -> String { <Self as $crate::TS>::name(cfg) }
         }
     )* };
 }
@@ -741,10 +741,10 @@ macro_rules! impl_tuples {
         impl<$($i: TS),*> TS for ($($i,)*) {
             type WithoutGenerics = (Dummy, );
             type OptionInnerType = Self;
-            fn name(cfg: &Config) -> String {
+            fn name(cfg: &$crate::Config) -> String {
                 format!("[{}]", [$(<$i as $crate::TS>::name(cfg)),*].join(", "))
             }
-            fn inline(_: &Config) -> String {
+            fn inline(_: &$crate::Config) -> String {
                 panic!("tuple cannot be inlined!");
             }
             fn visit_generics(v: &mut impl TypeVisitor)
@@ -756,9 +756,9 @@ macro_rules! impl_tuples {
                     <$i as $crate::TS>::visit_generics(v);
                 )*
             }
-            fn inline_flattened(_: &Config) -> String { panic!("tuple cannot be flattened") }
-            fn decl(_: &Config) -> String { panic!("tuple cannot be declared") }
-            fn decl_concrete(_: &Config) -> String { panic!("tuple cannot be declared") }
+            fn inline_flattened(_: &$crate::Config) -> String { panic!("tuple cannot be flattened") }
+            fn decl(_: &$crate::Config) -> String { panic!("tuple cannot be declared") }
+            fn decl_concrete(_: &$crate::Config) -> String { panic!("tuple cannot be declared") }
         }
     };
     ( $i2:ident $(, $i:ident)* ) => {
@@ -774,9 +774,9 @@ macro_rules! impl_wrapper {
         $($t)* {
             type WithoutGenerics = Self;
             type OptionInnerType = Self;
-            fn name(cfg: &Config) -> String { <T as $crate::TS>::name(cfg) }
-            fn inline(cfg: &Config) -> String { <T as $crate::TS>::inline(cfg) }
-            fn inline_flattened(cfg: &Config) -> String { <T as $crate::TS>::inline_flattened(cfg) }
+            fn name(cfg: &$crate::Config) -> String { <T as $crate::TS>::name(cfg) }
+            fn inline(cfg: &$crate::Config) -> String { <T as $crate::TS>::inline(cfg) }
+            fn inline_flattened(cfg: &$crate::Config) -> String { <T as $crate::TS>::inline_flattened(cfg) }
             fn visit_dependencies(v: &mut impl TypeVisitor)
             where
                 Self: 'static,
@@ -791,8 +791,8 @@ macro_rules! impl_wrapper {
                 <T as $crate::TS>::visit_generics(v);
                 v.visit::<T>();
             }
-            fn decl(_: &Config) -> String { panic!("wrapper type cannot be declared") }
-            fn decl_concrete(_: &Config) -> String { panic!("wrapper type cannot be declared") }
+            fn decl(_: &$crate::Config) -> String { panic!("wrapper type cannot be declared") }
+            fn decl_concrete(_: &$crate::Config) -> String { panic!("wrapper type cannot be declared") }
         }
     };
 }
@@ -803,10 +803,10 @@ macro_rules! impl_shadow {
         $($impl)* {
             type WithoutGenerics = <$s as $crate::TS>::WithoutGenerics;
             type OptionInnerType = <$s as $crate::TS>::OptionInnerType;
-            fn ident(cfg: &Config) -> String { <$s as $crate::TS>::ident(cfg) }
-            fn name(cfg: &Config) -> String { <$s as $crate::TS>::name(cfg) }
-            fn inline(cfg: &Config) -> String { <$s as $crate::TS>::inline(cfg) }
-            fn inline_flattened(cfg: &Config) -> String { <$s as $crate::TS>::inline_flattened(cfg) }
+            fn ident(cfg: &$crate::Config) -> String { <$s as $crate::TS>::ident(cfg) }
+            fn name(cfg: &$crate::Config) -> String { <$s as $crate::TS>::name(cfg) }
+            fn inline(cfg: &$crate::Config) -> String { <$s as $crate::TS>::inline(cfg) }
+            fn inline_flattened(cfg: &$crate::Config) -> String { <$s as $crate::TS>::inline_flattened(cfg) }
             fn visit_dependencies(v: &mut impl $crate::TypeVisitor)
             where
                 Self: 'static,
@@ -819,8 +819,8 @@ macro_rules! impl_shadow {
             {
                 <$s as $crate::TS>::visit_generics(v);
             }
-            fn decl(cfg: &Config) -> String { <$s as $crate::TS>::decl(cfg) }
-            fn decl_concrete(cfg: &Config) -> String { <$s as $crate::TS>::decl_concrete(cfg) }
+            fn decl(cfg: &$crate::Config) -> String { <$s as $crate::TS>::decl(cfg) }
+            fn decl_concrete(cfg: &$crate::Config) -> String { <$s as $crate::TS>::decl_concrete(cfg) }
             fn output_path() -> Option<std::path::PathBuf> { <$s as $crate::TS>::output_path() }
         }
     };
