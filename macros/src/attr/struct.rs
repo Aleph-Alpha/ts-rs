@@ -7,7 +7,7 @@ use super::{
     Attr, ContainerAttr, Serde, Tagged,
 };
 use crate::{
-    attr::{parse_assign_str, EnumAttr, Inflection, VariantAttr},
+    attr::{parse_assign_str, parse_optional_assign_str, EnumAttr, Inflection, VariantAttr},
     optional::{parse_optional, Optional},
     utils::{extract_docs, parse_attrs},
 };
@@ -172,13 +172,8 @@ impl_parse! {
         "bound" => out.0.bound = Some(parse_bound(input)?),
         // parse #[serde(default)] to not emit a warning
         "deny_unknown_fields" | "default" => {
-            use syn::Token;
-            if input.peek(Token![=]) {
-                input.parse::<Token![=]>()?;
-                parse_assign_str(input)?;
-            }
+            parse_optional_assign_str(input)?;
         },
-
         // parse #[serde(crate = "...")] to not emit a warning
         "crate" => {
             parse_assign_str(input)?;

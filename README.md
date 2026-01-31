@@ -97,6 +97,7 @@ If there's a type you're dealing with which doesn't implement `TS`, you can use 
 | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                            |
 | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                               |
 | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                |
+| arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                            |
 
 ### Serde Compatibility
 With the `serde-compat` feature (enabled by default), serde attributes are parsed for enums and structs.\

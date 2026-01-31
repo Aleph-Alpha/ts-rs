@@ -46,7 +46,6 @@ macro_rules! impl_parse {
                             "Unknown attribute \"{x}\". Allowed attributes are: {}",
                             [$(stringify!($k),)*].join(", ")
                         )
-
                     }
 
                     if $input.is_empty() {

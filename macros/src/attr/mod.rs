@@ -105,6 +105,13 @@ fn skip_until_next_comma(input: ParseStream) -> proc_macro2::TokenStream {
         .step(|cursor| {
             let mut stuff = quote!();
             let mut rest = *cursor;
+
+            if let Some((TokenTree::Punct(ref punct), _)) = cursor.token_tree() {
+                if punct.as_char() == ',' {
+                    return Ok((stuff, rest));
+                }
+            }
+
             while let Some((tt, next)) = rest.token_tree() {
                 if let Some((TokenTree::Punct(punct), _)) = next.token_tree() {
                     if punct.as_char() == ',' {
@@ -132,6 +139,15 @@ fn parse_assign_str(input: ParseStream) -> Result<String> {
         Lit::Str(string) => Ok(string.value()),
         other => Err(Error::new(other.span(), "expected string")),
     }
+}
+
+fn parse_optional_assign_str(input: ParseStream) -> Result<Option<String>> {
+    if input.peek(Token![=]) {
+        Some(parse_assign_str(input))
+    } else {
+        None
+    }
+    .transpose()
 }
 
 fn parse_concrete(input: ParseStream) -> Result<HashMap<syn::Ident, syn::Type>> {
