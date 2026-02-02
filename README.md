@@ -124,6 +124,7 @@ We are currently waiting for [#54140](https://github.com/rust-lang/rust/issues/5
 | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                            |
 | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                               |
 | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                |
+| rust_decimal-impl  | Implement `TS` for types from *rust_de                                                                                                              |
 | arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                            |
 
 ### Contributing

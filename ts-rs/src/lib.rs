@@ -122,6 +122,7 @@
 //! | smol_str-impl      | Implement `TS` for types from *smol_str*                                                                                                            |
 //! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                               |
 //! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                |
+//! | rust_decimal-impl  | Implement `TS` for types from *rust_de                                                                                                              |
 //! | arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                            |
 //!
 //! ## Contributing
@@ -153,6 +154,8 @@ mod chrono;
 mod export;
 #[cfg(feature = "jiff-impl")]
 mod jiff;
+#[cfg(feature = "rust-decimal-impl")]
+mod rust_decimal;
 #[cfg(feature = "serde-json-impl")]
 mod serde_json;
 #[cfg(feature = "tokio-impl")]
