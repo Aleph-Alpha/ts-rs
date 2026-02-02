@@ -65,8 +65,8 @@
 //! - works with generic types
 //! - compatible with serde
 //! - generate necessary imports when exporting to multiple files
-//! - precise control over generated types    
-//!                                                                                                                                                         |
+//! - precise control over generated types
+//!
 //! If there's a type you're dealing with which doesn't implement `TS`, you can use either
 //! `#[ts(as = "..")]` or `#[ts(type = "..")]`, enable the appropriate cargo feature, or open a PR.
 //!
