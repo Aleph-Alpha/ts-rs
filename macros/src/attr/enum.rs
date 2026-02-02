@@ -245,6 +245,15 @@ impl Attr for EnumAttr {
                 item;
                 "content cannot be used without tag"
             ),
+            (false, Some(_), None) => {
+                for variant in item.variants.iter() {
+                    if let Fields::Unnamed(ref unnamed) = variant.fields {
+                        if unnamed.unnamed.len() > 1 {
+                            syn_err_spanned!(variant; r#"`#[ts(tag = "...")]` cannot be used with tuple variants"#);
+                        }
+                    }
+                }
+            }
             _ => (),
         };
 
