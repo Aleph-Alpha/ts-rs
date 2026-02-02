@@ -139,7 +139,7 @@ fn format_variant(
     };
 
     let formatted = match (untagged_variant, enum_attr.tagged()?) {
-        (true, _) | (_, Tagged::Untagged) => quote!(#parsed_ty),
+        (true, _) | (_, Tagged::Untagged) => parsed_ty,
         (false, Tagged::Externally) => match &variant.fields {
             Fields::Unit => quote!(format!("\"{}\"", #ts_name)),
             Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
@@ -183,36 +183,29 @@ fn format_variant(
                 format!("{{ \"{}\": \"{}\", \"{}\": {} }}", #tag, #ts_name, #content, #parsed_ty)
             ),
         },
-        (false, Tagged::Internally { tag }) => match variant_type.inline_flattened {
-            Some(_) => {
-                quote! { #parsed_ty }
+        (false, Tagged::Internally { tag }) => match &variant.fields {
+            Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
+                let field = &unnamed.unnamed[0];
+                let field_attr = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
+
+                field_attr.assert_validity(field)?;
+
+                if field_attr.skip {
+                    quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name))
+                } else {
+                    let ty = match field_attr.type_override {
+                        Some(type_override) => quote! { #type_override },
+                        None => {
+                            let ty = field_attr.type_as(&field.ty);
+                            quote!(<#ty as #crate_rename::TS>::name(cfg))
+                        }
+                    };
+
+                    quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #ts_name, #ty))
+                }
             }
-            None => match &variant.fields {
-                Fields::Unnamed(unnamed) if unnamed.unnamed.len() == 1 => {
-                    let field = &unnamed.unnamed[0];
-                    let field_attr = FieldAttr::from_attrs(&unnamed.unnamed[0].attrs)?;
-
-                    field_attr.assert_validity(field)?;
-
-                    if field_attr.skip {
-                        quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name))
-                    } else {
-                        let ty = match field_attr.type_override {
-                            Some(type_override) => quote! { #type_override },
-                            None => {
-                                let ty = field_attr.type_as(&field.ty);
-                                quote!(<#ty as #crate_rename::TS>::name(cfg))
-                            }
-                        };
-
-                        quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #ts_name, #ty))
-                    }
-                }
-                Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name)),
-                _ => {
-                    quote!(format!("{{ \"{}\": \"{}\" }} & {}", #tag, #ts_name, #parsed_ty))
-                }
-            },
+            Fields::Unit => quote!(format!("{{ \"{}\": \"{}\" }}", #tag, #ts_name)),
+            _ => parsed_ty,
         },
     };
 
