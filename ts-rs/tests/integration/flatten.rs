@@ -29,6 +29,19 @@ struct C {
     d: i32,
 }
 
+#[derive(TS)]
+#[ts(export, export_to = "flatten/")]
+pub struct Inner {}
+
+// Create a parent struct that flattens the zero-field struct:
+#[derive(TS)]
+#[ts(export, export_to = "flatten/")]
+pub struct Outer {
+    #[ts(flatten)]
+    pub inner: Inner,
+    pub other_field: String,
+}
+
 #[test]
 fn test_def() {
     let cfg = Config::from_env();
@@ -36,4 +49,5 @@ fn test_def() {
         C::inline(&cfg),
         "{ b: { c: number, a: number, b: number, } & ({ [key in string]: number }), d: number, }"
     );
+    assert_eq!(Outer::inline(&cfg), "{ other_field: string, }");
 }
