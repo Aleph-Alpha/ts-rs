@@ -1,4 +1,4 @@
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "top_level_type_override/")]
@@ -13,7 +13,8 @@ pub enum IncompleteEnum {
 
 #[test]
 pub fn top_level_type_override_enum() {
-    assert_eq!(IncompleteEnum::inline(), r#"string"#)
+    let cfg = Config::from_env();
+    assert_eq!(IncompleteEnum::inline(&cfg), r#"string"#)
 }
 
 #[derive(TS)]
@@ -26,5 +27,6 @@ pub struct DataUrl {
 
 #[test]
 pub fn top_level_type_override_struct() {
-    assert_eq!(DataUrl::inline(), r#"string"#)
+    let cfg = Config::from_env();
+    assert_eq!(DataUrl::inline(&cfg), r#"string"#)
 }

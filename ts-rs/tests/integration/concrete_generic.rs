@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 mod issue_261 {
-    use ts_rs::TS;
+    use ts_rs::{Config, TS};
 
     trait Driver {
         type Info;
@@ -40,25 +40,26 @@ mod issue_261 {
 
     #[test]
     fn concrete_generic_param() {
+        let cfg = Config::from_env();
         assert_eq!(
-            Consumer1::<TsDriver>::decl(),
+            Consumer1::<TsDriver>::decl(&cfg),
             "type Consumer1 = { info: string, };"
         );
         // `decl` must use the concrete generic, no matter what we pass in
         assert_eq!(
-            Consumer1::<TsDriver>::decl(),
-            Consumer1::<OtherDriver>::decl()
+            Consumer1::<TsDriver>::decl(&cfg),
+            Consumer1::<OtherDriver>::decl(&cfg)
         );
 
         assert_eq!(
-            Consumer2::<OtherDriver>::decl_concrete(),
+            Consumer2::<OtherDriver>::decl_concrete(&cfg),
             "type Consumer2 = { info: OtherInfo, driver: OtherDriver, };"
         );
     }
 }
 
 mod simple {
-    use ts_rs::TS;
+    use ts_rs::{Config, TS};
 
     #[derive(TS)]
     #[ts(export, export_to = "concrete_generic/simple/")]
@@ -82,9 +83,10 @@ mod simple {
 
     #[test]
     fn simple() {
-        assert_eq!(Simple::<String>::decl(), "type Simple = { t: number, };");
+        let cfg = Config::from_env();
+        assert_eq!(Simple::<String>::decl(&cfg), "type Simple = { t: number, };");
         assert_eq!(
-            WithOption::<String>::decl(),
+            WithOption::<String>::decl(&cfg),
             "type WithOption = { opt: number | null, };"
         );
     }

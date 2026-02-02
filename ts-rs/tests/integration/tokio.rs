@@ -1,7 +1,7 @@
 #![cfg(feature = "tokio-impl")]
 
 use tokio::sync::{Mutex, OnceCell, RwLock};
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "tokio/")]
@@ -14,8 +14,9 @@ struct Tokio<T: 'static> {
 
 #[test]
 fn tokio() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Tokio::<String>::decl(),
+        Tokio::<String>::decl(&cfg),
         "type Tokio = { mutex: number, once_cell: number, rw_lock: number, };"
     )
 }

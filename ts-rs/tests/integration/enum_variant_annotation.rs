@@ -2,7 +2,7 @@
 
 #[cfg(feature = "serde-compat")]
 use serde::Serialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "enum_variant_anotation/")]
@@ -24,8 +24,9 @@ enum A {
 
 #[test]
 fn test_enum_variant_rename_all() {
+    let cfg = Config::from_env();
     assert_eq!(
-        A::inline(),
+        A::inline(&cfg),
         r#"{ "MESSAGE_ONE": { sender_id: string, number_of_snakes: bigint, } } | { "MESSAGE_TWO": { senderId: string, numberOfCamels: bigint, } }"#,
     );
 }
@@ -50,8 +51,9 @@ enum B {
 
 #[test]
 fn test_enum_variant_rename() {
+    let cfg = Config::from_env();
     assert_eq!(
-        B::inline(),
+        B::inline(&cfg),
         r#"{ "SnakeMessage": { sender_id: string, number_of_snakes: bigint, } } | { "CamelMessage": { sender_id: string, number_of_camels: bigint, } }"#,
     );
 }
@@ -72,7 +74,8 @@ pub enum C {
 
 #[test]
 fn test_enum_variant_with_tag() {
-    assert_eq!(C::inline(), r#"{ "kind": "SQUARE_THING", name: string, }"#);
+    let cfg = Config::from_env();
+    assert_eq!(C::inline(&cfg), r#"{ "kind": "SQUARE_THING", name: string, }"#);
 }
 
 #[cfg(feature = "serde-compat")]
@@ -83,8 +86,9 @@ fn test_tag_and_content_quoted() {
     enum E {
         V { f: String },
     }
+    let cfg = Config::from_env();
     assert_eq!(
-        E::inline(),
+        E::inline(&cfg),
         r#"{ "kebab-cased-tag": "V", "whitespace in content": { f: string, } }"#
     )
 }
@@ -97,7 +101,8 @@ fn test_variant_quoted() {
     enum E {
         VariantName { f: String },
     }
-    assert_eq!(E::inline(), r#"{ "variant-name": { f: string, } }"#)
+    let cfg = Config::from_env();
+    assert_eq!(E::inline(&cfg), r#"{ "variant-name": { f: string, } }"#)
 }
 
 #[derive(TS)]
@@ -116,8 +121,9 @@ enum E {
 
 #[test]
 fn test_empty_struct_variant_with_tag() {
+    let cfg = Config::from_env();
     assert_eq!(
-        E::inline(),
+        E::inline(&cfg),
         r#"{ "type": "Foo", } | { "type": "Bar", } | { "type": "Biz", x: number, }"#
     )
 }

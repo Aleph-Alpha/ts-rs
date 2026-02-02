@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "flatten/")]
@@ -31,8 +31,9 @@ struct C {
 
 #[test]
 fn test_def() {
+    let cfg = Config::from_env();
     assert_eq!(
-        C::inline(),
-        "{ b: { c: number, a: number, b: number, } & ({ [key in string]?: number }), d: number, }"
+        C::inline(&cfg),
+        "{ b: { c: number, a: number, b: number, } & ({ [key in string]: number }), d: number, }"
     );
 }

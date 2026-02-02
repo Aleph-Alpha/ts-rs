@@ -2,7 +2,7 @@
 #![cfg(feature = "semver-impl")]
 
 use semver::Version;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "semver/")]
@@ -12,5 +12,6 @@ struct Semver {
 
 #[test]
 fn semver() {
-    assert_eq!(Semver::decl(), "type Semver = { version: string, };")
+    let cfg = Config::from_env();
+    assert_eq!(Semver::decl(&cfg), "type Semver = { version: string, };")
 }

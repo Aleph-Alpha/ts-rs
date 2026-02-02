@@ -73,6 +73,7 @@ pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> R
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+        is_enum: quote!(false),
     })
 }
 
@@ -123,7 +124,7 @@ fn format_field(
     }
 
     if field_attr.flatten {
-        flattened_fields.push(quote!(<#ty as #crate_rename::TS>::inline_flattened()));
+        flattened_fields.push(quote!(<#ty as #crate_rename::TS>::inline_flattened(cfg)));
         return Ok(());
     }
 
@@ -132,9 +133,9 @@ fn format_field(
         .map(|t| quote!(#t))
         .unwrap_or_else(|| {
             if field_attr.inline {
-                quote!(<#ty as #crate_rename::TS>::inline())
+                quote!(<#ty as #crate_rename::TS>::inline(cfg))
             } else {
-                quote!(<#ty as #crate_rename::TS>::name())
+                quote!(<#ty as #crate_rename::TS>::name(cfg))
             }
         });
 

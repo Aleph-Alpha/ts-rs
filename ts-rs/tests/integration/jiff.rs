@@ -3,7 +3,7 @@ use jiff::{
     civil::{Date, DateTime, Time},
     Span, Timestamp, Zoned,
 };
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "jiff/")]
@@ -17,5 +17,9 @@ struct Jiff {
 
 #[test]
 fn jiff() {
-    assert_eq!(Jiff::decl(), "type Jiff = { date: string, time: string, date_time: string, timestamp: string, span: string, };")
+    let cfg = Config::from_env();
+    assert_eq!(
+        Jiff::decl(&cfg),
+        "type Jiff = { date: string, time: string, date_time: string, timestamp: string, span: string, };"
+    )
 }

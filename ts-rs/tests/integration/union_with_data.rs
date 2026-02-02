@@ -2,7 +2,7 @@
 
 #[cfg(feature = "serde-compat")]
 use serde::Serialize;
-use ts_rs::{Dependency, TS};
+use ts_rs::{Config, Dependency, TS};
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
@@ -32,20 +32,21 @@ enum SimpleEnum {
 
 #[test]
 fn test_stateful_enum() {
-    assert_eq!(Bar::decl(), r#"type Bar = { field: number, };"#);
-    assert_eq!(Bar::dependencies(), vec![]);
+    let cfg = Config::from_env();
+    assert_eq!(Bar::decl(&cfg), r#"type Bar = { field: number, };"#);
+    assert_eq!(Bar::dependencies(&cfg), vec![]);
 
-    assert_eq!(Foo::decl(), r#"type Foo = { bar: Bar, };"#);
+    assert_eq!(Foo::decl(&cfg), r#"type Foo = { bar: Bar, };"#);
     assert_eq!(
-        Foo::dependencies(),
-        vec![Dependency::from_ty::<Bar>().unwrap()]
+        Foo::dependencies(&cfg),
+        vec![Dependency::from_ty::<Bar>(&cfg).unwrap()]
     );
 
     assert_eq!(
-        SimpleEnum::decl(),
+        SimpleEnum::decl(&cfg),
         r#"type SimpleEnum = { "A": string } | { "B": number } | "C" | { "D": [string, number] } | { "E": Foo } | { "F": { a: number, b: string, } };"#
     );
-    assert!(SimpleEnum::dependencies()
+    assert!(SimpleEnum::dependencies(&cfg)
         .into_iter()
-        .all(|dep| dep == Dependency::from_ty::<Foo>().unwrap()),);
+        .all(|dep| dep == Dependency::from_ty::<Foo>(&cfg).unwrap()),);
 }

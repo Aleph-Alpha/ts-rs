@@ -1,7 +1,7 @@
 #![cfg(feature = "serde-compat")]
 
 use serde::{Deserialize, Serialize};
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 // A field annotated with both `#[serde(skip_serializing(_if))]` and `#[serde(default)]` is treated
 // like `#[ts(optional = nullable)]` (except no errors if the type is not `Option<T>`)
@@ -70,9 +70,10 @@ fn named() {
     let d = "d?: number | null";
     let e = "e: number | null";
     let f = "f?: number";
+    let cfg = Config::from_env();
 
     assert_eq!(
-        Named::decl(),
+        Named::decl(&cfg),
         format!("type Named = {{ {a}, {b}, {c}, {d}, {e}, {f}, }};")
     );
 }
@@ -87,8 +88,9 @@ pub struct Tuple(
 
 #[test]
 fn tuple() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Tuple::decl(),
+        Tuple::decl(&cfg),
         "type Tuple = [number | null, (number)?, (number | null)?];"
     );
 }
@@ -109,8 +111,9 @@ fn overrides() {
     let x = "x: number | null"; // same as without any attributes, since it's disabled at the struct level
     let y = "y: number | null"; // default type for an option
     let z = "z?: number"; // re-enabled for this field
+    let cfg = Config::from_env();
     assert_eq!(
-        Overrides::decl(),
+        Overrides::decl(&cfg),
         format!("type Overrides = {{ {x}, {y}, {z}, }};")
     );
 }

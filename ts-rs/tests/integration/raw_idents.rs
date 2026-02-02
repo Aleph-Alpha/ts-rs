@@ -1,6 +1,6 @@
 #![allow(non_camel_case_types, dead_code)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "raw_idents/")]
@@ -14,7 +14,8 @@ struct r#struct {
 
 #[test]
 fn raw_idents() {
-    let out = <r#struct as TS>::decl();
+    let cfg = Config::from_env();
+    let out = <r#struct as TS>::decl(&cfg);
     assert_eq!(
         out,
         "type struct = { type: number, use: number, struct: number, let: number, enum: number, };"
