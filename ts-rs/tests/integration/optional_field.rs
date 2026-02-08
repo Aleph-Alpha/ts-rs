@@ -19,7 +19,10 @@ fn in_struct() {
     let b = "b?: number | null";
     let c = "c: number | null";
     let cfg = Config::from_env();
-    assert_eq!(OptionalInStruct::inline(&cfg), format!("{{ {a}, {b}, {c}, }}"));
+    assert_eq!(
+        OptionalInStruct::inline(&cfg),
+        format!("{{ {a}, {b}, {c}, }}")
+    );
 }
 
 #[derive(Serialize, TS)]
@@ -105,7 +108,10 @@ fn inline() {
     let b = "b?: number | null";
     let c = "c: number | null";
     let cfg = Config::from_env();
-    assert_eq!(Inline::inline(&cfg), format!("{{ x: {{ {a}, {b}, {c}, }}, }}"));
+    assert_eq!(
+        Inline::inline(&cfg),
+        format!("{{ x: {{ {a}, {b}, {c}, }}, }}")
+    );
 }
 
 type Foo = Option<i32>;
@@ -132,6 +138,13 @@ struct OptionalStruct {
     h: Option<i32>,
 }
 
+#[derive(TS)]
+#[ts(export, export_to = "optional_field/", optional_fields)]
+struct OptionalGenericStruct<T> {
+    a: Option<T>,
+    b: T,
+}
+
 #[test]
 fn struct_optional() {
     let cfg = Config::from_env();
@@ -140,7 +153,11 @@ fn struct_optional() {
         format!(
             "{{ a?: number, b?: number, c?: number | null, d: number, e?: number, f?: number, g: string, h: string, }}"
         )
-    )
+    );
+    assert_eq!(
+        OptionalGenericStruct::<ts_rs::Dummy>::inline(&cfg),
+        format!("{{ a?: Dummy, b: Dummy, }}")
+    );
 }
 
 #[derive(TS)]
