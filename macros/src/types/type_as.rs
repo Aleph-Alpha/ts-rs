@@ -20,7 +20,7 @@ pub(crate) fn type_as_struct(
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),
         inline: quote!(<#type_as as #crate_rename::TS>::inline(cfg)),
-        inline_flattened: None,
+        inline_flattened: Some(quote!(<#type_as as #crate_rename::TS>::inline_flattened(cfg))),
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
@@ -42,7 +42,7 @@ pub(crate) fn type_as_enum(attr: &EnumAttr, ts_name: Expr, type_as: &Type) -> Re
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),
         inline: quote!(<#type_as as #crate_rename::TS>::inline(cfg)),
-        inline_flattened: None,
+        inline_flattened: Some(quote!(<#type_as as #crate_rename::TS>::inline_flattened(cfg))),
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
