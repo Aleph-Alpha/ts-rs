@@ -156,7 +156,7 @@ fn struct_optional() {
     );
     assert_eq!(
         OptionalGenericStruct::<ts_rs::Dummy>::inline(&cfg),
-        format!("{{ a?: Dummy, b: Dummy, }}")
+        "{ a?: Dummy, b: Dummy, }"
     );
 }
 
