@@ -4,13 +4,14 @@ use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{Path, Type};
 
+#[derive(Clone, Debug)]
 pub struct Dependencies {
     crate_rename: Rc<Path>,
     dependencies: HashSet<Dependency>,
     types: HashSet<Rc<Type>>,
 }
 
-#[derive(Hash, Eq, PartialEq)]
+#[derive(Clone, Hash, Eq, PartialEq, Debug)]
 enum Dependency {
     // A dependency on all dependencies of `ty`.
     // This does not include a dependency on `ty` itself - only its dependencies!

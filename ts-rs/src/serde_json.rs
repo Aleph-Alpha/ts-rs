@@ -20,4 +20,4 @@ pub enum TsJsonValue {
 
 impl_shadow!(as TsJsonValue: impl TS for serde_json::Value);
 impl_primitives!(serde_json::Number => "number");
-impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for serde_json::Map<K, V>);
+impl_shadow!(as HashMap<K, V>, for serde_json::Map<K, V>, generics: <K: TS, V: TS>);

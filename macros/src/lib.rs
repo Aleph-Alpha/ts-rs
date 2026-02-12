@@ -27,6 +27,7 @@ struct DerivedTS {
     inline: TokenStream,
     inline_flattened: Option<TokenStream>,
     dependencies: Dependencies,
+    flattened_dependencies: Dependencies,
     concrete: HashMap<Ident, Type>,
     bound: Option<Vec<WherePredicate>>,
     ts_enum: Option<Repr>,
@@ -77,13 +78,15 @@ impl DerivedTS {
         };
 
         let ident = self.ts_name.clone();
-        let impl_start = generate_impl_block_header(
+        let (impl_start, bounds) = generate_impl_block_header(
             &crate_rename,
             &rust_ty,
             &generics,
             self.bound.as_deref(),
             &self.dependencies,
+            &self.flattened_dependencies,
         );
+
         let assoc_type = generate_assoc_type(&rust_ty, &crate_rename, &generics, &self.concrete);
         let name = self.generate_name_fn(&generics);
         let is_enum = self.is_enum.clone();
@@ -92,9 +95,20 @@ impl DerivedTS {
         let dependencies = &self.dependencies;
         let generics_fn = self.generate_generics_fn(&generics);
 
+        let inline_flattened = self.inline_flattened.clone().map(|x| {
+            quote! {
+                #[automatically_derived]
+                #impl_start #crate_rename::Flattenable #bounds {
+                    fn inline_flattened(cfg: &#crate_rename::Config) -> String {
+                        #x
+                    }
+                }
+            }
+        });
+
         quote! {
             #[automatically_derived]
-            #impl_start {
+            #impl_start #crate_rename::TS #bounds {
                 #assoc_type
                 type OptionInnerType = Self;
 
@@ -118,6 +132,8 @@ impl DerivedTS {
                     #dependencies
                 }
             }
+
+            #inline_flattened
 
             #export
         }
@@ -178,9 +194,11 @@ impl DerivedTS {
                     type OptionInnerType = Self;
                     fn name(cfg: &#crate_rename::Config) -> String { stringify!(#generics).to_owned() }
                     fn inline(cfg: &#crate_rename::Config) -> String { panic!("{} cannot be inlined", #name) }
-                    fn inline_flattened(cfg: &#crate_rename::Config) -> String { stringify!(#generics).to_owned() }
                     fn decl(cfg: &#crate_rename::Config) -> String { panic!("{} cannot be declared", #name) }
                     fn decl_concrete(cfg: &#crate_rename::Config) -> String { panic!("{} cannot be declared", #name) }
+                }
+                impl #crate_rename::Flattenable for #generics {
+                    fn inline_flattened(cfg: &#crate_rename::Config) -> String { stringify!(#generics).to_owned() }
                 }
             )*
         }
@@ -245,12 +263,6 @@ impl DerivedTS {
         let inline = &self.inline;
         let crate_rename = &self.crate_rename;
 
-        let inline_flattened = self.inline_flattened.clone().unwrap_or_else(|| {
-            quote! {
-                panic!("{} cannot be flattened", <Self as #crate_rename::TS>::name(cfg))
-            }
-        });
-
         let inline = match self.ts_enum {
             Some(Repr::Int) => quote! {
                 let variants = #inline.replace(|x: char| !x.is_numeric() && x != ',', "");
@@ -300,10 +312,6 @@ impl DerivedTS {
         quote! {
             fn inline(cfg: &#crate_rename::Config) -> String {
                 #inline
-            }
-
-            fn inline_flattened(cfg: &#crate_rename::Config) -> String {
-                #inline_flattened
             }
         }
     }
@@ -394,7 +402,8 @@ fn generate_impl_block_header(
     generics: &Generics,
     bounds: Option<&[WherePredicate]>,
     dependencies: &Dependencies,
-) -> TokenStream {
+    flattened_dependencies: &Dependencies,
+) -> (TokenStream, TokenStream) {
     use GenericParam as G;
 
     let params = generics.params.iter().map(|param| match param {
@@ -426,18 +435,23 @@ fn generate_impl_block_header(
     let where_bound = match bounds {
         Some(bounds) => quote! { where #(#bounds),* },
         None => {
-            let bounds = generate_where_clause(crate_rename, generics, dependencies);
+            let bounds =
+                generate_where_clause(crate_rename, generics, dependencies, flattened_dependencies);
             quote! { #bounds }
         }
     };
 
-    quote!(impl <#(#params),*> #crate_rename::TS for #ty <#(#type_args),*> #where_bound)
+    (
+        quote!(impl <#(#params),*>),
+        quote!(for #ty <#(#type_args),*> #where_bound),
+    )
 }
 
 fn generate_where_clause(
     crate_rename: &Path,
     generics: &Generics,
     dependencies: &Dependencies,
+    flattened_dependencies: &Dependencies,
 ) -> WhereClause {
     let used_types = {
         let is_type_param = |id: &Ident| generics.type_params().any(|p| &p.ident == id);
@@ -449,9 +463,19 @@ fn generate_where_clause(
         used_types.into_iter()
     };
 
+    let flattened_used_types = {
+        let is_type_param = |id: &Ident| generics.type_params().any(|p| &p.ident == id);
+
+        let mut flattened_used_types = HashSet::new();
+        for ty in flattened_dependencies.used_types() {
+            used_type_params(&mut flattened_used_types, ty, is_type_param);
+        }
+        flattened_used_types.into_iter()
+    };
+
     let existing = generics.where_clause.iter().flat_map(|w| &w.predicates);
     parse_quote! {
-        where #(#existing,)* #(#used_types: #crate_rename::TS),*
+        where #(#existing,)* #(#used_types: #crate_rename::TS),* #(, #flattened_used_types: #crate_rename::Flattenable)*
     }
 }
 

@@ -435,12 +435,6 @@ pub trait TS {
     /// This function will panic if the type cannot be inlined.
     fn inline(cfg: &Config) -> String;
 
-    /// Flatten a type declaration.
-    /// This function will panic if the type cannot be flattened.
-    fn inline_flattened(cfg: &Config) -> String {
-        panic!("{} cannot be flattened", Self::name(cfg))
-    }
-
     /// Iterates over all dependency of this type.
     fn visit_dependencies(_: &mut impl TypeVisitor)
     where
@@ -538,6 +532,19 @@ pub trait TS {
     /// `None`.
     fn output_path() -> Option<PathBuf> {
         None
+    }
+}
+
+#[diagnostic::on_unimplemented(
+    message = "`#[ts(flatten)]` cannot be be used on fields of type `{Self}`",
+    note = "`#[ts(flatten)]` was used on a field of type {Self}, which is not permitted",
+    label = "`#[ts(flatten)]` is not allowed on field of type {Self}"
+)]
+pub trait Flattenable: TS {
+    /// Flatten a type declaration.
+    /// This function will panic if the type cannot be flattened.
+    fn inline_flattened(cfg: &Config) -> String {
+        panic!("{} cannot be flattened", Self::name(cfg))
     }
 }
 
@@ -767,7 +774,6 @@ macro_rules! impl_tuples {
                     <$i as $crate::TS>::visit_generics(v);
                 )*
             }
-            fn inline_flattened(_: &$crate::Config) -> String { panic!("tuple cannot be flattened") }
             fn decl(_: &$crate::Config) -> String { panic!("tuple cannot be declared") }
             fn decl_concrete(_: &$crate::Config) -> String { panic!("tuple cannot be declared") }
         }
@@ -781,13 +787,12 @@ macro_rules! impl_tuples {
 
 // generate impls for wrapper types
 macro_rules! impl_wrapper {
-    ($($t:tt)*) => {
-        $($t)* {
+    (for $ty: ty, generics: $($generics: tt)*) => {
+        impl<$($generics)*> TS for $ty {
             type WithoutGenerics = Self;
             type OptionInnerType = Self;
             fn name(cfg: &$crate::Config) -> String { <T as $crate::TS>::name(cfg) }
             fn inline(cfg: &$crate::Config) -> String { <T as $crate::TS>::inline(cfg) }
-            fn inline_flattened(cfg: &$crate::Config) -> String { <T as $crate::TS>::inline_flattened(cfg) }
             fn visit_dependencies(v: &mut impl TypeVisitor)
             where
                 Self: 'static,
@@ -805,6 +810,10 @@ macro_rules! impl_wrapper {
             fn decl(_: &$crate::Config) -> String { panic!("wrapper type cannot be declared") }
             fn decl_concrete(_: &$crate::Config) -> String { panic!("wrapper type cannot be declared") }
         }
+
+        impl<$($generics)* + Flattenable> Flattenable for $ty {
+            fn inline_flattened(cfg: &$crate::Config) -> String { <T as $crate::Flattenable>::inline_flattened(cfg) }
+        }
     };
 }
 
@@ -817,7 +826,6 @@ macro_rules! impl_shadow {
             fn ident(cfg: &$crate::Config) -> String { <$s as $crate::TS>::ident(cfg) }
             fn name(cfg: &$crate::Config) -> String { <$s as $crate::TS>::name(cfg) }
             fn inline(cfg: &$crate::Config) -> String { <$s as $crate::TS>::inline(cfg) }
-            fn inline_flattened(cfg: &$crate::Config) -> String { <$s as $crate::TS>::inline_flattened(cfg) }
             fn visit_dependencies(v: &mut impl $crate::TypeVisitor)
             where
                 Self: 'static,
@@ -833,6 +841,34 @@ macro_rules! impl_shadow {
             fn decl(cfg: &$crate::Config) -> String { <$s as $crate::TS>::decl(cfg) }
             fn decl_concrete(cfg: &$crate::Config) -> String { <$s as $crate::TS>::decl_concrete(cfg) }
             fn output_path() -> Option<std::path::PathBuf> { <$s as $crate::TS>::output_path() }
+        }
+    };
+    (as $s:ty, for $target:ty  $(, generics: $($generics: tt)*)? ) => {
+        impl$($($generics)*)? TS for $target {
+            type WithoutGenerics = <$s as $crate::TS>::WithoutGenerics;
+            type OptionInnerType = <$s as $crate::TS>::OptionInnerType;
+            fn ident(cfg: &$crate::Config) -> String { <$s as $crate::TS>::ident(cfg) }
+            fn name(cfg: &$crate::Config) -> String { <$s as $crate::TS>::name(cfg) }
+            fn inline(cfg: &$crate::Config) -> String { <$s as $crate::TS>::inline(cfg) }
+            fn visit_dependencies(v: &mut impl $crate::TypeVisitor)
+            where
+                Self: 'static,
+            {
+                <$s as $crate::TS>::visit_dependencies(v);
+            }
+            fn visit_generics(v: &mut impl $crate::TypeVisitor)
+            where
+                Self: 'static,
+            {
+                <$s as $crate::TS>::visit_generics(v);
+            }
+            fn decl(cfg: &$crate::Config) -> String { <$s as $crate::TS>::decl(cfg) }
+            fn decl_concrete(cfg: &$crate::Config) -> String { <$s as $crate::TS>::decl_concrete(cfg) }
+            fn output_path() -> Option<std::path::PathBuf> { <$s as $crate::TS>::output_path() }
+        }
+
+        impl$($($generics)*)? Flattenable for $target {
+            fn inline_flattened(cfg: &$crate::Config) -> String { <$s as $crate::Flattenable>::inline_flattened(cfg) }
         }
     };
 }
@@ -1026,9 +1062,11 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
         V::visit_generics(v);
         v.visit::<V>();
     }
+}
 
+impl<K: TS, V: TS, H> Flattenable for HashMap<K, V, H> {
     fn inline_flattened(cfg: &Config) -> String {
-        format!("({})", Self::inline(cfg))
+        format!("({})", <Self as TS>::inline(cfg))
     }
 }
 
@@ -1065,20 +1103,20 @@ impl<I: TS> TS for Range<I> {
 impl_shadow!(as Range<I>: impl<I: TS> TS for RangeInclusive<I>);
 impl_shadow!(as Vec<T>: impl<T: TS, H> TS for HashSet<T, H>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for BTreeSet<T>);
-impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for BTreeMap<K, V>);
+impl_shadow!(as HashMap<K, V>, for BTreeMap<K, V>, generics: <K: TS, V: TS>);
 impl_shadow!(as Vec<T>: impl<T: TS> TS for [T]);
 
-impl_wrapper!(impl<T: TS + ?Sized> TS for &T);
-impl_wrapper!(impl<T: TS + ?Sized> TS for Box<T>);
-impl_wrapper!(impl<T: TS + ?Sized> TS for std::sync::Arc<T>);
-impl_wrapper!(impl<T: TS + ?Sized> TS for std::rc::Rc<T>);
-impl_wrapper!(impl<'a, T: TS + ToOwned + ?Sized> TS for std::borrow::Cow<'a, T>);
-impl_wrapper!(impl<T: TS> TS for std::cell::Cell<T>);
-impl_wrapper!(impl<T: TS> TS for std::cell::RefCell<T>);
-impl_wrapper!(impl<T: TS> TS for std::sync::Mutex<T>);
-impl_wrapper!(impl<T: TS> TS for std::sync::RwLock<T>);
-impl_wrapper!(impl<T: TS + ?Sized> TS for std::sync::Weak<T>);
-impl_wrapper!(impl<T: TS> TS for std::marker::PhantomData<T>);
+impl_wrapper!(for &T, generics: T: TS + ?Sized);
+impl_wrapper!(for Box<T>, generics: T: TS + ?Sized);
+impl_wrapper!(for std::sync::Arc<T>, generics: T: TS + ?Sized);
+impl_wrapper!(for std::rc::Rc<T>, generics: T: TS + ?Sized);
+impl_wrapper!(for std::borrow::Cow<'a, T>, generics: 'a, T: TS + ToOwned + ?Sized);
+impl_wrapper!(for std::cell::Cell<T>, generics: T: TS);
+impl_wrapper!(for std::cell::RefCell<T>, generics: T: TS);
+impl_wrapper!(for std::sync::Mutex<T>, generics: T: TS);
+impl_wrapper!(for std::sync::RwLock<T>, generics: T: TS);
+impl_wrapper!(for std::sync::Weak<T>, generics: T: TS + ?Sized);
+impl_wrapper!(for std::marker::PhantomData<T>, generics: T: TS);
 
 impl_tuples!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
 
@@ -1110,7 +1148,7 @@ impl_primitives! { bson::Uuid => "string" }
 impl_shadow!(as Vec<T>: impl<T: TS> TS for indexmap::IndexSet<T>);
 
 #[cfg(feature = "indexmap-impl")]
-impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for indexmap::IndexMap<K, V>);
+impl_shadow!(as HashMap<K, V>, for indexmap::IndexMap<K, V>, generics: <K: TS, V: TS>);
 
 #[cfg(feature = "heapless-impl")]
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for heapless::Vec<T, N>);
@@ -1180,6 +1218,8 @@ impl TS for Dummy {
         panic!("{} cannot be inlined", Self::name(cfg))
     }
 }
+
+impl Flattenable for Dummy {}
 
 /// Formats rust doc comments, turning them into a JSDoc comments.
 /// Expects a `&[&str]` where each element corresponds to the value of one `#[doc]` attribute.
