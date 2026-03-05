@@ -1,7 +1,6 @@
 #[cfg(feature = "serde-compat")]
-
 use serde::Serialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[test]
 fn two_variant_enum() {
