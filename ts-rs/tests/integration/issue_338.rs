@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "issue_338/")]
@@ -31,8 +31,9 @@ pub struct MyStruct {
 
 #[test]
 fn test() {
+    let cfg = Config::from_env();
     assert_eq!(
-        MyType::inline(),
+        MyType::inline(&cfg),
         "{ my_field_0: boolean, my_field_1: { [key in MyEnum]?: MyStruct }, }"
     );
 }

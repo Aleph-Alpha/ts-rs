@@ -3,7 +3,7 @@
 use std::error::Error;
 
 use serde::Serialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 struct Unsupported;
 
@@ -20,7 +20,8 @@ struct Skip {
 
 #[test]
 fn simple() {
-    assert_eq!(Skip::inline(), "{ a: number, b: number, }");
+    let cfg = Config::from_env();
+    assert_eq!(Skip::inline(&cfg), "{ a: number, b: number, }");
 }
 
 #[derive(TS)]
@@ -54,8 +55,9 @@ enum Externally {
 #[test]
 fn externally_tagged() {
     // TODO: variant C should probably not generate `{}`
+    let cfg = Config::from_env();
     assert_eq!(
-        Externally::decl(),
+        Externally::decl(&cfg),
         r#"type Externally = "A" | { "B": [number] } | { "C": {  } } | { "D": { y: number, } };"#
     );
 }
@@ -86,8 +88,9 @@ enum Internally {
 
 #[test]
 fn internally_tagged() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Internally::decl(),
+        Internally::decl(&cfg),
         r#"type Internally = { "t": "A" } | { "t": "B", } | { "t": "C", y: number, };"#
     );
 }
@@ -125,8 +128,9 @@ enum Adjacently {
 #[test]
 fn adjacently_tagged() {
     // TODO: variant C should probably not generate `{ .., "c": { } }`
+    let cfg = Config::from_env();
     assert_eq!(
-        Adjacently::decl(),
+        Adjacently::decl(&cfg),
         r#"type Adjacently = { "t": "A" } | { "t": "B", "c": [number] } | { "t": "C", "c": {  } } | { "t": "D", "c": { y: number, } };"#
     );
 }

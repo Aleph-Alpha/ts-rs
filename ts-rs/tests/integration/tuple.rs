@@ -1,18 +1,20 @@
 #![allow(unused)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[test]
 fn test_tuple() {
     type Tuple = (String, i32, (i32, i32));
-    assert_eq!("[string, number, [number, number]]", Tuple::name());
+    let cfg = Config::from_env();
+    assert_eq!("[string, number, [number, number]]", Tuple::name(&cfg));
 }
 
 #[test]
 #[should_panic]
 fn test_decl() {
     type Tuple = (String, i32, (i32, i32));
-    let _ = Tuple::decl();
+    let cfg = Config::from_env();
+    let _ = Tuple::decl(&cfg);
 }
 
 #[test]
@@ -20,7 +22,8 @@ fn test_newtype() {
     #[derive(TS)]
     struct NewType(String);
 
-    assert_eq!("type NewType = string;", NewType::decl());
+    let cfg = Config::from_env();
+    assert_eq!("type NewType = string;", NewType::decl(&cfg));
 }
 
 #[derive(TS)]
@@ -29,9 +32,10 @@ struct TupleNewType(String, i32, (i32, i32));
 
 #[test]
 fn test_tuple_newtype() {
+    let cfg = Config::from_env();
     assert_eq!(
         "type TupleNewType = [string, number, [number, number]];",
-        TupleNewType::decl()
+        TupleNewType::decl(&cfg)
     )
 }
 
@@ -60,9 +64,10 @@ struct TupleWithDependencies(Dep1, Dep2, Dep4<Dep3>);
 
 #[test]
 fn tuple_with_dependencies() {
+    let cfg = Config::from_env();
     assert_eq!(
         "type TupleWithDependencies = [Dep1, Dep2, Dep4<Dep3>];",
-        TupleWithDependencies::decl()
+        TupleWithDependencies::decl(&cfg)
     );
 }
 
@@ -76,12 +81,13 @@ struct StructWithTuples {
 
 #[test]
 fn struct_with_tuples() {
+    let cfg = Config::from_env();
     assert_eq!(
         "type StructWithTuples = { \
             a: [Dep1, Dep1], \
             b: [Dep2, Dep2], \
             c: [Dep4<Dep3>, Dep4<Dep3>], \
         };",
-        StructWithTuples::decl()
+        StructWithTuples::decl(&cfg)
     );
 }

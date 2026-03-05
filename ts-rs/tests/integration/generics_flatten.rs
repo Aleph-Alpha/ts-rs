@@ -1,3 +1,4 @@
+use ts_rs::Config;
 use ts_rs_macros::TS;
 
 // https://github.com/Aleph-Alpha/ts-rs/issues/335
@@ -43,13 +44,14 @@ fn flattened_generic_parameters() {
         x: i32,
     }
 
-    assert_eq!(Item::<()>::decl(), "type Item<D> = { id: string, } & D;");
+    let cfg = Config::from_env();
+    assert_eq!(Item::<()>::decl(&cfg), "type Item<D> = { id: string, } & D;");
     assert_eq!(
-        TwoParameters::<(), ()>::decl(),
+        TwoParameters::<(), ()>::decl(&cfg),
         "type TwoParameters<A, B> = { id: string, ab: [A, B], } & A & B;"
     );
     assert_eq!(
-        Enum::<(), ()>::decl(),
+        Enum::<(), ()>::decl(&cfg),
         "type Enum<A, B> = { \"A\": A } | { \"B\": B } | { \"AB\": [A, B] };"
     );
 }

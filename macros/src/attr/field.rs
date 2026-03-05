@@ -4,7 +4,7 @@ use syn::{
     TypeReference, TypeSlice, TypeTuple,
 };
 
-use super::{parse_assign_from_str, parse_assign_str, Attr, Serde};
+use super::{parse_assign_from_str, parse_assign_str, parse_optional_assign_str, Attr, Serde};
 use crate::{
     optional::{parse_optional, Optional},
     utils::{extract_docs, parse_attrs},
@@ -182,13 +182,14 @@ impl_parse! {
             out.0.maybe_omitted = true;
         },
         "flatten" => out.0.flatten = true,
-        // parse #[serde(default)] to not emit a warning
+        // parse #[serde(default)] to make the TS field optional if `skip_serializing(_if)` is also present.
         "default" => {
-            use syn::Token;
-            if input.peek(Token![=]) {
-                parse_assign_str(input)?;
-            }
+            parse_optional_assign_str(input)?;
             out.0.has_default = true;
+        },
+        // parse #[serde(borrow)] or `#[serde(borrow = "..")]` to not emit a warning
+        "borrow" => {
+            parse_optional_assign_str(input)?;
         },
         "with" => {
             parse_assign_str(input)?;

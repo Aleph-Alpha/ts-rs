@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 trait Bar {
     type Baz;
@@ -22,8 +22,9 @@ struct Foo {
 
 #[test]
 fn test() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Foo::inline(),
+        Foo::inline(&cfg),
         "{ my_optional_bool?: boolean, q_self: number, }"
     );
 }

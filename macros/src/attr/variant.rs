@@ -2,7 +2,10 @@ use syn::{Attribute, Expr, Fields, Ident, Result, Type, Variant};
 
 use super::{parse_assign_expr, Attr, Serde};
 use crate::{
-    attr::{parse_assign_from_str, parse_assign_inflection, parse_assign_str, Inflection},
+    attr::{
+        parse_assign_from_str, parse_assign_inflection, parse_assign_str,
+        parse_optional_assign_str, Inflection,
+    },
     optional::{parse_optional, Optional},
     utils::parse_attrs,
 };
@@ -109,5 +112,9 @@ impl_parse! {
         "rename_all" => out.0.rename_all = Some(parse_assign_inflection(input)?),
         "skip" => out.0.skip = true,
         "untagged" => out.0.untagged = true,
+        // parse #[serde(borrow)] or `#[serde(borrow = "..")]` to not emit a warning
+        "borrow" => {
+            parse_optional_assign_str(input)?;
+        },
     }
 }

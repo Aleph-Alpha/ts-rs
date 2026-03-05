@@ -5,7 +5,7 @@ use std::{
 };
 
 use serde::Serialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 type Unsupported = UnsafeCell<MaybeUninit<NonNull<AtomicPtr<i32>>>>;
 
@@ -33,8 +33,9 @@ struct Override {
 
 #[test]
 fn struct_properties() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Override::inline(),
+        Override::inline(&cfg),
         "{ \
            a: number, \
            x: { a: number, b: number, c: number, }, \
@@ -42,7 +43,7 @@ fn struct_properties() {
            z: [number, ExternalTypeDef, number], \
         }"
     );
-    assert!(Override::dependencies()
+    assert!(Override::dependencies(&cfg)
         .iter()
         .any(|d| d.ts_name == "ExternalTypeDef"));
 }
@@ -95,13 +96,14 @@ enum OverrideVariant {
 fn enum_variants() {
     let a = OverrideVariant::A { x: Instant::now() };
     assert_eq!(serde_json::to_string(&a).unwrap(), r#"{"A":{"x":0}}"#);
+    let cfg = Config::from_env();
     assert_eq!(
-        OverrideEnum::inline(),
+        OverrideEnum::inline(&cfg),
         r#"{ "A": ExternalTypeDef } | { "B": { x: ExternalTypeDef, y: number, z: number, } }"#
     );
 
     assert_eq!(
-        OverrideVariant::inline(),
+        OverrideVariant::inline(&cfg),
         r#"{ "A": OverrideVariantDef } | { "B": { y: number, z: number, } }"#
     );
 }
@@ -119,9 +121,10 @@ struct Outer {
 
 #[test]
 fn complex() {
-    let external = ExternalTypeDef::inline();
+    let cfg = Config::from_env();
+    let external = ExternalTypeDef::inline(&cfg);
     assert_eq!(
-        Outer::inline(),
+        Outer::inline(&cfg),
         format!(r#"{{ x?: {external} | null, y?: ExternalTypeDef | null, }}"#)
     )
 }
