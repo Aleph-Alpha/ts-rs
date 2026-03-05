@@ -207,7 +207,7 @@ fn format_variant(
                 } else {
                     let ty = match field_attr.type_override {
                         Some(type_override) => quote!(#type_override),
-                        None => quote!(<#field_ty as #crate_rename::TS>::name(cfg))
+                        None => quote!(<#field_ty as #crate_rename::TS>::name(cfg)),
                     };
 
                     (

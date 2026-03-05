@@ -1,7 +1,7 @@
 #![cfg(feature = "serde-compat")]
 
 use serde::Serialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[test]
 fn two_variant_enum() {
@@ -20,7 +20,7 @@ fn two_variant_enum() {
     }
 
     assert_eq!(
-        T::optional_inline_flattened(),
+        T::optional_inline_flattened(&Config::default()),
         r#"{ a: string, } & ({ "firstOption": string; "secondOption"?: never } | { "secondOption": boolean; "firstOption"?: never } | { "firstOption"?: never; "secondOption"?: never })"#
     );
 }
@@ -43,7 +43,7 @@ fn three_variant_enum() {
     }
 
     assert_eq!(
-        T::optional_inline_flattened(),
+        T::optional_inline_flattened(&Config::default()),
         r#"{ a: string, } & ({ "firstOption": string; "secondOption"?: never; "thirdOption"?: never } | { "secondOption": boolean; "firstOption"?: never; "thirdOption"?: never } | { "thirdOption": number; "firstOption"?: never; "secondOption"?: never } | { "firstOption"?: never; "secondOption"?: never; "thirdOption"?: never })"#
     );
 }
@@ -68,7 +68,7 @@ fn unit_variants() {
 
     // "first" | "second" | "third" isn't valid
     assert_eq!(
-        T::optional_inline_flattened(),
+        T::optional_inline_flattened(&Config::default()),
         r#"{ a: string, } & ("first" | "second" | "third" | { "first"?: never; "second"?: never; "third"?: never })"#
     );
 }
@@ -93,7 +93,7 @@ fn mixed_variant_types() {
 
     // "unit" isn't valid
     assert_eq!(
-        T::optional_inline_flattened(),
+        T::optional_inline_flattened(&Config::default()),
         r#"{ a: string, } & ("unit" | { "tuple": [number, string]; "unit"?: never; "struct"?: never } | { "struct": { x: number, y: string, }; "unit"?: never; "tuple"?: never } | { "unit"?: never; "tuple"?: never; "struct"?: never })"#
     );
 }
@@ -120,7 +120,7 @@ fn nested_structs() {
     }
 
     assert_eq!(
-        T::optional_inline_flattened(),
+        T::optional_inline_flattened(&Config::default()),
         r#"{ a: string, } & ({ "first": Inner; "second"?: never } | { "second": Inner; "first"?: never } | { "first"?: never; "second"?: never })"#
     );
 }
@@ -141,7 +141,7 @@ fn kebab_case_renaming() {
         flattened: Option<Enum>,
     }
 
-    let result = T::optional_inline_flattened();
+    let result = T::optional_inline_flattened(&Config::default());
 
     assert!(result.contains(r#""first-option": string"#));
     assert!(result.contains(r#""second-option": boolean"#));
@@ -165,7 +165,7 @@ fn single_variant_enum() {
     }
 
     assert_eq!(
-        T::optional_inline_flattened(),
+        T::optional_inline_flattened(&Config::default()),
         r#"{ a: string, } & ({ "only": string; } | { "only"?: never })"#
     );
 }
@@ -187,7 +187,7 @@ fn original_non_optional_enum() {
     }
 
     assert_eq!(
-        T::optional_inline_flattened(),
+        T::optional_inline_flattened(&Config::default()),
         r#"{ a: string, } & ({ "firstOption": string } | { "secondOption": boolean })"#
     );
 }

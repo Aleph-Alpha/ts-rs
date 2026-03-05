@@ -92,7 +92,6 @@ impl DerivedTS {
         let decl = self.generate_decl_fn(&rust_ty, &generics);
         let dependencies = &self.dependencies;
         let generics_fn = self.generate_generics_fn(&generics);
-        let is_enum = self.is_enum;
 
         quote! {
             #[automatically_derived]
@@ -257,7 +256,7 @@ impl DerivedTS {
         let optional_inline_flattened =
             self.optional_inline_flattened.clone().unwrap_or_else(|| {
                 quote! {
-                    panic!("{} cannot be flattened", <Self as #crate_rename::TS>::name())
+                    panic!("{} cannot be flattened", <Self as #crate_rename::TS>::name(cfg))
                 }
             });
 
@@ -316,7 +315,7 @@ impl DerivedTS {
                 #inline_flattened
             }
 
-            fn optional_inline_flattened() -> String {
+            fn optional_inline_flattened(cfg: &#crate_rename::Config) -> String {
                 #optional_inline_flattened
             }
         }
@@ -532,11 +531,7 @@ fn entry(input: proc_macro::TokenStream) -> Result<TokenStream> {
     let input = syn::parse::<Item>(input)?;
     let (ts, ident, generics) = match input {
         Item::Struct(s) => (types::struct_def(&s)?, s.ident, s.generics),
-        Item::Enum(e) => {
-            let mut item_type = types::enum_def(&e)?;
-            item_type.is_enum = true;
-            (item_type, e.ident, e.generics)
-        }
+        Item::Enum(e) => (types::enum_def(&e)?, e.ident, e.generics),
         _ => syn_err!(input.span(); "unsupported item"),
     };
 

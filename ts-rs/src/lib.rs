@@ -100,7 +100,7 @@
 //! from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 //!
 //! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.\
-//! We are currently waiting for [#54140](https://github.com/rust-lang/rust/issues/54140), which will improve the ergonomics arund these diagnostics.
+//! We are currently waiting for [#54140](https://github.com/rust-lang/rust/issues/54140), which will improve the ergonomics around these diagnostics.
 //!
 //! ## Cargo Features
 //! | **Feature**        | **Description**                                                                                                                                     |
@@ -393,9 +393,6 @@ pub trait TS {
     #[doc(hidden)]
     const IS_ENUM: bool = false;
 
-    #[doc(hidden)]
-    const IS_ENUM: bool = false;
-
     /// JSDoc comment to describe this type in TypeScript - when `TS` is derived, docs are
     /// automatically read from your doc comments or `#[doc = ".."]` attributes
     fn docs() -> Option<String> {
@@ -404,7 +401,7 @@ pub trait TS {
 
     /// Identifier of this type, excluding generic parameters.
     fn ident(cfg: &Config) -> String {
-        // by default, fall back to `TS::name()`.
+        // by default, fall back to `TS::name(cfg)`.
         let name = <Self as crate::TS>::name(cfg);
 
         match name.find('<') {
@@ -446,7 +443,9 @@ pub trait TS {
 
     /// Flatten an optional type declaration.
     /// This function will panic if the type cannot be flattened.
-    fn optional_inline_flattened(cfg: &Config) -> String;
+    fn optional_inline_flattened(cfg: &Config) -> String {
+        panic!("{} cannot be flattened", Self::name(cfg))
+    }
 
     /// Iterates over all dependency of this type.
     fn visit_dependencies(_: &mut impl TypeVisitor)
@@ -737,7 +736,6 @@ macro_rules! impl_primitives {
             type OptionInnerType = Self;
             fn name(_: &$crate::Config) -> String { String::from($l) }
             fn inline(cfg: &$crate::Config) -> String { <Self as $crate::TS>::name(cfg) }
-            fn optional_inline_flattened(cfg: &$crate::Config) -> String { <Self as $crate::TS>::name(cfg) }
         }
     )*)* };
 }
@@ -776,9 +774,9 @@ macro_rules! impl_tuples {
                 )*
             }
             fn inline_flattened(_: &$crate::Config) -> String { panic!("tuple cannot be flattened") }
+            fn optional_inline_flattened(_: &$crate::Config) -> String { panic!("tuple cannot be flattened") }
             fn decl(_: &$crate::Config) -> String { panic!("tuple cannot be declared") }
             fn decl_concrete(_: &$crate::Config) -> String { panic!("tuple cannot be declared") }
-            fn optional_inline_flattened(_: &$crate::Config) -> String { panic!("tuple cannot be declared") }
         }
     };
     ( $i2:ident $(, $i:ident)* ) => {
@@ -1053,10 +1051,6 @@ impl<K: TS, V: TS, H> TS for HashMap<K, V, H> {
     fn inline_flattened(cfg: &Config) -> String {
         format!("({})", Self::inline(cfg))
     }
-
-    fn optional_inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
-    }
 }
 
 // TODO: replace manual impl with dummy struct & `impl_shadow` (like for `JsonValue`)
@@ -1086,10 +1080,6 @@ impl<I: TS> TS for Range<I> {
 
     fn inline(cfg: &Config) -> String {
         panic!("{} cannot be inlined", Self::name(cfg))
-    }
-
-    fn optional_inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
 
@@ -1209,10 +1199,6 @@ impl TS for Dummy {
 
     fn inline(cfg: &Config) -> String {
         panic!("{} cannot be inlined", Self::name(cfg))
-    }
-
-    fn optional_inline_flattened() -> String {
-        panic!("{} cannot be flattened", <Self as crate::TS>::name())
     }
 }
 
