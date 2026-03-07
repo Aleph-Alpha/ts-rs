@@ -229,7 +229,7 @@ impl Attr for EnumAttr {
             }
 
             if let Optional::Optional { .. } = self.optional_fields {
-                syn_err!("`optional_fields` is not compatible with `as`");
+                syn_err!("`optional_fields` is not compatible with `repr`");
             }
         }
 
