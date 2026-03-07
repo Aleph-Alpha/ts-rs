@@ -190,8 +190,6 @@ fn export_and_merge(
 
 const HEADER_ERROR_MESSAGE: &str = "The generated strings must have their NOTE and imports separated from their type declarations by a new line";
 
-const DECLARATION_START: &str = "export type ";
-
 /// Inserts the imports and declaration from the newly generated type
 /// into the contents of the file, removimg duplicate imports and organazing
 /// both imports and declarations alphabetically
@@ -252,25 +250,13 @@ fn merge(original_contents: String, new_contents: String) -> String {
 
     let new_decl = new_decl.trim_matches('\n');
 
-    let new_decl_name = new_decl
-        .split(DECLARATION_START)
-        .last()
-        .unwrap()
-        .split_whitespace()
-        .next()
-        .unwrap();
+    let new_decl_name = new_decl.split_whitespace().nth(2).unwrap();
 
     let original_decls = original_decls.split("\n\n").map(|x| x.trim_matches('\n'));
 
     let mut inserted = false;
     for decl in original_decls {
-        let decl_name = decl
-            .split(DECLARATION_START)
-            .last()
-            .unwrap()
-            .split_whitespace()
-            .next()
-            .unwrap();
+        let decl_name = decl.split_whitespace().nth(2).unwrap();
 
         if inserted || decl_name < new_decl_name {
             buffer.push('\n');
