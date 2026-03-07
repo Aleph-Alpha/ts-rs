@@ -241,6 +241,7 @@ fn parse_repr(input: ParseStream) -> Result<Repr> {
     let ident = content.parse::<Ident>()?;
     match ident.to_string().as_str() {
         "name" => Ok(Repr::Name),
-        _ => syn_err!(span; "expected `name`"),
+        "const_object" => Ok(Repr::ConstObject),
+        _ => syn_err!(span; "expected `name` or `const_object`"),
     }
 }

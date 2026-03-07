@@ -41,10 +41,11 @@ pub enum Tagged<'a> {
     Untagged,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Repr {
     Int,
     Name,
+    ConstObject,
 }
 
 impl EnumAttr {

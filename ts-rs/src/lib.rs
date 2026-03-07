@@ -342,9 +342,12 @@ mod tokio;
 ///
 /// - **`#[ts(repr(enum))]`** \
 ///   Exports the enum as a TypeScript enum instead of type union. \
-///   Discriminants (`= {integer}`) are included in the exported enum's variants
+///   Discriminants (`= {integer}`) are included in the exported enum's variants. \
 ///   If `#[ts(repr(enum = name))]` is used, all variants without a discriminant will be exported
-///   as `VariantName = "VariantName"`
+///   as `VariantName = "VariantName"`. \
+///   If `#[ts(repr(enum = const_object))]` or `#[ts(repr(enum = "const-object"))]` is used, the enum is exported as a TypeScript `const` object
+///   alongside a type alias for its values, allowing it to be used at runtime. All variants of the enum
+///   must be unit variants.
 ///
 /// ### enum variant attributes
 ///
