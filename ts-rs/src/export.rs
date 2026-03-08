@@ -250,6 +250,9 @@ fn merge(original_contents: String, new_contents: String) -> String {
 
     let new_decl = new_decl.trim_matches('\n');
 
+    // .nth(2) gets the third (0 based index) word in the string, skiping over
+    // the word "export" and the declaration keyword, which is either "type" or "enum"
+    // and leaving us with the type name
     let new_decl_name = new_decl.split_whitespace().nth(2).unwrap();
 
     let original_decls = original_decls.split("\n\n").map(|x| x.trim_matches('\n'));
