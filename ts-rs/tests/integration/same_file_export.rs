@@ -13,6 +13,14 @@ struct DepB {
 }
 
 #[derive(TS)]
+#[ts(export, export_to = "same_file_export/", repr(enum = const_object))]
+enum DepC {
+    A,
+    B,
+    C,
+}
+
+#[derive(TS)]
 #[ts(export, export_to = "same_file_export/types.ts")]
 struct A {
     foo: DepA,
@@ -30,4 +38,11 @@ struct C {
     foo: DepA,
     bar: DepB,
     biz: B,
+    baz: DepC,
+}
+
+#[derive(TS)]
+#[ts(export, export_to = "same_file_export/types.ts", repr(enum = const_object))]
+enum ConstEnumB {
+    B,
 }
