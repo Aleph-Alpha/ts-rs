@@ -590,7 +590,7 @@ pub struct Config {
     // TS_RS_IMPORT_EXTENSION
     import_extension: Option<String>,
     array_tuple_limit: usize,
-    
+
     export_note: String,
 }
 
@@ -711,8 +711,8 @@ impl Config {
     pub fn array_tuple_limit(&self) -> usize {
         self.array_tuple_limit
     }
-    
-    /// Set the custom export note. 
+
+    /// Set the custom export note.
     /// Default: [`EXPORT_NOTE`]
     pub fn with_custom_export_note(mut self, note: impl Into<String>) -> Self {
         self.export_note = note.into();
