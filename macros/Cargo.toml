@@ -16,6 +16,7 @@ no-serde-warnings = []
 proc-macro = true
 
 [dependencies]
+indexmap = "2"
 proc-macro2 = "1"
 quote = "1"
 syn = { version = "2.0.28", features = ["full", "extra-traits"] }

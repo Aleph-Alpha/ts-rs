@@ -1522,6 +1522,7 @@ dependencies = [
 name = "ts-rs-macros"
 version = "12.0.1"
 dependencies = [
+ "indexmap",
  "proc-macro2",
  "quote",
  "syn 2.0.90",
