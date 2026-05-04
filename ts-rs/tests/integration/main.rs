@@ -6,6 +6,7 @@ use ts_rs::{Config, TS};
 
 mod arrays;
 mod arrayvec;
+mod astrolabe;
 mod bound;
 mod bson;
 mod chrono;
