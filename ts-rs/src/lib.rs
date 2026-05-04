@@ -123,6 +123,7 @@
 //! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                               |
 //! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                |
 //! | arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                            |
+//! | astrolabe-impl     | Implement `TS` for types from *astrolabe*
 //!
 //! ## Contributing
 //! Contributions are always welcome!
