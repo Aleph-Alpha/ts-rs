@@ -75,6 +75,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "astrolabe"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cce4de37eb70265f1fe35d8d39a63d3b7ff1a71284dbb2d1fd72ca5766e7409f"
+
+[[package]]
 name = "autocfg"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1498,6 +1504,7 @@ name = "ts-rs"
 version = "12.0.1"
 dependencies = [
  "arrayvec",
+ "astrolabe",
  "bigdecimal",
  "bson",
  "bytes",

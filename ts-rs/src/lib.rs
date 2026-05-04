@@ -148,6 +148,8 @@ pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
 
+#[cfg(feature = "astrolabe-impl")]
+mod astrolabe;
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
