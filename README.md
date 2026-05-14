@@ -102,7 +102,7 @@ Supported serde attributes: `rename`, `rename-all`, `rename-all-fields`, `tag`, 
 from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 
 When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.\
-We are currently waiting for [#54140](https://github.com/rust-lang/rust/issues/54140), which will improve the ergonomics arund these diagnostics.
+We are currently waiting for [#54140](https://github.com/rust-lang/rust/issues/54140), which will improve the ergonomics around these diagnostics.
 
 ### Cargo Features
 | **Feature**        | **Description**                                                                                                                                     |

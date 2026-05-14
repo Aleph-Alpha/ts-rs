@@ -80,7 +80,10 @@ struct RenameSerdeSpecialChar {
 #[test]
 fn serde_rename_special_char() {
     let cfg = Config::from_env();
-    assert_eq!(RenameSerdeSpecialChar::inline(&cfg), r#"{ "a/b": number, }"#);
+    assert_eq!(
+        RenameSerdeSpecialChar::inline(&cfg),
+        r#"{ "a/b": number, }"#
+    );
 }
 
 // struct-level renames

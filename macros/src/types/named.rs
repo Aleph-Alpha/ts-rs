@@ -65,6 +65,7 @@ pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> R
         // results in simpler type definitions.
         inline: quote!(#inline.replace(" } & { ", " ")),
         inline_flattened: Some(quote!(#inline_flattened.replace(" } & { ", " "))),
+        optional_inline_flattened: Some(quote!(#inline_flattened.replace(" } & { ", " "))),
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,

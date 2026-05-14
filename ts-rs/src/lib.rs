@@ -100,7 +100,7 @@
 //! from the generated type, but cannot use `#[serde(skip)]`, use `#[ts(skip)]` instead.
 //!
 //! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.\
-//! We are currently waiting for [#54140](https://github.com/rust-lang/rust/issues/54140), which will improve the ergonomics arund these diagnostics.
+//! We are currently waiting for [#54140](https://github.com/rust-lang/rust/issues/54140), which will improve the ergonomics around these diagnostics.
 //!
 //! ## Cargo Features
 //! | **Feature**        | **Description**                                                                                                                                     |
@@ -382,6 +382,7 @@ pub trait TS {
     ///     // ...
     ///     # fn name(_: &ts_rs::Config) -> String { todo!() }
     ///     # fn inline(_: &ts_rs::Config) -> String { todo!() }
+    ///     # fn optional_inline_flattened(_: &ts_rs::Config) -> String { todo!() }
     /// }
     /// ```
     type WithoutGenerics: TS + ?Sized;
@@ -392,7 +393,6 @@ pub trait TS {
 
     #[doc(hidden)]
     const IS_OPTION: bool = false;
-
     #[doc(hidden)]
     const IS_ENUM: bool = false;
 
@@ -404,7 +404,7 @@ pub trait TS {
 
     /// Identifier of this type, excluding generic parameters.
     fn ident(cfg: &Config) -> String {
-        // by default, fall back to `TS::name()`.
+        // by default, fall back to `TS::name(cfg)`.
         let name = <Self as crate::TS>::name(cfg);
 
         match name.find('<') {
@@ -441,6 +441,12 @@ pub trait TS {
     /// Flatten a type declaration.
     /// This function will panic if the type cannot be flattened.
     fn inline_flattened(cfg: &Config) -> String {
+        panic!("{} cannot be flattened", Self::name(cfg))
+    }
+
+    /// Flatten an optional type declaration.
+    /// This function will panic if the type cannot be flattened.
+    fn optional_inline_flattened(cfg: &Config) -> String {
         panic!("{} cannot be flattened", Self::name(cfg))
     }
 
@@ -771,6 +777,7 @@ macro_rules! impl_tuples {
                 )*
             }
             fn inline_flattened(_: &$crate::Config) -> String { panic!("tuple cannot be flattened") }
+            fn optional_inline_flattened(_: &$crate::Config) -> String { panic!("tuple cannot be flattened") }
             fn decl(_: &$crate::Config) -> String { panic!("tuple cannot be declared") }
             fn decl_concrete(_: &$crate::Config) -> String { panic!("tuple cannot be declared") }
         }
@@ -791,6 +798,7 @@ macro_rules! impl_wrapper {
             fn name(cfg: &$crate::Config) -> String { <T as $crate::TS>::name(cfg) }
             fn inline(cfg: &$crate::Config) -> String { <T as $crate::TS>::inline(cfg) }
             fn inline_flattened(cfg: &$crate::Config) -> String { <T as $crate::TS>::inline_flattened(cfg) }
+            fn optional_inline_flattened(cfg: &$crate::Config) -> String { <T as $crate::TS>::optional_inline_flattened(cfg) }
             fn visit_dependencies(v: &mut impl TypeVisitor)
             where
                 Self: 'static,
@@ -821,6 +829,7 @@ macro_rules! impl_shadow {
             fn name(cfg: &$crate::Config) -> String { <$s as $crate::TS>::name(cfg) }
             fn inline(cfg: &$crate::Config) -> String { <$s as $crate::TS>::inline(cfg) }
             fn inline_flattened(cfg: &$crate::Config) -> String { <$s as $crate::TS>::inline_flattened(cfg) }
+            fn optional_inline_flattened(cfg: &$crate::Config) -> String { <$s as $crate::TS>::optional_inline_flattened(cfg) }
             fn visit_dependencies(v: &mut impl $crate::TypeVisitor)
             where
                 Self: 'static,
@@ -851,6 +860,18 @@ impl<T: TS> TS for Option<T> {
 
     fn inline(cfg: &Config) -> String {
         format!("{} | null", T::inline(cfg))
+    }
+
+    fn inline_flattened(cfg: &Config) -> String {
+        if <T as crate::TS>::IS_ENUM {
+            <T as crate::TS>::optional_inline_flattened(cfg)
+        } else {
+            <T as crate::TS>::inline_flattened(cfg)
+        }
+    }
+
+    fn optional_inline_flattened(cfg: &Config) -> String {
+        <T as crate::TS>::optional_inline_flattened(cfg)
     }
 
     fn visit_dependencies(v: &mut impl TypeVisitor)

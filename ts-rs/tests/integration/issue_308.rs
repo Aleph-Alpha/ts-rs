@@ -13,6 +13,7 @@ trait Malicious {
     fn name() -> String { unimplemented!() }
     fn inline() -> String { unimplemented!() }
     fn inline_flattened() -> String { unimplemented!() }
+    fn optional_inline_flattened() -> String { unimplemented!() }
     fn dependencies() -> Vec<Dependency> { unimplemented!() }
     fn visit_dependencies(_: &mut impl TypeVisitor) { unimplemented!() }
     fn visit_generics(_: &mut impl TypeVisitor) { unimplemented!() }
