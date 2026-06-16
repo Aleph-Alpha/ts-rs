@@ -35,8 +35,8 @@ pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> R
         )?;
     }
 
-    let fields = quote!(<[String]>::join(&[#(#formatted_fields),*], " "));
-    let flattened = quote!(<[String]>::join(&[#(#flattened_fields),*], " & "));
+    let fields = quote!(<[::std::string::String]>::join(&[#(#formatted_fields),*], " "));
+    let flattened = quote!(<[::std::string::String]>::join(&[#(#flattened_fields),*], " & "));
 
     let inline = match (formatted_fields.len(), flattened_fields.len()) {
         (0, 0) => quote!("{  }".to_owned()),
