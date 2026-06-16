@@ -78,6 +78,7 @@ mod union_serde;
 mod union_unnamed_serde_skip;
 mod union_with_data;
 mod union_with_internal_tag;
+mod heapless_string;
 mod unit;
 mod r#unsized;
 
