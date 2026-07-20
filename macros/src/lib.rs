@@ -72,7 +72,7 @@ impl DerivedTS {
         let docs = match &*self.docs {
             [] => None,
             docs => Some(quote! {
-                fn docs() -> Option<String> {
+                fn docs() -> Option<::std::string::String> {
                     Some(#crate_rename::format_docs(&[#(#docs),*]))
                 }
             }),
@@ -102,7 +102,7 @@ impl DerivedTS {
 
                 const IS_ENUM: bool = #is_enum;
 
-                fn ident(cfg: &#crate_rename::Config) -> String {
+                fn ident(cfg: &#crate_rename::Config) -> ::std::string::String {
                     (#ident).to_string()
                 }
 
@@ -178,11 +178,11 @@ impl DerivedTS {
                 impl #crate_rename::TS for #generics {
                     type WithoutGenerics = #generics;
                     type OptionInnerType = Self;
-                    fn name(cfg: &#crate_rename::Config) -> String { stringify!(#generics).to_owned() }
-                    fn inline(cfg: &#crate_rename::Config) -> String { panic!("{} cannot be inlined", #name) }
-                    fn inline_flattened(cfg: &#crate_rename::Config) -> String { stringify!(#generics).to_owned() }
-                    fn decl(cfg: &#crate_rename::Config) -> String { panic!("{} cannot be declared", #name) }
-                    fn decl_concrete(cfg: &#crate_rename::Config) -> String { panic!("{} cannot be declared", #name) }
+                    fn name(cfg: &#crate_rename::Config) -> ::std::string::String { stringify!(#generics).to_owned() }
+                    fn inline(cfg: &#crate_rename::Config) -> ::std::string::String { panic!("{} cannot be inlined", #name) }
+                    fn inline_flattened(cfg: &#crate_rename::Config) -> ::std::string::String { stringify!(#generics).to_owned() }
+                    fn decl(cfg: &#crate_rename::Config) -> ::std::string::String { panic!("{} cannot be declared", #name) }
+                    fn decl_concrete(cfg: &#crate_rename::Config) -> ::std::string::String { panic!("{} cannot be declared", #name) }
                 }
             )*
         }
@@ -237,7 +237,7 @@ impl DerivedTS {
         let crate_rename = &self.crate_rename;
         let name = self.name_with_generics(generics);
         quote! {
-            fn name(cfg: &#crate_rename::Config) -> String {
+            fn name(cfg: &#crate_rename::Config) -> ::std::string::String {
                 #name
             }
         }
@@ -265,7 +265,7 @@ impl DerivedTS {
                     return "never".into()
                 }
 
-                let mut buffer = String::new();
+                let mut buffer = ::std::string::String::new();
                 let mut latest = None::<isize>;
 
                 for variant in variants {
@@ -288,7 +288,7 @@ impl DerivedTS {
                     return "never".into()
                 }
 
-                let mut buffer = String::new();
+                let mut buffer = ::std::string::String::new();
                 for variant in variants {
                     buffer.push_str(&variant);
                     buffer.push_str(" | ");
@@ -300,11 +300,11 @@ impl DerivedTS {
         };
 
         quote! {
-            fn inline(cfg: &#crate_rename::Config) -> String {
+            fn inline(cfg: &#crate_rename::Config) -> ::std::string::String {
                 #inline
             }
 
-            fn inline_flattened(cfg: &#crate_rename::Config) -> String {
+            fn inline_flattened(cfg: &#crate_rename::Config) -> ::std::string::String {
                 #inline_flattened
             }
         }
@@ -321,11 +321,11 @@ impl DerivedTS {
         if self.ts_enum.is_some() {
             let inline = &self.inline;
             return quote! {
-                fn decl_concrete(cfg: &#crate_rename::Config) -> String {
+                fn decl_concrete(cfg: &#crate_rename::Config) -> ::std::string::String {
                     format!("enum {} {{ {} }}", #name, #inline)
                 }
 
-                fn decl(cfg: &#crate_rename::Config) -> String {
+                fn decl(cfg: &#crate_rename::Config) -> ::std::string::String {
                     format!("enum {} {{ {} }}", #name, #inline)
                 }
             };
@@ -356,10 +356,10 @@ impl DerivedTS {
             G::Const(ConstParam { ident, .. }) => Some(quote!(#ident)),
         });
         quote! {
-            fn decl_concrete(cfg: &#crate_rename::Config) -> String {
+            fn decl_concrete(cfg: &#crate_rename::Config) -> ::std::string::String {
                 format!("type {} = {};", #name, <Self as #crate_rename::TS>::inline(cfg))
             }
-            fn decl(cfg: &#crate_rename::Config) -> String {
+            fn decl(cfg: &#crate_rename::Config) -> ::std::string::String {
                 #generic_types
                 let inline = <#rust_ty<#(#generic_idents,)*> as #crate_rename::TS>::inline(cfg);
                 let generics = #ts_generics;
