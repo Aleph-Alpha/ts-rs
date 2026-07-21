@@ -124,6 +124,7 @@
 //! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                |
 //! | arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                            |
 //! | astrolabe-impl     | Implement `TS` for types from *astrolabe*
+//! | nonempty-impl      | Implement `TS` for types from *nonempty*
 //!
 //! ## Contributing
 //! Contributions are always welcome!
