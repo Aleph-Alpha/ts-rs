@@ -9,10 +9,10 @@ homepage = "https://github.com/Aleph-Alpha/ts-rs"
 repository = "https://github.com/Aleph-Alpha/ts-rs"
 keywords = ["typescript", "ts", "bindings", "ts-rs", "wasm"]
 categories = [
-    "development-tools::ffi",
-    "development-tools::build-utils",
-    "wasm",
-    "web-programming",
+  "development-tools::ffi",
+  "development-tools::build-utils",
+  "wasm",
+  "web-programming",
 ]
 readme = "../README.md"
 rust-version = "1.78.0"
@@ -39,6 +39,7 @@ tokio-impl = ["tokio"]
 jiff-impl = ["jiff"]
 arrayvec-impl = ["arrayvec"]
 astrolabe-impl = ["dep:astrolabe"]
+nonempty-impl = ["dep:nonempty"]
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -53,7 +54,9 @@ thiserror = "2"
 heapless = { version = ">= 0.7, < 0.10", optional = true }
 dprint-plugin-typescript = { version = "= 0.95", optional = true }
 chrono = { version = "0.4", optional = true }
-bigdecimal = { version = ">= 0.0.13, < 0.5", features = ["serde"], optional = true }
+bigdecimal = { version = ">= 0.0.13, < 0.5", features = [
+  "serde",
+], optional = true }
 uuid = { version = "1", optional = true }
 bson = { version = "2", optional = true }
 bytes = { version = "1", optional = true }
@@ -67,3 +70,4 @@ tokio = { version = "1", features = ["sync"], optional = true }
 jiff = { version = "0.2", optional = true }
 arrayvec = { version = ">= 0.6, < 0.8", optional = true }
 astrolabe = { version = "0.5.4", optional = true }
+nonempty = { version = "0", optional = true }

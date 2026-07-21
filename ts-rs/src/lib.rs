@@ -156,6 +156,8 @@ mod chrono;
 mod export;
 #[cfg(feature = "jiff-impl")]
 mod jiff;
+#[cfg(feature = "nonempty-impl")]
+mod nonempty;
 #[cfg(feature = "serde-json-impl")]
 mod serde_json;
 #[cfg(feature = "tokio-impl")]
