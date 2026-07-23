@@ -13,6 +13,7 @@ mod chrono;
 mod complex_flattened_type;
 mod concrete_generic;
 mod docs;
+mod either;
 mod enum_flattening;
 mod enum_flattening_nested;
 mod enum_struct_rename_all;

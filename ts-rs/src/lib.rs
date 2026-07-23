@@ -125,6 +125,7 @@
 //! | arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                            |
 //! | astrolabe-impl     | Implement `TS` for types from *astrolabe*
 //! | nonempty-impl      | Implement `TS` for types from *nonempty*
+//! | either-impl        | Implement `TS` for types from *either*
 //!
 //! ## Contributing
 //! Contributions are always welcome!
@@ -154,6 +155,8 @@ pub use crate::export::ExportError;
 mod astrolabe;
 #[cfg(feature = "chrono-impl")]
 mod chrono;
+#[cfg(feature = "either-impl")]
+mod either;
 mod export;
 #[cfg(feature = "jiff-impl")]
 mod jiff;
