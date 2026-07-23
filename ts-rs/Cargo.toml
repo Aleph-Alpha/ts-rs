@@ -18,7 +18,7 @@ readme = "../README.md"
 rust-version = "1.78.0"
 
 [features]
-default = ["serde-compat"]
+default = ["serde-compat", "either-impl"]
 
 chrono-impl = ["chrono"]
 bigdecimal-impl = ["bigdecimal"]
@@ -40,6 +40,7 @@ jiff-impl = ["jiff"]
 arrayvec-impl = ["arrayvec"]
 astrolabe-impl = ["dep:astrolabe"]
 nonempty-impl = ["dep:nonempty"]
+either-impl = ["dep:either"]
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -71,3 +72,4 @@ jiff = { version = "0.2", optional = true }
 arrayvec = { version = ">= 0.6, < 0.8", optional = true }
 astrolabe = { version = "0.5.4", optional = true }
 nonempty = { version = "0", optional = true }
+either = { version = "1", optional = true }
