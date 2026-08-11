@@ -46,7 +46,6 @@ macro_rules! impl_parse {
                             "Unknown attribute \"{x}\". Allowed attributes are: {}",
                             [$(stringify!($k),)*].join(", ")
                         )
-
                     }
 
                     if $input.is_empty() {
@@ -265,7 +264,7 @@ pub fn format_generics(
                 if let Some(default) = &type_param.default {
                     deps.push(default);
                     Some(quote!(
-                        format!("{} = {}", #ty, <#default as #crate_rename::TS>::name())
+                        format!("{} = {}", #ty, <#default as #crate_rename::TS>::name(cfg))
                     ))
                 } else {
                     Some(quote!(#ty.to_owned()))

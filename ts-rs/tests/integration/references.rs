@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "references/")]
@@ -12,8 +12,9 @@ struct FullOfRefs<'a> {
 
 #[test]
 fn references() {
+    let cfg = Config::from_env();
     assert_eq!(
-        FullOfRefs::inline(),
+        FullOfRefs::inline(&cfg),
         "{ str_slice: string, ref_slice: Array<string>, num_ref: number, }"
     )
 }

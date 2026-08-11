@@ -1,6 +1,6 @@
 [package]
 name = "ts-rs"
-version = "11.1.0"
+version = "12.0.1"
 authors = ["Moritz Bischof <moritz.bischof1@gmail.com>"]
 edition = "2021"
 license = "MIT"
@@ -40,6 +40,8 @@ export = ["ts-rs-macros/export"]
 generate-metadata = []
 tokio-impl = ["tokio"]
 jiff-impl = ["jiff"]
+arrayvec-impl = ["arrayvec"]
+astrolabe-impl = ["dep:astrolabe"]
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -48,10 +50,10 @@ chrono = { version = "0.4", features = ["serde"] }
 tokio = { version = "1.40", features = ["sync", "rt"] }
 
 [dependencies]
-ts-rs-macros = { version = "=11.1.0", path = "../macros" }
+ts-rs-macros = { version = "=12.0.1", path = "../macros" }
 thiserror = "2"
 
-heapless = { version = ">= 0.7, < 0.9", optional = true }
+heapless = { version = ">= 0.7, < 0.10", optional = true }
 dprint-plugin-typescript = { version = "= 0.95", optional = true }
 chrono = { version = "0.4", optional = true }
 bigdecimal = { version = ">= 0.0.13, < 0.5", features = ["serde"], optional = true }
@@ -66,3 +68,5 @@ ordered-float = { version = ">= 3, < 6", optional = true }
 serde_json = { version = "1", optional = true }
 tokio = { version = "1", features = ["sync"], optional = true }
 jiff = { version = "0.2", optional = true }
+arrayvec = { version = ">= 0.6, < 0.8", optional = true }
+astrolabe = { version = "0.5.4", optional = true }

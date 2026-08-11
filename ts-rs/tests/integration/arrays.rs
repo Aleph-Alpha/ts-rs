@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "arrays/")]
@@ -10,13 +10,15 @@ struct Interface {
 
 #[test]
 fn free() {
-    assert_eq!(<[String; 4]>::inline(), "[string, string, string, string]")
+    let cfg = Config::from_env();
+    assert_eq!(<[String; 4]>::inline(&cfg), "[string, string, string, string]")
 }
 
 #[test]
 fn interface() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Interface::inline(),
+        Interface::inline(&cfg),
         "{ a: [number, number, number, number], }"
     )
 }
@@ -26,5 +28,6 @@ fn newtype() {
     #[derive(TS)]
     struct Newtype(#[allow(dead_code)] [i32; 4]);
 
-    assert_eq!(Newtype::inline(), "[number, number, number, number]")
+    let cfg = Config::from_env();
+    assert_eq!(Newtype::inline(&cfg), "[number, number, number, number]")
 }

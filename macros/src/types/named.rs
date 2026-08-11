@@ -35,8 +35,8 @@ pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> R
         )?;
     }
 
-    let fields = quote!(<[String]>::join(&[#(#formatted_fields),*], " "));
-    let flattened = quote!(<[String]>::join(&[#(#flattened_fields),*], " & "));
+    let fields = quote!(<[::std::string::String]>::join(&[#(#formatted_fields),*], " "));
+    let flattened = quote!(<[::std::string::String]>::join(&[#(#flattened_fields),*], " & "));
 
     let inline = match (formatted_fields.len(), flattened_fields.len()) {
         (0, 0) => quote!("{  }".to_owned()),
@@ -73,6 +73,7 @@ pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> R
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+        is_enum: quote!(false),
     })
 }
 
@@ -114,9 +115,16 @@ fn format_field(
     );
     let optional_annotation = quote!(if #is_optional { "?" } else { "" });
 
+    if field_attr.type_override.is_none() {
+        if field_attr.inline || field_attr.flatten {
+            dependencies.append_from(&ty);
+        } else {
+            dependencies.push(&ty);
+        }
+    }
+
     if field_attr.flatten {
-        flattened_fields.push(quote!(<#ty as #crate_rename::TS>::inline_flattened()));
-        dependencies.append_from(&ty);
+        flattened_fields.push(quote!(<#ty as #crate_rename::TS>::inline_flattened(cfg)));
         return Ok(());
     }
 
@@ -125,11 +133,9 @@ fn format_field(
         .map(|t| quote!(#t))
         .unwrap_or_else(|| {
             if field_attr.inline {
-                dependencies.append_from(&ty);
-                quote!(<#ty as #crate_rename::TS>::inline())
+                quote!(<#ty as #crate_rename::TS>::inline(cfg))
             } else {
-                dependencies.push(&ty);
-                quote!(<#ty as #crate_rename::TS>::name())
+                quote!(<#ty as #crate_rename::TS>::name(cfg))
             }
         });
 

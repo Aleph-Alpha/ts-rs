@@ -40,6 +40,7 @@ pub(crate) fn tuple(attr: &StructAttr, ts_name: Expr, fields: &FieldsUnnamed) ->
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+        is_enum: quote!(false),
     })
 }
 
@@ -66,16 +67,22 @@ fn format_field(
         field.span(),
     );
 
+    if field_attr.type_override.is_none() {
+        if field_attr.inline {
+            dependencies.append_from(&ty);
+        } else {
+            dependencies.push(&ty);
+        }
+    }
+
     let formatted_ty = field_attr
         .type_override
         .map(|t| quote!(#t.to_owned()))
         .unwrap_or_else(|| {
             if field_attr.inline {
-                dependencies.append_from(&ty);
-                quote!(<#ty as #crate_rename::TS>::inline())
+                quote!(<#ty as #crate_rename::TS>::inline(cfg))
             } else {
-                dependencies.push(&ty);
-                quote!(<#ty as #crate_rename::TS>::name())
+                quote!(<#ty as #crate_rename::TS>::name(cfg))
             }
         });
 

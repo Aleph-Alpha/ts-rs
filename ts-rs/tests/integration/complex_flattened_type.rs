@@ -1,4 +1,4 @@
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 /// Defines the type of input and its intial fields
 #[derive(TS)]
@@ -39,12 +39,13 @@ pub struct InputField {
 
 #[test]
 fn complex_flattened_type() {
+    let cfg = Config::from_env();
     assert_eq!(
-        InputFieldElement::decl(),
+        InputFieldElement::decl(&cfg),
         r#"type InputFieldElement = { "type": "Label", text: string, } | { "type": "Input", name: string | null, placeholder: string | null, default: string | null, } & ({ "input_type": "Text" } | { "input_type": "Expression" } | { "input_type": "Number", min: number | null, max: number | null, } | { "input_type": "Dropdown", options: Array<[string, string]>, });"#
     );
     assert_eq!(
-        InputField::decl(),
+        InputField::decl(&cfg),
         r#"type InputField = { "type": "Label", text: string, } | { "type": "Input", name: string | null, placeholder: string | null, default: string | null, } & ({ "input_type": "Text" } | { "input_type": "Expression" } | { "input_type": "Number", min: number | null, max: number | null, } | { "input_type": "Dropdown", options: Array<[string, string]>, });"#
     )
 }

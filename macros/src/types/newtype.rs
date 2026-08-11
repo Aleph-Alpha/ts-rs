@@ -35,12 +35,12 @@ pub(crate) fn newtype(
 
     let inline_def = match field_attr.type_override {
         Some(ref o) => quote!(#o.to_owned()),
-        None if field_attr.inline => quote!(<#inner_ty as #crate_rename::TS>::inline()),
-        None => quote!(<#inner_ty as #crate_rename::TS>::name()),
+        None if field_attr.inline => quote!(<#inner_ty as #crate_rename::TS>::inline(cfg)),
+        None => quote!(<#inner_ty as #crate_rename::TS>::name(cfg)),
     };
 
     Ok(DerivedTS {
-        crate_rename,
+        crate_rename: crate_rename.clone(),
         inline: inline_def,
         inline_flattened: None,
         docs: attr.docs.clone(),
@@ -51,5 +51,10 @@ pub(crate) fn newtype(
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+        is_enum: if field_attr.type_override.is_none() {
+            quote!(<#inner_ty as #crate_rename::TS>::IS_ENUM)
+        } else {
+            quote!(false)
+        },
     })
 }

@@ -19,7 +19,7 @@ pub(crate) fn type_as_struct(
 
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),
-        inline: quote!(<#type_as as #crate_rename::TS>::inline()),
+        inline: quote!(<#type_as as #crate_rename::TS>::inline(cfg)),
         inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies,
@@ -29,6 +29,7 @@ pub(crate) fn type_as_struct(
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+        is_enum: quote!(<#type_as as #crate_rename::TS>::IS_ENUM),
     })
 }
 
@@ -40,7 +41,7 @@ pub(crate) fn type_as_enum(attr: &EnumAttr, ts_name: Expr, type_as: &Type) -> Re
 
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),
-        inline: quote!(<#type_as as #crate_rename::TS>::inline()),
+        inline: quote!(<#type_as as #crate_rename::TS>::inline(cfg)),
         inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies,
@@ -50,5 +51,6 @@ pub(crate) fn type_as_enum(attr: &EnumAttr, ts_name: Expr, type_as: &Type) -> Re
         concrete: attr.concrete.clone(),
         bound: attr.bound.clone(),
         ts_enum: None,
+        is_enum: quote!(<#type_as as #crate_rename::TS>::IS_ENUM),
     })
 }

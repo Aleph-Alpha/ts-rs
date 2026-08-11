@@ -3,7 +3,7 @@ use std::{collections::HashMap, sync::Arc};
 
 #[cfg(feature = "serde-compat")]
 use serde::Serialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "self_referential/")]
@@ -29,8 +29,9 @@ struct T<'a> {
 
 #[test]
 fn named() {
+    let cfg = Config::from_env();
     assert_eq!(
-        T::decl(),
+        T::decl(&cfg),
         "type T = { \
             t_box: T, \
             self_box: T, \
@@ -76,15 +77,16 @@ enum ExternallyTagged {
 
 #[test]
 fn enum_externally_tagged() {
+    let cfg = Config::from_env();
     assert_eq!(
-        ExternallyTagged::decl(),
+        ExternallyTagged::decl(&cfg),
        "type E = { \"A\": E } | \
                  { \"B\": E } | \
                  { \"C\": E } | \
                  { \"D\": E } | \
                  { \"E\": [E, E, E, E] } | \
-                 { \"F\": { a: E, b: E, c: { [key in string]?: E }, d: E | null, e?: E | null, f?: E, } } | \
-                 { \"G\": [Array<E>, Array<E>, { [key in string]?: E }] };"
+                 { \"F\": { a: E, b: E, c: { [key in string]: E }, d: E | null, e?: E | null, f?: E, } } | \
+                 { \"G\": [Array<E>, Array<E>, { [key in string]: E }] };"
     );
 }
 
@@ -115,8 +117,9 @@ enum InternallyTagged {
 //       gets lost during the translation to TypeScript (e.g "Box<T>" => "T").
 #[test]
 fn enum_internally_tagged() {
+    let cfg = Config::from_env();
     assert_eq!(
-        InternallyTagged::decl(),
+        InternallyTagged::decl(&cfg),
         "type I = { \"tag\": \"A\" } & I | \
                   { \"tag\": \"B\" } & I | \
                   { \"tag\": \"C\" } & I | \
@@ -158,8 +161,9 @@ enum AdjacentlyTagged {
 //       gets lost during the translation to TypeScript (e.g "Box<T>" => "T").
 #[test]
 fn enum_adjacently_tagged() {
+    let cfg = Config::from_env();
     assert_eq!(
-        AdjacentlyTagged::decl(),
+        AdjacentlyTagged::decl(&cfg),
         "type A = { \"tag\": \"A\", \"content\": A } | \
                   { \"tag\": \"B\", \"content\": A } | \
                   { \"tag\": \"C\", \"content\": A } | \
@@ -170,7 +174,7 @@ fn enum_adjacently_tagged() {
                      \"content\": { \
                          a: A, \
                          b: A, \
-                         c: { [key in string]?: A }, \
+                         c: { [key in string]: A }, \
                          d: A | null, \
                          e?: A | null, \
                          f?: A, \
@@ -181,7 +185,7 @@ fn enum_adjacently_tagged() {
                      \"content\": [\
                         Array<A>, \
                         [A, A, A, A], \
-                        { [key in string]?: A }\
+                        { [key in string]: A }\
                      ] \
                   };"
     );

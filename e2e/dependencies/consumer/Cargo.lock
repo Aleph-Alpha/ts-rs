@@ -19,9 +19,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.94"
+version = "1.0.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a31971752e70b8b2686d7e46ec17fb38dad4051d94024c88df49b667caea9c84"
+checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
 dependencies = [
  "unicode-ident",
 ]
@@ -37,9 +37,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.100"
+version = "2.0.114"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b09a44accad81e1ba1cd74a32461ba89dee89095ba17b32f5d03683b1b1fc2a0"
+checksum = "d4d107df263a3013ef9b1879b0df87d706ff80f65a86ea879bd9c31f9b307c2a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -57,18 +57,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.12"
+version = "2.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "567b8a2dae586314f7be2a752ec7474332959c6460e02bde30d702a66d488708"
+checksum = "4288b5bcbc7920c07a1149a35cf9590a2aa808e0bc1eafaade0b80947865fbc4"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.12"
+version = "2.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f7cf42b4507d8ea322120659672cf1b9dbb93f8f2d4ecfd6e51350ff5b17a1d"
+checksum = "ebc4ee7f67670e9b64d05fa4253e753e016c6c95ff35b89b7941d6b856dec1d5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -77,7 +77,7 @@ dependencies = [
 
 [[package]]
 name = "ts-rs"
-version = "10.1.0"
+version = "11.1.0"
 dependencies = [
  "thiserror",
  "ts-rs-macros",
@@ -85,7 +85,7 @@ dependencies = [
 
 [[package]]
 name = "ts-rs-macros"
-version = "10.1.0"
+version = "11.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
