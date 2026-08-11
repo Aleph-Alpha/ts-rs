@@ -132,7 +132,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
         std::fs::create_dir_all(parent)?;
     }
 
-    export_and_merge::<T>(path, type_name, buffer)?;
+    export_and_merge::<T>(cfg, path, type_name, buffer)?;
 
     Ok(())
 }
@@ -140,6 +140,7 @@ pub(crate) fn export_to<T: TS + ?Sized + 'static, P: AsRef<Path>>(
 /// Exports the type to a new file if the file hasn't yet been written to.
 /// Otherwise, finds its place in the already existing file and inserts it.
 fn export_and_merge<T: TS + ?Sized>(
+    cfg: &Config,
     path: PathBuf,
     type_name: String,
     generated_type: String,
@@ -155,13 +156,13 @@ fn export_and_merge<T: TS + ?Sized>(
             .to_string_lossy()
             .into_owned();
 
-        let type_ts_name = T::ident();
+        let type_ts_name = T::ident(cfg);
         let type_rs_name = std::any::type_name::<T>().split('<').next().unwrap();
 
         std::fs::OpenOptions::new()
             .append(true)
             .create(true)
-            .open(default_out_dir().join("ts-rs.meta"))?
+            .open(cfg.out_dir().join("ts-rs.meta"))?
             .write_fmt(format_args!(
                 "{type_ts_name},{type_rs_name},./{relative_path}\n"
             ))?;

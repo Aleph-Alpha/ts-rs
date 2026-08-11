@@ -143,6 +143,7 @@ use std::{
     },
     ops::{Range, RangeInclusive},
     path::{Path, PathBuf},
+    sync::OnceLock,
 };
 
 pub use ts_rs_macros::TS;
