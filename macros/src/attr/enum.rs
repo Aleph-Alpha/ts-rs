@@ -8,7 +8,10 @@ use super::{
     parse_assign_expr, parse_assign_from_str, parse_bound, parse_repr, Attr, ContainerAttr, Serde,
 };
 use crate::{
-    attr::{parse_assign_inflection, parse_assign_str, parse_concrete, Inflection},
+    attr::{
+        parse_assign_inflection, parse_assign_str, parse_concrete, parse_optional_assign_str,
+        Inflection,
+    },
     optional::{parse_optional, Optional},
     utils::{extract_docs, parse_attrs},
 };
@@ -289,6 +292,11 @@ impl_parse! {
         "content" => out.0.content = Some(parse_assign_str(input)?),
         "untagged" => out.0.untagged = true,
         "bound" => out.0.bound = Some(parse_bound(input)?),
+        // parse #[serde(deny_unknown_fields)] and #[serde(default)] to not
+        // emit a warning (mirrors the StructAttr handling from PR #157).
+        "deny_unknown_fields" | "default" => {
+            parse_optional_assign_str(input)?;
+        },
 
         // parse #[serde(crate = "...")] to not emit a warning
         "crate" => {

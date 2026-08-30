@@ -123,6 +123,7 @@
 //! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                               |
 //! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                |
 //! | arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                            |
+//! | astrolabe-impl     | Implement `TS` for types from *astrolabe*
 //!
 //! ## Contributing
 //! Contributions are always welcome!
@@ -148,6 +149,8 @@ pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
 
+#[cfg(feature = "astrolabe-impl")]
+mod astrolabe;
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
@@ -551,7 +554,7 @@ pub trait TypeVisitor: Sized {
 
 /// A typescript type which is depended upon by other types.
 /// This information is required for generating the correct import statements.
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Dependency {
     /// Type ID of the rust type
     pub type_id: TypeId,
@@ -561,6 +564,21 @@ pub struct Dependency {
     /// name, which can be customized with `#[ts(export_to = "..")]`.
     /// This path does _not_ include a base directory.
     pub output_path: PathBuf,
+}
+
+impl Ord for Dependency {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.output_path
+            .cmp(&other.output_path)
+            .then_with(|| self.ts_name.cmp(&other.ts_name))
+            .then_with(|| self.type_id.cmp(&other.type_id))
+    }
+}
+
+impl PartialOrd for Dependency {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl Dependency {
@@ -1114,6 +1132,9 @@ impl_shadow!(as HashMap<K, V>: impl<K: TS, V: TS> TS for indexmap::IndexMap<K, V
 
 #[cfg(feature = "heapless-impl")]
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for heapless::Vec<T, N>);
+
+#[cfg(feature = "heapless-impl")]
+impl_shadow!(as String: impl<const N: usize> TS for heapless::String<N>);
 
 #[cfg(feature = "arrayvec-impl")]
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for arrayvec::ArrayVec<T, N>);
