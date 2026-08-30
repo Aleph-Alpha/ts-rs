@@ -39,10 +39,15 @@ pub(crate) fn newtype(
         None => quote!(<#inner_ty as #crate_rename::TS>::name(cfg)),
     };
 
+    let inline_flattened = match field_attr.type_override {
+        Some(_) => None,
+        None => Some(quote!(<#inner_ty as #crate_rename::TS>::inline_flattened(cfg))),
+    };
+
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),
         inline: inline_def,
-        inline_flattened: None,
+        inline_flattened,
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
