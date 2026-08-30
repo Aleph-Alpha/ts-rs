@@ -467,7 +467,7 @@ fn generate_where_clause(
     let flattened_used_types = {
         let is_type_param = |id: &Ident| generics.type_params().any(|p| &p.ident == id);
 
-        let mut flattened_used_types = HashSet::new();
+        let mut flattened_used_types = IndexSet::new();
         for ty in flattened_dependencies.used_types() {
             used_type_params(&mut flattened_used_types, ty, is_type_param);
         }
