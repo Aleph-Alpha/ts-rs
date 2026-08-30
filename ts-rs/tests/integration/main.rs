@@ -6,6 +6,7 @@ use ts_rs::{Config, TS};
 
 mod arrays;
 mod arrayvec;
+mod astrolabe;
 mod bound;
 mod bson;
 mod chrono;
@@ -77,6 +78,7 @@ mod union_serde;
 mod union_unnamed_serde_skip;
 mod union_with_data;
 mod union_with_internal_tag;
+mod heapless_string;
 mod unit;
 mod r#unsized;
 

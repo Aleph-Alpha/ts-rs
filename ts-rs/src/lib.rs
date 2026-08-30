@@ -123,6 +123,7 @@
 //! | tokio-impl         | Implement `TS` for types from *tokio*                                                                                                               |
 //! | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                |
 //! | arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                            |
+//! | astrolabe-impl     | Implement `TS` for types from *astrolabe*
 //!
 //! ## Contributing
 //! Contributions are always welcome!
@@ -148,6 +149,8 @@ pub use ts_rs_macros::TS;
 
 pub use crate::export::ExportError;
 
+#[cfg(feature = "astrolabe-impl")]
+mod astrolabe;
 #[cfg(feature = "chrono-impl")]
 mod chrono;
 mod export;
@@ -1152,6 +1155,9 @@ impl_shadow!(as HashMap<K, V>, for indexmap::IndexMap<K, V>, generics: <K: TS, V
 
 #[cfg(feature = "heapless-impl")]
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for heapless::Vec<T, N>);
+
+#[cfg(feature = "heapless-impl")]
+impl_shadow!(as String: impl<const N: usize> TS for heapless::String<N>);
 
 #[cfg(feature = "arrayvec-impl")]
 impl_shadow!(as Vec<T>: impl<T: TS, const N: usize> TS for arrayvec::ArrayVec<T, N>);

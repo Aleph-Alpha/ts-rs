@@ -1,7 +1,9 @@
 #![macro_use]
 #![deny(unused)]
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+
+use indexmap::IndexSet;
 
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
@@ -71,7 +73,7 @@ impl DerivedTS {
         let docs = match &*self.docs {
             [] => None,
             docs => Some(quote! {
-                fn docs() -> Option<String> {
+                fn docs() -> Option<::std::string::String> {
                     Some(#crate_rename::format_docs(&[#(#docs),*]))
                 }
             }),
@@ -99,7 +101,7 @@ impl DerivedTS {
             quote! {
                 #[automatically_derived]
                 #impl_start #crate_rename::Flattenable #bounds {
-                    fn inline_flattened(cfg: &#crate_rename::Config) -> String {
+                    fn inline_flattened(cfg: &#crate_rename::Config) -> ::std::string::String {
                         #x
                     }
                 }
@@ -114,7 +116,7 @@ impl DerivedTS {
 
                 const IS_ENUM: bool = #is_enum;
 
-                fn ident(cfg: &#crate_rename::Config) -> String {
+                fn ident(cfg: &#crate_rename::Config) -> ::std::string::String {
                     (#ident).to_string()
                 }
 
@@ -192,10 +194,10 @@ impl DerivedTS {
                 impl #crate_rename::TS for #generics {
                     type WithoutGenerics = #generics;
                     type OptionInnerType = Self;
-                    fn name(cfg: &#crate_rename::Config) -> String { stringify!(#generics).to_owned() }
-                    fn inline(cfg: &#crate_rename::Config) -> String { panic!("{} cannot be inlined", #name) }
-                    fn decl(cfg: &#crate_rename::Config) -> String { panic!("{} cannot be declared", #name) }
-                    fn decl_concrete(cfg: &#crate_rename::Config) -> String { panic!("{} cannot be declared", #name) }
+                    fn name(cfg: &#crate_rename::Config) -> ::std::string::String { stringify!(#generics).to_owned() }
+                    fn inline(cfg: &#crate_rename::Config) -> ::std::string::String { panic!("{} cannot be inlined", #name) }
+                    fn decl(cfg: &#crate_rename::Config) -> ::std::string::String { panic!("{} cannot be declared", #name) }
+                    fn decl_concrete(cfg: &#crate_rename::Config) -> ::std::string::String { panic!("{} cannot be declared", #name) }
                 }
                 impl #crate_rename::Flattenable for #generics {
                     fn inline_flattened(cfg: &#crate_rename::Config) -> String { stringify!(#generics).to_owned() }
@@ -253,7 +255,7 @@ impl DerivedTS {
         let crate_rename = &self.crate_rename;
         let name = self.name_with_generics(generics);
         quote! {
-            fn name(cfg: &#crate_rename::Config) -> String {
+            fn name(cfg: &#crate_rename::Config) -> ::std::string::String {
                 #name
             }
         }
@@ -275,7 +277,7 @@ impl DerivedTS {
                     return "never".into()
                 }
 
-                let mut buffer = String::new();
+                let mut buffer = ::std::string::String::new();
                 let mut latest = None::<isize>;
 
                 for variant in variants {
@@ -298,7 +300,7 @@ impl DerivedTS {
                     return "never".into()
                 }
 
-                let mut buffer = String::new();
+                let mut buffer = ::std::string::String::new();
                 for variant in variants {
                     buffer.push_str(&variant);
                     buffer.push_str(" | ");
@@ -310,7 +312,7 @@ impl DerivedTS {
         };
 
         quote! {
-            fn inline(cfg: &#crate_rename::Config) -> String {
+            fn inline(cfg: &#crate_rename::Config) -> ::std::string::String {
                 #inline
             }
         }
@@ -327,11 +329,11 @@ impl DerivedTS {
         if self.ts_enum.is_some() {
             let inline = &self.inline;
             return quote! {
-                fn decl_concrete(cfg: &#crate_rename::Config) -> String {
+                fn decl_concrete(cfg: &#crate_rename::Config) -> ::std::string::String {
                     format!("enum {} {{ {} }}", #name, #inline)
                 }
 
-                fn decl(cfg: &#crate_rename::Config) -> String {
+                fn decl(cfg: &#crate_rename::Config) -> ::std::string::String {
                     format!("enum {} {{ {} }}", #name, #inline)
                 }
             };
@@ -362,10 +364,10 @@ impl DerivedTS {
             G::Const(ConstParam { ident, .. }) => Some(quote!(#ident)),
         });
         quote! {
-            fn decl_concrete(cfg: &#crate_rename::Config) -> String {
+            fn decl_concrete(cfg: &#crate_rename::Config) -> ::std::string::String {
                 format!("type {} = {};", #name, <Self as #crate_rename::TS>::inline(cfg))
             }
-            fn decl(cfg: &#crate_rename::Config) -> String {
+            fn decl(cfg: &#crate_rename::Config) -> ::std::string::String {
                 #generic_types
                 let inline = <#rust_ty<#(#generic_idents,)*> as #crate_rename::TS>::inline(cfg);
                 let generics = #ts_generics;
@@ -456,7 +458,7 @@ fn generate_where_clause(
     let used_types = {
         let is_type_param = |id: &Ident| generics.type_params().any(|p| &p.ident == id);
 
-        let mut used_types = HashSet::new();
+        let mut used_types = IndexSet::new();
         for ty in dependencies.used_types() {
             used_type_params(&mut used_types, ty, is_type_param);
         }
@@ -483,7 +485,7 @@ fn generate_where_clause(
 // Associated types of a type parameter are extracted as well.
 // Note: This will not extract `I` from `I::Item`, but just `I::Item`!
 fn used_type_params<'ty, 'out>(
-    out: &'out mut HashSet<&'ty Type>,
+    out: &'out mut IndexSet<&'ty Type>,
     ty: &'ty Type,
     is_type_param: impl Fn(&'ty Ident) -> bool + Copy + 'out,
 ) {
