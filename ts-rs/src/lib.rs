@@ -554,7 +554,7 @@ pub trait TypeVisitor: Sized {
 
 /// A typescript type which is depended upon by other types.
 /// This information is required for generating the correct import statements.
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Dependency {
     /// Type ID of the rust type
     pub type_id: TypeId,
@@ -564,6 +564,21 @@ pub struct Dependency {
     /// name, which can be customized with `#[ts(export_to = "..")]`.
     /// This path does _not_ include a base directory.
     pub output_path: PathBuf,
+}
+
+impl Ord for Dependency {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.output_path
+            .cmp(&other.output_path)
+            .then_with(|| self.ts_name.cmp(&other.ts_name))
+            .then_with(|| self.type_id.cmp(&other.type_id))
+    }
+}
+
+impl PartialOrd for Dependency {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 impl Dependency {

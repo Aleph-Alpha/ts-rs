@@ -1,4 +1,3 @@
-#![macro_use]
 #![deny(unused)]
 
 use std::collections::HashMap;
