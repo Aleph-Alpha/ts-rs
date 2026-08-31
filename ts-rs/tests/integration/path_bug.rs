@@ -2,7 +2,7 @@
 use ts_rs::{Config, TS};
 
 #[derive(TS)]
-#[ts(export, export_to = "path_bug/aaa/")]
+#[ts(export_to = "path_bug/aaa/")]
 struct Foo {
     bar: Bar,
 }
@@ -16,7 +16,7 @@ struct Bar {
 #[test]
 fn path_bug() {
     let cfg = Config::from_env();
-    export_bindings_foo();
+    Foo::export_all(&cfg).unwrap();
 
     assert!(cfg.out_dir().join(Foo::output_path().unwrap()).is_file());
     assert!(cfg.out_dir().join(Bar::output_path().unwrap()).is_file());

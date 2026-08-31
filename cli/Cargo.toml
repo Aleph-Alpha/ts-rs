@@ -1,0 +1,16 @@
+[package]
+name = "ts-rs-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "ts-rs"
+path = "src/main.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+color-eyre = "0.6"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"

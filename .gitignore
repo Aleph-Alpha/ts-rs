@@ -4,3 +4,5 @@ target/
 tsconfig.json
 
 /ts-rs/tests-out
+ts-rs.meta
+ts-rs.toml

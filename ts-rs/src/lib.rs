@@ -143,6 +143,7 @@ use std::{
     },
     ops::{Range, RangeInclusive},
     path::{Path, PathBuf},
+    sync::OnceLock,
 };
 
 pub use ts_rs_macros::TS;
@@ -740,13 +741,31 @@ impl<T> IsOption for Option<T> {
     type Inner = T;
 }
 
+static OVERRIDES: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+
+fn get_override(rust_type: &str) -> Option<&'static str> {
+    let overrides = OVERRIDES.get_or_init(|| {
+        std::env::var("TS_RS_INTERNAL_OVERRIDE")
+            .ok()
+            .into_iter()
+            .flat_map(|value| value.leak().split(';'))
+            .flat_map(|value| value.split_once(':'))
+            .collect()
+    });
+    overrides.get(rust_type).copied()
+}
+
 // generate impls for primitive types
 macro_rules! impl_primitives {
     ($($($ty:ty),* => $l:expr),*) => { $($(
         impl TS for $ty {
             type WithoutGenerics = Self;
             type OptionInnerType = Self;
-            fn name(_: &$crate::Config) -> String { String::from($l) }
+            fn name(_: &$crate::Config) -> String {
+                $crate::get_override(stringify!($ty))
+                    .unwrap_or($l)
+                    .to_owned()
+            }
             fn inline(cfg: &$crate::Config) -> String { <Self as $crate::TS>::name(cfg) }
         }
     )*)* };
