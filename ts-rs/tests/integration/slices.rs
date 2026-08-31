@@ -1,10 +1,11 @@
 #![allow(unused)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[test]
 fn free() {
-    assert_eq!(<[String]>::inline(), "Array<string>")
+    let cfg = Config::from_env();
+    assert_eq!(<[String]>::inline(&cfg), "Array<string>")
 }
 
 #[derive(TS)]
@@ -16,7 +17,8 @@ struct Interface {
 
 #[test]
 fn interface() {
-    assert_eq!(Interface::inline(), "{ a: Array<number>, }")
+    let cfg = Config::from_env();
+    assert_eq!(Interface::inline(&cfg), "{ a: Array<number>, }")
 }
 
 #[derive(TS)]
@@ -28,7 +30,8 @@ struct InterfaceRef<'a> {
 
 #[test]
 fn slice_ref() {
-    assert_eq!(InterfaceRef::inline(), "{ a: Array<string>, }")
+    let cfg = Config::from_env();
+    assert_eq!(InterfaceRef::inline(&cfg), "{ a: Array<string>, }")
 }
 
 #[derive(TS)]
@@ -37,7 +40,8 @@ struct Newtype(#[allow(dead_code)] [i32]);
 
 #[test]
 fn newtype() {
-    assert_eq!(Newtype::inline(), "Array<number>")
+    let cfg = Config::from_env();
+    assert_eq!(Newtype::inline(&cfg), "Array<number>")
 }
 
 // Since slices usually need to be wrapped in a `Box` or other container,
@@ -45,7 +49,8 @@ fn newtype() {
 
 #[test]
 fn boxed_free() {
-    assert_eq!(<Box<[String]>>::inline(), "Array<string>")
+    let cfg = Config::from_env();
+    assert_eq!(<Box<[String]>>::inline(&cfg), "Array<string>")
 }
 
 #[derive(TS)]
@@ -57,7 +62,8 @@ struct InterfaceBoxed {
 
 #[test]
 fn boxed_interface() {
-    assert_eq!(InterfaceBoxed::inline(), "{ a: Array<number>, }")
+    let cfg = Config::from_env();
+    assert_eq!(InterfaceBoxed::inline(&cfg), "{ a: Array<number>, }")
 }
 
 #[derive(TS)]
@@ -66,7 +72,8 @@ struct NewtypeBoxed(#[allow(dead_code)] Box<[i32]>);
 
 #[test]
 fn boxed_newtype() {
-    assert_eq!(NewtypeBoxed::inline(), "Array<number>")
+    let cfg = Config::from_env();
+    assert_eq!(NewtypeBoxed::inline(&cfg), "Array<number>")
 }
 
 #[derive(TS)]

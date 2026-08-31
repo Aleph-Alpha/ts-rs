@@ -2,7 +2,7 @@
 
 #[cfg(feature = "serde-compat")]
 use serde::Serialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
@@ -45,20 +45,21 @@ struct NestedExternallyLonely {
 fn externally_tagged() {
     // Notice here that baz is the only field inside `FooExternally`, so the parenthesis
     // aren't needed
+    let cfg = Config::from_env();
     assert_eq!(
-        FooExternally::inline(),
+        FooExternally::inline(&cfg),
         r#"{ "Baz": { a: number, a2: string, } } | { "Biz": { b: boolean, } } | { "Buz": { c: string, d: number | null, } }"#
     );
 
     // But when flattening, the parenthesis are needed due to type intesections
     assert_eq!(
-        NestedExternally::inline(),
+        NestedExternally::inline(&cfg),
         r#"{ u: number, } & ({ "Baz": { a: number, a2: string, } } | { "Biz": { b: boolean, } } | { "Buz": { c: string, d: number | null, } })"#
     );
 
     // And here, they are, again, unecessary
     assert_eq!(
-        NestedExternallyLonely::inline(),
+        NestedExternallyLonely::inline(&cfg),
         r#"{ "Baz": { a: number, a2: string, } } | { "Biz": { b: boolean, } } | { "Buz": { c: string, d: number | null, } }"#
     );
 }
@@ -114,18 +115,19 @@ struct NestedAdjecentlyLonely {
 
 #[test]
 fn adjacently_tagged() {
+    let cfg = Config::from_env();
     assert_eq!(
-        FooAdjecently::inline(),
+        FooAdjecently::inline(&cfg),
         r#"{ "type": "Baz", "stuff": { a: number, a2: string, } } | { "type": "Biz", "stuff": { b: boolean, } } | { c: string, d: number | null, }"#
     );
 
     assert_eq!(
-        NestedAdjecently::inline(),
+        NestedAdjecently::inline(&cfg),
         r#"{ u: number, } & ({ "type": "Baz", "stuff": { a: number, a2: string, } } | { "type": "Biz", "stuff": { b: boolean, } } | { c: string, d: number | null, })"#
     );
 
     assert_eq!(
-        NestedAdjecentlyLonely::inline(),
+        NestedAdjecentlyLonely::inline(&cfg),
         r#"{ "type": "Baz", "stuff": { a: number, a2: string, } } | { "type": "Biz", "stuff": { b: boolean, } } | { c: string, d: number | null, }"#
     );
 }
@@ -170,18 +172,19 @@ struct NestedInternallyLonely {
 
 #[test]
 fn internally_tagged() {
+    let cfg = Config::from_env();
     assert_eq!(
-        FooInternally::inline(),
+        FooInternally::inline(&cfg),
         r#"{ "type": "Baz", a: number, a2: string, } | { "type": "Biz", b: boolean, } | { "type": "Buz", c: string, d: number | null, }"#
     );
 
     assert_eq!(
-        NestedInternally::inline(),
+        NestedInternally::inline(&cfg),
         r#"{ u: number, } & ({ "type": "Baz", a: number, a2: string, } | { "type": "Biz", b: boolean, } | { "type": "Buz", c: string, d: number | null, })"#
     );
 
     assert_eq!(
-        NestedInternallyLonely::inline(),
+        NestedInternallyLonely::inline(&cfg),
         r#"{ "type": "Baz", a: number, a2: string, } | { "type": "Biz", b: boolean, } | { "type": "Buz", c: string, d: number | null, }"#
     );
 }
@@ -226,18 +229,19 @@ struct NestedUntaggedLonely {
 
 #[test]
 fn untagged() {
+    let cfg = Config::from_env();
     assert_eq!(
-        FooUntagged::inline(),
+        FooUntagged::inline(&cfg),
         r#"{ a: number, a2: string, } | { b: boolean, } | { c: string, }"#
     );
 
     assert_eq!(
-        NestedUntagged::inline(),
+        NestedUntagged::inline(&cfg),
         r#"{ u: number, } & ({ a: number, a2: string, } | { b: boolean, } | { c: string, })"#
     );
 
     assert_eq!(
-        NestedUntaggedLonely::inline(),
+        NestedUntaggedLonely::inline(&cfg),
         r#"{ a: number, a2: string, } | { b: boolean, } | { c: string, }"#
     );
 }

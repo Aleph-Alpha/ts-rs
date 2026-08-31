@@ -4,7 +4,7 @@ use std::time::Instant;
 
 #[cfg(feature = "serde-compat")]
 use serde::Serialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 struct Unsupported<T>(T);
 struct Unsupported2;
@@ -25,8 +25,9 @@ struct Override {
 
 #[test]
 fn simple() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Override::inline(),
+        Override::inline(&cfg),
         "{ a: number, b: 0 | 1 | 2, x: string, y: string, z: string | null, }"
     )
 }
@@ -41,8 +42,9 @@ struct New2(#[ts(type = "string | null")] Unsupported<Unsupported2>);
 
 #[test]
 fn newtype() {
-    assert_eq!(New1::inline(), r#"string"#);
-    assert_eq!(New2::inline(), r#"string | null"#);
+    let cfg = Config::from_env();
+    assert_eq!(New1::inline(&cfg), r#"string"#);
+    assert_eq!(New2::inline(&cfg), r#"string | null"#);
 }
 
 #[cfg_attr(feature = "serde-compat", derive(Serialize))]
@@ -69,6 +71,7 @@ enum Adjacent {
 #[test]
 fn enum_newtype_representations() {
     // regression test for https://github.com/Aleph-Alpha/ts-rs/issues/126
-    assert_eq!(Internal::inline(), r#"{ "t": "Newtype" } & unknown"#);
-    assert_eq!(Adjacent::inline(), r#"{ "t": "Newtype", "c": unknown }"#);
+    let cfg = Config::from_env();
+    assert_eq!(Internal::inline(&cfg), r#"{ "t": "Newtype" } & unknown"#);
+    assert_eq!(Adjacent::inline(&cfg), r#"{ "t": "Newtype", "c": unknown }"#);
 }

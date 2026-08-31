@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 type TypeAlias = HashMap<String, String>;
 
@@ -22,12 +22,13 @@ struct Struct {
 
 #[test]
 fn issue_70() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Enum::decl(),
+        Enum::decl(&cfg),
         "type Enum = { \"A\": { [key in string]: string } } | { \"B\": { [key in string]: string } };"
     );
     assert_eq!(
-        Struct::decl(),
+        Struct::decl(&cfg),
         "type Struct = { a: { [key in string]: string }, b: { [key in string]: string }, };"
     );
 }
@@ -58,8 +59,9 @@ struct GenericContainer<A, B = i32> {
 
 #[test]
 fn generic() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Container::decl(),
+        Container::decl(&cfg),
         "type Container = { \
             a: GenericType<[Array<number>, string], Array<[Array<string>, number]>>, \
             b: GenericType<[string, string], Array<[string, number]>>, \
@@ -67,7 +69,7 @@ fn generic() {
     );
 
     assert_eq!(
-        GenericContainer::<(), ()>::decl(),
+        GenericContainer::<(), ()>::decl(&cfg),
         "type GenericContainer<A, B = number> = { \
             a: GenericType<[string, string], Array<[string, number]>>, \
             b: GenericType<[A, string], Array<[B, number]>>, \

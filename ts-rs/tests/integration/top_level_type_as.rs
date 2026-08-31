@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 #[cfg(feature = "serde-json-impl")]
 use serde_json::Value as JsonValue;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(as = "T")]
@@ -13,7 +13,8 @@ pub enum UntaggedEnum<T: TS> {
 
 #[test]
 pub fn top_level_type_as_enum() {
-    assert_eq!(UntaggedEnum::<String>::inline(), r#"string"#)
+    let cfg = Config::from_env();
+    assert_eq!(UntaggedEnum::<String>::inline(&cfg), r#"string"#)
 }
 
 #[derive(TS)]
@@ -22,7 +23,8 @@ pub struct Wrapper<T: TS>(T);
 
 #[test]
 pub fn top_level_type_as_struct() {
-    assert_eq!(Wrapper::<String>::inline(), r#"string"#)
+    let cfg = Config::from_env();
+    assert_eq!(Wrapper::<String>::inline(&cfg), r#"string"#)
 }
 
 #[cfg(feature = "serde-json-impl")]
@@ -105,20 +107,21 @@ pub struct StructAsStruct {
 
 #[test]
 fn preserves_is_enum() {
+    let cfg = Config::from_env();
     assert!(NormalEnum::IS_ENUM);
     assert!(!NormalStruct::IS_ENUM);
 
-    assert_eq!(EnumAsString::inline(), String::inline());
+    assert_eq!(EnumAsString::inline(&cfg), String::inline(&cfg));
     assert!(!EnumAsString::IS_ENUM);
-    assert_eq!(EnumAsEnum::inline(), NormalEnum::inline());
+    assert_eq!(EnumAsEnum::inline(&cfg), NormalEnum::inline(&cfg));
     assert!(EnumAsEnum::IS_ENUM);
-    assert_eq!(EnumAsStruct::inline(), NormalStruct::inline());
+    assert_eq!(EnumAsStruct::inline(&cfg), NormalStruct::inline(&cfg));
     assert!(!EnumAsStruct::IS_ENUM);
 
-    assert_eq!(StructAsString::inline(), String::inline());
+    assert_eq!(StructAsString::inline(&cfg), String::inline(&cfg));
     assert!(!StructAsString::IS_ENUM);
-    assert_eq!(StructAsEnum::inline(), NormalEnum::inline());
+    assert_eq!(StructAsEnum::inline(&cfg), NormalEnum::inline(&cfg));
     assert!(StructAsEnum::IS_ENUM);
-    assert_eq!(StructAsStruct::inline(), NormalStruct::inline());
+    assert_eq!(StructAsStruct::inline(&cfg), NormalStruct::inline(&cfg));
     assert!(!StructAsStruct::IS_ENUM);
 }

@@ -4,7 +4,7 @@
 // from issue #107. This does now no longer generate a warning.
 
 use serde::{Deserialize, Serialize};
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 fn default_http_version() -> String {
     "2".to_owned()
@@ -21,5 +21,6 @@ pub struct Foobar {
 
 #[test]
 fn serde_skip_with_default() {
-    assert_eq!(Foobar::decl(), "type Foobar = { something_else: number, };");
+    let cfg = Config::from_env();
+    assert_eq!(Foobar::decl(&cfg), "type Foobar = { something_else: number, };");
 }

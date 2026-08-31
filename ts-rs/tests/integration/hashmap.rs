@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "hashmap/")]
@@ -13,8 +13,9 @@ struct Hashes {
 
 #[test]
 fn hashmap() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Hashes::decl(),
+        Hashes::decl(&cfg),
         "type Hashes = { map: { [key in string]: string }, set: Array<string>, };"
     )
 }
@@ -33,8 +34,9 @@ struct HashesHasher {
 
 #[test]
 fn hashmap_with_custom_hasher() {
+    let cfg = Config::from_env();
     assert_eq!(
-        HashesHasher::decl(),
+        HashesHasher::decl(&cfg),
         "type HashesHasher = { map: { [key in string]: string }, set: Array<string>, };"
     )
 }
@@ -68,20 +70,21 @@ enum EnumKey {
 
 #[test]
 fn with_custom_types() {
+    let cfg = Config::from_env();
     assert_eq!(
-        HashMapWithCustomTypes::inline(),
-        BTreeMapWithCustomTypes::inline()
+        HashMapWithCustomTypes::inline(&cfg),
+        BTreeMapWithCustomTypes::inline(&cfg)
     );
     assert_eq!(
-        HashMapWithCustomTypes::decl(),
+        HashMapWithCustomTypes::decl(&cfg),
         "type HashMapWithCustomTypes = { map: { [key in CustomKey]: CustomValue }, };"
     );
     assert_eq!(
-        HashMap::<EnumKey, String>::name(),
+        HashMap::<EnumKey, String>::name(&cfg),
         "{ [key in EnumKey]?: string }"
     );
     assert_eq!(
-        HashMap::<EnumKey, String>::inline(),
+        HashMap::<EnumKey, String>::inline(&cfg),
         r#"{ [key in "Foo" | "Bar"]?: string }"#
     );
 }

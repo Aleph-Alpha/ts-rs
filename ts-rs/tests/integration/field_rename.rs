@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(serde::Serialize, serde::Deserialize))]
@@ -16,9 +16,10 @@ struct Rename {
 
 #[test]
 fn test() {
+    let cfg = Config::from_env();
     if (cfg!(feature = "serde-compat")) {
-        assert_eq!(Rename::inline(), "{ c: string, bb: number, }")
+        assert_eq!(Rename::inline(&cfg), "{ c: string, bb: number, }")
     } else {
-        assert_eq!(Rename::inline(), "{ a: string, bb: number, }")
+        assert_eq!(Rename::inline(&cfg), "{ a: string, bb: number, }")
     }
 }

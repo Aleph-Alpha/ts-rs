@@ -1,4 +1,6 @@
-use std::{collections::HashSet, rc::Rc};
+use std::rc::Rc;
+
+use indexmap::IndexSet;
 
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
@@ -6,8 +8,8 @@ use syn::{Path, Type};
 
 pub struct Dependencies {
     crate_rename: Rc<Path>,
-    dependencies: HashSet<Dependency>,
-    types: HashSet<Rc<Type>>,
+    dependencies: IndexSet<Dependency>,
+    types: IndexSet<Rc<Type>>,
 }
 
 #[derive(Hash, Eq, PartialEq)]
@@ -30,9 +32,9 @@ enum Dependency {
 impl Dependencies {
     pub fn new(crate_rename: Path) -> Self {
         Self {
-            dependencies: HashSet::new(),
+            dependencies: IndexSet::new(),
             crate_rename: Rc::new(crate_rename),
-            types: HashSet::new(),
+            types: IndexSet::new(),
         }
     }
 

@@ -80,9 +80,9 @@ fn format_field(
         .map(|t| quote!(#t.to_owned()))
         .unwrap_or_else(|| {
             if field_attr.inline {
-                quote!(<#ty as #crate_rename::TS>::inline())
+                quote!(<#ty as #crate_rename::TS>::inline(cfg))
             } else {
-                quote!(<#ty as #crate_rename::TS>::name())
+                quote!(<#ty as #crate_rename::TS>::name(cfg))
             }
         });
 

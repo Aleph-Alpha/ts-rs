@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "path_bug/aaa/")]
@@ -15,8 +15,9 @@ struct Bar {
 
 #[test]
 fn path_bug() {
+    let cfg = Config::from_env();
     export_bindings_foo();
 
-    assert!(Foo::default_output_path().unwrap().is_file());
-    assert!(Bar::default_output_path().unwrap().is_file());
+    assert!(cfg.out_dir().join(Foo::output_path().unwrap()).is_file());
+    assert!(cfg.out_dir().join(Bar::output_path().unwrap()).is_file());
 }

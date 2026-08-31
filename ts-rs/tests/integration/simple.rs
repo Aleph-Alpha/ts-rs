@@ -2,7 +2,7 @@
 
 use std::cell::RefCell;
 
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[ts(export, export_to = "simple/")]
@@ -18,8 +18,9 @@ struct Simple {
 
 #[test]
 fn test_def() {
+    let cfg = Config::from_env();
     assert_eq!(
-        Simple::inline(),
+        Simple::inline(&cfg),
         "{ a: number, b: string, c: [number, string, number], d: Array<string>, e: string | null, f: string, g: string | null, }"
     )
 }

@@ -2,7 +2,7 @@
 
 #[cfg(feature = "serde-compat")]
 use serde::Deserialize;
-use ts_rs::TS;
+use ts_rs::{Config, TS};
 
 #[derive(TS)]
 #[cfg_attr(feature = "serde-compat", derive(Deserialize))]
@@ -64,23 +64,24 @@ enum TestInternally {
 
 #[test]
 fn test() {
+    let cfg = Config::from_env();
     assert_eq!(
-        TestUntagged::decl(),
+        TestUntagged::decl(&cfg),
         r#"type TestUntagged = null | never[] | {  };"#
     );
 
     assert_eq!(
-        TestExternally::decl(),
+        TestExternally::decl(&cfg),
         r#"type TestExternally = "A" | { "B": never[] } | { "C": {  } };"#
     );
 
     assert_eq!(
-        TestAdjacently::decl(),
+        TestAdjacently::decl(&cfg),
         r#"type TestAdjacently = { "type": "A" } | { "type": "B", "content": never[] } | { "type": "C", "content": {  } };"#
     );
 
     assert_eq!(
-        TestInternally::decl(),
+        TestInternally::decl(&cfg),
         r#"type TestInternally = { "type": "A" } | { "type": "B" } | { "type": "C", };"#
     );
 }
