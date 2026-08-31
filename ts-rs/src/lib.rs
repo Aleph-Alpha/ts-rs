@@ -388,7 +388,7 @@ pub trait TS {
 
     /// If the implementing type is `std::option::Option<T>`, then this associated type is set to `T`.
     /// All other implementations of `TS` should set this type to `Self` instead.
-    type OptionInnerType: ?Sized;
+    type OptionInnerType: TS + ?Sized;
 
     #[doc(hidden)]
     const IS_OPTION: bool = false;
