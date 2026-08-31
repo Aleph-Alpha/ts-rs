@@ -4,12 +4,14 @@ use std::path::PathBuf;
 
 use ts_rs::{Config, TS};
 
+mod auto_namespace;
 mod arrays;
 mod arrayvec;
 mod astrolabe;
 mod bound;
 mod bson;
 mod chrono;
+mod collision;
 mod complex_flattened_type;
 mod concrete_generic;
 mod docs;
