@@ -52,6 +52,7 @@ mod ranges;
 mod raw_idents;
 mod recursion_limit;
 mod references;
+mod repr_const_object;
 mod repr_enum;
 mod same_file_export;
 mod self_referential;

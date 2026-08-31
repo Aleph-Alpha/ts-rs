@@ -44,10 +44,11 @@ pub enum Tagged<'a> {
     Untagged,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Repr {
     Int,
     Name,
+    ConstObject,
 }
 
 impl EnumAttr {
@@ -231,7 +232,7 @@ impl Attr for EnumAttr {
             }
 
             if let Optional::Optional { .. } = self.optional_fields {
-                syn_err!("`optional_fields` is not compatible with `as`");
+                syn_err!("`optional_fields` is not compatible with `repr`");
             }
         }
 
