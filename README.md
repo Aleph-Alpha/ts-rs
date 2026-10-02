@@ -126,6 +126,8 @@ We are currently waiting for [#54140](https://github.com/rust-lang/rust/issues/5
 | jiff-impl          | Implement `TS` for types from *jiff*                                                                                                                |
 | arrayvec-impl      | Implement `TS` for types from *arrayvec*                                                                                                            |
 | astrolabe-impl     | Implement `TS` for types from *astrolabe*
+| nonempty-impl      | Implement `TS` for types from *nonempty*
+| either-impl        | Implement `TS` for types from *either*
 
 ### Contributing
 Contributions are always welcome!
