@@ -73,5 +73,8 @@ fn enum_newtype_representations() {
     // regression test for https://github.com/Aleph-Alpha/ts-rs/issues/126
     let cfg = Config::from_env();
     assert_eq!(Internal::inline(&cfg), r#"{ "t": "Newtype" } & unknown"#);
-    assert_eq!(Adjacent::inline(&cfg), r#"{ "t": "Newtype", "c": unknown }"#);
+    assert_eq!(
+        Adjacent::inline(&cfg),
+        r#"{ "t": "Newtype", "c": unknown }"#
+    );
 }

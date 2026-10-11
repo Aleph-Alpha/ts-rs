@@ -19,7 +19,10 @@ fn in_struct() {
     let b = "b?: number | null";
     let c = "c: number | null";
     let cfg = Config::from_env();
-    assert_eq!(OptionalInStruct::inline(&cfg), format!("{{ {a}, {b}, {c}, }}"));
+    assert_eq!(
+        OptionalInStruct::inline(&cfg),
+        format!("{{ {a}, {b}, {c}, }}")
+    );
 }
 
 #[derive(Serialize, TS)]
@@ -105,7 +108,10 @@ fn inline() {
     let b = "b?: number | null";
     let c = "c: number | null";
     let cfg = Config::from_env();
-    assert_eq!(Inline::inline(&cfg), format!("{{ x: {{ {a}, {b}, {c}, }}, }}"));
+    assert_eq!(
+        Inline::inline(&cfg),
+        format!("{{ x: {{ {a}, {b}, {c}, }}, }}")
+    );
 }
 
 type Foo = Option<i32>;

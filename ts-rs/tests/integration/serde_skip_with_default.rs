@@ -22,5 +22,8 @@ pub struct Foobar {
 #[test]
 fn serde_skip_with_default() {
     let cfg = Config::from_env();
-    assert_eq!(Foobar::decl(&cfg), "type Foobar = { something_else: number, };");
+    assert_eq!(
+        Foobar::decl(&cfg),
+        "type Foobar = { something_else: number, };"
+    );
 }

@@ -13,5 +13,8 @@ struct User {
 #[test]
 fn bson() {
     let cfg = Config::from_env();
-    assert_eq!(User::decl(&cfg), "type User = { _id: string, _uuid: string, };")
+    assert_eq!(
+        User::decl(&cfg),
+        "type User = { _id: string, _uuid: string, };"
+    )
 }
