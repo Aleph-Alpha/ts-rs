@@ -101,6 +101,7 @@
 //!
 //! When ts-rs encounters an unsupported serde attribute, a warning is emitted, unless the feature `no-serde-warnings` is enabled.\
 //! We are currently waiting for [#54140](https://github.com/rust-lang/rust/issues/54140), which will improve the ergonomics arund these diagnostics.
+//! If you want errors instead, enable the feature `serde-errors`.
 //!
 //! ## Cargo Features
 //! | **Feature**        | **Description**                                                                                                                                     |
@@ -108,6 +109,7 @@
 //! | serde-compat       | **Enabled by default** <br/>See the *"serde compatibility"* section below for more information.                                                     |
 //! | format             | Enables formatting of the generated TypeScript bindings. <br/>Currently, this unfortunately adds quite a few dependencies.                          |
 //! | no-serde-warnings  | By default, warnings are printed during build if unsupported serde attributes are encountered. <br/>Enabling this feature silences these warnings.  |
+//! | serde-errors       | Turn the warnings on unknown serde attributes into errors. If both this feature and `no-serde-warnings` are enabled, this feature takes precedence. |
 //! | serde-json-impl    | Implement `TS` for types from *serde_json*                                                                                                          |
 //! | chrono-impl        | Implement `TS` for types from *chrono*                                                                                                              |
 //! | bigdecimal-impl    | Implement `TS` for types from *bigdecimal*                                                                                                          |
