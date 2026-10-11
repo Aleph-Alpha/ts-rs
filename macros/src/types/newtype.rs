@@ -45,6 +45,7 @@ pub(crate) fn newtype(
         inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies,
+        flattened_dependencies: Dependencies::new(crate_rename.clone()),
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name,

@@ -45,13 +45,16 @@ fn flattened_generic_parameters() {
     }
 
     let cfg = Config::from_env();
-    assert_eq!(Item::<()>::decl(&cfg), "type Item<D> = { id: string, } & D;");
     assert_eq!(
-        TwoParameters::<(), ()>::decl(&cfg),
+        Item::<ts_rs::Dummy>::decl(&cfg),
+        "type Item<D> = { id: string, } & D;"
+    );
+    assert_eq!(
+        TwoParameters::<ts_rs::Dummy, ts_rs::Dummy>::decl(&cfg),
         "type TwoParameters<A, B> = { id: string, ab: [A, B], } & A & B;"
     );
     assert_eq!(
-        Enum::<(), ()>::decl(&cfg),
+        Enum::<ts_rs::Dummy, ts_rs::Dummy>::decl(&cfg),
         "type Enum<A, B> = { \"A\": A } | { \"B\": B } | { \"AB\": [A, B] };"
     );
 }

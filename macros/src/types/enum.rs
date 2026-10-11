@@ -36,11 +36,13 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 
     let mut formatted_variants = Vec::new();
     let mut dependencies = Dependencies::new(crate_rename.clone());
+    let mut flattened_dependencies = Dependencies::new(crate_rename.clone());
 
     for variant in &s.variants {
         format_variant(
             &mut formatted_variants,
             &mut dependencies,
+            &mut flattened_dependencies,
             &enum_attr,
             variant,
         )?;
@@ -58,6 +60,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
             format!("({})", [#(#formatted_variants),*].join(" | "))
         )),
         dependencies,
+        flattened_dependencies,
         docs: enum_attr.docs,
         export: enum_attr.export,
         export_to: enum_attr.export_to,
@@ -72,6 +75,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 fn format_variant(
     formatted_variants: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
+    flattened_dependencies: &mut Dependencies,
     enum_attr: &EnumAttr,
     variant: &Variant,
 ) -> syn::Result<()> {
@@ -123,6 +127,7 @@ fn format_variant(
     )?;
 
     let variant_dependencies = variant_type.dependencies;
+    let variant_flattened_dependencies = variant_type.flattened_dependencies;
     let inline_type = variant_type.inline;
 
     let parsed_ty = match (&variant_attr.type_as, &variant_attr.type_override) {
@@ -134,6 +139,7 @@ fn format_variant(
         (None, Some(ty)) => quote!(#ty.to_owned()),
         (None, None) => {
             dependencies.append(variant_dependencies);
+            flattened_dependencies.append(variant_flattened_dependencies);
             inline_type
         }
     };
@@ -228,7 +234,8 @@ fn empty_enum(ts_name: Expr, enum_attr: EnumAttr) -> DerivedTS {
         inline: quote!("never".to_owned()),
         docs: enum_attr.docs,
         inline_flattened: None,
-        dependencies: Dependencies::new(crate_rename),
+        dependencies: Dependencies::new(crate_rename.clone()),
+        flattened_dependencies: Dependencies::new(crate_rename),
         export: enum_attr.export,
         export_to: enum_attr.export_to,
         ts_name,

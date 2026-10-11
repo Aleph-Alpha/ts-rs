@@ -16,6 +16,7 @@ pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> R
     let mut formatted_fields = Vec::new();
     let mut flattened_fields = Vec::new();
     let mut dependencies = Dependencies::new(crate_rename.clone());
+    let mut flattened_dependencies = Dependencies::new(crate_rename.clone());
 
     if let Some(tag) = &attr.tag {
         formatted_fields.push(quote! {
@@ -29,6 +30,7 @@ pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> R
             &mut formatted_fields,
             &mut flattened_fields,
             &mut dependencies,
+            &mut flattened_dependencies,
             field,
             &attr.rename_all,
             attr.optional_fields,
@@ -67,6 +69,7 @@ pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> R
         inline_flattened: Some(quote!(#inline_flattened.replace(" } & { ", " "))),
         docs: attr.docs.clone(),
         dependencies,
+        flattened_dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name,
@@ -92,6 +95,7 @@ fn format_field(
     formatted_fields: &mut Vec<TokenStream>,
     flattened_fields: &mut Vec<TokenStream>,
     dependencies: &mut Dependencies,
+    flattened_dependencies: &mut Dependencies,
     field: &Field,
     rename_all: &Option<Inflection>,
     struct_optional: Optional,
@@ -124,7 +128,8 @@ fn format_field(
     }
 
     if field_attr.flatten {
-        flattened_fields.push(quote!(<#ty as #crate_rename::TS>::inline_flattened(cfg)));
+        flattened_fields.push(quote!(<#ty as #crate_rename::Flattenable>::inline_flattened(cfg)));
+        flattened_dependencies.append_from(&ty);
         return Ok(());
     }
 
