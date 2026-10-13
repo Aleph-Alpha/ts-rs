@@ -163,7 +163,23 @@ fn export_and_merge(
     };
 
     if entry.contains(&type_name) {
-        return Ok(());
+        let existing_contents = std::fs::read_to_string(&path)?;
+        // Idempotent re-run: same content → allow
+        if existing_contents == generated_type {
+            return Ok(());
+        }
+        // Merged file: check if the declaration is already present verbatim
+        if let Some((_, new_decl)) = generated_type.split_once("\n\n") {
+            let new_decl = new_decl.trim();
+            if existing_contents.contains(new_decl) {
+                return Ok(());
+            }
+        }
+        return Err(ExportError::Collision {
+            path: path.clone(),
+            existing_types: entry.iter().cloned().collect::<Vec<_>>().join(", "),
+            new_type: type_name,
+        });
     }
 
     let mut file = std::fs::OpenOptions::new()

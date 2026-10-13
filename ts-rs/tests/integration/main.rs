@@ -10,6 +10,7 @@ mod astrolabe;
 mod bound;
 mod bson;
 mod chrono;
+mod collision;
 mod complex_flattened_type;
 mod concrete_generic;
 mod docs;
