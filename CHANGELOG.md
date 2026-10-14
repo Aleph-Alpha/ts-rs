@@ -2,7 +2,7 @@
 ### Breaking
 ### Features
 ### Fixes
-- Avoid trailing spaces before field documentation in generated bindings.
+- Avoid trailing spaces before field documentation in generated bindings ([#501](https://github.com/Aleph-Alpha/ts-rs/pull/501))
 
 # 12.0.0
 ### Breaking
