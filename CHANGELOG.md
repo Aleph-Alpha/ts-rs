@@ -2,6 +2,7 @@
 ### Breaking
 ### Features
 ### Fixes
+- Avoid trailing spaces before field documentation in generated bindings.
 
 # 12.0.0
 ### Breaking
