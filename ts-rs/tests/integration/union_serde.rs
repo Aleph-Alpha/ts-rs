@@ -73,3 +73,26 @@ fn test_rename_all() {
     let cfg = Config::from_env();
     assert_eq!(Enum::inline(&cfg), r#""firstOption" | "secondOption""#);
 }
+
+#[cfg(feature = "serde-compat")]
+#[test]
+fn test_serde_alias_and_other() {
+    #[derive(Serialize, Deserialize, TS)]
+    struct Block {
+        #[serde(alias = "mime_type", skip_serializing_if = "Option::is_none")]
+        mime: Option<String>,
+    }
+
+    #[derive(Serialize, Deserialize, TS)]
+    #[serde(rename_all = "snake_case")]
+    enum Kind {
+        #[serde(alias = "write", alias = "modify")]
+        Edit,
+        #[serde(other)]
+        Other,
+    }
+
+    let cfg = Config::from_env();
+    assert_eq!(Block::decl(&cfg), "type Block = { mime: string | null, };");
+    assert_eq!(Kind::decl(&cfg), r#"type Kind = "edit" | "other";"#);
+}
