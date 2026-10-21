@@ -113,6 +113,7 @@ fn skip_until_next_comma(input: ParseStream) -> proc_macro2::TokenStream {
             }
 
             while let Some((tt, next)) = rest.token_tree() {
+                stuff = quote!(#stuff #tt);
                 if let Some((TokenTree::Punct(punct), _)) = next.token_tree() {
                     if punct.as_char() == ',' {
                         return Ok((stuff, next));
@@ -120,7 +121,6 @@ fn skip_until_next_comma(input: ParseStream) -> proc_macro2::TokenStream {
                 }
 
                 rest = next;
-                stuff = quote!(#stuff #tt)
             }
 
             Ok((stuff, rest))
@@ -242,5 +242,26 @@ fn parse_repr(input: ParseStream) -> Result<Repr> {
     match ident.to_string().as_str() {
         "name" => Ok(Repr::Name),
         _ => syn_err!(span; "expected `name`"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use syn::parse::Parser;
+
+    use super::*;
+
+    #[test]
+    fn skip_until_next_comma_retains_value_before_comma() {
+        let parser = |input: ParseStream| {
+            let skipped = skip_until_next_comma(input);
+            input.parse::<Token![,]>()?;
+            let next_ident: Ident = input.parse()?;
+            Ok((skipped.to_string(), next_ident.to_string()))
+        };
+
+        let (skipped, next_ident) = parser.parse_str(r#"= "meta", skip"#).unwrap();
+        assert_eq!(skipped, r#"= "meta""#);
+        assert_eq!(next_ident, "skip");
     }
 }
