@@ -29,13 +29,34 @@ struct GenericOptionalStruct<T> {
     a: Option<T>,
 }
 
+#[derive(Serialize, TS)]
+#[ts(export, export_to = "optional_field/", optional_fields)]
+struct GenericOptionalFieldsStruct<T> {
+    a: T,
+    b: Option<T>,
+}
+
+#[derive(Serialize, TS)]
+#[ts(export, export_to = "optional_field/", optional_fields)]
+enum GenericOptionalFieldsEnum<T> {
+    Variant { a: T, b: Option<T> },
+}
+
 #[test]
 fn in_generic_struct() {
     let cfg = Config::from_env();
     assert_eq!(
         GenericOptionalStruct::<()>::decl(&cfg),
         "type GenericOptionalStruct<T> = { a?: T, };"
-    )
+    );
+    assert_eq!(
+        GenericOptionalFieldsStruct::<()>::decl(&cfg),
+        "type GenericOptionalFieldsStruct<T> = { a: T, b?: T, };"
+    );
+    assert_eq!(
+        GenericOptionalFieldsEnum::<()>::decl(&cfg),
+        r#"type GenericOptionalFieldsEnum<T> = { "Variant": { a: T, b?: T, } };"#
+    );
 }
 
 #[derive(Serialize, TS)]
