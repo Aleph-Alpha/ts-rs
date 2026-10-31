@@ -63,8 +63,8 @@ pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> R
         crate_rename,
         // the `replace` combines `{ ... } & { ... }` into just one `{ ... }`. Not necessary, but it
         // results in simpler type definitions.
-        inline: quote!(#inline.replace(" } & { ", " ")),
-        inline_flattened: Some(quote!(#inline_flattened.replace(" } & { ", " "))),
+        inline: quote!(#inline.replace(" } & {  }", " }").replace("{  } & ", "").replace(" & {  }", "").replace(" } & { ", " ")),
+        inline_flattened: Some(quote!(#inline_flattened.replace(" } & {  }", " }").replace("{  } & ", "").replace(" & {  }", "").replace(" } & { ", " "))),
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
