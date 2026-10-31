@@ -11,6 +11,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install TypeScript
+        run: npm install -g typescript
       - uses: Swatinem/rust-cache@v2
       - name: dependencies e2e test
         working-directory: e2e/dependencies/consumer
@@ -33,6 +38,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install TypeScript
+        run: npm install -g typescript
       - uses: Swatinem/rust-cache@v2
       - name: workspace e2e test
         working-directory: e2e/workspace
@@ -58,6 +68,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install TypeScript
+        run: npm install -g typescript
       - uses: Swatinem/rust-cache@v2
       - name: example e2e test
         working-directory: example
@@ -81,6 +96,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install TypeScript
+        run: npm install -g typescript
       - uses: Swatinem/rust-cache@v2
       - name: Check that README.md is up-to-date
         working-directory: ts-rs
@@ -98,6 +118,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install TypeScript
+        run: npm install -g typescript
       - uses: Swatinem/rust-cache@v2
       - name: Check that README.md is up-to-date
         working-directory: ts-rs
@@ -121,6 +146,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install TypeScript
+        run: npm install -g typescript
       - uses: Swatinem/rust-cache@v2
       - name: Test
         working-directory: ts-rs
@@ -140,6 +170,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install TypeScript
+        run: npm install -g typescript
       - uses: Swatinem/rust-cache@v2
       - name: Test
         working-directory: ts-rs
@@ -159,6 +194,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install TypeScript
+        run: npm install -g typescript
       - uses: Swatinem/rust-cache@v2
       - name: Test
         working-directory: ts-rs
@@ -178,6 +218,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install TypeScript
+        run: npm install -g typescript
       - uses: Swatinem/rust-cache@v2
       - name: Test
         working-directory: ts-rs
@@ -197,6 +242,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install TypeScript
+        run: npm install -g typescript
       - uses: Swatinem/rust-cache@v2
       - name: Test
         working-directory: ts-rs
