@@ -24,7 +24,7 @@ pub(crate) fn tuple(attr: &StructAttr, ts_name: Expr, fields: &FieldsUnnamed) ->
     }
 
     Ok(DerivedTS {
-        crate_rename,
+        crate_rename: crate_rename.clone(),
         inline: quote! {
             format!(
                 "[{}]",
@@ -34,6 +34,7 @@ pub(crate) fn tuple(attr: &StructAttr, ts_name: Expr, fields: &FieldsUnnamed) ->
         inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies,
+        flattened_dependencies: Dependencies::new(crate_rename),
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name,

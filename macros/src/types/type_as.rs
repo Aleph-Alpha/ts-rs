@@ -17,12 +17,15 @@ pub(crate) fn type_as_struct(
     let mut dependencies = Dependencies::new(crate_rename.clone());
     dependencies.append_from(type_as);
 
+    let flattened_dependencies = Dependencies::new(crate_rename.clone());
+
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),
         inline: quote!(<#type_as as #crate_rename::TS>::inline(cfg)),
         inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies,
+        flattened_dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name,
@@ -39,12 +42,15 @@ pub(crate) fn type_as_enum(attr: &EnumAttr, ts_name: Expr, type_as: &Type) -> Re
     let mut dependencies = Dependencies::new(crate_rename.clone());
     dependencies.append_from(type_as);
 
+    let flattened_dependencies = Dependencies::new(crate_rename.clone());
+
     Ok(DerivedTS {
         crate_rename: crate_rename.clone(),
         inline: quote!(<#type_as as #crate_rename::TS>::inline(cfg)),
         inline_flattened: None,
         docs: attr.docs.clone(),
         dependencies,
+        flattened_dependencies,
         export: attr.export,
         export_to: attr.export_to.clone(),
         ts_name,
