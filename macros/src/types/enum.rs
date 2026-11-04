@@ -36,6 +36,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
 
     let mut formatted_variants = Vec::new();
     let mut dependencies = Dependencies::new(crate_rename.clone());
+    let is_int_enum = s.variants.iter().any(|v| v.discriminant.is_some());
 
     for variant in &s.variants {
         format_variant(
@@ -43,6 +44,7 @@ pub(crate) fn r#enum_def(s: &ItemEnum) -> syn::Result<DerivedTS> {
             &mut dependencies,
             &enum_attr,
             variant,
+            is_int_enum,
         )?;
     }
 
@@ -74,6 +76,7 @@ fn format_variant(
     dependencies: &mut Dependencies,
     enum_attr: &EnumAttr,
     variant: &Variant,
+    is_int_enum: bool,
 ) -> syn::Result<()> {
     let crate_rename = enum_attr.crate_rename();
 
@@ -101,12 +104,16 @@ fn format_variant(
     };
 
     if let Some(ref repr) = enum_attr.repr {
-        let formatted = match (repr, &variant.discriminant) {
-            (Repr::Int, Some((_, value))) => {
+        let formatted = match (repr, &variant.discriminant, is_int_enum) {
+            (Repr::Int, Some((_, value)), _) | (Repr::ConstObject, Some((_, value)), true) => {
                 quote!(format!("\"{}\" = {}", #ts_name, #value))
             }
-            (Repr::Int, None) => quote!(format!("\"{}\"", #ts_name)),
-            (Repr::Name, _) => quote!(format!("\"{}\" = \"{}\"", #ts_name, #ts_name)),
+            (Repr::Int, None, _) | (Repr::ConstObject, None, true) => {
+                quote!(format!("\"{}\"", #ts_name))
+            }
+            (Repr::Name, _, _) | (Repr::ConstObject, _, false) => {
+                quote!(format!("\"{}\" = \"{}\"", #ts_name, #ts_name))
+            }
         };
 
         formatted_variants.push(formatted);

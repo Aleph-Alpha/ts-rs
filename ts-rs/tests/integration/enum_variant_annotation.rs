@@ -75,7 +75,10 @@ pub enum C {
 #[test]
 fn test_enum_variant_with_tag() {
     let cfg = Config::from_env();
-    assert_eq!(C::inline(&cfg), r#"{ "kind": "SQUARE_THING", name: string, }"#);
+    assert_eq!(
+        C::inline(&cfg),
+        r#"{ "kind": "SQUARE_THING", name: string, }"#
+    );
 }
 
 #[cfg(feature = "serde-compat")]

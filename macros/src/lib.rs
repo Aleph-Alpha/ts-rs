@@ -295,6 +295,36 @@ impl DerivedTS {
 
                 buffer.trim_end_matches(['|', ' ']).into()
             },
+            Some(Repr::ConstObject) => quote! {
+                let variants = #inline;
+                let mut variants = variants.split(',').map(|v| v.trim()).peekable();
+
+                if variants.peek().is_none() {
+                    return "never".into()
+                }
+
+                let mut buffer = String::new();
+                let mut latest = None::<isize>;
+
+                for variant in variants {
+                    if let Some((_name, explicit_val)) = variant.split_once('=') {
+                        let explicit_val = explicit_val.trim();
+
+                        if let Ok(val) = explicit_val.parse::<isize>() {
+                            buffer.push_str(&format!("{} | ", val));
+                            latest = Some(val);
+                        } else {
+                            buffer.push_str(&format!("{} | ", explicit_val));
+                        }
+                    } else {
+                        let new_val = latest.map(|x| x + 1).unwrap_or(0);
+                        buffer.push_str(&format!("{} | ", new_val));
+                        latest = Some(new_val);
+                    }
+                }
+
+                buffer.trim_end_matches(['|', ' ']).into()
+            },
             None => quote!(#inline),
         };
 
@@ -316,6 +346,48 @@ impl DerivedTS {
     fn generate_decl_fn(&mut self, rust_ty: &Ident, generics: &Generics) -> TokenStream {
         let crate_rename = &self.crate_rename;
         let name = &self.ts_name;
+
+        if self.ts_enum == Some(Repr::ConstObject) {
+            let inline = &self.inline;
+            return quote! {
+                fn decl_concrete(cfg: &#crate_rename::Config) -> String {
+                    let variants = #inline;
+                    let mut variants = variants.split(',').map(|v| v.trim()).peekable();
+
+                    if variants.peek().is_none() {
+                        return format!("const {} = {{}} as const;\nexport type {} = never;", #name, #name)
+                    }
+
+                    let mut buffer = String::new();
+                    let mut latest = None::<isize>;
+
+                    for variant in variants {
+                        if let Some((name, explicit_val)) = variant.split_once('=') {
+                            let name = name.trim();
+                            let explicit_val = explicit_val.trim();
+
+                            if let Ok(val) = explicit_val.parse::<isize>() {
+                                buffer.push_str(&format!("{}: {}, ", name, val));
+                                latest = Some(val);
+                            } else {
+                                buffer.push_str(&format!("{}: {}, ", name, explicit_val));
+                            }
+                        } else {
+                            let new_val = latest.map(|x| x + 1).unwrap_or(0);
+                            buffer.push_str(&format!("{}: {}, ", variant, new_val));
+                            latest = Some(new_val);
+                        }
+                    }
+
+                    let obj = format!("{{ {} }}", buffer.trim_end_matches([',', ' ']));
+                    format!("const {} = {} as const;\nexport type {} = (typeof {})[keyof typeof {}];", #name, obj, #name, #name, #name)
+                }
+
+                fn decl(cfg: &#crate_rename::Config) -> String {
+                    <Self as #crate_rename::TS>::decl_concrete(cfg)
+                }
+            };
+        }
 
         if self.ts_enum.is_some() {
             let inline = &self.inline;

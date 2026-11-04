@@ -53,22 +53,10 @@ enum KebabCase {
 #[test]
 fn native_ts_enum_repr() {
     let cfg = Config::from_env();
-    assert_eq!(
-        Foo::decl(&cfg),
-        "enum Foo { \"A\" = 1, \"B\" = 2 }"
-    );
-    assert_eq!(
-        Bar::decl(&cfg),
-        "enum Bar { \"A\" = 1, \"B\" }"
-    );
-    assert_eq!(
-        Baz::decl(&cfg),
-        "enum Baz { \"A\", \"B\" }"
-    );
-    assert_eq!(
-        Biz::decl(&cfg),
-        "enum Biz { \"A\" = \"A\", \"B\" = \"B\" }"
-    );
+    assert_eq!(Foo::decl(&cfg), "enum Foo { \"A\" = 1, \"B\" = 2 }");
+    assert_eq!(Bar::decl(&cfg), "enum Bar { \"A\" = 1, \"B\" }");
+    assert_eq!(Baz::decl(&cfg), "enum Baz { \"A\", \"B\" }");
+    assert_eq!(Biz::decl(&cfg), "enum Biz { \"A\" = \"A\", \"B\" = \"B\" }");
     assert_eq!(
         SnakeCase::decl(&cfg),
         "enum SnakeCase { \"enum_variant_foo\" = \"enum_variant_foo\", \"enum_variant_bar\" = \"enum_variant_bar\" }"
