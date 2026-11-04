@@ -191,6 +191,10 @@ impl_parse! {
         "borrow" => {
             parse_optional_assign_str(input)?;
         },
+        // parse #[serde(alias = "..")] to not emit a warning
+        "alias" => {
+            parse_assign_str(input)?;
+        },
         "with" => {
             parse_assign_str(input)?;
             out.0.using_serde_with = true;
