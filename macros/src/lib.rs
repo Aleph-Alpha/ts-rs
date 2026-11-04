@@ -112,6 +112,10 @@ impl DerivedTS {
                 #generics_fn
                 #output_path_fn
 
+                fn crate_name() -> Option<&'static str> {
+                    Some(env!("CARGO_PKG_NAME"))
+                }
+
                 fn visit_dependencies(v: &mut impl #crate_rename::TypeVisitor)
                 where
                     Self: 'static,

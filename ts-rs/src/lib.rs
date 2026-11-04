@@ -501,6 +501,7 @@ pub trait TS {
         let relative_path = Self::output_path()
             .ok_or_else(std::any::type_name::<Self>)
             .map_err(ExportError::CannotBeExported)?;
+        let relative_path = export::maybe_namespace::<Self>(cfg, relative_path);
         let path = cfg.export_dir.join(relative_path);
 
         export::export_to::<Self, _>(cfg, path)
@@ -548,6 +549,12 @@ pub trait TS {
     fn output_path() -> Option<PathBuf> {
         None
     }
+
+    /// Returns the Cargo package name of the crate that defined this type.
+    /// Used for auto-namespacing when `Config::auto_namespace` is enabled.
+    fn crate_name() -> Option<&'static str> {
+        None
+    }
 }
 
 /// A visitor used to iterate over all dependencies or generics of a type.
@@ -592,7 +599,13 @@ impl Dependency {
     /// If `T` is not exportable (meaning `T::EXPORT_TO` is `None`), this function will return
     /// `None`
     pub fn from_ty<T: TS + 'static + ?Sized>(cfg: &Config) -> Option<Self> {
-        let output_path = <T as crate::TS>::output_path()?;
+        let mut output_path = <T as crate::TS>::output_path()?;
+        if cfg.auto_namespace() {
+            if let Some(crate_name) = <T as crate::TS>::crate_name() {
+                let ns = crate_name.replace('-', "_");
+                output_path = PathBuf::from(ns).join(output_path);
+            }
+        }
         Some(Dependency {
             type_id: TypeId::of::<T>(),
             ts_name: <T as crate::TS>::ident(cfg),
@@ -612,6 +625,8 @@ pub struct Config {
     // TS_RS_IMPORT_EXTENSION
     import_extension: Option<String>,
     array_tuple_limit: usize,
+    // TS_RS_AUTO_NAMESPACE
+    auto_namespace: bool,
 }
 
 impl Default for Config {
@@ -622,6 +637,7 @@ impl Default for Config {
             export_dir: "./bindings".into(),
             import_extension: None,
             array_tuple_limit: 64,
+            auto_namespace: false,
         }
     }
 }
@@ -659,6 +675,10 @@ impl Config {
         #[allow(deprecated)]
         if let Ok("1" | "true" | "on" | "yes") = std::env::var("TS_RS_USE_V11_HASHMAP").as_deref() {
             cfg = cfg.with_v11_hashmap();
+        }
+
+        if let Ok("1" | "true" | "on" | "yes") = std::env::var("TS_RS_AUTO_NAMESPACE").as_deref() {
+            cfg.auto_namespace = true;
         }
 
         cfg
@@ -729,6 +749,21 @@ impl Config {
     /// Returns the maximum size of arrays (`[T; N]`) up to which they are treated as TypeScript tuples (`[T, T, ...]`).  
     pub fn array_tuple_limit(&self) -> usize {
         self.array_tuple_limit
+    }
+
+    /// When enabled, exported types are organized into `{crate_name}/` subdirectories
+    /// based on the crate that defined them. This prevents type name collisions between
+    /// different crates.
+    ///
+    /// Default: `false`
+    pub fn with_auto_namespace(mut self, enabled: bool) -> Self {
+        self.auto_namespace = enabled;
+        self
+    }
+
+    /// Returns whether auto-namespacing by crate name is enabled.
+    pub fn auto_namespace(&self) -> bool {
+        self.auto_namespace
     }
 }
 
