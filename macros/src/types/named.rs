@@ -35,12 +35,24 @@ pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> R
         )?;
     }
 
-    let fields = quote!(<[::std::string::String]>::join(&[#(#formatted_fields),*], " "));
+    let fields = quote!({
+        let fields: &[::std::string::String] = &[#(#formatted_fields),*];
+        let capacity = fields.iter().map(|field| field.len() + 1).sum();
+        let mut output = ::std::string::String::with_capacity(capacity);
+        for field in fields {
+            // Documented fields already start on a new line.
+            if !field.starts_with('\n') {
+                output.push(' ');
+            }
+            output.push_str(field);
+        }
+        output
+    });
     let flattened = quote!(<[::std::string::String]>::join(&[#(#flattened_fields),*], " & "));
 
     let inline = match (formatted_fields.len(), flattened_fields.len()) {
         (0, 0) => quote!("{  }".to_owned()),
-        (_, 0) => quote!(format!("{{ {} }}", #fields)),
+        (_, 0) => quote!(format!("{{{} }}", #fields)),
         (0, 1) => quote! {{
             if #flattened.starts_with('(') && #flattened.ends_with(')') {
                 #flattened[1..#flattened.len() - 1].trim().to_owned()
@@ -49,22 +61,22 @@ pub(crate) fn named(attr: &StructAttr, ts_name: Expr, fields: &FieldsNamed) -> R
             }
         }},
         (0, _) => quote!(#flattened),
-        (_, _) => quote!(format!("{{ {} }} & {}", #fields, #flattened)),
+        (_, _) => quote!(format!("{{{} }} & {}", #fields, #flattened)),
     };
 
     let inline_flattened = match (formatted_fields.len(), flattened_fields.len()) {
         (0, 0) => quote!("{  }".to_owned()),
-        (_, 0) => quote!(format!("{{ {} }}", #fields)),
+        (_, 0) => quote!(format!("{{{} }}", #fields)),
         (0, _) => quote!(#flattened),
-        (_, _) => quote!(format!("{{ {} }} & {}", #fields, #flattened)),
+        (_, _) => quote!(format!("{{{} }} & {}", #fields, #flattened)),
     };
 
     Ok(DerivedTS {
         crate_rename,
         // the `replace` combines `{ ... } & { ... }` into just one `{ ... }`. Not necessary, but it
         // results in simpler type definitions.
-        inline: quote!(#inline.replace(" } & { ", " ")),
-        inline_flattened: Some(quote!(#inline_flattened.replace(" } & { ", " "))),
+        inline: quote!(#inline.replace(" } & {", "")),
+        inline_flattened: Some(quote!(#inline_flattened.replace(" } & {", ""))),
         docs: attr.docs.clone(),
         dependencies,
         export: attr.export,
