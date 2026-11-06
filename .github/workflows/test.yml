@@ -3,7 +3,7 @@ name: Test
 jobs:
   e2e-dependencies:
     name: Run 'dependencies' end-to-end test
-    runs-on: ubuntu-latest
+    runs-on: linux-xarm92
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     steps:
       - uses: actions/checkout@v4
