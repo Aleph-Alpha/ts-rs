@@ -75,4 +75,9 @@ fn export_order() {
     }
 
     assert_eq!(text, expected);
+
+    let reverse_cfg = Config::from_env().with_out_dir(cfg.out_dir().join("reverse_order"));
+    Bar::export_all(&reverse_cfg);
+    Foo::export_all(&reverse_cfg);
+    assert_eq!(super::read_file::<Foo>(&reverse_cfg), expected);
 }
